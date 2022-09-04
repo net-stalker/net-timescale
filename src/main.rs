@@ -21,7 +21,7 @@ fn main() {
         .send(global_header.as_bytes(), 0)
         .expect("client failed sending request");
 
-    capture_packages(-1, |cnt, packet| {
+    capture_packages(-1, |_cnt, packet| {
         socket
             .send(packet.as_bytes(), 0)
             .expect("client failed sending request");
