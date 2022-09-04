@@ -16,14 +16,19 @@ pub fn print_devices() {
 
 pub fn lookup_default_device() -> Device {
     let default_devide = Device::lookup().unwrap();
-    println!(
-        "Default Device: {}, {:?}, {:?}",
-        default_devide.name,
-        default_devide.desc.as_ref(),
-        default_devide.addresses
-    );
+    match default_devide {
+        Some(devide) => {
+            println!(
+                "Default Device: {}, {:?}, {:?}",
+                devide.name,
+                devide.desc.as_ref(),
+                devide.addresses
+            );
 
-    default_devide
+            devide
+        }
+        None => todo!(),
+    }
 }
 
 pub fn create_global_header() -> GlobalHeader {
@@ -51,7 +56,7 @@ pub fn capture_packages(cnt_packages: i16, f: impl Fn(i16, PcapPacket)) {
         .unwrap();
 
     let mut cnt = 0;
-    while let Ok(packet) = cap.next() {
+    while let Ok(packet) = cap.next_packet() {
         if cnt_packages == cnt {
             break;
         }
