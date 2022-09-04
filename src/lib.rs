@@ -210,6 +210,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_lookup_default_device() {
         let expected_default_device = lookup_default_device();
         assert_eq!(expected_default_device.name, "en0");
