@@ -18,6 +18,8 @@ jobs:
     - uses: actions/checkout@v3
     - name: Clean
       run: cargo clean
+    - name: Update platform
+      run: sudo apt-get install libzmq-dev
     - name: Build
       run: cargo build
     - name: Run tests
