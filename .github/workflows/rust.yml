@@ -19,7 +19,7 @@ jobs:
     - name: Clean
       run: cargo clean
     - name: Update platform
-      run: sudo apt-get install libzmq-dev
+      run: sudo apt-get update && sudo apt-get install libzmq-dev
     - name: Build
       run: cargo build
     - name: Run tests
