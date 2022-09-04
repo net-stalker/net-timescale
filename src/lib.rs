@@ -254,6 +254,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_expected_create_pcap_file() {
         let (tx, rx) = mpsc::channel();
 
@@ -270,7 +271,7 @@ mod tests {
             .unwrap();
         f.write_all(&global_header.as_bytes()).unwrap();
 
-        capture_packages(10, |cnt, packet| tx.send(packet.as_bytes()).unwrap());
+        capture_packages(10, |_cnt, packet| tx.send(packet.as_bytes()).unwrap());
 
         // File::create("target/test-data.pcap").unwrap();
         // let mut f = OpenOptions::new()
