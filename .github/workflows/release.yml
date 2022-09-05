@@ -3,7 +3,7 @@ name: Build and upload binaries to release
 on:
   push:
     tags: 'v*'
-    # branches: [ "develop" ]
+    branches: [ "develop" ]
 
 jobs:
   release:
@@ -16,9 +16,10 @@ jobs:
             artifact_name: monitor
             asset_name: monitor-linux-amd64
             run: sudo apt-get update && sudo apt-get install libpcap-dev libzmq3-dev
-          # - os: macos-latest
-            # artifact_name: monitor
-            # asset_name: monitor-macos-amd64
+          - os: macos-latest
+            artifact_name: monitor
+            asset_name: monitor-macos-amd64
+            run: brew install libpcap
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -27,10 +28,8 @@ jobs:
       - name: Build project
         run: cargo build --release
       - name: Upload binary to release
-        uses: svenstaro/upload-release-action@v1-release
+        uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: target/release/${{ matrix.artifact_name }}
           asset_name: ${{ matrix.asset_name }}
-#           tag: ${{ github.event.client_payload.new_version }}
-#           tag: ${{github.ref_name}}
