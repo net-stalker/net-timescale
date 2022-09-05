@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Install utils
+      - name: Update platform
         run:  ${{ matrix.run }}
       - name: Build project
         run: cargo build --release
@@ -32,4 +32,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: target/release/${{ matrix.artifact_name }}
           asset_name: ${{ matrix.asset_name }}
-          tag: ${{ github.event.client_payload.new_version }}
+          # tag: ${{ github.event.client_payload.new_version }}
+          tag: ${{github.ref_name}}
