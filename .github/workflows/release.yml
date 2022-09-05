@@ -19,7 +19,7 @@ jobs:
           - os: macos-latest
             artifact_name: monitor
             asset_name: monitor-macos-amd64
-            run: brew install libpcap libzmq
+            run: brew install libpcap zeromq
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
