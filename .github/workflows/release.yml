@@ -3,7 +3,7 @@ name: Build and upload binaries to release
 on:
   push:
     tags: 'v*'
-    branches: [ "develop" ]
+    # branches: [ "develop" ]
 
 jobs:
   release:
@@ -32,5 +32,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: target/release/${{ matrix.artifact_name }}
           asset_name: ${{ matrix.asset_name }}
-          # tag: ${{ github.event.client_payload.new_version }}
-          tag: ${{github.ref_name}}
+          tag: ${{ github.event.client_payload.new_version }}
+          # tag: ${{github.ref_name}}
