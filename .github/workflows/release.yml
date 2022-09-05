@@ -33,4 +33,4 @@ jobs:
           file: target/release/${{ matrix.artifact_name }}
           asset_name: ${{ matrix.asset_name }}
 #           tag: ${{ github.event.client_payload.new_version }}
-          tag: ${{github.ref_name}}
+#           tag: ${{github.ref_name}}
