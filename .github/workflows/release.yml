@@ -17,15 +17,13 @@ jobs:
             asset_name: monitor-linux-amd64
             run: sudo apt-get update && sudo apt-get install libpcap-dev libzmq3-dev && cargo install cargo-bundle
             bundle: deb
-            bundle_artifact_name: monitor_1.0.0_amd_64
-            bundle_asset_name: monitor-macos-amd64.deb
+            bundle_artifact_name: monitor_1.0.0_amd_64.deb
           - os: macos-latest
             artifact_name: monitor
             asset_name: monitor-macos-amd64
             run: brew install libpcap zeromq && cargo install cargo-bundle
             bundle: osx
             bundle_artifact_name: ExampleApplication.app
-            bundle_asset_name: monitor-macos-amd64.app
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -48,4 +46,4 @@ jobs:
           overwrite: true
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: target/release/bundle/${{ matrix.bundle }}/${{ matrix.bundle_artifact_name }}
-          asset_name: ${{ matrix.asset_name }}    
+          asset_name: ${{ matrix.bundle_artifact_name }}    
