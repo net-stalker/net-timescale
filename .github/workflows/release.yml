@@ -41,7 +41,7 @@ jobs:
           file: target/release/${{ matrix.artifact_name }}
           asset_name: ${{ matrix.asset_name }}
       - name: Create bundle
-        run: cargo bundle --format=${{ matrix.bundle }}
+        run: cargo bundle --release --format=${{ matrix.bundle }}
       - name: Upload bundle
         uses: svenstaro/upload-release-action@v2
         with:
