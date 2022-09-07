@@ -15,14 +15,14 @@ jobs:
           - os: ubuntu-latest
             artifact_name: monitor
             asset_name: monitor-linux-amd64
-            run: sudo apt-get update && sudo apt-get install libpcap-dev libzmq3-dev
+            run: sudo apt-get update && sudo apt-get install libpcap-dev libzmq3-dev && cargo install cargo-bundle
             bundle: deb
             bundle_artifact_name: monitor_1.0.0_amd_64
             bundle_asset_name: monitor-macos-amd64.deb
           - os: macos-latest
             artifact_name: monitor
             asset_name: monitor-macos-amd64
-            run: brew install libpcap zeromq
+            run: brew install libpcap zeromq && cargo install cargo-bundle
             bundle: osx
             bundle_artifact_name: ExampleApplication.app
             bundle_asset_name: monitor-macos-amd64.app
