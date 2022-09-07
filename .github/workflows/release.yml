@@ -3,6 +3,7 @@ name: Build and upload binaries to release
 on:
   push:
     tags: 'v*'
+    branches: [ "develop" ]
 
 jobs:
   release:
@@ -15,10 +16,14 @@ jobs:
             artifact_name: monitor
             asset_name: monitor-linux-amd64
             run: sudo apt-get update && sudo apt-get install libpcap-dev libzmq3-dev
+            bundle: deb
+            bundle_asset_name: deb-monitor-macos-amd64
           - os: macos-latest
             artifact_name: monitor
             asset_name: monitor-macos-amd64
             run: brew install libpcap zeromq
+            bundle: osx
+            bundle_asset_name: osx-monitor-macos-amd64
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -32,3 +37,9 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: target/release/${{ matrix.artifact_name }}
           asset_name: ${{ matrix.asset_name }}
+      - name: Create bundle
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/bundle/${{ matrix.bundle }}
+          asset_name: ${{ matrix.asset_name }}    
