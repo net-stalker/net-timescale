@@ -21,7 +21,7 @@ enim ad minim veniam, quis nostrud exercitation ullamco laboris
 nisi ut aliquip ex ea commodo consequat.
 """
 deb_depends = ["libpcap-dev", "libzmq3-dev"]
-osx_frameworks = ["libpcap"]
+# osx_frameworks = ["libpcap"]
 
 [[bin]]
 name = "edge"

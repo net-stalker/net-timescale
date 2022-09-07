@@ -17,13 +17,15 @@ jobs:
             asset_name: monitor-linux-amd64
             run: sudo apt-get update && sudo apt-get install libpcap-dev libzmq3-dev
             bundle: deb
-            bundle_asset_name: deb-monitor-macos-amd64
+            bundle_artifact_name: monitor_1.0.0_amd_64
+            bundle_asset_name: monitor-macos-amd64.deb
           - os: macos-latest
             artifact_name: monitor
             asset_name: monitor-macos-amd64
             run: brew install libpcap zeromq
             bundle: osx
-            bundle_asset_name: osx-monitor-macos-amd64
+            bundle_artifact_name: ExampleApplication.app
+            bundle_asset_name: monitor-macos-amd64.app
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -38,8 +40,10 @@ jobs:
           file: target/release/${{ matrix.artifact_name }}
           asset_name: ${{ matrix.asset_name }}
       - name: Create bundle
+        run: cargo bundle --format=${{ matrix.bundle }}
+      - name: Upload bundle
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/bundle/${{ matrix.bundle }}
+          file: target/release/bundle/${{ matrix.bundle }}/${{ matrix.bundle_artifact_name }}
           asset_name: ${{ matrix.asset_name }}    
