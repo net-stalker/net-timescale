@@ -14,7 +14,7 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: monitor
-            asset_name: monitor-linux-amd64
+            asset_name: monitor_1.0.0_amd64
             run: sudo apt-get update && sudo apt-get install libpcap-dev libzmq3-dev && cargo install cargo-bundle
             bundle: deb
             bundle_artifact_name: monitor_1.0.0_amd64.deb
@@ -64,4 +64,4 @@ jobs:
           gpg_private_key: ${{ secrets.PPA_GPG_PRIVATE_KEY }}
           gpg_passphrase: ${{ secrets.PPA_GPG_PASSPHRASE }}
 #          pkgdir: '${{ github.workspace }}/artifacts/${{ matrix.bundle_artifact_name }}'
-          pkgdir: target/release/bundle/${{ matrix.bundle }}/
+          pkgdir: target/release/bundle/deb/${{ matrix.asset_name }}/
