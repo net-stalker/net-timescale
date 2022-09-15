@@ -47,6 +47,10 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: target/release/bundle/${{ matrix.bundle }}/${{ matrix.bundle_artifact_name }}
           asset_name: ${{ matrix.bundle_artifact_name }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.bundle_artifact_name }}
+          path: deb-build/${{ matrix.bundle_artifact_name }}
       - name: Publish PPA
         uses: yuezk/publish-ppa-package@main
         with:
