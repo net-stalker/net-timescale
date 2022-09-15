@@ -63,4 +63,4 @@ jobs:
           repository: 'ppa:dshcherbatiuk/netstalker'
           gpg_private_key: ${{ secrets.PPA_GPG_PRIVATE_KEY }}
           gpg_passphrase: ${{ secrets.PPA_GPG_PASSPHRASE }}
-          pkgdir: '$GITHUB_WORKSPACE/artifacts/${{ matrix.bundle_artifact_name }}'
+          pkgdir: '${{ env.GITHUB_WORKSPACE }}/artifacts/${{ matrix.bundle_artifact_name }}'
