@@ -18,17 +18,17 @@ jobs:
             run: sudo apt-get update && sudo apt-get install libpcap-dev libzmq3-dev && cargo install cargo-bundle
             bundle: deb
             bundle_artifact_name: monitor_1.0.0_amd64.deb
-          - os: macos-latest
-            artifact_name: monitor
-            asset_name: monitor-macos-amd64
-            run: brew install libpcap zeromq && cargo install cargo-bundle
-            bundle: osx
-            bundle_artifact_name: ExampleApplication.app
+    #          - os: macos-latest
+    #            artifact_name: monitor
+    #            asset_name: monitor-macos-amd64
+    #            run: brew install libpcap zeromq && cargo install cargo-bundle
+    #            bundle: osx
+    #            bundle_artifact_name: ExampleApplication.app
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Update platform
-        run:  ${{ matrix.run }}
+        run: ${{ matrix.run }}
       - name: Build project
         run: cargo build --release
       - name: Upload binary to release
@@ -46,4 +46,11 @@ jobs:
           overwrite: true
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: target/release/bundle/${{ matrix.bundle }}/${{ matrix.bundle_artifact_name }}
-          asset_name: ${{ matrix.bundle_artifact_name }}    
+          asset_name: ${{ matrix.bundle_artifact_name }}
+      - name: Publish PPA
+        uses: yuezk/publish-ppa-package@main
+        with:
+          repository: 'ppa:dshcherbatiuk/netstalker'
+          gpg_private_key: ${{ secrets.PPA_GPG_PRIVATE_KEY }}
+          gpg_passphrase: ${{ secrets.PPA_GPG_PASSPHRASE }}
+          pkgdir: '${{ github.workspace }}/artifacts/deb-build/${{ matrix.bundle_artifact_name }}'
