@@ -57,11 +57,11 @@ jobs:
       #          version: 'tags/v1.0'
       #          file: 'artifacts/deb-build/${{ matrix.bundle_artifact_name }}'
       #          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish PPA
-        uses: yuezk/publish-ppa-package@main
-        with:
-          repository: 'ppa:dshcherbatiuk/netstalker'
-          gpg_private_key: ${{ secrets.PPA_GPG_PRIVATE_KEY }}
-          gpg_passphrase: ${{ secrets.PPA_GPG_PASSPHRASE }}
-#          pkgdir: '${{ github.workspace }}/artifacts/${{ matrix.bundle_artifact_name }}'
-          pkgdir: target/release/bundle/deb/${{ matrix.asset_name }}/
+#      - name: Publish PPA
+#        uses: yuezk/publish-ppa-package@main
+#        with:
+#          repository: 'ppa:dshcherbatiuk/netstalker'
+#          gpg_private_key: ${{ secrets.PPA_GPG_PRIVATE_KEY }}
+#          gpg_passphrase: ${{ secrets.PPA_GPG_PASSPHRASE }}
+#          #          pkgdir: '${{ github.workspace }}/artifacts/${{ matrix.bundle_artifact_name }}'
+#          pkgdir: target/release/bundle/deb/${{ matrix.asset_name }}/

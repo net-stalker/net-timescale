@@ -1,4 +1,4 @@
-use monitor::{capture_packages, create_global_header};
+use netmonitor::{capture_packages, create_global_header};
 use rand::{thread_rng, Rng};
 
 fn main() {
