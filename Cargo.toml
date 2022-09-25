@@ -4,15 +4,22 @@ name = "netmonitor"
 version = "0.1.0"
 edition = "2021"
 description = ""
+repository = "https://github.com/net-stalker/monitor"
+#links = "libpcap-dev libzmq3-dev"
+authors = ["Dmytro Shcherbatiuk <dmytro.shcherbatiuk@netstalker.io>"]
+readme = "README.md"
+#homepage = "https://serde.rs/"
+#license = "MIT OR Apache-2.0"
+#license-file = "LICENSE.txt"
 
 [package.metadata.bundle]
 name = "netmonitor"
-identifier = "com.doe.exampleapplication"
+identifier = "io.netmonitor"
 icon = ["32x32.png", "128x128.png", "128x128@2x.png"]
-resources = ["assets", "images/**/*.png", "secrets/public_key.txt", "debian"]
+resources = ["assets", "images/**/*.png", "debian"]
 copyright = "Copyright (c) Netstalker 2022. All rights reserved."
 category = "Developer Tool"
-short_description = "An example application."
+short_description = "Capture packets and redirect them to the cloud for the feature analyze."
 long_description = """
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
 eiusmod tempor incididunt ut labore et dolore magna aliqua.  Ut
@@ -36,6 +43,7 @@ zmq = "0.9.2"
 simple-websockets = "0.1.4"
 hocon = "0.9.0"
 derivative = "2.2.0"
+directories = "4.0.1"
 # message-io = "0.14.6"
 # tungstenite = "0.17.3"
 # scoped_threadpool = "0.1.9"
