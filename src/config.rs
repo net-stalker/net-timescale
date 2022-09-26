@@ -1,8 +1,11 @@
-use std::{fmt, fs};
+use std::fmt;
+use std::path::PathBuf;
 
 use derivative::Derivative;
 use directories::ProjectDirs;
-use hocon::HoconLoader;
+use hocon::{Error, HoconLoader};
+#[cfg(test)]
+use mockall::automock;
 use serde::{Deserialize, Serialize};
 
 #[derive(Derivative)]
@@ -11,10 +14,10 @@ use serde::{Deserialize, Serialize};
 pub struct Dealer {
     #[allow(dead_code)]
     #[derivative(Default(value = "true"))]
-    enable: bool,
+    pub enable: bool,
     #[allow(dead_code)]
-    #[derivative(Default(value = "\"tcp://*:5555\".to_string()"))]
-    addr: String,
+    #[derivative(Default(value = "\"tcp://0.0.0.0:5555\".to_string()"))]
+    pub endpoint: String,
 }
 
 #[derive(Derivative)]
@@ -23,13 +26,13 @@ pub struct Dealer {
 pub struct Data {
     #[allow(dead_code)]
     #[derivative(Default(value = "[\"any\".to_string()].to_vec()"))]
-    devices: Vec<String>,
+    pub devices: Vec<String>,
     #[allow(dead_code)]
     #[derivative(Default(value = "-1"))]
-    number_packages: i32,
+    pub number_packages: i32,
     #[allow(dead_code)]
     #[derivative(Default(value = "1000"))]
-    buffer_size: i32,
+    pub buffer_size: i32,
 }
 
 #[derive(Derivative)]
@@ -37,58 +40,104 @@ pub struct Data {
 #[derivative(Default)]
 pub struct Config {
     #[allow(dead_code)]
-    dealer: Dealer,
+    pub dealer: Dealer,
     #[allow(dead_code)]
     data: Data,
 }
 
 impl fmt::Display for Config {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "default configuration:\n {}", serde_json::to_string_pretty(&self).unwrap())
+        write!(f, "configuration\n {}", serde_json::to_string_pretty(&self).unwrap())
     }
 }
 
-pub fn load_configuration() -> Config {
-    let project_dirs = ProjectDirs::from(
-        "io",
-        "net-stalker",
-        "net-monitor");
-    dbg!(project_dirs.clone());
+pub struct FileLoader;
 
-    match project_dirs {
-        None => { Config::default() }
-        Some(project_dirs) => {
-            let config_dir = project_dirs.config_dir();
-            dbg!(config_dir.clone());
+impl FileLoader {
+    fn get_project_dirs() -> Option<ProjectDirs> {
+        let project_dirs = ProjectDirs::from(
+            "io",
+            "net-stalker",
+            "net-monitor");
+        dbg!(project_dirs.clone());
 
-            let config_file = fs::read_to_string(config_dir.join(".config/application.conf"));
-            match config_file {
-                Ok(file) => {
-                    dbg!(file.clone());
+        project_dirs
+    }
 
-                    let config: Result<Config, _> = HoconLoader::new()
-                        .load_file(file)
-                        .unwrap()
-                        .resolve();
+    fn get_config_dir() -> PathBuf {
+        let project_dirs = Self::get_project_dirs();
+        match project_dirs {
+            None => { panic!("not found directories") }
+            Some(project_dirs) => {
+                let config_dir = project_dirs.config_dir();
+                dbg!(config_dir.clone());
 
-                    match config {
-                        Ok(config) => {
-                            println!("{:?}", config);
+                PathBuf::from(config_dir)
+            }
+        }
+    }
+}
 
-                            config
-                        }
-                        Err(error) => {
-                            println!("\n{:?}", error);
+#[cfg_attr(test, automock)]
+pub trait FileLoaderSpec {
+    fn get_config_file(&self) -> PathBuf;
+}
 
-                            Config::default()
-                        }
+impl FileLoaderSpec for FileLoader {
+    fn get_config_file(&self) -> PathBuf {
+        let config_dir = Self::get_config_dir();
+        let config_file = config_dir.join("application.conf");
+        dbg!(config_file.clone());
+
+        config_file
+    }
+}
+
+pub struct ConfigManager {
+    pub file_loader: Box<dyn FileLoaderSpec>,
+}
+
+impl ConfigManager {
+    fn get_default_config() -> Config {
+        Config::default()
+    }
+}
+
+pub trait ConfigSpec {
+    fn load(&self) -> Config;
+}
+
+impl ConfigSpec for ConfigManager {
+    fn load(&self) -> Config {
+        let config_file = self.file_loader.get_config_file();
+
+        let hocon_config: Result<HoconLoader, Error> =
+            HoconLoader::new()
+                .load_file(config_file);
+
+        match hocon_config {
+            Ok(loader) => {
+                match loader.resolve() {
+                    Ok(config) => {
+                        println!("loaded configuration {:?}", config);
+
+                        config
+                    }
+                    Err(error) => {
+                        dbg!(error);
+                        let default_config = Self::get_default_config();
+                        println!("loaded default {}", default_config);
+
+                        default_config
                     }
                 }
-                Err(error) => {
-                    println!("\n{}", error);
+            }
+            Err(error) => {
+                dbg!(error);
+                let default_config = Self::get_default_config();
+                println!("loaded default {}", default_config);
 
-                    Config::default()
-                }
+                default_config
             }
         }
     }
@@ -96,10 +145,7 @@ pub fn load_configuration() -> Config {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
-
-    use directories::{BaseDirs, ProjectDirs};
-    use hocon::{Error, HoconLoader};
+    use hocon::HoconLoader;
 
     use super::*;
 
@@ -109,7 +155,7 @@ mod tests {
         println!("{}", config);
 
         assert_eq!(config.dealer.enable, true);
-        assert_eq!(config.dealer.addr, "tcp://*:5555".to_string());
+        assert_eq!(config.dealer.endpoint, "tcp://0.0.0.0:5555");
         assert_eq!(config.data.devices, vec!["any"]);
         assert_eq!(config.data.number_packages, -1);
         assert_eq!(config.data.buffer_size, 1000);
@@ -127,20 +173,35 @@ mod tests {
         println!("{}", config);
 
         assert_eq!(config.dealer.enable, true);
-        assert_eq!(config.dealer.addr, "tcp://*:5555".to_string());
-        assert_eq!(config.data.devices, vec!["eth0", "any"]);
+        assert_eq!(config.dealer.endpoint, "tcp://0.0.0.0:4444");
+        assert_eq!(config.data.devices, vec!["eth0"]);
+        assert_eq!(config.data.number_packages, -1);
+        assert_eq!(config.data.buffer_size, 100);
+    }
+
+    #[test]
+    fn expect_not_find_config_and_load_default() {
+        let config = ConfigManager { file_loader: Box::new(FileLoader) as Box<dyn FileLoaderSpec> }.load();
+
+        assert_eq!(config.dealer.enable, true);
+        assert_eq!(config.dealer.endpoint, "tcp://0.0.0.0:5555");
+        assert_eq!(config.data.devices, vec!["any"]);
         assert_eq!(config.data.number_packages, -1);
         assert_eq!(config.data.buffer_size, 1000);
     }
 
     #[test]
-    fn expect_find_default_config_directory() {
-        let config = load_configuration();
+    fn expect_find_config_and_load() {
+        let mut mock = MockFileLoaderSpec::new();
+        mock.expect_get_config_file()
+            .return_const(".config/application.conf");
+
+        let config = ConfigManager { file_loader: Box::new(mock) as Box<dyn FileLoaderSpec> }.load();
 
         assert_eq!(config.dealer.enable, true);
-        assert_eq!(config.dealer.addr, "tcp://*:5555".to_string());
-        assert_eq!(config.data.devices, vec!["any"]);
+        assert_eq!(config.dealer.endpoint, "tcp://0.0.0.0:4444");
+        assert_eq!(config.data.devices, vec!["eth0"]);
         assert_eq!(config.data.number_packages, -1);
-        assert_eq!(config.data.buffer_size, 1000);
+        assert_eq!(config.data.buffer_size, 100);
     }
 }
