@@ -1,7 +1,18 @@
-use netmonitor::{capture_packages, create_global_header};
-use rand::{thread_rng, Rng};
+use rand::{Rng, thread_rng};
+
+use crate::config::{ConfigManager, ConfigSpec, FileLoader, FileLoaderSpec};
+use crate::pcapture::{capture_packages, create_global_header};
+
+mod config;
+mod pcapture;
 
 fn main() {
+    let config = ConfigManager { file_loader: Box::new(FileLoader) as Box<dyn FileLoaderSpec> }.load();
+    if !config.dealer.enable {
+        println!("Dealer is disabled!");
+        return;
+    }
+
     let ctx = zmq::Context::new();
 
     let socket = ctx.socket(zmq::DEALER).unwrap();
@@ -12,7 +23,7 @@ fn main() {
         .expect("failed setting client id");
 
     socket
-        .connect("tcp://0.0.0.0:5555")
+        .connect(&config.dealer.endpoint)
         .expect("failed connecting client");
 
     let global_header = create_global_header();
@@ -21,11 +32,13 @@ fn main() {
         .send(global_header.as_bytes(), 0)
         .expect("client failed sending request");
 
-    capture_packages(-1, |_cnt, packet| {
-        socket
-            .send(packet.as_bytes(), 0)
-            .expect("client failed sending request");
-    });
+    capture_packages(
+        config.data,
+        |_cnt, packet| {
+            socket
+                .send(packet.as_bytes(), 0)
+                .expect("client failed sending request");
+        });
 
     loop {
         let mut items = [socket.as_poll_item(zmq::POLLIN)];
@@ -38,8 +51,21 @@ fn main() {
         if items[0].is_readable() {
             let msg = socket
                 .recv_string(0)
-                .expect("client failed receivng response");
+                .expect("client failed receiving response");
             println!("{:?}", msg);
         }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn expected_load_configuration() {
+        // let config = ConfigManager { file_loader: FileLoader }.load_config();
+
+        // println!("{}", config);
     }
 }
