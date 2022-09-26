@@ -1,0 +1,15 @@
+version: '3.8'
+
+#https://docs.docker.com/desktop/networking/#i-want-to-connect-from-a-container-to-a-service-on-the-host
+#the special DNS name host.docker.internal which resolves to the internal IP address used by the host
+services:
+  netmonitor:
+    hostname: netmonitor
+    build:
+      context: .
+    networks:
+      - skynet
+
+networks:
+  skynet:
+    driver: bridge
