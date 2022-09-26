@@ -8,6 +8,8 @@ use hocon::{Error, HoconLoader};
 use mockall::automock;
 use serde::{Deserialize, Serialize};
 
+use crate::pcapture::config::Data;
+
 #[derive(Derivative)]
 #[derive(Serialize, Deserialize, Debug)]
 #[derivative(Default)]
@@ -23,26 +25,11 @@ pub struct Dealer {
 #[derive(Derivative)]
 #[derive(Serialize, Deserialize, Debug)]
 #[derivative(Default)]
-pub struct Data {
-    #[allow(dead_code)]
-    #[derivative(Default(value = "[\"any\".to_string()].to_vec()"))]
-    pub devices: Vec<String>,
-    #[allow(dead_code)]
-    #[derivative(Default(value = "-1"))]
-    pub number_packages: i32,
-    #[allow(dead_code)]
-    #[derivative(Default(value = "1000"))]
-    pub buffer_size: i32,
-}
-
-#[derive(Derivative)]
-#[derive(Serialize, Deserialize, Debug)]
-#[derivative(Default)]
 pub struct Config {
     #[allow(dead_code)]
     pub dealer: Dealer,
     #[allow(dead_code)]
-    data: Data,
+    pub data: Data,
 }
 
 impl fmt::Display for Config {
