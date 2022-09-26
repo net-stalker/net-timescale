@@ -1,7 +1,29 @@
-use serde::{Deserialize, Serialize};
 use std::fmt;
 
 use pcap::{Capture, Device};
+use serde::{Deserialize, Serialize};
+
+use crate::pcapture::config::Data;
+
+pub mod config {
+    use derivative::Derivative;
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Derivative)]
+    #[derive(Serialize, Deserialize, Debug)]
+    #[derivative(Default)]
+    pub struct Data {
+        #[allow(dead_code)]
+        #[derivative(Default(value = "[\"any\".to_string()].to_vec()"))]
+        pub devices: Vec<String>,
+        #[allow(dead_code)]
+        #[derivative(Default(value = "-1"))]
+        pub number_packages: i16,
+        #[allow(dead_code)]
+        #[derivative(Default(value = "1000"))]
+        pub buffer_size: i32,
+    }
+}
 
 pub fn print_devices() {
     Device::list().unwrap().iter().for_each(|device| {
@@ -46,18 +68,22 @@ pub fn create_global_header() -> GlobalHeader {
     }
 }
 
-pub fn capture_packages(cnt_packages: i16, f: impl Fn(i16, PcapPacket)) {
-    let mut cap = Capture::from_device(lookup_default_device())
+pub fn capture_packages(config: Data, f: impl Fn(i16, PcapPacket)) {
+    let device_name = config.devices.get(0).unwrap();
+    dbg!(device_name);
+    // let device = lookup_default_device();
+
+    let mut cap = Capture::from_device(device_name.as_str())
         .unwrap()
         // .promisc(true)
         // .snaplen(65535)
-        .buffer_size(1000)
+        .buffer_size(config.buffer_size)
         .open()
         .unwrap();
 
     let mut cnt = 0;
     while let Ok(packet) = cap.next_packet() {
-        if cnt_packages == cnt {
+        if config.number_packages == cnt {
             break;
         }
         cnt += 1;
@@ -97,13 +123,13 @@ pub fn capture_packages(cnt_packages: i16, f: impl Fn(i16, PcapPacket)) {
 // network = 4 bytes (01 00 00 00) *0x1 which indicates that the link-layer protocol is Ethernet. Full list: http://www.tcpdump.org/linktypes.html
 #[derive(Serialize, Deserialize)]
 pub struct GlobalHeader {
-    magic_number: u32,
-    version_major: u16,
-    version_minor: u16,
-    thiszone: u32,
-    sigfigs: u32,
-    snaplen: u32,
-    network: u32,
+    pub magic_number: u32,
+    pub version_major: u16,
+    pub version_minor: u16,
+    pub thiszone: u32,
+    pub sigfigs: u32,
+    pub snaplen: u32,
+    pub network: u32,
 }
 
 impl fmt::Display for GlobalHeader {
@@ -111,12 +137,12 @@ impl fmt::Display for GlobalHeader {
         write!(
             f,
             "(
-            magic_number={}, 
-            version_major={}, 
-            version_minor={}, 
-            thiszone={}, 
-            sigfigs={}, 
-            snaplen={}, 
+            magic_number={},
+            version_major={},
+            version_minor={},
+            thiszone={},
+            sigfigs={},
+            snaplen={},
             network={}
         )",
             self.magic_number,
@@ -246,8 +272,8 @@ mod tests {
         assert!([
             161, 178, 195, 212, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 0, 1, 0, 0, 0
         ]
-        .iter()
-        .eq(bytes.iter()));
+            .iter()
+            .eq(bytes.iter()));
 
         // let mut f = File::create("test-data.pcap").unwrap();
         // bincode::serialize_into(&mut f, &global_header).unwrap();
@@ -271,7 +297,9 @@ mod tests {
             .unwrap();
         f.write_all(&global_header.as_bytes()).unwrap();
 
-        capture_packages(10, |_cnt, packet| tx.send(packet.as_bytes()).unwrap());
+        capture_packages(
+            Data::default(),
+            |_cnt, packet| tx.send(packet.as_bytes()).unwrap());
 
         // File::create("target/test-data.pcap").unwrap();
         // let mut f = OpenOptions::new()
