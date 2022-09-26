@@ -10,7 +10,7 @@ fn main() {
     let ctx = zmq::Context::new();
 
     let socket = ctx.socket(zmq::DEALER).unwrap();
-    socket.bind("tcp://*:5555").unwrap();
+    socket.bind("tcp://*:4444").unwrap();
 
     // chrome-extension://fgponpodhbmadfljofbimhhlengambbn/index.html
     let event_hub = simple_websockets::launch(9091).expect("failed to listen on port 9001");
