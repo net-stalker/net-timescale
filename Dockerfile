@@ -10,6 +10,6 @@ COPY ./src src
 
 RUN cargo clean && cargo build
 
-COPY ./.config/application.conf /root/.config/net-monitor/application.conf
+COPY ./.config/net-monitor.conf /root/.config/net-monitor/application.conf
 
 CMD ["target/debug/netmonitor"]
