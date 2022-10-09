@@ -30,7 +30,7 @@ deb_depends = ["libpcap-dev", "libzmq3-dev"]
 # osx_frameworks = ["libpcap"]
 
 [[bin]]
-name = "edge"
+name = "hub"
 
 [dependencies]
 rand = "0.8.5"
