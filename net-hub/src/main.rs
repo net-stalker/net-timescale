@@ -6,7 +6,15 @@ use std::{
 
 use simple_websockets::{Event, Message, Responder};
 
+use net_commons::config::{ConfigManager, ConfigSpec, FileLoader, FileLoaderSpec};
+
 fn main() {
+    let config = ConfigManager { file_loader: Box::new(FileLoader) as Box<dyn FileLoaderSpec> }.load();
+    if !config.dealer.enable {
+        println!("Dealer is disabled!");
+        return;
+    }
+
     let ctx = zmq::Context::new();
 
     let socket = ctx.socket(zmq::DEALER).unwrap();

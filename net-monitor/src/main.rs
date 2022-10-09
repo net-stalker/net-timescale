@@ -1,10 +1,7 @@
 use rand::{Rng, thread_rng};
 
-use crate::config::{ConfigManager, ConfigSpec, FileLoader, FileLoaderSpec};
-use crate::pcapture::{capture_packages, create_global_header};
-
-mod config;
-mod pcapture;
+use net_commons::config::{ConfigManager, ConfigSpec, FileLoader, FileLoaderSpec};
+use net_commons::pcapture::{capture_packages, create_global_header};
 
 fn main() {
     let config = ConfigManager { file_loader: Box::new(FileLoader) as Box<dyn FileLoaderSpec> }.load();
