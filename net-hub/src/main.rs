@@ -18,10 +18,11 @@ fn main() {
     let ctx = zmq::Context::new();
 
     let socket = ctx.socket(zmq::DEALER).unwrap();
-    socket.bind("tcp://*:4444").unwrap();
+    socket.bind(&config.dealer.endpoint)
+        .expect("failed bind server");
 
-    // chrome-extension://fgponpodhbmadfljofbimhhlengambbn/index.html
-    let event_hub = simple_websockets::launch(9091).expect("failed to listen on port 9001");
+    let event_hub = simple_websockets::launch(9091)
+        .expect("failed to listen on port 9001");
     let clients: Arc<RwLock<HashMap<u64, Responder>>> = Arc::new(RwLock::new(HashMap::new()));
     let clients_inner = clients.clone();
 
@@ -54,9 +55,6 @@ fn main() {
 
     let dealer_thread_handle = thread::spawn(move || {
         let mut items = [socket.as_poll_item(zmq::POLLIN)];
-        let socket1 = ctx.socket(zmq::DEALER).unwrap();
-
-        socket1.connect("tcp://0.0.0.0:5556").unwrap();
 
         loop {
             let rc = zmq::poll(&mut items, -1).unwrap();
@@ -66,7 +64,7 @@ fn main() {
             if items[0].is_readable() {
                 let msg = socket
                     .recv_bytes(0)
-                    .expect("client failed receivng response");
+                    .expect("monitor manager failed receiving response");
                 println!("{:?}", msg);
 
                 let magic_num = &msg[..4];

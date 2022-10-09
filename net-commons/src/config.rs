@@ -73,7 +73,7 @@ pub trait FileLoaderSpec {
 impl FileLoaderSpec for FileLoader {
     fn get_config_file(&self) -> PathBuf {
         let config_dir = Self::get_config_dir();
-        let config_file = config_dir.join("net-monitor.conf");
+        let config_file = config_dir.join("application.conf");
         dbg!(config_file.clone());
 
         config_file
@@ -151,7 +151,7 @@ mod tests {
     #[test]
     fn expect_load_configuration_from_file() {
         let config: Result<Config, _> = HoconLoader::new()
-            .load_file(".config/net-monitor.conf")
+            .load_file(".config/application.conf")
             .unwrap()
             .resolve();
 
@@ -181,7 +181,7 @@ mod tests {
     fn expect_find_config_and_load() {
         let mut mock = MockFileLoaderSpec::new();
         mock.expect_get_config_file()
-            .return_const(".config/net-monitor.conf");
+            .return_const(".config/application.conf");
 
         let config = ConfigManager { file_loader: Box::new(mock) as Box<dyn FileLoaderSpec> }.load();
 
