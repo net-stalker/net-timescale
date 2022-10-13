@@ -20,6 +20,5 @@ FROM build as starter
 COPY ./${PROJ_NAME}/.config/application.conf /root/.config/${PROJ_NAME}/application.conf
 
 ENV PROJ_NAME ${PROJ_NAME}
-ENV HOST ${PROJ_NAME}
 
 CMD "target/debug/$PROJ_NAME"

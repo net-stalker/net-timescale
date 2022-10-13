@@ -29,6 +29,7 @@ pub struct Config {
     #[allow(dead_code)]
     pub dealer: Dealer,
     #[allow(dead_code)]
+    #[serde(default)]
     pub data: Data,
 }
 

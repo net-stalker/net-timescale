@@ -9,6 +9,8 @@ services:
       context: .
       args:
         PROJ_NAME: net-monitor
+    environment:
+      HOST: net-hub
     networks:
       - skynet
 
