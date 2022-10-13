@@ -9,7 +9,7 @@ use simple_websockets::{Event, Message, Responder};
 use net_commons::config::{ConfigManager, ConfigSpec, FileLoader, FileLoaderSpec};
 
 fn main() {
-    let config = ConfigManager { file_loader: Box::new(FileLoader) as Box<dyn FileLoaderSpec> }.load();
+    let config = ConfigManager { application_name: "net-hub", file_loader: Box::new(FileLoader) as Box<dyn FileLoaderSpec> }.load();
     if !config.dealer.enable {
         println!("Dealer is disabled!");
         return;
