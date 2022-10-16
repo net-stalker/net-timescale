@@ -14,11 +14,11 @@ pub mod config {
     #[derivative(Default)]
     pub struct Data {
         #[allow(dead_code)]
-        #[derivative(Default(value = "[\"any\".to_string()].to_vec()"))]
+        #[derivative(Default(value = "[\"en0\".to_string()].to_vec()"))]
         pub devices: Vec<String>,
         #[allow(dead_code)]
         #[derivative(Default(value = "-1"))]
-        pub number_packages: i16,
+        pub number_packages: i32,
         #[allow(dead_code)]
         #[derivative(Default(value = "1000"))]
         pub buffer_size: i32,
@@ -68,7 +68,7 @@ pub fn create_global_header() -> GlobalHeader {
     }
 }
 
-pub fn capture_packages(config: Data, f: impl Fn(i16, PcapPacket)) {
+pub fn capture_packages(config: Data, f: impl Fn(i32, PcapPacket)) {
     let device_name = config.devices.get(0).unwrap();
     dbg!(device_name);
     // let device = lookup_default_device();
@@ -81,7 +81,7 @@ pub fn capture_packages(config: Data, f: impl Fn(i16, PcapPacket)) {
         .open()
         .unwrap();
 
-    let mut cnt = 0;
+    let mut cnt = 0_i32;
     while let Ok(packet) = cap.next_packet() {
         if config.number_packages == cnt {
             break;

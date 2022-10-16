@@ -5,21 +5,30 @@ use std::{
 };
 
 use simple_websockets::{Event, Message, Responder};
+use zmq::Socket;
 
 use net_commons::config::{ConfigManager, ConfigSpec, FileLoader, FileLoaderSpec};
 
+use crate::hub_context::HubContext;
+use crate::monitor::{CONNECTOR_ENDPOINT, Manager, MonitorPoller, PollerSpec};
+
+mod monitor;
+mod hub_context;
+
 fn main() {
-    let config = ConfigManager { application_name: "net-hub", file_loader: Box::new(FileLoader) as Box<dyn FileLoaderSpec> }.load();
-    if !config.dealer.enable {
-        println!("Dealer is disabled!");
-        return;
-    }
+    //Global for the project
+    let hub_context = Arc::new(HubContext::default());
 
-    let ctx = zmq::Context::new();
+    // //Global for the project
+    // let config = hub_context.clone().config.clone();
+    // if !config.dealer.enable {
+    //     println!("Dealer is disabled!");
+    //     return;
+    // }
 
-    let socket = ctx.socket(zmq::DEALER).unwrap();
-    socket.bind(&config.dealer.endpoint)
-        .expect("failed bind server");
+    //Responsible for monitor-manager
+    let manager = Manager::new(hub_context.clone());
+    let monitor = thread::spawn(move || manager.monitor_poller.poll(|msg| {}));
 
     let event_hub = simple_websockets::launch(9091)
         .expect("failed to listen on port 9001");
@@ -35,6 +44,8 @@ fn main() {
                         .write()
                         .unwrap()
                         .insert(client_id, responder.clone());
+
+                    //TODO for every websocket conn should be created new zmq socket referenced to the websocket client connection.
                 }
                 Event::Disconnect(client_id) => {
                     println!("Client #{} disconnected.", client_id);
@@ -53,35 +64,62 @@ fn main() {
         }
     });
 
-    let dealer_thread_handle = thread::spawn(move || {
-        let mut items = [socket.as_poll_item(zmq::POLLIN)];
+    pub struct Connector {
+        connector_socket: Socket,
+    }
 
-        loop {
-            let rc = zmq::poll(&mut items, -1).unwrap();
-            if rc == -1 {
-                break;
-            }
-            if items[0].is_readable() {
-                let msg = socket
-                    .recv_bytes(0)
-                    .expect("monitor manager failed receiving response");
-                println!("{:?}", msg);
+    impl Connector {
+        pub fn new(hub_context: Arc<HubContext>) -> Self {
+            let connector_socket = hub_context.zmq_ctx.socket(zmq::DEALER).unwrap();
+            connector_socket.connect(CONNECTOR_ENDPOINT)
+                .expect("failed connect to monitor connector endpoint");
 
-                let magic_num = &msg[..4];
-                if 3569595041_u32.to_be_bytes() == magic_num {
-                    println!("Global header will be skipped");
-                    continue;
+            Self { connector_socket }
+        }
+    }
+
+    impl PollerSpec for Connector {
+        fn poll(&self, handler: impl Fn(Vec<u8>)) {
+            let mut items = [self.connector_socket.as_poll_item(zmq::POLLIN)];
+
+            loop {
+                let rc = zmq::poll(&mut items, -1).unwrap();
+                if rc == -1 {
+                    break;
                 }
 
-                clients.read().unwrap().iter().for_each(|endpoint| {
-                    println!("Connections: {:?}", endpoint);
-                    let responder = endpoint.1;
-                    responder.send(Message::Text(format!("{:?}", &msg)));
-                });
+                if !items[0].is_readable() {
+                    return;
+                }
+
+                let msg = self.connector_socket
+                    .recv_bytes(0)
+                    .expect("monitor manager failed receiving response");
+                println!("received from connector {:?}", msg);
+
+                handler(msg);
             }
         }
+    }
+
+    let connector = Connector::new(hub_context.clone());
+    let connector = thread::spawn(move || {
+        connector.poll(|msg| {
+            let magic_num = &msg[..4];
+            if 3569595041_u32.to_be_bytes() == magic_num {
+                println!("Global header will be skipped");
+                return;
+            }
+
+            clients.read().unwrap().iter().for_each(|endpoint| {
+                println!("Connections: {:?}", endpoint);
+                let responder = endpoint.1;
+                responder.send(Message::Text(format!("{:?}", &msg)));
+            });
+        })
     });
 
     ws_thread_handle.join().unwrap();
-    dealer_thread_handle.join().unwrap();
+    monitor.join().unwrap();
+    connector.join().unwrap();
 }
