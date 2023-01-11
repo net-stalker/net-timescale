@@ -10,10 +10,12 @@ use zmq::Socket;
 use net_commons::config::{ConfigManager, ConfigSpec, FileLoader, FileLoaderSpec};
 
 use crate::hub_context::HubContext;
-use crate::monitor::{CONNECTOR_ENDPOINT, Manager, MonitorPoller, PollerSpec};
+use crate::pcap_processor::Connector;
+use crate::monitor::{CONNECTOR_MONITOR_ENDPOINT, Manager, MonitorPoller, PollerSpec};
 
 mod monitor;
 mod hub_context;
+mod pcap_processor;
 
 fn main() {
     //Global for the project
@@ -64,57 +66,19 @@ fn main() {
         }
     });
 
-    pub struct Connector {
-        connector_socket: Socket,
-    }
-
-    impl Connector {
-        pub fn new(hub_context: Arc<HubContext>) -> Self {
-            let connector_socket = hub_context.zmq_ctx.socket(zmq::DEALER).unwrap();
-            connector_socket.connect(CONNECTOR_ENDPOINT)
-                .expect("failed connect to monitor connector endpoint");
-
-            Self { connector_socket }
-        }
-    }
-
-    impl PollerSpec for Connector {
-        fn poll(&self, handler: impl Fn(Vec<u8>)) {
-            let mut items = [self.connector_socket.as_poll_item(zmq::POLLIN)];
-
-            loop {
-                let rc = zmq::poll(&mut items, -1).unwrap();
-                if rc == -1 {
-                    break;
-                }
-
-                if !items[0].is_readable() {
+    let connector = thread::spawn(move || {
+        Connector::new(hub_context.clone())
+            .poll(|msg| {
+                let magic_num = &msg[..4];
+                if 3569595041_u32.to_be_bytes() == magic_num {
+                    println!("Global header will be skipped");
                     return;
                 }
 
-                let msg = self.connector_socket
-                    .recv_bytes(0)
-                    .expect("monitor manager failed receiving response");
-                println!("received from connector {:?}", msg);
-
-                handler(msg);
-            }
-        }
-    }
-
-    let connector = Connector::new(hub_context.clone());
-    let connector = thread::spawn(move || {
-        connector.poll(|msg| {
-            let magic_num = &msg[..4];
-            if 3569595041_u32.to_be_bytes() == magic_num {
-                println!("Global header will be skipped");
-                return;
-            }
-
-            clients.read().unwrap().iter().for_each(|endpoint| {
-                println!("Connections: {:?}", endpoint);
-                let responder = endpoint.1;
-                responder.send(Message::Text(format!("{:?}", &msg)));
+                clients.read().unwrap().iter().for_each(|endpoint| {
+                    println!("Connections: {:?}", endpoint);
+                    let responder = endpoint.1;
+                    responder.send(Message::Text(format!("{:?}", &msg)));
             });
         })
     });

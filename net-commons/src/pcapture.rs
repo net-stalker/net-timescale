@@ -1,6 +1,6 @@
 use std::fmt;
 
-use pcap::{Capture, Device};
+use pcap::{Capture, Device, Packet, PacketCodec, PacketHeader};
 use serde::{Deserialize, Serialize};
 
 use crate::pcapture::config::Data;
@@ -169,6 +169,8 @@ impl GlobalHeader {
     }
 }
 
+
+// TODO use PacketCodec
 // Packet header
 // typedef struct pcaprec_hdr_s {
 //     guint32 ts_sec;         /* timestamp seconds */
@@ -223,10 +225,14 @@ impl<'a> PcapPacket<'a> {
 #[cfg(test)]
 mod tests {
     use std::{
-        fs::{File, OpenOptions},
+        fs::OpenOptions,
         io::Write,
         sync::mpsc,
     };
+    use std::fs::File;
+    use std::io;
+    use std::io::prelude::*;
+    use std::ptr::null;
 
     use super::*;
 
@@ -282,36 +288,59 @@ mod tests {
     #[test]
     #[ignore]
     fn test_expected_create_pcap_file() {
-        let (tx, rx) = mpsc::channel();
-
         let global_header = create_global_header();
         println!("Global Header {}", global_header);
-        // tx.send(global_header.as_bytes()).unwrap();
 
-        File::create("target/test-data.pcap").unwrap();
+        File::create("../target/test-data.pcap").unwrap();
         let mut f = OpenOptions::new()
             // .create_new(true)
             .write(true)
             .append(true)
-            .open("target/test-data.pcap")
+            .open("../target/test-data.pcap")
             .unwrap();
         f.write_all(&global_header.as_bytes()).unwrap();
 
+        let data = Data {
+            devices: ["en0".to_string()].to_vec(),
+            number_packages: 1,
+            buffer_size: 100,
+        };
+
         capture_packages(
-            Data::default(),
-            |_cnt, packet| tx.send(packet.as_bytes()).unwrap());
+            data,
+            |_cnt, packet| {
+                // tx.send(packet.as_bytes()).unwrap()
+                let received = packet.as_bytes();
+                println!("received data: length={}, {:?} ", received.len(), received);
+                let mut f = OpenOptions::new()
+                    // .create_new(true)
+                    .write(true)
+                    .append(true)
+                    .open("../target/test-data.pcap")
+                    .unwrap();
+                f.write_all(&received).unwrap();
+            });
+    }
 
-        // File::create("target/test-data.pcap").unwrap();
-        // let mut f = OpenOptions::new()
-        //     // .create_new(true)
-        //     .write(true)
-        //     .append(true)
-        //     .open("target/test-data.pcap")
-        //     .unwrap();
+    #[test]
+    fn test_expected_parse_ethernet_frame() {
+        let mut f = File::open("pcap/test-data.pcap").unwrap();
+        let mut buffer = Vec::new();
+        f.read_to_end(&mut buffer).unwrap();
 
-        for received in rx {
-            println!("received data: length={}, {:?} ", received.len(), received);
-            f.write_all(&received).unwrap();
-        }
+        println!("full packet {:?}", buffer);
+        println!("length {}", buffer.len());
+
+        //24
+        let global_header = &buffer[..24];
+        println!("global header {:?}", global_header);
+
+        //16
+        let packet_header = &buffer[24..40];
+        println!("packet header {:?}", packet_header);
+
+        //14
+        let ethernet_header = &buffer[40..54];
+        println!("ethernet header {:?}", ethernet_header);
     }
 }

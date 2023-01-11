@@ -4,7 +4,7 @@ use zmq::{Context, Socket};
 
 use crate::hub_context::HubContext;
 
-pub const CONNECTOR_ENDPOINT: &'static str = "inproc://monitor";
+pub const CONNECTOR_MONITOR_ENDPOINT: &'static str = "inproc://monitor";
 
 pub struct Manager {
     hub_context: Arc<HubContext>,
@@ -18,11 +18,11 @@ impl Manager {
             .expect("failed bind server");
 
         let connector_socket = hub_context.zmq_ctx.socket(zmq::DEALER).unwrap();
-        connector_socket.bind(CONNECTOR_ENDPOINT)
+        connector_socket.bind(CONNECTOR_MONITOR_ENDPOINT)
             .expect("failed bind monitor endpoint");
 
         Self {
-            hub_context: hub_context,
+            hub_context,
             monitor_poller: MonitorPoller { monitor_socket, connector_socket },
         }
     }
