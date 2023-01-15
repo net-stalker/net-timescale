@@ -3,5 +3,6 @@
 members = [
     "net-commons",
     "net-monitor",
-    "net-hub"
+    "net-hub",
+    "net-translator"
 ]
