@@ -65,7 +65,7 @@ impl PollerSpec for MonitorPoller {
 
 #[cfg(test)]
 mod tests {
-    use net_commons::config::{ConfigManager, ConfigSpec, FileLoader, FileLoaderSpec};
+    use net_commons::config::{ConfigManager, ConfigSpec, ConfigFile, FileReader};
 
     use super::*;
 

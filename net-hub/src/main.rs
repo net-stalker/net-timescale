@@ -7,7 +7,7 @@ use std::{
 use simple_websockets::{Event, Message, Responder};
 use zmq::Socket;
 
-use net_commons::config::{ConfigManager, ConfigSpec, FileLoader, FileLoaderSpec};
+use net_commons::config::{ConfigManager, ConfigSpec, ConfigFile, FileReader};
 
 use crate::hub_context::HubContext;
 use crate::pcap_processor::Connector;

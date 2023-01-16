@@ -1,10 +1,10 @@
 use rand::{Rng, thread_rng};
 
-use net_commons::config::{ConfigManager, ConfigSpec, FileLoader, FileLoaderSpec};
+use net_commons::config::{ConfigManager, ConfigSpec, ConfigFile, FileReader};
 use net_commons::pcapture::{capture_packages, create_global_header};
 
 fn main() {
-    let config = ConfigManager { application_name: "net-monitor", file_loader: Box::new(FileLoader) as Box<dyn FileLoaderSpec> }.load();
+    let config = ConfigManager { application_name: "net-monitor", file_loader: Box::new(ConfigFile) as Box<dyn FileReader> }.load();
     if !config.dealer.enable {
         println!("Dealer is disabled!");
         return;

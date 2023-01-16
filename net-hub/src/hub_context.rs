@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use zmq::Context;
 
-use net_commons::config::{Config, ConfigManager, ConfigSpec, FileLoader, FileLoaderSpec};
+use net_commons::config::{Config, ConfigManager, ConfigSpec, ConfigFile, FileReader};
 
 pub struct HubContext {
     pub config: Arc<Config>,
@@ -17,7 +17,7 @@ impl HubContext {
 
 impl Default for HubContext {
     fn default() -> Self {
-        let config = Arc::new(ConfigManager { application_name: "net-hub", file_loader: Box::new(FileLoader) as Box<dyn FileLoaderSpec> }.load());
+        let config = Arc::new(ConfigManager { application_name: "net-hub", file_loader: Box::new(ConfigFile) as Box<dyn FileReader> }.load());
 
         Self {
             config,
