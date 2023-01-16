@@ -1,7 +1,10 @@
 use std::fmt;
 
+use std::fs::File;
+use std::io::Read;
 use pcap::{Capture, Device, Packet, PacketCodec, PacketHeader};
 use serde::{Deserialize, Serialize};
+use crate::file::FileReader;
 
 use crate::pcapture::config::Data;
 
@@ -232,7 +235,6 @@ mod tests {
     use std::fs::File;
     use std::io;
     use std::io::prelude::*;
-    use std::ptr::null;
 
     use super::*;
 
@@ -320,27 +322,5 @@ mod tests {
                     .unwrap();
                 f.write_all(&received).unwrap();
             });
-    }
-
-    #[test]
-    fn test_expected_parse_ethernet_frame() {
-        let mut f = File::open("pcap/test-data.pcap").unwrap();
-        let mut buffer = Vec::new();
-        f.read_to_end(&mut buffer).unwrap();
-
-        println!("full packet {:?}", buffer);
-        println!("length {}", buffer.len());
-
-        //24
-        let global_header = &buffer[..24];
-        println!("global header {:?}", global_header);
-
-        //16
-        let packet_header = &buffer[24..40];
-        println!("packet header {:?}", packet_header);
-
-        //14
-        let ethernet_header = &buffer[40..54];
-        println!("ethernet header {:?}", ethernet_header);
     }
 }

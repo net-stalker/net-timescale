@@ -39,9 +39,9 @@ impl fmt::Display for Config {
     }
 }
 
-pub struct FileLoader;
+pub struct ConfigFile;
 
-impl FileLoader {
+impl ConfigFile {
     fn get_project_dirs(application_name: &str) -> Option<ProjectDirs> {
         let project_dirs = ProjectDirs::from(
             "io",
@@ -67,12 +67,12 @@ impl FileLoader {
 }
 
 #[cfg_attr(test, automock)]
-pub trait FileLoaderSpec {
-    fn get_config_file(&self, application_name: &str) -> PathBuf;
+pub trait FileReader {
+    fn read(&self, application_name: &str) -> PathBuf;
 }
 
-impl FileLoaderSpec for FileLoader {
-    fn get_config_file(&self, application_name: &str) -> PathBuf {
+impl FileReader for ConfigFile {
+    fn read(&self, application_name: &str) -> PathBuf {
         let config_dir = Self::get_config_dir(application_name);
         let config_file = config_dir.join("application.conf");
         dbg!(config_file.clone());
@@ -83,7 +83,7 @@ impl FileLoaderSpec for FileLoader {
 
 pub struct ConfigManager {
     pub application_name: &'static str,
-    pub file_loader: Box<dyn FileLoaderSpec>,
+    pub file_loader: Box<dyn FileReader>,
 }
 
 impl ConfigManager {
@@ -98,7 +98,7 @@ pub trait ConfigSpec {
 
 impl ConfigSpec for ConfigManager {
     fn load(&self) -> Config {
-        let config_file = self.file_loader.get_config_file(&self.application_name);
+        let config_file = self.file_loader.read(&self.application_name);
 
         let hocon_config: Result<HoconLoader, Error> =
             HoconLoader::new()
@@ -172,7 +172,7 @@ mod tests {
     fn expect_not_find_config_and_load_default() {
         let config = ConfigManager {
             application_name: "net-monitor",
-            file_loader: Box::new(FileLoader) as Box<dyn FileLoaderSpec>,
+            file_loader: Box::new(ConfigFile) as Box<dyn FileReader>,
         }
             .load();
 
@@ -185,13 +185,13 @@ mod tests {
 
     #[test]
     fn expect_find_config_and_load() {
-        let mut mock = MockFileLoaderSpec::new();
+        let mut mock = MockFileReader::new();
         mock.expect_get_config_file()
             .return_const(".config/application.conf");
 
         let config = ConfigManager {
             application_name: "net-monitor",
-            file_loader: Box::new(mock) as Box<dyn FileLoaderSpec>,
+            file_loader: Box::new(mock) as Box<dyn FileReader>,
         }
             .load();
 
