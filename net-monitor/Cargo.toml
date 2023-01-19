@@ -30,7 +30,7 @@ deb_depends = ["libpcap-dev", "libzmq3-dev"]
 # osx_frameworks = ["libpcap"]
 
 [dependencies]
-net-commons = { path = "../net-commons" }
+net-commons = { path = "../net-core" }
 
 rand = "0.8.5"
 zmq = "0.9.2"

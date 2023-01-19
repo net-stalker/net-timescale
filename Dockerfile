@@ -10,7 +10,7 @@ ARG PROJ_NAME
 
 WORKDIR /usr/src/net-monitor
 
-COPY ./net-commons net-commons
+COPY net-core net-core
 COPY ./${PROJ_NAME}/Cargo.toml ${PROJ_NAME}/Cargo.toml
 COPY ./${PROJ_NAME}/src ${PROJ_NAME}/src
 

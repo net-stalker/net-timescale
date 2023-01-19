@@ -1,7 +1,7 @@
 [workspace]
 
 members = [
-    "net-commons",
+    "net-core",
     "net-monitor",
     "net-hub",
     "net-translator"

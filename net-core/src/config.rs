@@ -68,11 +68,11 @@ impl ConfigFile {
 
 #[cfg_attr(test, automock)]
 pub trait FileReader {
-    fn read(&self, application_name: &str) -> PathBuf;
+    fn get_config_file(&self, application_name: &str) -> PathBuf;
 }
 
 impl FileReader for ConfigFile {
-    fn read(&self, application_name: &str) -> PathBuf {
+    fn get_config_file(&self, application_name: &str) -> PathBuf {
         let config_dir = Self::get_config_dir(application_name);
         let config_file = config_dir.join("application.conf");
         dbg!(config_file.clone());
@@ -98,7 +98,7 @@ pub trait ConfigSpec {
 
 impl ConfigSpec for ConfigManager {
     fn load(&self) -> Config {
-        let config_file = self.file_loader.read(&self.application_name);
+        let config_file = self.file_loader.get_config_file(&self.application_name);
 
         let hocon_config: Result<HoconLoader, Error> =
             HoconLoader::new()
