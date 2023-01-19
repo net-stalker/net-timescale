@@ -1,5 +1,5 @@
-use subprocess::{Exec, Redirection};
 use crate::translator::Decoder;
+use subprocess::{Exec, Redirection};
 
 pub struct BinaryDecoder;
 
@@ -29,22 +29,23 @@ impl Decoder for BinaryDecoder {
             .stdout(Redirection::Pipe)
             .capture()
             .unwrap()
-            .stdout_str()
+            .stdout_str();
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::capture::pcap_file::PCapFile;
-    use crate::file::FileReader;
     use super::*;
+    use crate::capture::pcap_file::PCapFile;
+    use crate::file::Reader;
 
     #[test]
-    fn subprocess() {
+    fn expected_decode_pcap() {
         let pcap_buffer = PCapFile::read("../net-core/captures/arp.pcap");
+        let json_buffer = PCapFile::read("../net-core/captures/arp.json");
 
         let json_result = BinaryDecoder::decode(pcap_buffer);
-        println!("{}", json_result);
-        // assert_eq!(out, "");
+
+        assert_eq!(json_result, std::str::from_utf8(&json_buffer).unwrap());
     }
 }

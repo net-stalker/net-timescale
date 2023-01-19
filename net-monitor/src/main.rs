@@ -1,7 +1,7 @@
 use rand::{Rng, thread_rng};
 
-use net_commons::config::{ConfigManager, ConfigSpec, ConfigFile, FileReader};
-use net_commons::pcapture::{capture_packages, create_global_header};
+use net_core::config::{ConfigManager, ConfigSpec, ConfigFile, FileReader};
+use net_core::capture::pcapture::{capture_packages, create_global_header};
 
 fn main() {
     let config = ConfigManager { application_name: "net-monitor", file_loader: Box::new(ConfigFile) as Box<dyn FileReader> }.load();

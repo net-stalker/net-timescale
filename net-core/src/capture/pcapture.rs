@@ -2,7 +2,7 @@ use std::fmt;
 
 use pcap::{Capture, Device, Packet, PacketCodec, PacketHeader};
 use serde::{Deserialize, Serialize};
-use crate::file::FileReader;
+use crate::file::Reader;
 
 use crate::capture::pcapture::config::Data;
 

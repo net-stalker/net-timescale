@@ -12,7 +12,7 @@ readme = "README.md"
 #license-file = "LICENSE.txt"
 
 [dependencies]
-net-commons = { path = "../net-core" }
+net-core = { path = "../net-core" }
 
 #zmq = "0.9.2"
 #simple-websockets = "0.1.4"
