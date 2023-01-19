@@ -1,7 +1,5 @@
 use std::fmt;
 
-use std::fs::File;
-use std::io::Read;
 use pcap::{Capture, Device, Packet, PacketCodec, PacketHeader};
 use serde::{Deserialize, Serialize};
 use crate::file::FileReader;
