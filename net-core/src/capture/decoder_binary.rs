@@ -1,11 +1,22 @@
-// https://tshark.dev/capture/tshark/
-
 use subprocess::{Exec, Redirection};
 use crate::translator::Decoder;
 
 pub struct BinaryDecoder;
 
 impl Decoder for BinaryDecoder {
+    /// https://tshark.dev/capture/tshark/
+    ///
+    /// # Arguments
+    ///
+    /// * `buf`:
+    ///
+    /// returns: String
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///
+    /// ```
     fn decode(buf: Vec<u8>) -> String {
         return Exec::cmd("tshark")
             .arg("-V") //add output of packet tree        (Packet Details)
@@ -26,15 +37,14 @@ impl Decoder for BinaryDecoder {
 mod tests {
     use crate::capture::pcap_file::PCapFile;
     use crate::file::FileReader;
-
     use super::*;
 
     #[test]
     fn subprocess() {
         let pcap_buffer = PCapFile::read("../net-core/captures/arp.pcap");
 
-        let out = BinaryDecoder::decode(pcap_buffer);
-        println!("{}", out);
+        let json_result = BinaryDecoder::decode(pcap_buffer);
+        println!("{}", json_result);
         // assert_eq!(out, "");
     }
 }

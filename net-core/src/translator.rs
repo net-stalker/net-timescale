@@ -1,3 +1,3 @@
 pub trait Decoder {
-    fn decode(path: Vec<u8>) -> String;
+    fn decode(data: Vec<u8>) -> String;
 }
