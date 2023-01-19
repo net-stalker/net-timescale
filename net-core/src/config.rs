@@ -8,7 +8,7 @@ use hocon::{Error, HoconLoader};
 use mockall::automock;
 use serde::{Deserialize, Serialize};
 
-use crate::pcapture::config::Data;
+use crate::capture::pcapture::config::Data;
 
 #[derive(Derivative)]
 #[derive(Serialize, Deserialize, Debug)]

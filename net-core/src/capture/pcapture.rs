@@ -6,7 +6,7 @@ use pcap::{Capture, Device, Packet, PacketCodec, PacketHeader};
 use serde::{Deserialize, Serialize};
 use crate::file::FileReader;
 
-use crate::pcapture::config::Data;
+use crate::capture::pcapture::config::Data;
 
 pub mod config {
     use derivative::Derivative;
