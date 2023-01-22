@@ -8,18 +8,12 @@ use simple_websockets::{Event, Message, Responder};
 use zmq::Socket;
 
 use net_core::config::{ConfigManager, ConfigSpec, ConfigFile, FileReader};
-
-use crate::hub_context::HubContext;
-use crate::pcap_processor::Connector;
-use crate::monitor::{CONNECTOR_MONITOR_ENDPOINT, Manager, MonitorPoller, PollerSpec};
-
-mod monitor;
-mod hub_context;
-mod pcap_processor;
+use net_core::transport::connector::{ConnectorBuilder, Poller};
+use net_core::transport::context::ContextBuilder;
 
 fn main() {
     //Global for the project
-    let hub_context = Arc::new(HubContext::default());
+    let config = Arc::new(ConfigManager { application_name: "net-hub", file_loader: Box::new(ConfigFile) as Box<dyn FileReader> }.load());
 
     // //Global for the project
     // let config = hub_context.clone().config.clone();
@@ -27,10 +21,6 @@ fn main() {
     //     println!("Dealer is disabled!");
     //     return;
     // }
-
-    //Responsible for monitor-manager
-    let manager = Manager::new(hub_context.clone());
-    let monitor = thread::spawn(move || manager.monitor_poller.poll(|msg| {}));
 
     let event_hub = simple_websockets::launch(9091)
         .expect("failed to listen on port 9001");
@@ -66,24 +56,31 @@ fn main() {
         }
     });
 
+    let context = ContextBuilder::new().build(); //TODO Use From trait instead of new
     let connector = thread::spawn(move || {
-        Connector::new(hub_context.clone())
-            .poll(|msg| {
-                let magic_num = &msg[..4];
+        ConnectorBuilder::new()
+            .with_context(context)
+            .with_xtype(zmq::DEALER)
+            .with_endpoint(config.dealer.endpoint.clone())
+            .with_handler(|data| {
+                println!("received from monitor {:?}", data);
+                let magic_num = &data[..4];
                 if 3569595041_u32.to_be_bytes() == magic_num {
                     println!("Global header will be skipped");
                     return;
                 }
 
-                clients.read().unwrap().iter().for_each(|endpoint| {
-                    println!("Connections: {:?}", endpoint);
-                    let responder = endpoint.1;
-                    responder.send(Message::Text(format!("{:?}", &msg)));
-            });
-        })
+                // clients.read().unwrap().iter().for_each(|endpoint| {
+                    //     println!("Connections: {:?}", endpoint);
+                    //     let responder = endpoint.1;
+                    //     responder.send(Message::Text(format!("{:?}", &data)));
+                // });
+            })
+            .build()
+            .bind()
+            .poll();
     });
 
     ws_thread_handle.join().unwrap();
-    monitor.join().unwrap();
     connector.join().unwrap();
 }
