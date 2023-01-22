@@ -105,6 +105,7 @@ impl ConnectorBuilder {
 
     pub fn build(self) -> Connector {
         Connector {
+            // Potentially clone method is inefficient but it is called only once when Connector is created.
             endpoint: self.endpoint.clone(),
             handler: self.handler,
             socket: self.create_socket(),
@@ -129,7 +130,7 @@ mod tests {
 
     #[test]
     fn test() {
-        let context = ContextBuilder::new().build();
+        let context = ContextBuilder::new().build(); //TODO Use From trait instead of new
         let connector_context = context.clone();
 
         let server_handle = thread::spawn(move || {
