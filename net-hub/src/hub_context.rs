@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use zmq::Context;
 
-use net_commons::config::{Config, ConfigManager, ConfigSpec, ConfigFile, FileReader};
+use net_core::config::{Config, ConfigManager, ConfigSpec, ConfigFile, FileReader};
 
 pub struct HubContext {
     pub config: Arc<Config>,
