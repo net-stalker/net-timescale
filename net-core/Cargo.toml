@@ -21,6 +21,8 @@ derivative = "2.2.0"
 directories = "4.0.1"
 hocon = "0.9.0"
 subprocess = "0.2.9"
+zmq = "0.10.0"
+rand = "0.8.5" # Used for zmq identity
 
 [dev-dependencies]
 mockall = "0.11.2"
