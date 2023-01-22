@@ -109,22 +109,22 @@ impl ConnectorBuilder {
         }
     }
 
-    pub fn handler(mut self, handler: fn(Vec<u8>)) -> ConnectorBuilder {
+    pub fn with_handler(mut self, handler: fn(Vec<u8>)) -> ConnectorBuilder {
         self.handler = handler;
         self
     }
 
-    pub fn endpoint(mut self, endpoint: String) -> ConnectorBuilder {
+    pub fn with_endpoint(mut self, endpoint: String) -> ConnectorBuilder {
         self.endpoint = endpoint;
         self
     }
 
-    pub fn xtype(mut self, xtype: SocketType) -> ConnectorBuilder {
+    pub fn with_xtype(mut self, xtype: SocketType) -> ConnectorBuilder {
         self.xtype = xtype;
         self
     }
 
-    pub fn context(mut self, context: Arc<Context>) -> ConnectorBuilder {
+    pub fn with_context(mut self, context: Arc<Context>) -> ConnectorBuilder {
         self.context = context;
         self
     }
@@ -142,10 +142,10 @@ mod tests {
 
         let server_handle = thread::spawn(move || {
             ConnectorBuilder::new()
-                .context(context)
-                .xtype(zmq::DEALER)
-                .endpoint("inproc://test".to_string())
-                .handler(|data| {
+                .with_context(context)
+                .with_xtype(zmq::DEALER)
+                .with_endpoint("inproc://test".to_string())
+                .with_handler(|data| {
                     let result = String::from_utf8(data);
                     println!("received data {:?}", result);
                 })
@@ -155,9 +155,9 @@ mod tests {
         });
 
         let _client = ConnectorBuilder::new()
-            .context(connector_context)
-            .xtype(zmq::DEALER)
-            .endpoint("inproc://test".to_string())
+            .with_context(connector_context)
+            .with_xtype(zmq::DEALER)
+            .with_endpoint("inproc://test".to_string())
             .build()
             .connect()
             .send(b"test".to_vec());

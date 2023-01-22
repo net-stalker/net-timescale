@@ -15,10 +15,10 @@ fn main() {
 
     let context = ContextBuilder::new().build();
     let client = ConnectorBuilder::new()
-        .context(context)
-        .xtype(zmq::DEALER)
-        .endpoint(config.dealer.endpoint)
-        .handler(|data| {})
+        .with_context(context)
+        .with_xtype(zmq::DEALER)
+        .with_endpoint(config.dealer.endpoint)
+        .with_handler(|data| {})
         .build()
         .connect();
 
