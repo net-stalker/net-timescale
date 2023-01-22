@@ -5,6 +5,8 @@ use zmq::{Socket, SocketType};
 
 use crate::transport::context::{Context, ContextBuilder};
 
+//TODO Connector Builder should be redesigned as Fluent API with constraints.
+
 pub trait Sender {
     fn send(&self, data: Vec<u8>);
 }
@@ -28,7 +30,7 @@ impl Connector {
         self
     }
 
-    fn connect(self) -> Connector {
+    pub fn connect(self) -> Connector {
         self.socket
             .connect(&self.endpoint)
             .expect(format!("failed connecting to {}", &self.endpoint).as_str());
@@ -84,7 +86,7 @@ impl ConnectorBuilder {
             context,
             xtype: zmq::DEALER,
             identity: format!("{:04X}-{:04X}", rng.gen::<u16>(), rng.gen::<u16>()),
-            endpoint: "inproc://test".to_string(),
+            endpoint: "inproc://dummy".to_string(),
             handler: |_data| {},
         }
     }
@@ -98,11 +100,6 @@ impl ConnectorBuilder {
         socket
     }
 
-    pub fn handler(mut self, handler: fn(Vec<u8>)) -> ConnectorBuilder {
-        self.handler = handler;
-        self
-    }
-
     pub fn build(self) -> Connector {
         Connector {
             // Potentially clone method is inefficient but it is called only once when Connector is created.
@@ -110,6 +107,16 @@ impl ConnectorBuilder {
             handler: self.handler,
             socket: self.create_socket(),
         }
+    }
+
+    pub fn handler(mut self, handler: fn(Vec<u8>)) -> ConnectorBuilder {
+        self.handler = handler;
+        self
+    }
+
+    pub fn endpoint(mut self, endpoint: String) -> ConnectorBuilder {
+        self.endpoint = endpoint;
+        self
     }
 
     pub fn xtype(mut self, xtype: SocketType) -> ConnectorBuilder {
@@ -137,6 +144,7 @@ mod tests {
             ConnectorBuilder::new()
                 .context(context)
                 .xtype(zmq::DEALER)
+                .endpoint("inproc://test".to_string())
                 .handler(|data| {
                     let result = String::from_utf8(data);
                     println!("received data {:?}", result);
@@ -149,6 +157,7 @@ mod tests {
         let _client = ConnectorBuilder::new()
             .context(connector_context)
             .xtype(zmq::DEALER)
+            .endpoint("inproc://test".to_string())
             .build()
             .connect()
             .send(b"test".to_vec());
