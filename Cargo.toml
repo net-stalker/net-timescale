@@ -2,7 +2,7 @@
 
 members = [
     "net-core",
-    "net-monitor",
+    "net-agent",
     "net-hub",
     "net-translator"
 ]

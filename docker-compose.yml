@@ -4,11 +4,11 @@ version: '3.8'
 #the special DNS name host.docker.internal which resolves to the internal IP address used by the host
 services:
   net-monitor:
-    hostname: net-monitor
+    hostname: net-agent
     build:
       context: .
       args:
-        PROJ_NAME: net-monitor
+        PROJ_NAME: net-agent
     environment:
       HOST: net-hub
     networks:

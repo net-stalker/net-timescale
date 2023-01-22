@@ -171,7 +171,7 @@ mod tests {
     #[test]
     fn expect_not_find_config_and_load_default() {
         let config = ConfigManager {
-            application_name: "net-monitor",
+            application_name: "net-agent",
             file_loader: Box::new(ConfigFile) as Box<dyn FileReader>,
         }
             .load();
@@ -190,7 +190,7 @@ mod tests {
             .return_const(".config/application.conf");
 
         let config = ConfigManager {
-            application_name: "net-monitor",
+            application_name: "net-agent",
             file_loader: Box::new(mock) as Box<dyn FileReader>,
         }
             .load();

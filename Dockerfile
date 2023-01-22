@@ -1,5 +1,5 @@
 # Dockerfile is relevant for monorepo
-# Dockerfile is generic for any projects like net-monitor and net-hub.
+# Dockerfile is generic for any projects like net-agent and net-hub.
 # To build dicker image for spesific project you need to set right name of the project.
 FROM rust as build
 

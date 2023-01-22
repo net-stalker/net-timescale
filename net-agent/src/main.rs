@@ -7,7 +7,7 @@ use net_core::transport::connector::{ConnectorBuilder, Sender, Poller};
 use net_core::transport::context::{ContextBuilder};
 
 fn main() {
-    let config = ConfigManager { application_name: "net-monitor", file_loader: Box::new(ConfigFile) as Box<dyn FileReader> }.load();
+    let config = ConfigManager { application_name: "net-agent", file_loader: Box::new(ConfigFile) as Box<dyn FileReader> }.load();
     if !config.dealer.enable {
         println!("Dealer is disabled!");
         return;
