@@ -1,7 +1,10 @@
+use std::thread;
 use rand::{Rng, thread_rng};
 
 use net_core::config::{ConfigManager, ConfigSpec, ConfigFile, FileReader};
 use net_core::capture::pcapture::{capture_packages, create_global_header};
+use net_core::transport::connector::{ConnectorBuilder, Sender, Poller};
+use net_core::transport::context::{ContextBuilder};
 
 fn main() {
     let config = ConfigManager { application_name: "net-monitor", file_loader: Box::new(ConfigFile) as Box<dyn FileReader> }.load();
@@ -10,48 +13,24 @@ fn main() {
         return;
     }
 
-    let ctx = zmq::Context::new();
-
-    let socket = ctx.socket(zmq::DEALER).unwrap();
-    let mut rng = thread_rng();
-    let identity = format!("{:04X}-{:04X}", rng.gen::<u16>(), rng.gen::<u16>());
-    socket
-        .set_identity(identity.as_bytes())
-        .expect("failed setting client id");
-
-    socket
-        .connect(&config.dealer.endpoint)
-        .expect("failed connecting client");
+    let context = ContextBuilder::new().build();
+    let client = ConnectorBuilder::new()
+        .context(context)
+        .xtype(zmq::DEALER)
+        .endpoint(config.dealer.endpoint)
+        .handler(|data| {})
+        .build()
+        .connect();
 
     let global_header = create_global_header();
     println!("Global Header {}", global_header);
-    socket
-        .send(global_header.as_bytes(), 0)
-        .expect("client failed sending request");
+    client.send(global_header.as_bytes());
 
-    capture_packages(
-        config.data,
-        |_cnt, packet| {
-            socket
-                .send(packet.as_bytes(), 0)
-                .expect("client failed sending request");
-        });
+    capture_packages(config.data, |_cnt, packet| client.send(packet.as_bytes()));
 
-    loop {
-        let mut items = [socket.as_poll_item(zmq::POLLIN)];
-
-        let rc = zmq::poll(&mut items, -1).unwrap();
-        if rc == -1 {
-            break;
-        }
-
-        if items[0].is_readable() {
-            let msg = socket
-                .recv_string(0)
-                .expect("client failed receiving response");
-            println!("{:?}", msg);
-        }
-    }
+    thread::spawn(move || client.poll())
+        .join()
+        .unwrap();
 }
 
 
