@@ -131,7 +131,11 @@ impl ConnectorBuilder {
 }
 
 mod tests {
+    use std::io::{Read, Write};
     use std::thread;
+    use nanomsg::Protocol;
+    use nng::options::{Options, Raw, RecvFd};
+    use polling::Event;
 
     use super::*;
 
@@ -167,5 +171,70 @@ mod tests {
         // f: impl Fn(i32, PcapPacket)
 
         // server_handle.join().unwrap();
+    }
+
+    #[test]
+    fn play_with_nng() {
+        use nng::*;
+
+        const ADDRESS: &'static str = "ws://127.0.0.1:5555";
+
+        fn request() -> Result<()> {
+            // Set up the client and connect to the specified address
+            let client = Socket::new(Protocol::Req0).unwrap();
+            client.dial(ADDRESS).unwrap();
+
+            // Send the request from the client to the server. In general, it will be
+            // better to directly use a `Message` to enable zero-copy, but that doesn't
+            // matter here.
+            client.send("Ferris1".as_bytes()).unwrap();
+            client.send("Ferris2".as_bytes()).unwrap();
+
+            // Wait for the response from the server.
+            let msg = client.recv()?;
+            assert_eq!(&msg[..], b"Hello, Ferris");
+            Ok(())
+        }
+
+        // Set up the server and listen for connections on the specified address.
+        let socket = Socket::new(Protocol::Rep0).unwrap();
+        socket.listen(ADDRESS).unwrap();
+
+        let handle_2 = thread::spawn(move || {
+            let raw = socket.get_opt::<RecvFd>().unwrap();
+
+            let poller = polling::Poller::new().unwrap();
+            let key = 8;
+            poller.add(&raw, Event::readable(key)).unwrap();
+            let mut events = Vec::new();
+
+            loop {
+                events.clear();
+                poller.wait(&mut events, None).unwrap();
+
+                for ev in &events {
+                    if ev.key == key {
+                        // Perform a non-blocking accept operation.
+                        // socket.accept()?;
+                        // Set interest in the next readability event.
+
+                        // Receive the message from the client.
+                        let mut msg = socket.recv().unwrap();
+                        println!("We got a message: {:?}", msg);
+                        // msg.clear();
+                        // Reuse the message to be more efficient.
+                        msg.push_front(b"Hello, ");
+
+                        socket.send(msg).unwrap();
+
+                        poller.modify(&raw, Event::readable(key)).unwrap();
+                    }
+                }
+            }
+        });
+
+        request();
+
+        handle_2.join().unwrap();
     }
 }
