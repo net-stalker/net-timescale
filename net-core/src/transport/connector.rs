@@ -133,8 +133,6 @@ impl ConnectorBuilder {
 mod tests {
     use std::io::{Read, Write};
     use std::thread;
-    use nanomsg::Protocol;
-    use nng::options::{Options, Raw, RecvFd};
     use polling::Event;
 
     use super::*;
@@ -176,13 +174,14 @@ mod tests {
     #[test]
     fn play_with_nng() {
         use nng::*;
+        use nng::options::{Options, Raw, RecvFd};
 
         const ADDRESS: &'static str = "ws://127.0.0.1:5555";
 
-        fn request() -> Result<()> {
+        let handle = thread::spawn(move || {
             // Set up the client and connect to the specified address
             let client = Socket::new(Protocol::Req0).unwrap();
-            client.dial(ADDRESS).unwrap();
+            client.dial_async(ADDRESS).unwrap();
 
             // Send the request from the client to the server. In general, it will be
             // better to directly use a `Message` to enable zero-copy, but that doesn't
@@ -191,16 +190,14 @@ mod tests {
             client.send("Ferris2".as_bytes()).unwrap();
 
             // Wait for the response from the server.
-            let msg = client.recv()?;
+            let msg = client.recv().unwrap();
             assert_eq!(&msg[..], b"Hello, Ferris");
-            Ok(())
-        }
-
-        // Set up the server and listen for connections on the specified address.
-        let socket = Socket::new(Protocol::Rep0).unwrap();
-        socket.listen(ADDRESS).unwrap();
+        });
 
         let handle_2 = thread::spawn(move || {
+            // Set up the server and listen for connections on the specified address.
+            let socket = Socket::new(Protocol::Rep0).unwrap();
+            socket.listen(ADDRESS).unwrap();
             let raw = socket.get_opt::<RecvFd>().unwrap();
 
             let poller = polling::Poller::new().unwrap();
@@ -233,8 +230,7 @@ mod tests {
             }
         });
 
-        request();
-
+        handle.join().unwrap();
         handle_2.join().unwrap();
     }
 }
