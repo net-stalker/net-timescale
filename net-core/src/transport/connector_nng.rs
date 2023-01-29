@@ -1,73 +1,74 @@
+use std::num::TryFromIntError;
+use std::os::unix::io::RawFd;
 use std::sync::Arc;
-
+use nng::{Protocol, Socket};
+use nng::options::{Options, RecvFd};
 use rand::{Rng, thread_rng};
-use zmq::{POLLIN, PollItem, Socket, SocketType};
+use zmq::SocketType;
+use crate::transport;
 
 use crate::transport::context::{Context, ContextBuilder};
 
+const ADDRESS: &'static str = "ws://127.0.0.1:5555";
 //TODO Connector Builder should be redesigned as Fluent API with constraints.
 
 pub trait Sender {
     fn send(&self, data: Vec<u8>);
 }
 
-pub struct Connector {
+pub struct ConnectorNng {
     endpoint: String,
     handler: fn(Vec<u8>),
     socket: Socket,
 }
 
-impl Connector {
-    pub fn bind(self) -> Connector {
-        self.socket
-            .bind(&self.endpoint)
-            .expect(format!("failed binding on {}", &self.endpoint).as_str());
-
-        self
+impl transport::polling::Socket for ConnectorNng
+{
+    fn fd(&self) -> RawFd {
+        self.socket.get_opt::<RecvFd>().unwrap()
     }
 
-    pub fn connect(self) -> Connector {
-        self.socket
-            .connect(&self.endpoint)
-            .expect(format!("failed connecting to {}", &self.endpoint).as_str());
+    fn fd_as_usize(&self) -> Result<usize, TryFromIntError> {
+        usize::try_from(self.fd())
+    }
 
-        self
+    fn recv(&self) -> Vec<u8> {
+        self.socket.recv()
+            .unwrap()
+            .as_slice()
+            .to_vec() //note: every time data is coped from stack to the heap!
+    }
+
+    fn handle(&self, data: Vec<u8>) {
+        (self.handler)(data);
     }
 }
 
-impl Sender for Connector {
+impl ConnectorNng {
+    pub fn bind(self) -> ConnectorNng {
+        self.socket.listen(ADDRESS).unwrap();
+        self
+    }
+
+    // pub fn connect(self) -> Connector {
+    //     self.socket
+    //         .connect(&self.endpoint)
+    //         .expect(format!("failed connecting to {}", &self.endpoint).as_str());
+    //
+    //     self
+    // }
+}
+
+impl Sender for ConnectorNng {
     fn send(&self, data: Vec<u8>) {
-        self.socket
-            .send(data, 0)
-            .expect("client failed sending data");
+        // self.socket
+        //     .send(data, 0)
+        //     .expect("client failed sending data");
     }
 }
-
-// impl Poller for Connector {
-//     fn poll(self) {
-//         let mut items = [self.socket.as_poll_item(zmq::POLLIN)];
-//
-//         loop {
-//             let rc = zmq::poll(&mut items, -1).unwrap();
-//             if rc == -1 {
-//                 break;
-//             }
-//
-//             if !items[0].is_readable() {
-//                 break;
-//             }
-//
-//             let data = self.socket
-//                 .recv_bytes(0)
-//                 .unwrap();
-//             (self.handler)(data);
-//         }
-//     }
-// }
 
 pub struct ConnectorBuilder {
     context: Arc<Context>,
-    identity: String,
     xtype: SocketType,
     endpoint: String,
     handler: fn(Vec<u8>),
@@ -81,23 +82,17 @@ impl ConnectorBuilder {
         ConnectorBuilder {
             context,
             xtype: zmq::DEALER,
-            identity: format!("{:04X}-{:04X}", rng.gen::<u16>(), rng.gen::<u16>()),
             endpoint: "inproc://dummy".to_string(),
             handler: |_data| {},
         }
     }
 
     fn create_socket(self) -> Socket {
-        let socket = self.context.xctx().socket(self.xtype).unwrap();
-        socket
-            .set_identity(self.identity.as_bytes())
-            .expect("failed setting client id");
-
-        socket
+        Socket::new(Protocol::Rep0).unwrap()
     }
 
-    pub fn build(self) -> Connector {
-        Connector {
+    pub fn build(self) -> ConnectorNng {
+        ConnectorNng {
             // Potentially clone method is inefficient but it is called only once when Connector is created.
             endpoint: self.endpoint.clone(),
             handler: self.handler,
@@ -105,22 +100,22 @@ impl ConnectorBuilder {
         }
     }
 
-    pub fn with_handler(mut self, handler: fn(Vec<u8>)) -> ConnectorBuilder {
+    pub fn with_handler(mut self, handler: fn(Vec<u8>)) -> Self {
         self.handler = handler;
         self
     }
 
-    pub fn with_endpoint(mut self, endpoint: String) -> ConnectorBuilder {
+    pub fn with_endpoint(mut self, endpoint: String) -> Self {
         self.endpoint = endpoint;
         self
     }
 
-    pub fn with_xtype(mut self, xtype: SocketType) -> ConnectorBuilder {
+    pub fn with_xtype(mut self, xtype: SocketType) -> Self {
         self.xtype = xtype;
         self
     }
 
-    pub fn with_context(mut self, context: Arc<Context>) -> ConnectorBuilder {
+    pub fn with_context(mut self, context: Arc<Context>) -> Self {
         self.context = context;
         self
     }
@@ -157,13 +152,13 @@ mod tests {
             // poller.poll();
         });
 
-        let _client = ConnectorBuilder::new()
-            .with_context(connector_context)
-            .with_xtype(zmq::DEALER)
-            .with_endpoint("inproc://test".to_string())
-            .build()
-            .connect()
-            .send(b"test".to_vec());
+        // let _client = ConnectorBuilder::new()
+        //     .with_context(connector_context)
+        //     .with_xtype(zmq::DEALER)
+        //     .with_endpoint("inproc://test".to_string())
+        //     .build()
+        //     .connect()
+        //     .send(b"test".to_vec());
 
         // assert_eq!(json_result, std::str::from_utf8(&json_buffer).unwrap());
 
