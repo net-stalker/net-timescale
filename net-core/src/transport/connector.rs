@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use rand::{Rng, thread_rng};
-use zmq::{Socket, SocketType};
+use zmq::{POLLIN, PollItem, Socket, SocketType};
 
 use crate::transport::context::{Context, ContextBuilder};
 
@@ -9,10 +9,6 @@ use crate::transport::context::{Context, ContextBuilder};
 
 pub trait Sender {
     fn send(&self, data: Vec<u8>);
-}
-
-pub trait Poller {
-    fn poll(self);
 }
 
 pub struct Connector {
@@ -47,27 +43,27 @@ impl Sender for Connector {
     }
 }
 
-impl Poller for Connector {
-    fn poll(self) {
-        let mut items = [self.socket.as_poll_item(zmq::POLLIN)];
-
-        loop {
-            let rc = zmq::poll(&mut items, -1).unwrap();
-            if rc == -1 {
-                break;
-            }
-
-            if !items[0].is_readable() {
-                break;
-            }
-
-            let data = self.socket
-                .recv_bytes(0)
-                .unwrap();
-            (self.handler)(data);
-        }
-    }
-}
+// impl Poller for Connector {
+//     fn poll(self) {
+//         let mut items = [self.socket.as_poll_item(zmq::POLLIN)];
+//
+//         loop {
+//             let rc = zmq::poll(&mut items, -1).unwrap();
+//             if rc == -1 {
+//                 break;
+//             }
+//
+//             if !items[0].is_readable() {
+//                 break;
+//             }
+//
+//             let data = self.socket
+//                 .recv_bytes(0)
+//                 .unwrap();
+//             (self.handler)(data);
+//         }
+//     }
+// }
 
 pub struct ConnectorBuilder {
     context: Arc<Context>,
@@ -131,8 +127,10 @@ impl ConnectorBuilder {
 }
 
 mod tests {
+    use std::net::TcpListener;
     use std::io::{Read, Write};
     use std::thread;
+    use zmq::{DEALER, ROUTER};
     use polling::Event;
 
     use super::*;
@@ -142,18 +140,21 @@ mod tests {
         let context = ContextBuilder::new().build(); //TODO Use From trait instead of new
         let connector_context = context.clone();
 
+        let dealer_server = ConnectorBuilder::new()
+            .with_context(context)
+            .with_xtype(zmq::DEALER)
+            .with_endpoint("inproc://test".to_string())
+            .with_handler(|data| {
+                let result = String::from_utf8(data);
+                println!("received data {:?}", result);
+            })
+            .build()
+            .bind();
+
         let server_handle = thread::spawn(move || {
-            ConnectorBuilder::new()
-                .with_context(context)
-                .with_xtype(zmq::DEALER)
-                .with_endpoint("inproc://test".to_string())
-                .with_handler(|data| {
-                    let result = String::from_utf8(data);
-                    println!("received data {:?}", result);
-                })
-                .build()
-                .bind()
-                .poll();
+            // let poller = polling::Poller::new().unwrap();
+            // poller.add(&socket, Event::readable(key));
+            // poller.poll();
         });
 
         let _client = ConnectorBuilder::new()
@@ -171,66 +172,34 @@ mod tests {
         // server_handle.join().unwrap();
     }
 
+    trait Parser {
+        fn parse(&self);
+    }
+
+    struct PlainParser;
+
+    impl Parser for PlainParser {
+        fn parse(&self) {
+            println!("Hello!")
+        }
+    }
+
+    struct Printer {
+        parsers: Vec<Box<dyn Parser>>,
+    }
+
+    impl Printer {
+        pub fn print(&self) {
+            self.parsers.iter()
+                .for_each(|parser| parser.parse())
+        }
+    }
+
     #[test]
-    fn play_with_nng() {
-        use nng::*;
-        use nng::options::{Options, Raw, RecvFd};
+    fn test_handlers() {
+        let plain_parser = PlainParser;
 
-        const ADDRESS: &'static str = "ws://127.0.0.1:5555";
-
-        let handle = thread::spawn(move || {
-            // Set up the client and connect to the specified address
-            let client = Socket::new(Protocol::Req0).unwrap();
-            client.dial_async(ADDRESS).unwrap();
-
-            // Send the request from the client to the server. In general, it will be
-            // better to directly use a `Message` to enable zero-copy, but that doesn't
-            // matter here.
-            client.send("Ferris1".as_bytes()).unwrap();
-            client.send("Ferris2".as_bytes()).unwrap();
-
-            // Wait for the response from the server.
-            let msg = client.recv().unwrap();
-            assert_eq!(&msg[..], b"Hello, Ferris");
-        });
-
-        let handle_2 = thread::spawn(move || {
-            // Set up the server and listen for connections on the specified address.
-            let socket = Socket::new(Protocol::Rep0).unwrap();
-            socket.listen(ADDRESS).unwrap();
-            let raw = socket.get_opt::<RecvFd>().unwrap();
-
-            let poller = polling::Poller::new().unwrap();
-            let key = 8;
-            poller.add(&raw, Event::readable(key)).unwrap();
-            let mut events = Vec::new();
-
-            loop {
-                events.clear();
-                poller.wait(&mut events, None).unwrap();
-
-                for ev in &events {
-                    if ev.key == key {
-                        // Perform a non-blocking accept operation.
-                        // socket.accept()?;
-                        // Set interest in the next readability event.
-
-                        // Receive the message from the client.
-                        let mut msg = socket.recv().unwrap();
-                        println!("We got a message: {:?}", msg);
-                        // msg.clear();
-                        // Reuse the message to be more efficient.
-                        msg.push_front(b"Hello, ");
-
-                        socket.send(msg).unwrap();
-
-                        poller.modify(&raw, Event::readable(key)).unwrap();
-                    }
-                }
-            }
-        });
-
-        handle.join().unwrap();
-        handle_2.join().unwrap();
+        let printer = Printer { parsers: vec![Box::new(plain_parser)] };
+        printer.print();
     }
 }
