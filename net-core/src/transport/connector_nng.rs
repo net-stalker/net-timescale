@@ -1,6 +1,5 @@
 use std::num::TryFromIntError;
 use std::os::unix::io::RawFd;
-use std::sync::Arc;
 use nng::{Protocol, Socket};
 use nng::options::{Options, RecvFd};
 use rand::{Rng, thread_rng};
@@ -15,7 +14,7 @@ use crate::transport::sockets::{Handler, Receiver, Sender};
 
 pub struct ConnectorNng<HANDLER> {
     endpoint: String,
-    handler: Option<Arc<HANDLER>>,
+    handler: Option<Box<HANDLER>>,
     socket: Socket,
 }
 
@@ -76,12 +75,12 @@ impl<H: Handler> Sender for ConnectorNng<H> {
 
 pub struct ConnectorNngBuilder<HANDLER: Handler> {
     endpoint: String,
-    handler: Option<Arc<HANDLER>>,
+    handler: Option<Box<HANDLER>>,
 }
 
 impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
     pub fn with_handler(mut self, handler: HANDLER) -> Self {
-        self.handler = Some(Arc::new(handler));
+        self.handler = Some(Box::new(handler));
         self
     }
 
@@ -95,7 +94,7 @@ impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
     //     self
     // }
 
-    // pub fn with_context(mut self, context: Arc<Context>) -> Self {
+    // pub fn with_context(mut self, context: Box<Context>) -> Self {
     //     self.context = context;
     //     self
     // }
