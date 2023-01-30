@@ -52,19 +52,34 @@ impl<HANDLER: Handler> sockets::Socket for ConnectorNng<HANDLER>
 }
 
 impl<HANDLER: Handler> ConnectorNng<HANDLER> {
-    pub fn new() -> Self {
-        ConnectorNng {
-            endpoint: "".to_string(),
-            handler: None,
-            socket: Socket::new(Protocol::Rep0).unwrap(),
-        }
-    }
-
     pub fn bind(self) -> ConnectorNng<HANDLER> {
         self.socket.listen(&self.endpoint).unwrap();
         self
     }
 
+    pub fn builder() -> ConnectorNngBuilder<HANDLER> {
+        ConnectorNngBuilder {
+            endpoint: "".to_string(),
+            handler: None,
+        }
+    }
+}
+
+impl<H: Handler> Sender for ConnectorNng<H> {
+    fn send(&self, data: Vec<u8>) {
+        self.socket
+            // .send(data.as_bytes())
+            .send("Ferris1".as_bytes())
+            .expect("client failed sending data");
+    }
+}
+
+pub struct ConnectorNngBuilder<HANDLER: Handler> {
+    endpoint: String,
+    handler: Option<Arc<HANDLER>>,
+}
+
+impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
     pub fn with_handler(mut self, handler: HANDLER) -> Self {
         self.handler = Some(Arc::new(handler));
         self
@@ -92,14 +107,13 @@ impl<HANDLER: Handler> ConnectorNng<HANDLER> {
     //
     //     self
     // }
-}
 
-impl<H: Handler> Sender for ConnectorNng<H> {
-    fn send(&self, data: Vec<u8>) {
-        self.socket
-            // .send(data.as_bytes())
-            .send("Ferris1".as_bytes())
-            .expect("client failed sending data");
+    pub fn build(self) -> ConnectorNng<HANDLER> {
+        ConnectorNng {
+            endpoint: self.endpoint,
+            handler: self.handler,
+            socket: Socket::new(Protocol::Rep0).unwrap(),
+        }
     }
 }
 

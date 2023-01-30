@@ -82,11 +82,11 @@ mod tests {
             }
         }
 
-        let server = connector_nng::ConnectorNng::new()
+        let server = connector_nng::ConnectorNng::builder()
             // .with_xtype(zmq::DEALER)
             .with_endpoint("ws://127.0.0.1:5555".to_string())
             .with_handler(Command)
-            // .build()
+            .build()
             .bind();
 
         let handle = thread::spawn(move || {
