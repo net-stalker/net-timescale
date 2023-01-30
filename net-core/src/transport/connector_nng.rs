@@ -8,6 +8,7 @@ use zmq::SocketType;
 use crate::transport;
 
 use crate::transport::context::{Context, ContextBuilder};
+use crate::transport::polling::Handler;
 
 const ADDRESS: &'static str = "ws://127.0.0.1:5555";
 //TODO Connector Builder should be redesigned as Fluent API with constraints.
@@ -16,13 +17,13 @@ pub trait Sender {
     fn send(&self, data: Vec<u8>);
 }
 
-pub struct ConnectorNng {
+pub struct ConnectorNng<H> {
     endpoint: String,
-    handler: fn(Vec<u8>),
+    handler: Option<Arc<H>>,
     socket: Socket,
 }
 
-impl transport::polling::Socket for ConnectorNng
+impl<H: Handler> transport::polling::Socket for ConnectorNng<H>
 {
     fn fd(&self) -> RawFd {
         self.socket.get_opt::<RecvFd>().unwrap()
@@ -40,15 +41,43 @@ impl transport::polling::Socket for ConnectorNng
     }
 
     fn handle(&self, data: Vec<u8>) {
-        (self.handler)(data);
+        self.handler.as_ref().unwrap().handle(data);
     }
 }
 
-impl ConnectorNng {
-    pub fn bind(self) -> ConnectorNng {
-        self.socket.listen(ADDRESS).unwrap();
+impl<H: Handler> ConnectorNng<H> {
+    pub fn new() -> Self {
+        ConnectorNng {
+            endpoint: "".to_string(),
+            handler: None,
+            socket: Socket::new(Protocol::Rep0).unwrap(),
+        }
+    }
+
+    pub fn bind(self) -> ConnectorNng<H> {
+        self.socket.listen(&self.endpoint).unwrap();
         self
     }
+
+    pub fn with_handler(mut self, handler: H) -> Self {
+        self.handler = Some(Arc::new(handler));
+        self
+    }
+
+    pub fn with_endpoint(mut self, endpoint: String) -> Self {
+        self.endpoint = endpoint;
+        self
+    }
+
+    // pub fn with_xtype(mut self, xtype: SocketType) -> Self {
+    //     self.xtype = xtype;
+    //     self
+    // }
+
+    // pub fn with_context(mut self, context: Arc<Context>) -> Self {
+    //     self.context = context;
+    //     self
+    // }
 
     // pub fn connect(self) -> Connector {
     //     self.socket
@@ -59,65 +88,11 @@ impl ConnectorNng {
     // }
 }
 
-impl Sender for ConnectorNng {
+impl<H: Handler> Sender for ConnectorNng<H> {
     fn send(&self, data: Vec<u8>) {
         // self.socket
         //     .send(data, 0)
         //     .expect("client failed sending data");
-    }
-}
-
-pub struct ConnectorBuilder {
-    context: Arc<Context>,
-    xtype: SocketType,
-    endpoint: String,
-    handler: fn(Vec<u8>),
-}
-
-impl ConnectorBuilder {
-    pub fn new() -> ConnectorBuilder {
-        let mut rng = thread_rng();
-        let context = ContextBuilder::new().build();
-
-        ConnectorBuilder {
-            context,
-            xtype: zmq::DEALER,
-            endpoint: "inproc://dummy".to_string(),
-            handler: |_data| {},
-        }
-    }
-
-    fn create_socket(self) -> Socket {
-        Socket::new(Protocol::Rep0).unwrap()
-    }
-
-    pub fn build(self) -> ConnectorNng {
-        ConnectorNng {
-            // Potentially clone method is inefficient but it is called only once when Connector is created.
-            endpoint: self.endpoint.clone(),
-            handler: self.handler,
-            socket: self.create_socket(),
-        }
-    }
-
-    pub fn with_handler(mut self, handler: fn(Vec<u8>)) -> Self {
-        self.handler = handler;
-        self
-    }
-
-    pub fn with_endpoint(mut self, endpoint: String) -> Self {
-        self.endpoint = endpoint;
-        self
-    }
-
-    pub fn with_xtype(mut self, xtype: SocketType) -> Self {
-        self.xtype = xtype;
-        self
-    }
-
-    pub fn with_context(mut self, context: Arc<Context>) -> Self {
-        self.context = context;
-        self
     }
 }
 
@@ -135,16 +110,16 @@ mod tests {
         let context = ContextBuilder::new().build(); //TODO Use From trait instead of new
         let connector_context = context.clone();
 
-        let dealer_server = ConnectorBuilder::new()
-            .with_context(context)
-            .with_xtype(zmq::DEALER)
-            .with_endpoint("inproc://test".to_string())
-            .with_handler(|data| {
-                let result = String::from_utf8(data);
-                println!("received data {:?}", result);
-            })
-            .build()
-            .bind();
+        // let dealer_server = ConnectorBuilder::new()
+        //     .with_context(context)
+        //     .with_xtype(zmq::DEALER)
+        //     .with_endpoint("inproc://test".to_string())
+        //     .with_handler(|data| {
+        //         let result = String::from_utf8(data);
+        //         println!("received data {:?}", result);
+        //     })
+        //     .build()
+        //     .bind();
 
         let server_handle = thread::spawn(move || {
             // let poller = polling::Poller::new().unwrap();

@@ -5,6 +5,10 @@ use std::sync::Arc;
 use nng::options::{Options, RecvFd};
 use polling::{Event};
 
+pub trait Handler {
+    fn handle(&self, data: Vec<u8>);
+}
+
 pub trait Socket {
     fn fd(&self) -> RawFd;
 
@@ -63,16 +67,14 @@ mod tests {
     use polling::Event;
     use crate::transport::connector_nng;
     use crate::transport::connector_nng::Sender;
-    use crate::transport::polling::{Poller};
-
-    const ADDRESS: &'static str = "ws://127.0.0.1:5555";
+    use crate::transport::polling::{Handler, Poller};
 
     #[test]
     fn expected_create_poller_using_builder() {
         let handle0 = thread::spawn(move || {
             // Set up the client and connect to the specified address
             let client = Socket::new(Protocol::Req0).unwrap();
-            client.dial_async(ADDRESS).unwrap();
+            client.dial_async("ws://127.0.0.1:5555".to_string().as_str()).unwrap();
 
             // Send the request from the client to the server. In general, it will be
             // better to directly use a `Message` to enable zero-copy, but that doesn't
@@ -85,16 +87,21 @@ mod tests {
             assert_eq!(&msg[..], b"Hello, Ferris");
         });
 
-        let server = connector_nng::ConnectorBuilder::new()
-            .with_xtype(zmq::DEALER)
-            .with_endpoint("inproc://test".to_string())
-            .with_handler(|data| {
+        struct Command;
+        impl Handler for Command {
+            fn handle(&self, data: Vec<u8>) {
                 // let result = String::from_utf8(data);
                 // println!("received data {:?}", result);
                 println!("We got a message: {:?}", data);
-                // socket.send(msg).unwrap();
-            })
-            .build()
+                // self.socket.send(msg).unwrap();
+            }
+        }
+
+        let server = connector_nng::ConnectorNng::new()
+            // .with_xtype(zmq::DEALER)
+            .with_endpoint("ws://127.0.0.1:5555".to_string())
+            .with_handler(Command)
+            // .build()
             .bind();
 
         let handle = thread::spawn(move || {
@@ -104,7 +111,7 @@ mod tests {
         });
 
         handle0.join().unwrap();
-        // handle.join().unwrap();
+        handle.join().unwrap();
     }
 
     #[test]
@@ -115,7 +122,7 @@ mod tests {
         let handle = thread::spawn(move || {
             // Set up the client and connect to the specified address
             let client = Socket::new(Protocol::Req0).unwrap();
-            client.dial_async(ADDRESS).unwrap();
+            client.dial_async("ws://127.0.0.1:5555".to_string().as_str()).unwrap();
 
             // Send the request from the client to the server. In general, it will be
             // better to directly use a `Message` to enable zero-copy, but that doesn't
@@ -131,7 +138,7 @@ mod tests {
         let handle_2 = thread::spawn(move || {
             // Set up the server and listen for connections on the specified address.
             let socket = Socket::new(Protocol::Rep0).unwrap();
-            socket.listen(ADDRESS).unwrap();
+            socket.listen("ws://127.0.0.1:5555".to_string().as_str()).unwrap();
             let raw = socket.get_opt::<RecvFd>().unwrap();
 
             let poller = polling::Poller::new().unwrap();
