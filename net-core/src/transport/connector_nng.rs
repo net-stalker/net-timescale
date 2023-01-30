@@ -8,14 +8,11 @@ use zmq::SocketType;
 use crate::transport;
 
 use crate::transport::context::{Context, ContextBuilder};
-use crate::transport::polling::Handler;
+use crate::transport::sockets;
+use crate::transport::sockets::{Handler, Receiver, Sender};
 
 const ADDRESS: &'static str = "ws://127.0.0.1:5555";
 //TODO Connector Builder should be redesigned as Fluent API with constraints.
-
-pub trait Sender {
-    fn send(&self, data: Vec<u8>);
-}
 
 pub struct ConnectorNng<H> {
     endpoint: String,
@@ -23,7 +20,16 @@ pub struct ConnectorNng<H> {
     socket: Socket,
 }
 
-impl<H: Handler> transport::polling::Socket for ConnectorNng<H>
+impl<H> Receiver for ConnectorNng<H> {
+    fn recv(&self) -> Vec<u8> {
+        self.socket.recv()
+            .unwrap()
+            .as_slice()
+            .to_vec() //note: every time data is coped from stack to the heap!
+    }
+}
+
+impl<H: Handler> sockets::Socket for ConnectorNng<H>
 {
     fn fd(&self) -> RawFd {
         self.socket.get_opt::<RecvFd>().unwrap()
@@ -33,15 +39,16 @@ impl<H: Handler> transport::polling::Socket for ConnectorNng<H>
         usize::try_from(self.fd())
     }
 
-    fn recv(&self) -> Vec<u8> {
-        self.socket.recv()
-            .unwrap()
-            .as_slice()
-            .to_vec() //note: every time data is coped from stack to the heap!
+    fn handle(&self, receiver: &dyn Receiver, sender: &dyn Sender) {
+        self.handler.as_ref().unwrap().handle(receiver, sender);
     }
 
-    fn handle(&self, data: Vec<u8>) {
-        self.handler.as_ref().unwrap().handle(data);
+    fn get_receiver(&self) -> &dyn Receiver {
+        self
+    }
+
+    fn get_sender(&self) -> &dyn Sender {
+        self
     }
 }
 
@@ -90,9 +97,10 @@ impl<H: Handler> ConnectorNng<H> {
 
 impl<H: Handler> Sender for ConnectorNng<H> {
     fn send(&self, data: Vec<u8>) {
-        // self.socket
-        //     .send(data, 0)
-        //     .expect("client failed sending data");
+        self.socket
+            // .send(data.as_bytes())
+            .send("Ferris1".as_bytes())
+            .expect("client failed sending data");
     }
 }
 
