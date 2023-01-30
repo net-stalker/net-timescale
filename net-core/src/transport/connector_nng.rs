@@ -13,13 +13,13 @@ use crate::transport::sockets::{Handler, Receiver, Sender};
 
 //TODO Connector Builder should be redesigned as Fluent API with constraints.
 
-pub struct ConnectorNng<H> {
+pub struct ConnectorNng<HANDLER> {
     endpoint: String,
-    handler: Option<Arc<H>>,
+    handler: Option<Arc<HANDLER>>,
     socket: Socket,
 }
 
-impl<H> Receiver for ConnectorNng<H> {
+impl<HANDLER> Receiver for ConnectorNng<HANDLER> {
     fn recv(&self) -> Vec<u8> {
         self.socket.recv()
             .unwrap()
@@ -28,7 +28,7 @@ impl<H> Receiver for ConnectorNng<H> {
     }
 }
 
-impl<H: Handler> sockets::Socket for ConnectorNng<H>
+impl<HANDLER: Handler> sockets::Socket for ConnectorNng<HANDLER>
 {
     fn fd(&self) -> RawFd {
         self.socket.get_opt::<RecvFd>().unwrap()
@@ -51,7 +51,7 @@ impl<H: Handler> sockets::Socket for ConnectorNng<H>
     }
 }
 
-impl<H: Handler> ConnectorNng<H> {
+impl<HANDLER: Handler> ConnectorNng<HANDLER> {
     pub fn new() -> Self {
         ConnectorNng {
             endpoint: "".to_string(),
@@ -60,12 +60,12 @@ impl<H: Handler> ConnectorNng<H> {
         }
     }
 
-    pub fn bind(self) -> ConnectorNng<H> {
+    pub fn bind(self) -> ConnectorNng<HANDLER> {
         self.socket.listen(&self.endpoint).unwrap();
         self
     }
 
-    pub fn with_handler(mut self, handler: H) -> Self {
+    pub fn with_handler(mut self, handler: HANDLER) -> Self {
         self.handler = Some(Arc::new(handler));
         self
     }
