@@ -6,8 +6,8 @@ use nng::options::{Options, RecvFd};
 use polling::Event;
 use crate::transport::sockets::Socket;
 
-pub struct Poller<S> {
-    sockets: HashMap<i32, Box<S>>,
+pub struct Poller<SOCKET> {
+    sockets: HashMap<i32, Box<SOCKET>>,
 }
 
 impl<S: Socket> Poller<S> {

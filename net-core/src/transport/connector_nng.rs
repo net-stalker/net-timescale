@@ -11,7 +11,6 @@ use crate::transport::context::{Context, ContextBuilder};
 use crate::transport::sockets;
 use crate::transport::sockets::{Handler, Receiver, Sender};
 
-const ADDRESS: &'static str = "ws://127.0.0.1:5555";
 //TODO Connector Builder should be redesigned as Fluent API with constraints.
 
 pub struct ConnectorNng<H> {
