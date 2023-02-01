@@ -11,6 +11,7 @@ use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::context::ContextBuilder;
 use net_core::transport::polling::Poller;
 use net_hub::command::agent::AgentCommand;
+use net_hub::command::translator::TranslatorCommand;
 
 fn main() {
     //Global for the project
@@ -59,7 +60,16 @@ fn main() {
         }
     });
 
-    let server_command = AgentCommand { clients };
+    let translator = ConnectorNNG::builder()
+        .with_endpoint("tcp://0.0.0.0:5557".to_string())
+        .with_proto(Proto::Req)
+        .with_handler(TranslatorCommand)
+        .build()
+        .connect()
+        .into_inner();
+    let translator_clone = translator.clone();
+
+    let server_command = AgentCommand { clients, translator: translator_clone };
     let server = ConnectorNNG::builder()
         .with_endpoint(config.dealer.endpoint.clone())
         .with_proto(Proto::Rep)
@@ -71,30 +81,7 @@ fn main() {
     thread::spawn(move || {
         Poller::new()
             .add(server)
+            .add(translator)
             .poll();
     }).join().unwrap();
-
-    // let translator_router = Arc::new(ConnectorBuilder::new()
-    //     .with_context(context_translator)
-    //     .with_xtype(zmq::DEALER)
-    //     .with_endpoint("tcp://0.0.0.0:5557".to_string())
-    //     .with_handler(|data| {
-    //         println!("received from translator {:?}", data);
-    //         let magic_num = &data[..4];
-    //         if 3569595041_u32.to_be_bytes() == magic_num {
-    //             println!("Global header will be skipped");
-    //             return;
-    //         }
-    //
-    //         // clients.read().unwrap().iter().for_each(|endpoint| {
-    //         //     println!("Connections: {:?}", endpoint);
-    //         //     let responder = endpoint.1;
-    //         //     responder.send(Message::Text(format!("{:?}", &data)));
-    //         // });
-    //     })
-    //     .build()
-    //     .bind());
-    // let arc = translator_router.clone();
-
-    // let translator_router_handle = thread::spawn(move || translator_router.poll());
 }

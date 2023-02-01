@@ -3,11 +3,12 @@ use std::sync::{Arc, RwLock};
 use simple_websockets::{Message, Responder};
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
-pub struct AgentCommand {
+pub struct AgentCommand<S> {
     pub clients: Arc<RwLock<HashMap<u64, Responder>>>,
+    pub translator: Arc<S>,
 }
 
-impl Handler for AgentCommand {
+impl<S: Sender> Handler for AgentCommand<S> {
     fn handle(&self, receiver: &dyn Receiver, sender: &dyn Sender) {
         let data = receiver.recv();
 
@@ -23,5 +24,7 @@ impl Handler for AgentCommand {
             let responder = endpoint.1;
             responder.send(Message::Text(format!("{:?}", &data)));
         });
+
+        self.translator.send(data);
     }
 }
