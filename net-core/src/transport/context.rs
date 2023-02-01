@@ -1,28 +1,17 @@
 use std::sync::Arc;
 
-pub struct Context {
-    xctx: Arc<zmq::Context>,
-}
+pub struct Context;
 
-impl Context {
-    pub fn xctx(&self) -> &Arc<zmq::Context> {
-        &self.xctx
-    }
-}
+impl Context {}
 
-pub struct ContextBuilder {
-    xctx: Arc<zmq::Context>,
-}
+pub struct ContextBuilder {}
 
 impl ContextBuilder {
-    pub fn new() -> ContextBuilder {
-        ContextBuilder {
-            xctx: Arc::new(zmq::Context::new())
-        }
+    pub fn new() -> Self {
+        ContextBuilder{}
     }
-
     pub fn build(self) -> Arc<Context> {
-        Arc::from(Context { xctx: self.xctx })
+        Arc::from(Context)
     }
 }
 
@@ -31,7 +20,6 @@ mod tests {
 
     #[test]
     fn test() {
-        let context = ContextBuilder::new().build();
-        let _x = context.xctx();
+        let _context = ContextBuilder::new().build();
     }
 }

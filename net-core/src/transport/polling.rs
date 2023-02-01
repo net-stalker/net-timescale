@@ -11,7 +11,7 @@ pub struct Poller {
 }
 
 impl Poller {
-    fn new() -> Poller {
+    pub fn new() -> Poller {
         Poller { sockets: HashMap::new() }
     }
 
@@ -53,6 +53,7 @@ mod tests {
     use nng::{Aio, Protocol, Socket};
     use polling::Event;
     use crate::transport::{connector_nng, sockets};
+    use crate::transport::connector_nng::Proto;
     use crate::transport::polling::Poller;
     use crate::transport::sockets::{Handler, Receiver, Sender};
 
@@ -68,7 +69,7 @@ mod tests {
 
         let client = connector_nng::ConnectorNng::builder()
             .with_endpoint("ws://127.0.0.1:5555".to_string())
-            .with_proto(Protocol::Req0)
+            .with_proto(Proto::Req)
             .with_handler(ClientCommand)
             .build()
             .connect()
@@ -91,7 +92,7 @@ mod tests {
 
         let server = connector_nng::ConnectorNng::builder()
             .with_endpoint("ws://127.0.0.1:5555".to_string())
-            .with_proto(Protocol::Rep0)
+            .with_proto(Proto::Rep)
             .with_handler(ServerCommand)
             .build()
             .bind()

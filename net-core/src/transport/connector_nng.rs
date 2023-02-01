@@ -82,10 +82,53 @@ impl<HANDLER: Handler> ConnectorNng<HANDLER> {
     }
 }
 
+#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub enum Proto
+{
+    Bus,
+
+    // Pair,
+
+    // Pair,
+
+    Pub,
+
+    Pull,
+
+    Push,
+
+    Rep,
+
+    Req,
+
+    Respondent,
+
+    Sub,
+
+    Surveyor,
+}
+
+impl Proto {
+    pub fn into(proto: Proto) -> Protocol {
+        match proto {
+            Proto::Bus => { Protocol::Bus0 }
+            Proto::Pub => { Protocol::Pub0 }
+            Proto::Pull => { Protocol::Pull0 }
+            Proto::Push => { Protocol::Push0 }
+            Proto::Rep => { Protocol::Rep0 }
+            Proto::Req => { Protocol::Req0 }
+            Proto::Respondent => { Protocol::Respondent0 }
+            Proto::Sub => { Protocol::Sub0 }
+            Proto::Surveyor => { Protocol::Surveyor0 }
+        }
+    }
+}
+
 pub struct ConnectorNngBuilder<HANDLER: Handler> {
     endpoint: Option<String>,
-    proto: Option<Protocol>,
+    proto: Option<Proto>,
     handler: Option<Box<HANDLER>>,
+
 }
 
 impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
@@ -107,16 +150,18 @@ impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
         self
     }
 
-    pub fn with_proto(mut self, proto: Protocol) -> Self {
+    pub fn with_proto(mut self, proto: Proto) -> Self {
         self.proto = Some(proto);
         self
     }
 
     pub fn build(self) -> ConnectorNng<HANDLER> {
+        let proto = Proto::into(self.proto.unwrap());
+
         ConnectorNng {
             endpoint: self.endpoint.unwrap(),
             handler: self.handler,
-            socket: Socket::new(self.proto.unwrap()).unwrap(),
+            socket: Socket::new(proto).unwrap(),
         }
     }
 }
