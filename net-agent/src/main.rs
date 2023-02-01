@@ -34,7 +34,6 @@ fn main() {
 
         capture_packages(config.data, |_cnt, packet| {
             //Send pcap packet header + packet payload
-            // client.send(packet.as_bytes())
             client_clone.send(packet.as_bytes())
         });
     });
