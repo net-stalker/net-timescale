@@ -28,6 +28,14 @@ impl<HANDLER> Receiver for ConnectorNng<HANDLER> {
     }
 }
 
+impl<H: Handler> Sender for ConnectorNng<H> {
+    fn send(&self, data: Vec<u8>) {
+        self.socket
+            .send(&data)
+            .expect("client failed sending data");
+    }
+}
+
 impl<HANDLER: Handler> sockets::Socket for ConnectorNng<HANDLER>
 {
     fn fd(&self) -> RawFd {
@@ -71,14 +79,6 @@ impl<HANDLER: Handler> ConnectorNng<HANDLER> {
 
     pub fn builder() -> ConnectorNngBuilder<HANDLER> {
         ConnectorNngBuilder::new()
-    }
-}
-
-impl<H: Handler> Sender for ConnectorNng<H> {
-    fn send(&self, data: Vec<u8>) {
-        self.socket
-            .send(&data)
-            .expect("client failed sending data");
     }
 }
 
@@ -165,36 +165,5 @@ mod tests {
         // f: impl Fn(i32, PcapPacket)
 
         // server_handle.join().unwrap();
-    }
-
-    trait Parser {
-        fn parse(&self);
-    }
-
-    struct PlainParser;
-
-    impl Parser for PlainParser {
-        fn parse(&self) {
-            println!("Hello!")
-        }
-    }
-
-    struct Printer {
-        parsers: Vec<Box<dyn Parser>>,
-    }
-
-    impl Printer {
-        pub fn print(&self) {
-            self.parsers.iter()
-                .for_each(|parser| parser.parse())
-        }
-    }
-
-    #[test]
-    fn test_handlers() {
-        let plain_parser = PlainParser;
-
-        let printer = Printer { parsers: vec![Box::new(plain_parser)] };
-        printer.print();
     }
 }
