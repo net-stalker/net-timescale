@@ -67,7 +67,7 @@ mod tests {
             }
         }
 
-        let client = connector_nng::ConnectorNng::builder()
+        let client = connector_nng::ConnectorNNG::builder()
             .with_endpoint("ws://127.0.0.1:5555".to_string())
             .with_proto(Proto::Req)
             .with_handler(ClientCommand)
@@ -90,7 +90,7 @@ mod tests {
             }
         }
 
-        let server = connector_nng::ConnectorNng::builder()
+        let server = connector_nng::ConnectorNNG::builder()
             .with_endpoint("ws://127.0.0.1:5555".to_string())
             .with_proto(Proto::Rep)
             .with_handler(ServerCommand)

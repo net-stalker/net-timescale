@@ -7,7 +7,7 @@ use std::{
 use simple_websockets::{Event, Message, Responder};
 
 use net_core::config::{ConfigManager, ConfigSpec, ConfigFile, FileReader};
-use net_core::transport::connector_nng::{ConnectorNng, Proto};
+use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::context::ContextBuilder;
 use net_core::transport::polling::Poller;
 use net_hub::server_command::ServerCommand;
@@ -26,7 +26,8 @@ fn main() {
     let clients = Arc::new(RwLock::new(HashMap::new()));
     let clients_inner = clients.clone();
 
-    let ws_thread_handle = thread::spawn(move || {
+    //TODO use instead ws from ConnectoNNG
+    thread::spawn(move || {
         let event_hub = simple_websockets::launch(9091)
             .expect("failed to listen on port 9091");
 
@@ -59,7 +60,7 @@ fn main() {
     });
 
     let server_command = ServerCommand { clients };
-    let server = ConnectorNng::builder()
+    let server = ConnectorNNG::builder()
         .with_endpoint(config.dealer.endpoint.clone())
         .with_proto(Proto::Rep)
         .with_handler(server_command)
@@ -67,16 +68,11 @@ fn main() {
         .bind()
         .into_inner();
 
-    let poller = thread::spawn(move || {
+    thread::spawn(move || {
         Poller::new()
             .add(server)
             .poll();
-    });
-
-    poller.join().unwrap();
-
-    let context = ContextBuilder::new().build(); //TODO Use From trait instead of new
-    let context_translator = context.clone();
+    }).join().unwrap();
 
     // let translator_router = Arc::new(ConnectorBuilder::new()
     //     .with_context(context_translator)
@@ -100,10 +96,5 @@ fn main() {
     //     .bind());
     // let arc = translator_router.clone();
 
-    // let agent_router_handle = thread::spawn(move || agent_router.poll());
     // let translator_router_handle = thread::spawn(move || translator_router.poll());
-
-    ws_thread_handle.join().unwrap();
-    // agent_router_handle.join().unwrap();
-    // translator_router_handle.join().unwrap();
 }

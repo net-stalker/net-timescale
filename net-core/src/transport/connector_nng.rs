@@ -13,13 +13,13 @@ use crate::transport::sockets::{Handler, Receiver, Sender};
 
 //TODO Connector Builder should be redesigned as Fluent API with constraints.
 
-pub struct ConnectorNng<HANDLER> {
+pub struct ConnectorNNG<HANDLER> {
     endpoint: String,
     handler: Option<Box<HANDLER>>,
     socket: Socket,
 }
 
-impl<HANDLER> Receiver for ConnectorNng<HANDLER> {
+impl<HANDLER> Receiver for ConnectorNNG<HANDLER> {
     fn recv(&self) -> Vec<u8> {
         self.socket.recv()
             .unwrap()
@@ -28,7 +28,7 @@ impl<HANDLER> Receiver for ConnectorNng<HANDLER> {
     }
 }
 
-impl<H: Handler> Sender for ConnectorNng<H> {
+impl<H: Handler> Sender for ConnectorNNG<H> {
     fn send(&self, data: Vec<u8>) {
         self.socket
             .send(&data)
@@ -36,7 +36,7 @@ impl<H: Handler> Sender for ConnectorNng<H> {
     }
 }
 
-impl<HANDLER: Handler> sockets::Socket for ConnectorNng<HANDLER>
+impl<HANDLER: Handler> sockets::Socket for ConnectorNNG<HANDLER>
 {
     fn fd(&self) -> RawFd {
         self.socket.get_opt::<RecvFd>().unwrap()
@@ -59,13 +59,13 @@ impl<HANDLER: Handler> sockets::Socket for ConnectorNng<HANDLER>
     }
 }
 
-impl<HANDLER: Handler> ConnectorNng<HANDLER> {
-    pub fn bind(self) -> ConnectorNng<HANDLER> {
+impl<HANDLER: Handler> ConnectorNNG<HANDLER> {
+    pub fn bind(self) -> ConnectorNNG<HANDLER> {
         self.socket.listen(&self.endpoint).unwrap();
         self
     }
 
-    pub fn connect(self) -> ConnectorNng<HANDLER> {
+    pub fn connect(self) -> ConnectorNNG<HANDLER> {
         self.socket
             .dial_async(&self.endpoint)
             .expect(format!("failed connecting to {}", &self.endpoint).as_str());
@@ -155,10 +155,10 @@ impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
         self
     }
 
-    pub fn build(self) -> ConnectorNng<HANDLER> {
+    pub fn build(self) -> ConnectorNNG<HANDLER> {
         let proto = Proto::into(self.proto.unwrap());
 
-        ConnectorNng {
+        ConnectorNNG {
             endpoint: self.endpoint.unwrap(),
             handler: self.handler,
             socket: Socket::new(proto).unwrap(),
