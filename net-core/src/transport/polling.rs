@@ -6,17 +6,17 @@ use nng::options::{Options, RecvFd};
 use polling::Event;
 use crate::transport::sockets::Socket;
 
-pub struct Poller<SOCKET> {
-    sockets: HashMap<i32, Box<SOCKET>>,
+pub struct Poller {
+    sockets: HashMap<i32, Arc<dyn Socket>>,
 }
 
-impl<S: Socket> Poller<S> {
-    fn new() -> Poller<S> {
+impl Poller {
+    fn new() -> Poller {
         Poller { sockets: HashMap::new() }
     }
 
-    pub fn add(&mut self, socket: S) -> &mut Self {
-        self.sockets.insert(socket.fd(), Box::new(socket));
+    pub fn add<S: Socket + 'static>(&mut self, socket: Arc<S>) -> &mut Self {
+        self.sockets.insert(socket.fd(), socket);
 
         self
     }
@@ -47,34 +47,41 @@ impl<S: Socket> Poller<S> {
 }
 
 mod tests {
+    use std::sync::Arc;
     use std::thread;
     use nng::options::{Options, RecvFd};
-    use nng::{Protocol, Socket};
+    use nng::{Aio, Protocol, Socket};
     use polling::Event;
-    use crate::transport::connector_nng;
+    use crate::transport::{connector_nng, sockets};
     use crate::transport::polling::Poller;
     use crate::transport::sockets::{Handler, Receiver, Sender};
 
     #[test]
     fn expected_create_poller_using_builder() {
-        let handle0 = thread::spawn(move || {
-            // Set up the client and connect to the specified address
-            let client = Socket::new(Protocol::Req0).unwrap();
-            client.dial_async("ws://127.0.0.1:5555".to_string().as_str()).unwrap();
+        struct ClientCommand;
+        impl Handler for ClientCommand {
+            fn handle(&self, receiver: &dyn Receiver, sender: &dyn Sender) {
+                let msg = receiver.recv();
+                assert_eq!(&msg[..], b"Hello, Ferris");
+            }
+        }
 
-            // Send the request from the client to the server. In general, it will be
-            // better to directly use a `Message` to enable zero-copy, but that doesn't
-            // matter here.
-            client.send("Ferris1".as_bytes()).unwrap();
-            client.send("Ferris2".as_bytes()).unwrap();
+        let client = connector_nng::ConnectorNng::builder()
+            .with_endpoint("ws://127.0.0.1:5555".to_string())
+            .with_proto(Protocol::Req0)
+            .with_handler(ClientCommand)
+            .build()
+            .connect()
+            .into_inner();
 
-            // Wait for the response from the server.
-            let msg = client.recv().unwrap();
-            assert_eq!(&msg[..], b"Hello, Ferris");
+        let arc = client.clone();
+        let client_handle = thread::spawn(move || {
+            arc.send(Vec::from("Ferris1"));
+            arc.send(Vec::from("Ferris2"));
         });
 
-        struct Command;
-        impl Handler for Command {
+        struct ServerCommand;
+        impl Handler for ServerCommand {
             fn handle(&self, receiver: &dyn Receiver, sender: &dyn Sender) {
                 let data = receiver.recv();
                 println!("We got a message: {:?}", data);
@@ -83,19 +90,21 @@ mod tests {
         }
 
         let server = connector_nng::ConnectorNng::builder()
-            // .with_xtype(zmq::DEALER)
             .with_endpoint("ws://127.0.0.1:5555".to_string())
-            .with_handler(Command)
+            .with_proto(Protocol::Rep0)
+            .with_handler(ServerCommand)
             .build()
-            .bind();
+            .bind()
+            .into_inner();
 
-        let handle = thread::spawn(move || {
+        let poller = thread::spawn(move || {
             Poller::new()
                 .add(server)
+                .add(client)
                 .poll();
         });
 
-        handle0.join().unwrap();
-        handle.join().unwrap();
+        poller.join().unwrap();
+        client_handle.join().unwrap();
     }
 }

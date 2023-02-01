@@ -1,6 +1,7 @@
 use std::num::TryFromIntError;
 use std::os::unix::io::RawFd;
-use nng::{Protocol, Socket};
+use std::sync::Arc;
+use nng::{Aio, Protocol, Socket};
 use nng::options::{Options, RecvFd};
 use rand::{Rng, thread_rng};
 use zmq::SocketType;
@@ -56,62 +57,66 @@ impl<HANDLER: Handler> ConnectorNng<HANDLER> {
         self
     }
 
+    pub fn connect(self) -> ConnectorNng<HANDLER> {
+        self.socket
+            .dial_async(&self.endpoint)
+            .expect(format!("failed connecting to {}", &self.endpoint).as_str());
+
+        self
+    }
+
+    pub fn into_inner(self) -> Arc<Self> {
+        Arc::from(self)
+    }
+
     pub fn builder() -> ConnectorNngBuilder<HANDLER> {
-        ConnectorNngBuilder {
-            endpoint: "".to_string(),
-            handler: None,
-        }
+        ConnectorNngBuilder::new()
     }
 }
 
 impl<H: Handler> Sender for ConnectorNng<H> {
     fn send(&self, data: Vec<u8>) {
         self.socket
-            // .send(data.as_bytes())
-            .send("Ferris1".as_bytes())
+            .send(&data)
             .expect("client failed sending data");
     }
 }
 
 pub struct ConnectorNngBuilder<HANDLER: Handler> {
-    endpoint: String,
+    endpoint: Option<String>,
+    proto: Option<Protocol>,
     handler: Option<Box<HANDLER>>,
 }
 
 impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
+    pub fn new() -> ConnectorNngBuilder<HANDLER> {
+        ConnectorNngBuilder {
+            endpoint: None,
+            proto: None,
+            handler: None,
+        }
+    }
+
     pub fn with_handler(mut self, handler: HANDLER) -> Self {
         self.handler = Some(Box::new(handler));
         self
     }
 
     pub fn with_endpoint(mut self, endpoint: String) -> Self {
-        self.endpoint = endpoint;
+        self.endpoint = Some(endpoint);
         self
     }
 
-    // pub fn with_xtype(mut self, xtype: SocketType) -> Self {
-    //     self.xtype = xtype;
-    //     self
-    // }
-
-    // pub fn with_context(mut self, context: Box<Context>) -> Self {
-    //     self.context = context;
-    //     self
-    // }
-
-    // pub fn connect(self) -> Connector {
-    //     self.socket
-    //         .connect(&self.endpoint)
-    //         .expect(format!("failed connecting to {}", &self.endpoint).as_str());
-    //
-    //     self
-    // }
+    pub fn with_proto(mut self, proto: Protocol) -> Self {
+        self.proto = Some(proto);
+        self
+    }
 
     pub fn build(self) -> ConnectorNng<HANDLER> {
         ConnectorNng {
-            endpoint: self.endpoint,
+            endpoint: self.endpoint.unwrap(),
             handler: self.handler,
-            socket: Socket::new(Protocol::Rep0).unwrap(),
+            socket: Socket::new(self.proto.unwrap()).unwrap(),
         }
     }
 }
