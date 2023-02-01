@@ -39,6 +39,7 @@ impl<H: Handler> Sender for ConnectorNNG<H> {
 impl<HANDLER: Handler> sockets::Socket for ConnectorNNG<HANDLER>
 {
     fn fd(&self) -> RawFd {
+        //FIXME RecvFd will be worked only for Protocols that can receive data
         self.socket.get_opt::<RecvFd>().unwrap()
     }
 
@@ -172,8 +173,7 @@ mod tests {
     use std::thread;
     use zmq::{DEALER, ROUTER};
     use polling::Event;
-
-    use super::*;
+    use crate::transport::context::ContextBuilder;
 
     #[test]
     fn test() {
