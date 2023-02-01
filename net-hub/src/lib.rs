@@ -1,1 +1,1 @@
-pub mod server_command;
+pub mod command;

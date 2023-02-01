@@ -3,11 +3,11 @@ use std::sync::{Arc, RwLock};
 use simple_websockets::{Message, Responder};
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
-pub struct ServerCommand {
+pub struct AgentCommand {
     pub clients: Arc<RwLock<HashMap<u64, Responder>>>,
 }
 
-impl Handler for ServerCommand {
+impl Handler for AgentCommand {
     fn handle(&self, receiver: &dyn Receiver, sender: &dyn Sender) {
         let data = receiver.recv();
 

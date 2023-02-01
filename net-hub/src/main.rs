@@ -10,7 +10,7 @@ use net_core::config::{ConfigManager, ConfigSpec, ConfigFile, FileReader};
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::context::ContextBuilder;
 use net_core::transport::polling::Poller;
-use net_hub::server_command::ServerCommand;
+use net_hub::command::agent::AgentCommand;
 
 fn main() {
     //Global for the project
@@ -59,7 +59,7 @@ fn main() {
         }
     });
 
-    let server_command = ServerCommand { clients };
+    let server_command = AgentCommand { clients };
     let server = ConnectorNNG::builder()
         .with_endpoint(config.dealer.endpoint.clone())
         .with_proto(Proto::Rep)
