@@ -10,14 +10,14 @@ pub struct AgentCommand<S> {
 
 impl<S: Sender> Handler for AgentCommand<S> {
     fn handle(&self, receiver: &dyn Receiver, sender: &dyn Sender) {
-        let data = receiver.recv();
-
+        let mut data = receiver.recv();
         println!("received from agent {:?}", data);
-        let magic_num = &data[..4];
-        if 3569595041_u32.to_be_bytes() == magic_num {
-            println!("Global header will be skipped");
-            return;
-        }
+
+        // let magic_num = &data[..4];
+        // if 3569595041_u32.to_be_bytes() == magic_num {
+        // println!("Global header will be skipped");
+        // return;
+        // }
 
         self.clients.read().unwrap().iter().for_each(|endpoint| {
             println!("Connections: {:?}", endpoint);

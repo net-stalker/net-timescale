@@ -27,14 +27,17 @@ fn main() {
     thread::spawn(move || {
         //TODO should be moved to standalone command
         let global_header = create_global_header();
-        println!("Global Header {}", global_header);
+        // println!("Global Header {}", global_header);
         //Send first packet as Global Header of pcap file
-        client_clone.send(global_header.as_bytes());
+        // client_clone.send(global_header.as_bytes());
         // client.send(global_header.as_bytes());
 
         capture_packages(config.data, |_cnt, packet| {
             //Send pcap packet header + packet payload
-            client_clone.send(packet.as_bytes())
+            let mut buf = global_header.as_bytes();
+            buf.append(&mut packet.as_bytes());
+            // client_clone.send(packet.as_bytes())
+            client_clone.send(buf)
         });
     });
 

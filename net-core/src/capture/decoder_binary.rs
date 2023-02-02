@@ -20,6 +20,7 @@ impl Decoder for BinaryDecoder {
     fn decode(buf: Vec<u8>) -> String {
         return Exec::cmd("tshark")
             .arg("-V") //add output of packet tree        (Packet Details)
+            // .arg("-c1") //add output of packet tree        (Packet Details)
             // .arg("-rcaptures/arp.pcap") // set the filename to read from (or '-' for stdin)
             .arg("-r") // set the filename to read from (or '-' for stdin)
             .arg("-")
