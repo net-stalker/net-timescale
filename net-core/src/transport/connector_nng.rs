@@ -3,7 +3,6 @@ use std::os::unix::io::RawFd;
 use std::sync::Arc;
 use nng::{Aio, Protocol, Socket};
 use nng::options::{Options, RecvFd};
-use rand::{Rng, thread_rng};
 use zmq::SocketType;
 use crate::transport;
 
