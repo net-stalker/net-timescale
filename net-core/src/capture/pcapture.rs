@@ -281,7 +281,7 @@ mod tests {
             .iter()
             .eq(bytes.iter()));
 
-        // let mut f = File::create("test-data.pcap").unwrap();
+        // let mut f = File::create("../net-core/captures/arp.pcap").unwrap();
         // bincode::serialize_into(&mut f, &global_header).unwrap();
     }
 
@@ -291,12 +291,12 @@ mod tests {
         let global_header = create_global_header();
         println!("Global Header {}", global_header);
 
-        File::create("../target/test-data.pcap").unwrap();
+        File::create("../net-core/captures/arp.pcap").unwrap();
         let mut f = OpenOptions::new()
             // .create_new(true)
             .write(true)
             .append(true)
-            .open("../target/test-data.pcap")
+            .open("../net-core/captures/arp.pcap")
             .unwrap();
         f.write_all(&global_header.as_bytes()).unwrap();
 
@@ -316,7 +316,7 @@ mod tests {
                     // .create_new(true)
                     .write(true)
                     .append(true)
-                    .open("../target/test-data.pcap")
+                    .open("../net-core/captures/arp.pcap")
                     .unwrap();
                 f.write_all(&received).unwrap();
             });
