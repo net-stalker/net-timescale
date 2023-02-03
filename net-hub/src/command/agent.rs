@@ -4,7 +4,6 @@ use simple_websockets::{Message, Responder};
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
 pub struct AgentCommand<S> {
-    pub clients: Arc<RwLock<HashMap<u64, Responder>>>,
     pub translator: Arc<S>,
 }
 
@@ -18,12 +17,6 @@ impl<S: Sender> Handler for AgentCommand<S> {
         // println!("Global header will be skipped");
         // return;
         // }
-
-        self.clients.read().unwrap().iter().for_each(|endpoint| {
-            println!("Connections: {:?}", endpoint);
-            let responder = endpoint.1;
-            responder.send(Message::Text(format!("{:?}", &data)));
-        });
 
         self.translator.send(data);
     }

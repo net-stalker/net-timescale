@@ -8,9 +8,11 @@ use simple_websockets::{Event, Message, Responder};
 
 use net_core::config::{ConfigManager, ConfigSpec, ConfigFile, FileReader};
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
+use net_core::transport::connector_nng::Proto::{Pub, Pull};
 use net_core::transport::context::ContextBuilder;
 use net_core::transport::polling::Poller;
 use net_hub::command::agent::AgentCommand;
+use net_hub::command::pull::PullCommand;
 use net_hub::command::translator::TranslatorCommand;
 
 fn main() {
@@ -69,7 +71,7 @@ fn main() {
         .into_inner();
     let translator_clone = translator.clone();
 
-    let server_command = AgentCommand { clients, translator: translator_clone };
+    let server_command = AgentCommand { translator: translator_clone };
     let server = ConnectorNNG::builder()
         .with_endpoint(config.dealer.endpoint.clone())
         .with_proto(Proto::Rep)
@@ -78,10 +80,19 @@ fn main() {
         .bind()
         .into_inner();
 
+    let pull = ConnectorNNG::builder()
+        .with_endpoint("tcp://0.0.0.0:5558".to_string())
+        .with_proto(Proto::Rep)
+        .with_handler(PullCommand { clients })
+        .build()
+        .bind()
+        .into_inner();
+
     thread::spawn(move || {
         Poller::new()
             .add(server)
             .add(translator)
+            .add(pull)
             .poll();
     }).join().unwrap();
 }
