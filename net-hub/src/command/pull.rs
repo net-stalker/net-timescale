@@ -3,7 +3,6 @@ use std::sync::{Arc, RwLock};
 use simple_websockets::{Message, Responder};
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 use serde_json::json;
-use unescape::unescape;
 
 pub struct PullCommand {
     pub clients: Arc<RwLock<HashMap<u64, Responder>>>,
