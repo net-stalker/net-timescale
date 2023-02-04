@@ -14,9 +14,11 @@ pub trait Sender {
 }
 
 pub trait Socket {
-    fn fd(&self) -> RawFd;
+    fn as_raw_fd(&self) -> RawFd;
 
-    fn fd_as_usize(&self) -> Result<usize, TryFromIntError>;
+    fn fd_as_usize(&self) -> Result<usize, TryFromIntError> {
+        usize::try_from(self.as_raw_fd())
+    }
 
     fn handle(&self, receiver: &dyn Receiver, sender: &dyn Sender);
 

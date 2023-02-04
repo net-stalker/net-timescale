@@ -1,12 +1,19 @@
+use std::ops::Deref;
 use std::thread;
+use net_core::capture;
+use net_core::capture::packet;
+use net_core::capture::packet::Packet;
 
 use net_core::config::{ConfigManager, ConfigSpec, ConfigFile, FileReader};
-use net_core::capture::pcapture::{capture_packages, create_global_header};
+use net_core::capture::pcapture::{create_global_header};
+use net_core::capture::polling::Handler;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::context::{ContextBuilder};
 use net_core::transport::polling::Poller;
 use net_core::transport::sockets::Sender;
-use net_monitor::client_command::ClientCommand;
+use net_monitor::codec;
+use net_monitor::codec::Codec;
+use net_monitor::command::dummy::DummyCommand;
 
 fn main() {
     let config = ConfigManager { application_name: "net-agent", file_loader: Box::new(ConfigFile) as Box<dyn FileReader> }.load();
@@ -18,27 +25,26 @@ fn main() {
     let client = ConnectorNNG::builder()
         .with_endpoint(config.dealer.endpoint)
         .with_proto(Proto::Req)
-        .with_handler(ClientCommand)
+        .with_handler(DummyCommand)
         .build()
         .connect()
         .into_inner();
     let client_clone = client.clone();
 
     thread::spawn(move || {
-        //TODO should be moved to standalone command
-        let global_header = create_global_header();
-        // println!("Global Header {}", global_header);
-        //Send first packet as Global Header of pcap file
-        // client_clone.send(global_header.as_bytes());
-        // client.send(global_header.as_bytes());
+        let capture = pcap::Capture::from_device("en0")
+            .unwrap()
+            // .promisc(true)
+            // .snaplen(65535)
+            .buffer_size(1000)
+            .open()
+            .unwrap();
 
-        capture_packages(config.data, |_cnt, packet| {
-            //Send pcap packet header + packet payload
-            let mut buf = global_header.as_bytes();
-            buf.append(&mut packet.as_bytes());
-            // client_clone.send(packet.as_bytes())
-            client_clone.send(buf)
-        });
+        let codec = Codec::new(client_clone);
+        capture::polling::Poller::new(capture)
+            .with_packet_cnt(1)
+            .with_codec(codec)
+            .poll();
     });
 
     thread::spawn(move || {

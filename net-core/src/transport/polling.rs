@@ -16,7 +16,7 @@ impl Poller {
     }
 
     pub fn add<S: Socket + 'static>(&mut self, socket: Arc<S>) -> &mut Self {
-        self.sockets.insert(socket.fd(), socket);
+        self.sockets.insert(socket.as_raw_fd(), socket);
 
         self
     }
@@ -28,8 +28,9 @@ impl Poller {
         self.sockets.values().for_each(|socket| {
             let usize_fd = socket.fd_as_usize().unwrap();
             let event = Event::readable(usize_fd);
+            let fd = socket.as_raw_fd();
 
-            poller.add(socket.fd(), event).unwrap();
+            poller.add(fd, event).unwrap();
         });
 
         loop {
@@ -40,7 +41,7 @@ impl Poller {
                 let socket = self.sockets.get(&(ev.key as i32)).unwrap();
                 socket.handle(socket.get_receiver(), socket.get_sender());
 
-                poller.modify(socket.fd(), Event::readable(ev.key)).unwrap();
+                poller.modify(socket.as_raw_fd(), Event::readable(ev.key)).unwrap();
             }
         }
     }
@@ -98,14 +99,11 @@ mod tests {
             .bind()
             .into_inner();
 
-        let poller = thread::spawn(move || {
+        thread::spawn(move || {
             Poller::new()
                 .add(server)
                 .add(client)
                 .poll();
-        });
-
-        poller.join().unwrap();
-        client_handle.join().unwrap();
+        }).join().unwrap();
     }
 }

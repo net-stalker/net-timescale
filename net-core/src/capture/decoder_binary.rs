@@ -1,9 +1,9 @@
 use crate::translator::Decoder;
 use subprocess::{Exec, Redirection};
 
-pub struct BinaryDecoder;
+pub struct JsonDecoder;
 
-impl Decoder for BinaryDecoder {
+impl Decoder for JsonDecoder {
     /// https://tshark.dev/capture/tshark/
     ///
     /// # Arguments
@@ -45,7 +45,7 @@ mod tests {
         let pcap_buffer = PCapFile::read("../net-core/captures/arp.pcap");
         let json_buffer = PCapFile::read("../net-core/captures/arp.json");
 
-        let json_result = BinaryDecoder::decode(pcap_buffer);
+        let json_result = JsonDecoder::decode(pcap_buffer);
 
         assert_eq!(json_result, std::str::from_utf8(&json_buffer).unwrap());
     }
