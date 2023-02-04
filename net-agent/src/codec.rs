@@ -21,7 +21,9 @@ impl Handler for Codec {
     fn decode(&self, _cnt: i32, packet: Packet) {
         let global_header = GlobalHeader::new();
         println!("{:?}", global_header);
+        println!("{:?}", packet);
 
+        //TODO very slow, should be redesigned in the task CU-861maxexc
         let mut buf = global_header.to_bytes();
         buf.append(&mut packet.to_bytes());
         self.client.send(buf)
