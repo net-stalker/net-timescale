@@ -1,10 +1,14 @@
 use std::fmt;
+use std::num::TryFromIntError;
+use std::os::unix::io::{AsRawFd, RawFd};
+use std::sync::Arc;
 
 use pcap::{Capture, Device, Packet, PacketCodec, PacketHeader};
 use serde::{Deserialize, Serialize};
 use crate::file::Reader;
 
 use crate::capture::pcapture::config::Data;
+use crate::transport::sockets::{Receiver, Sender, Socket};
 
 pub mod config {
     use derivative::Derivative;
@@ -66,39 +70,6 @@ pub fn create_global_header() -> GlobalHeader {
         sigfigs: 0,
         snaplen: u32::from_le(65535),
         network: u32::from_le(1),
-    }
-}
-
-pub fn capture_packages(config: Data, f: impl Fn(i32, PcapPacket)) {
-    let device_name = config.devices.get(0).unwrap();
-    dbg!(device_name);
-    // let device = lookup_default_device();
-
-    let mut cap = Capture::from_device(device_name.as_str())
-        .unwrap()
-        // .promisc(true)
-        // .snaplen(65535)
-        .buffer_size(config.buffer_size)
-        .open()
-        .unwrap();
-
-    let mut cnt = 0_i32;
-    while let Ok(packet) = cap.next_packet() {
-        if config.number_packages == cnt {
-            break;
-        }
-        cnt += 1;
-
-        let packet = PcapPacket {
-            tv_sec: packet.header.ts.tv_sec as u32,
-            tv_usec: packet.header.ts.tv_usec as u32,
-            caplen: packet.header.caplen,
-            len: packet.header.len,
-            data: packet.data,
-        };
-        println!("Received packet: cnt={} packet={}", cnt, packet);
-
-        f(cnt, packet);
     }
 }
 
@@ -170,69 +141,13 @@ impl GlobalHeader {
     }
 }
 
-
-// TODO use PacketCodec
-// Packet header
-// typedef struct pcaprec_hdr_s {
-//     guint32 ts_sec;         /* timestamp seconds */
-//     guint32 ts_usec;        /* timestamp microseconds */
-//     guint32 incl_len;       /* number of octets of packet saved in file */
-//     guint32 orig_len;       /* actual length of packet */
-// } pcaprec_hdr_t;
-
-// Packet header size = 16 bytes
-
-// ts_sec = 4 bytes (85 AD C7 50) *This is the number of seconds since the start of 1970, also known as Unix Epoch
-// ts_usec = 4 bytes (AC 97 05 00) *microseconds part of the time at which the packet was captured
-// incl_len = 4 bytes (E0 04 00 00) = 1248 *contains the size of the saved packet data in our file in bytes (following the header)
-// orig_len = 4 bytes (E0 04 00 00) *Both fields' value is same here, but these may have different values in cases where we set the maximum packet length (whose value is 65535 in the global header of our file) to a smaller size.
-#[derive(Serialize, Deserialize, Debug)]
-pub struct PcapPacket<'a> {
-    /// The time when the packet was captured
-    pub tv_sec: u32,
-    pub tv_usec: u32,
-    /// The number of bytes of the packet that are available from the capture
-    pub caplen: u32,
-    /// The length of the packet, in bytes (which might be more than the number of bytes available
-    /// from the capture, if the length of the packet is larger than the maximum number of bytes to
-    /// capture)
-    pub len: u32,
-    pub data: &'a [u8],
-}
-
-impl<'a> fmt::Display for PcapPacket<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "(tv_sec={} tv_usec={} caplen={} len={} data={:?})",
-            self.tv_sec, self.tv_usec, self.caplen, self.len, self.data
-        )
-    }
-}
-
-impl<'a> PcapPacket<'a> {
-    pub fn as_bytes(&self) -> Vec<u8> {
-        let packet_header_bytes = bincode::serialize(&self).unwrap();
-        println!(
-            "Length={} Packet as bytes {:?}",
-            packet_header_bytes.len(),
-            packet_header_bytes
-        );
-
-        packet_header_bytes
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs::OpenOptions,
-        io::Write,
-        sync::mpsc,
-    };
+    use std::{fs::OpenOptions, io::Write, sync::mpsc, thread};
     use std::fs::File;
     use std::io;
     use std::io::prelude::*;
+    use crate::transport::polling::Poller;
 
     use super::*;
 
@@ -286,39 +201,32 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
-    fn test_expected_create_pcap_file() {
-        let global_header = create_global_header();
-        println!("Global Header {}", global_header);
+    fn capturing() {
+        struct Codec;
+        impl PacketCodec for Codec {
+            type Item = ();
 
-        File::create("../net-core/captures/arp.pcap").unwrap();
-        let mut f = OpenOptions::new()
-            // .create_new(true)
-            .write(true)
-            .append(true)
-            .open("../net-core/captures/arp.pcap")
-            .unwrap();
-        f.write_all(&global_header.as_bytes()).unwrap();
+            fn decode(&mut self, packet: Packet) -> Self::Item {
+                todo!()
+            }
+        }
 
-        let data = Data {
-            devices: ["en0".to_string()].to_vec(),
-            number_packages: 1,
-            buffer_size: 100,
-        };
-
-        capture_packages(
-            data,
-            |_cnt, packet| {
-                // tx.send(packet.as_bytes()).unwrap()
-                let received = packet.as_bytes();
-                println!("received data: length={}, {:?} ", received.len(), received);
-                let mut f = OpenOptions::new()
-                    // .create_new(true)
-                    .write(true)
-                    .append(true)
-                    .open("../net-core/captures/arp.pcap")
-                    .unwrap();
-                f.write_all(&received).unwrap();
-            });
+        thread::spawn(move || {
+            // let dev = pcap::Device::lookup()
+            //     .expect("device lookup failed")
+            //     .unwrap();
+            // /// let cap1 = Capture::from_device(dev);
+            // let stream = pcap::Capture::from_device(dev)
+            //     .unwrap()
+            //     // .promisc(true)
+            //     // .snaplen(65535)
+            //     .buffer_size(1000)
+            //     .open()
+            //     .unwrap()
+            //     .setnonblock()
+            //     .unwrap()
+            //     .stream(Codec)
+            //     .unwrap();
+        }).join().unwrap()
     }
 }

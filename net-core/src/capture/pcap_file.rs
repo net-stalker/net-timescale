@@ -16,6 +16,8 @@ impl Reader for PCapFile {
 
 #[cfg(test)]
 mod tests {
+    use pcap::{Capture, Packet};
+    use crate::capture::polling::{Handler, Poller};
     use super::*;
 
     #[test]
