@@ -4,7 +4,8 @@
 FROM rust as build
 
 RUN apt-get update
-RUN apt-get install -y tcpdump netcat libpcap-dev libzmq3-dev
+# install nng https://launchpad.net/ubuntu/+source/nng
+RUN apt-get install -y tcpdump netcat libpcap-dev libzmq3-dev libnng-dev
 
 ARG PROJ_NAME
 
