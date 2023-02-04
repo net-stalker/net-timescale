@@ -1,5 +1,7 @@
 use std::ops::Deref;
 use std::thread;
+use net_agent::codec::Codec;
+use net_agent::command::dummy::DummyCommand;
 use net_core::capture;
 use net_core::capture::packet;
 use net_core::capture::packet::Packet;
@@ -10,9 +12,6 @@ use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::context::{ContextBuilder};
 use net_core::transport::polling::Poller;
 use net_core::transport::sockets::Sender;
-use net_monitor::codec;
-use net_monitor::codec::Codec;
-use net_monitor::command::dummy::DummyCommand;
 
 fn main() {
     let config = ConfigManager { application_name: "net-agent", file_loader: Box::new(ConfigFile) as Box<dyn FileReader> }.load();
