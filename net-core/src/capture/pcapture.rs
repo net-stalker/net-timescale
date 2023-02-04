@@ -5,7 +5,6 @@ use std::sync::Arc;
 
 use pcap::{Capture, Device, Packet, PacketCodec, PacketHeader};
 use serde::{Deserialize, Serialize};
-use crate::file::Reader;
 
 use crate::capture::pcapture::config::Data;
 use crate::transport::sockets::{Receiver, Sender, Socket};
