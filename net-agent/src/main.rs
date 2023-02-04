@@ -5,7 +5,6 @@ use net_core::capture::packet;
 use net_core::capture::packet::Packet;
 
 use net_core::config::{ConfigManager, ConfigSpec, ConfigFile, FileReader};
-use net_core::capture::pcapture::{create_global_header};
 use net_core::capture::polling::Handler;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::context::{ContextBuilder};

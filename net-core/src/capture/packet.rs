@@ -13,19 +13,19 @@ use std::ops::Deref;
 #[derive(Serialize)]
 pub struct Packet {
     // ts_sec = 4 bytes (85 AD C7 50) *This is the number of seconds since the start of 1970, also known as Unix Epoch
-    pub tv_sec: u32,
+    tv_sec: u32,
     // ts_usec = 4 bytes (AC 97 05 00) *microseconds part of the time at which the packet was captured
-    pub tv_usec: u32,
+    tv_usec: u32,
     // The number of bytes of the packet that are available from the capture
     // incl_len = 4 bytes (E0 04 00 00) = 1248 *contains the size of the saved packet data in our file in bytes (following the header)
-    pub caplen: u32,
+    caplen: u32,
     // The length of the packet, in bytes (which might be more than the number of bytes available
     // from the capture, if the length of the packet is larger than the maximum number of bytes to
     // capture)
     // orig_len = 4 bytes (E0 04 00 00) *Both fields' value is same here, but these may have different values in cases where we set the maximum packet length (whose value is 65535 in the global header of our file) to a smaller size.
-    pub len: u32,
+    len: u32,
     #[serde(skip_serializing)]
-    pub data: Vec<u8>,
+    data: Vec<u8>,
 }
 
 impl From<pcap::Packet<'_>> for Packet {
@@ -53,10 +53,10 @@ impl fmt::Debug for Packet {
 
 impl Packet {
     pub fn to_bytes(&self) -> Vec<u8> {
-        let mut packet_header_bytes = bincode::serialize(&self).unwrap();
-        packet_header_bytes.append(&mut self.data.deref().to_vec());
+        let mut bytes = bincode::serialize(&self).unwrap();
+        bytes.append(&mut self.data.deref().to_vec());
 
-        packet_header_bytes
+        bytes
     }
 }
 
