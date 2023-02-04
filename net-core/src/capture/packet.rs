@@ -2,6 +2,7 @@ use serde::{Serialize};
 use std::fmt;
 use std::ops::Deref;
 
+// https://tshark.dev/formats/pcap_deconstruction/
 // Packet header
 // typedef struct pcaprec_hdr_s {
 //     guint32 ts_sec;         /* timestamp seconds */

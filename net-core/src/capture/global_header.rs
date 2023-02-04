@@ -1,6 +1,7 @@
 use serde::{Serialize};
 use std::fmt;
 
+/// https://tshark.dev/formats/pcap_deconstruction/
 // typedef struct pcap_hdr_s {
 //     guint32 magic_number;   /* magic number */
 //     guint16 version_major;  /* major version number */
@@ -10,10 +11,14 @@ use std::fmt;
 //     guint32 snaplen;        /* max length of captured packets, in octets */
 //     guint32 network;        /* data link type */
 // } pcap_hdr_t;
+//
 // Header size = 24 bytes:
+///
+/// ```
 #[derive(Serialize)]
 pub struct GlobalHeader {
     // magic_number = 4 bytes (d4 c3 b2 a1)
+    // Magic Number Types https://tshark.dev/formats/pcap_deconstruction/
     magic_number: u32,
     // version_major = 2 bytes (02 00)
     version_major: u16,
@@ -25,20 +30,31 @@ pub struct GlobalHeader {
     sigfigs: u32,
     // snaplen = 4 bytes (FF FF 00 00) *maximum length of the captured packets (data#) in bytes, here its 65535 (0xffff) which is default value for tcpdump and wireshark)
     snaplen: u32,
-    // network = 4 bytes (01 00 00 00) *0x1 which indicates that the link-layer protocol is Ethernet. Full list: http://www.tcpdump.org/linktypes.html
+    // network = 4 bytes (01 00 00 00) *0x1 which indicates that the link-layer protocol is Ethernet.
+    // Full list: http://www.tcpdump.org/linktypes.html
     network: u32,
 }
 
+const PCAPH_MAGIC_NUM_LE: u32 = 3569595041;
+const PCAPH_VER_MAJOR: u16 = 2;
+const PCAPH_VER_MINOR: u16 = 4;
+const PCAPH_THISZONE: u32 = 0;
+const PCAPH_SIGFIGS: u32 = 0;
+const PCAPH_SNAPLEN: u32 = 65535;
+const LINKTYPE_ETHERNET: u32 = 1;
+
 impl GlobalHeader {
     pub fn new() -> Self {
+        let pcaph_magic_num_be = u32::from_be(PCAPH_MAGIC_NUM_LE);
+
         GlobalHeader {
-            magic_number: u32::from_be(3569595041),
-            version_major: 2,
-            version_minor: 4,
-            thiszone: 0,
-            sigfigs: 0,
-            snaplen: 65535,
-            network: 1,
+            magic_number: pcaph_magic_num_be,
+            version_major: PCAPH_VER_MAJOR,
+            version_minor: PCAPH_VER_MINOR,
+            thiszone: PCAPH_THISZONE,
+            sigfigs: PCAPH_SIGFIGS,
+            snaplen: PCAPH_SNAPLEN,
+            network: LINKTYPE_ETHERNET,
         }
     }
 }
