@@ -37,13 +37,9 @@ impl<H: Handler> Sender for ConnectorNNG<H> {
 
 impl<HANDLER: Handler> sockets::Socket for ConnectorNNG<HANDLER>
 {
-    fn fd(&self) -> RawFd {
+    fn as_raw_fd(&self) -> RawFd {
         //FIXME RecvFd will be worked only for Protocols that can receive data
         self.socket.get_opt::<RecvFd>().unwrap()
-    }
-
-    fn fd_as_usize(&self) -> Result<usize, TryFromIntError> {
-        usize::try_from(self.fd())
     }
 
     fn handle(&self, receiver: &dyn Receiver, sender: &dyn Sender) {
