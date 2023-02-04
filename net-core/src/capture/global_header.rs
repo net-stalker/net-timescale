@@ -32,9 +32,9 @@ pub struct GlobalHeader {
 impl GlobalHeader {
     pub fn new() -> Self {
         GlobalHeader {
-            magic_number: 3569595041,
+            magic_number: u32::from_be(3569595041),
             version_major: 2,
-            version_minor: 2,
+            version_minor: 4,
             thiszone: 0,
             sigfigs: 0,
             snaplen: 65535,
@@ -70,8 +70,15 @@ mod tests {
     #[test]
     fn expected_create_global_header() {
         let global_header = GlobalHeader::new();
+        let buf = global_header.to_bytes();
 
         println!("{:?}", global_header);
-        assert_eq!(24, global_header.to_bytes().len());
+        assert_eq!(24, buf.len());
+
+        assert!([
+            212, 195, 178, 161, 2, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 0, 1, 0, 0, 0
+        ]
+            .iter()
+            .eq(buf.iter()));
     }
 }
