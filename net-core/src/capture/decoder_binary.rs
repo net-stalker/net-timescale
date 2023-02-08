@@ -1,5 +1,6 @@
-use crate::translator::Decoder;
 use subprocess::{Exec, Redirection};
+
+use crate::translator::Decoder;
 
 pub struct JsonDecoder;
 
@@ -37,6 +38,7 @@ impl Decoder for JsonDecoder {
 #[cfg(test)]
 mod tests {
     use crate::file::files::{Files, Reader};
+
     use super::*;
 
     #[test]

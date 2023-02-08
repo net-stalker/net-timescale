@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use simple_websockets::{Message, Responder};
-use net_core::transport::sockets::{Handler, Receiver, Sender};
+
 use serde_json::json;
+use simple_websockets::{Message, Responder};
+
+use net_core::transport::sockets::{Handler, Receiver, Sender};
 
 pub struct PullCommand {
     pub clients: Arc<RwLock<HashMap<u64, Responder>>>,

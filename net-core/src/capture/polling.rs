@@ -1,5 +1,7 @@
 use std::sync::Arc;
+
 use pcap::{Active, Capture};
+
 use crate::capture::packet::Packet;
 
 pub struct Poller<H> {
@@ -55,7 +57,9 @@ impl<H: Handler> Poller<H> {
 #[cfg(test)]
 mod tests {
     use std::ops::Deref;
+
     use crate::capture::packet::Packet;
+
     use super::*;
 
     #[test]

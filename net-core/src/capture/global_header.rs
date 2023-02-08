@@ -1,5 +1,6 @@
-use serde::{Serialize};
 use std::fmt;
+
+use serde::Serialize;
 
 /// https://tshark.dev/formats/pcap_deconstruction/
 // typedef struct pcap_hdr_s {
@@ -36,7 +37,6 @@ pub struct GlobalHeader {
 }
 
 const PCAPH_MAGIC_NUM_LE: u32 = 3569595041;
-const PCAPH_MAGIC_NUM_BE: u32 = 2712847316;
 const PCAPH_VER_MAJOR: u16 = 2;
 const PCAPH_VER_MINOR: u16 = 4;
 const PCAPH_THISZONE: u32 = 0;
@@ -83,6 +83,8 @@ impl GlobalHeader {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const PCAPH_MAGIC_NUM_BE: u32 = 2712847316;
 
     #[test]
     fn expected_create_global_header() {
