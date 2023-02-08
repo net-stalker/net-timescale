@@ -1,11 +1,12 @@
 use std::num::TryFromIntError;
 use std::os::unix::io::RawFd;
 use std::sync::Arc;
+
 use nng::{Aio, Protocol, Socket};
 use nng::options::{Options, RecvFd};
 use zmq::SocketType;
-use crate::transport;
 
+use crate::transport;
 use crate::transport::context::{Context, ContextBuilder};
 use crate::transport::sockets;
 use crate::transport::sockets::{Handler, Receiver, Sender};
@@ -163,17 +164,19 @@ impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
 }
 
 mod tests {
-    use std::net::TcpListener;
     use std::io::{Read, Write};
+    use std::net::TcpListener;
     use std::thread;
-    use zmq::{DEALER, ROUTER};
+
     use polling::Event;
+    use zmq::{DEALER, ROUTER};
+
     use crate::transport::context::ContextBuilder;
 
     #[test]
     fn test() {
         let context = ContextBuilder::new().build(); //TODO Use From trait instead of new
-        let connector_context = context.clone();
+        let _connector_context = context.clone();
 
         // let dealer_server = ConnectorBuilder::new()
         //     .with_context(context)
@@ -186,7 +189,7 @@ mod tests {
         //     .build()
         //     .bind();
 
-        let server_handle = thread::spawn(move || {
+        let _server_handle = thread::spawn(move || {
             // let poller = polling::Poller::new().unwrap();
             // poller.add(&socket, Event::readable(key));
             // poller.poll();

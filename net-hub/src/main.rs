@@ -6,7 +6,7 @@ use std::{
 
 use simple_websockets::{Event, Message, Responder};
 
-use net_core::config::{ConfigManager, ConfigSpec, ConfigFile, FileReader};
+use net_core::config::{ConfigFile, ConfigManager, ConfigSpec, FileReader};
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::connector_nng::Proto::{Pub, Pull};
 use net_core::transport::context::ContextBuilder;

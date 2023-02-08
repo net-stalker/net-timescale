@@ -1,6 +1,7 @@
-use serde::{Serialize};
 use std::fmt;
 use std::ops::Deref;
+
+use serde::Serialize;
 
 // https://tshark.dev/formats/pcap_deconstruction/
 // Packet header
@@ -64,6 +65,7 @@ impl Packet {
 #[cfg(test)]
 mod tests {
     use pcap::Capture;
+
     use super::*;
 
     #[test]

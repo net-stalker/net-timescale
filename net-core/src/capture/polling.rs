@@ -1,5 +1,7 @@
 use std::sync::Arc;
+
 use pcap::{Active, Capture};
+
 use crate::capture::packet::Packet;
 
 pub struct Poller<H> {
@@ -14,10 +16,11 @@ pub trait Handler {
 
 impl<H: Handler> Poller<H> {
     pub fn new(capture: Capture<Active>) -> Self {
+        let infinite_capturing = -1;
+
         Poller {
             capture,
-            //TODO create enum instead of -1 constant
-            packet_cnt: -1, //infinite capturing
+            packet_cnt: infinite_capturing,
             handler: None,
         }
     }
@@ -54,7 +57,9 @@ impl<H: Handler> Poller<H> {
 #[cfg(test)]
 mod tests {
     use std::ops::Deref;
+
     use crate::capture::packet::Packet;
+
     use super::*;
 
     #[test]

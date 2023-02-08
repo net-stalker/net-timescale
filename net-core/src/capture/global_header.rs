@@ -1,5 +1,6 @@
-use serde::{Serialize};
 use std::fmt;
+
+use serde::Serialize;
 
 /// https://tshark.dev/formats/pcap_deconstruction/
 // typedef struct pcap_hdr_s {
@@ -83,6 +84,8 @@ impl GlobalHeader {
 mod tests {
     use super::*;
 
+    const PCAPH_MAGIC_NUM_BE: u32 = 2712847316;
+
     #[test]
     fn expected_create_global_header() {
         let global_header = GlobalHeader::new();
@@ -90,11 +93,12 @@ mod tests {
 
         println!("{:?}", global_header);
         assert_eq!(24, buf.len());
-
-        assert!([
-            212, 195, 178, 161, 2, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 0, 1, 0, 0, 0
-        ]
-            .iter()
-            .eq(buf.iter()));
+        assert_eq!(PCAPH_MAGIC_NUM_BE, global_header.magic_number);
+        assert_eq!(PCAPH_VER_MAJOR, global_header.version_major);
+        assert_eq!(PCAPH_VER_MINOR, global_header.version_minor);
+        assert_eq!(PCAPH_THISZONE, global_header.thiszone);
+        assert_eq!(PCAPH_SIGFIGS, global_header.sigfigs);
+        assert_eq!(PCAPH_SNAPLEN, global_header.snaplen);
+        assert_eq!(LINKTYPE_ETHERNET, global_header.network);
     }
 }

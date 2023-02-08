@@ -1,10 +1,12 @@
 use std::ops::Deref;
 use std::sync::Arc;
+
 use net_core::capture::global_header::GlobalHeader;
 use net_core::capture::packet::Packet;
 use net_core::capture::polling::Handler;
 use net_core::transport::connector_nng::ConnectorNNG;
 use net_core::transport::sockets::Sender;
+
 use crate::command::dummy::DummyCommand;
 
 pub struct Codec {
