@@ -1,10 +1,10 @@
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
-name = "net-monitor"
+name = "net-agent"
 version = "0.1.0"
 edition = "2021"
 description = ""
-repository = "https://github.com/net-stalker/monitor"
+repository = "https://github.com/net-stalker/netmonitor"
 #links = "libpcap-dev libzmq3-dev"
 authors = ["Dmytro Shcherbatiuk <dmytro.shcherbatiuk@netstalker.io>"]
 readme = "README.md"
@@ -13,8 +13,8 @@ readme = "README.md"
 #license-file = "LICENSE.txt"
 
 [package.metadata.bundle]
-name = "netmonitor"
-identifier = "io.netmonitor"
+name = "netagent"
+identifier = "io.netagent"
 icon = ["32x32.png", "128x128.png", "128x128@2x.png"]
 resources = ["assets", "images/**/*.png", "debian"]
 copyright = "Copyright (c) Netstalker 2022. All rights reserved."

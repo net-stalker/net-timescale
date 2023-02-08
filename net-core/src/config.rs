@@ -8,8 +8,6 @@ use hocon::{Error, HoconLoader};
 use mockall::automock;
 use serde::{Deserialize, Serialize};
 
-use crate::capture::pcapture::config::Data;
-
 #[derive(Derivative)]
 #[derive(Serialize, Deserialize, Debug)]
 #[derivative(Default)]
@@ -28,9 +26,9 @@ pub struct Dealer {
 pub struct Config {
     #[allow(dead_code)]
     pub dealer: Dealer,
-    #[allow(dead_code)]
-    #[serde(default)]
-    pub data: Data,
+    // #[allow(dead_code)]
+    // #[serde(default)]
+    // pub data: Data,
 }
 
 impl fmt::Display for Config {
@@ -145,9 +143,9 @@ mod tests {
 
         assert_eq!(config.dealer.enable, true);
         assert_eq!(config.dealer.endpoint, "tcp://0.0.0.0:5555");
-        assert_eq!(config.data.devices, vec!["any"]);
-        assert_eq!(config.data.number_packages, -1);
-        assert_eq!(config.data.buffer_size, 1000);
+        // assert_eq!(config.data.devices, vec!["any"]);
+        // assert_eq!(config.data.number_packages, -1);
+        // assert_eq!(config.data.buffer_size, 1000);
     }
 
     #[test]
@@ -163,9 +161,9 @@ mod tests {
 
         assert_eq!(config.dealer.enable, true);
         assert_eq!(config.dealer.endpoint, "tcp://0.0.0.0:4444");
-        assert_eq!(config.data.devices, vec!["eth0"]);
-        assert_eq!(config.data.number_packages, -1);
-        assert_eq!(config.data.buffer_size, 100);
+        // assert_eq!(config.data.devices, vec!["eth0"]);
+        // assert_eq!(config.data.number_packages, -1);
+        // assert_eq!(config.data.buffer_size, 100);
     }
 
     #[test]
@@ -178,9 +176,9 @@ mod tests {
 
         assert_eq!(config.dealer.enable, true);
         assert_eq!(config.dealer.endpoint, "tcp://0.0.0.0:5555");
-        assert_eq!(config.data.devices, vec!["any"]);
-        assert_eq!(config.data.number_packages, -1);
-        assert_eq!(config.data.buffer_size, 1000);
+        // assert_eq!(config.data.devices, vec!["any"]);
+        // assert_eq!(config.data.number_packages, -1);
+        // assert_eq!(config.data.buffer_size, 1000);
     }
 
     #[test]
@@ -197,8 +195,8 @@ mod tests {
 
         assert_eq!(config.dealer.enable, true);
         assert_eq!(config.dealer.endpoint, "tcp://0.0.0.0:4444");
-        assert_eq!(config.data.devices, vec!["eth0"]);
-        assert_eq!(config.data.number_packages, -1);
-        assert_eq!(config.data.buffer_size, 100);
+        // assert_eq!(config.data.devices, vec!["eth0"]);
+        // assert_eq!(config.data.number_packages, -1);
+        // assert_eq!(config.data.buffer_size, 100);
     }
 }
