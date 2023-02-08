@@ -14,10 +14,11 @@ pub trait Handler {
 
 impl<H: Handler> Poller<H> {
     pub fn new(capture: Capture<Active>) -> Self {
+        let infinite_capturing = -1;
+
         Poller {
             capture,
-            //TODO create enum instead of -1 constant
-            packet_cnt: -1, //infinite capturing
+            packet_cnt: infinite_capturing,
             handler: None,
         }
     }
