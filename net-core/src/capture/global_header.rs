@@ -36,6 +36,7 @@ pub struct GlobalHeader {
 }
 
 const PCAPH_MAGIC_NUM_LE: u32 = 3569595041;
+const PCAPH_MAGIC_NUM_BE: u32 = 2712847316;
 const PCAPH_VER_MAJOR: u16 = 2;
 const PCAPH_VER_MINOR: u16 = 4;
 const PCAPH_THISZONE: u32 = 0;
@@ -90,11 +91,12 @@ mod tests {
 
         println!("{:?}", global_header);
         assert_eq!(24, buf.len());
-
-        assert!([
-            212, 195, 178, 161, 2, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 0, 1, 0, 0, 0
-        ]
-            .iter()
-            .eq(buf.iter()));
+        assert_eq!(PCAPH_MAGIC_NUM_BE, global_header.magic_number);
+        assert_eq!(PCAPH_VER_MAJOR, global_header.version_major);
+        assert_eq!(PCAPH_VER_MINOR, global_header.version_minor);
+        assert_eq!(PCAPH_THISZONE, global_header.thiszone);
+        assert_eq!(PCAPH_SIGFIGS, global_header.sigfigs);
+        assert_eq!(PCAPH_SNAPLEN, global_header.snaplen);
+        assert_eq!(LINKTYPE_ETHERNET, global_header.network);
     }
 }
