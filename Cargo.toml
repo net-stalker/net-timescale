@@ -4,5 +4,6 @@ members = [
     "net-core",
     "net-agent",
     "net-hub",
-    "net-translator"
+    "net-translator",
+    "net-timescale"
 ]
