@@ -65,12 +65,13 @@ impl Packet {
 #[cfg(test)]
 mod tests {
     use pcap::Capture;
+    use crate::test_resources;
 
     use super::*;
 
     #[test]
     fn expected_encode_file() {
-        let mut capture = Capture::from_file("../net-core/captures/arp.pcap").unwrap();
+        let mut capture = Capture::from_file(test_resources!("captures/arp.pcap")).unwrap();
         let packet = capture.next_packet().unwrap();
 
         let packet = Packet::from(packet);
