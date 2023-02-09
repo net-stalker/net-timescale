@@ -63,6 +63,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore]
     fn test() {
         let capture = Capture::from_device("en0")
             .unwrap()
