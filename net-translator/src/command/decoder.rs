@@ -1,4 +1,4 @@
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc};
 
 use net_core::capture::decoder_binary::JsonDecoder;
 use net_core::translator::Decoder;

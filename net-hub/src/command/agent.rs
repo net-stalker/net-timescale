@@ -1,7 +1,7 @@
-use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
 
-use simple_websockets::{Message, Responder};
+use std::sync::{Arc};
+
+
 
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
@@ -11,7 +11,7 @@ pub struct AgentCommand<S> {
 
 impl<S: Sender> Handler for AgentCommand<S> {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
-        let mut data = receiver.recv();
+        let data = receiver.recv();
         println!("received from agent {:?}", data);
 
         // let magic_num = &data[..4];

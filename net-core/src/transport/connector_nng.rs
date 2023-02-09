@@ -1,13 +1,10 @@
-use std::num::TryFromIntError;
 use std::os::unix::io::RawFd;
 use std::sync::Arc;
 
-use nng::{Aio, Protocol, Socket};
+use nng::{Protocol, Socket};
 use nng::options::{Options, RecvFd};
-use zmq::SocketType;
 
-use crate::transport;
-use crate::transport::context::{Context, ContextBuilder};
+
 use crate::transport::sockets;
 use crate::transport::sockets::{Handler, Receiver, Sender};
 
@@ -164,49 +161,5 @@ impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
 }
 
 mod tests {
-    use std::io::{Read, Write};
-    use std::net::TcpListener;
     use std::thread;
-
-    use polling::Event;
-    use zmq::{DEALER, ROUTER};
-
-    use crate::transport::context::ContextBuilder;
-
-    #[test]
-    fn test() {
-        let context = ContextBuilder::new().build(); //TODO Use From trait instead of new
-        let _connector_context = context.clone();
-
-        // let dealer_server = ConnectorBuilder::new()
-        //     .with_context(context)
-        //     .with_xtype(zmq::DEALER)
-        //     .with_endpoint("inproc://test".to_string())
-        //     .with_handler(|data| {
-        //         let result = String::from_utf8(data);
-        //         println!("received data {:?}", result);
-        //     })
-        //     .build()
-        //     .bind();
-
-        let _server_handle = thread::spawn(move || {
-            // let poller = polling::Poller::new().unwrap();
-            // poller.add(&socket, Event::readable(key));
-            // poller.poll();
-        });
-
-        // let _client = ConnectorBuilder::new()
-        //     .with_context(connector_context)
-        //     .with_xtype(zmq::DEALER)
-        //     .with_endpoint("inproc://test".to_string())
-        //     .build()
-        //     .connect()
-        //     .send(b"test".to_vec());
-
-        // assert_eq!(json_result, std::str::from_utf8(&json_buffer).unwrap());
-
-        // f: impl Fn(i32, PcapPacket)
-
-        // server_handle.join().unwrap();
-    }
 }

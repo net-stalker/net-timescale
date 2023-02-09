@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-use std::num::TryFromIntError;
-use std::os::unix::io::RawFd;
+
+
 use std::sync::Arc;
 
-use nng::options::{Options, RecvFd};
+
 use polling::Event;
 
 use crate::transport::sockets::Socket;
@@ -50,15 +50,9 @@ impl Poller {
 }
 
 mod tests {
-    use std::sync::Arc;
     use std::thread;
-
-    use nng::{Aio, Protocol, Socket};
-    use nng::options::{Options, RecvFd};
-    use polling::Event;
-
-    use crate::transport::{connector_nng, sockets};
-    use crate::transport::connector_nng::Proto;
+    use crate::transport::connector_nng;
+    use crate::transport::connector_nng::{ConnectorNNG, Proto};
     use crate::transport::polling::Poller;
     use crate::transport::sockets::{Handler, Receiver, Sender};
 
@@ -73,7 +67,7 @@ mod tests {
             }
         }
 
-        let client = connector_nng::ConnectorNNG::builder()
+        let client = ConnectorNNG::builder()
             .with_endpoint("ws://127.0.0.1:5555".to_string())
             .with_proto(Proto::Req)
             .with_handler(ClientCommand)
@@ -95,7 +89,7 @@ mod tests {
             }
         }
 
-        let server = connector_nng::ConnectorNNG::builder()
+        let server = ConnectorNNG::builder()
             .with_endpoint("ws://127.0.0.1:5555".to_string())
             .with_proto(Proto::Rep)
             .with_handler(ServerCommand)

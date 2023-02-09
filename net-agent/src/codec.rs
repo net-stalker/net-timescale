@@ -1,4 +1,4 @@
-use std::ops::Deref;
+
 use std::sync::Arc;
 
 use net_core::capture::global_header::GlobalHeader;
