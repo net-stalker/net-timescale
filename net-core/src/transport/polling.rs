@@ -51,7 +51,6 @@ impl Poller {
 
 mod tests {
     use std::thread;
-    use crate::transport::connector_nng;
     use crate::transport::connector_nng::{ConnectorNNG, Proto};
     use crate::transport::polling::Poller;
     use crate::transport::sockets::{Handler, Receiver, Sender};

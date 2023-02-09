@@ -159,7 +159,3 @@ impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
         }
     }
 }
-
-mod tests {
-    use std::thread;
-}
