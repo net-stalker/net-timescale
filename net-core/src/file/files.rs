@@ -19,11 +19,12 @@ impl Reader for Files {
 
 #[cfg(test)]
 mod tests {
+    use crate::test_resources;
     use super::*;
 
     #[test]
     fn expected_read_file() {
-        let buf = Files::read("../net-core/captures/arp.pcap");
+        let buf = Files::read(test_resources!("captures/arp.pcap"));
 
         println!("full packet {:?}", buf);
         assert_eq!(buf.len(), 70);

@@ -37,14 +37,16 @@ impl Decoder for JsonDecoder {
 
 #[cfg(test)]
 mod tests {
+    use crate::test_resources;
     use crate::file::files::{Files, Reader};
 
     use super::*;
 
+
     #[test]
     fn expected_decode_pcap() {
-        let pcap_buffer = Files::read("../net-core/captures/arp.pcap");
-        let json_buffer = Files::read("../net-core/captures/arp.json");
+        let pcap_buffer = Files::read(test_resources!("captures/arp.pcap"));
+        let json_buffer = Files::read(test_resources!("captures/arp.json"));
 
         let json_result = JsonDecoder::decode(pcap_buffer);
 
