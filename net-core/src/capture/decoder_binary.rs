@@ -27,6 +27,7 @@ impl Decoder for JsonDecoder {
             .arg("-")
             // .arg("-x") //add output of hex and ASCII dump (Packet Bytes)
             .arg("-Tjson") //pdml|ps|psml|json|jsonraw|ek|tabs|text|fields| format of text output (def: text)
+            .arg("--no-duplicate-keys") // If -T json is specified, merge duplicate keys in an object into a single key with as value a json array containing all values
             .stdin(buf)
             .stdout(Redirection::Pipe)
             .capture()
@@ -44,9 +45,19 @@ mod tests {
 
 
     #[test]
-    fn expected_decode_pcap() {
+    fn expected_decode_arp_pcap() {
         let pcap_buffer = Files::read(test_resources!("captures/arp.pcap"));
         let json_buffer = Files::read(test_resources!("captures/arp.json"));
+
+        let json_result = JsonDecoder::decode(pcap_buffer);
+
+        assert_eq!(json_result, std::str::from_utf8(&json_buffer).unwrap());
+    }
+
+    #[test]
+    fn expected_decode_dhcp_pcap() {
+        let pcap_buffer = Files::read(test_resources!("captures/dhcp.pcap"));
+        let json_buffer = Files::read(test_resources!("captures/dhcp.json"));
 
         let json_result = JsonDecoder::decode(pcap_buffer);
 
