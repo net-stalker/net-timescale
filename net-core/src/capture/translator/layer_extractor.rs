@@ -1,7 +1,6 @@
 use std::str::from_utf8;
 use jsonpath_rust::JsonPathFinder;
 use mockall::PredicateStrExt;
-use subprocess::{Exec, Redirection};
 use crate::capture::translator::translator::Translator;
 
 const PATH: &str = "$.._source.layers";
@@ -23,7 +22,6 @@ impl Translator for LayerExtractor {
 
 #[cfg(test)]
 mod tests {
-    use crate::capture::translator::pcap_translator::PcapTranslator;
     use crate::test_resources;
     use crate::file::files::{Files, Reader};
 
@@ -31,11 +29,10 @@ mod tests {
 
     #[test]
     fn expected_extract_layer() {
-        let pcap_buffer = Files::read(test_resources!("captures/arp.pcap"));
+        let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
         let json_buffer = Files::read(test_resources!("captures/arp_sliced.json"));
 
-        let json_result = PcapTranslator::translate(pcap_buffer);
-        let string = LayerExtractor::translate(json_result);
+        let string = LayerExtractor::translate(pcap_buffer);
 
         assert_eq!(string, from_utf8(&json_buffer).unwrap());
     }
