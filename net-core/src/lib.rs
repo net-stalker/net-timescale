@@ -3,6 +3,7 @@ pub mod config;
 pub mod transport;
 pub mod file;
 pub mod json_parser;
+pub mod json_pcap_parser;
 
 #[macro_export]
 macro_rules! test_resources {($fname:expr) => (
