@@ -1,15 +1,14 @@
 use subprocess::{Exec, Redirection};
+use crate::capture::translator::translator::Translator;
 
-use crate::translator::Decoder;
+pub struct PcapTranslator;
 
-pub struct JsonDecoder;
-
-impl Decoder for JsonDecoder {
+impl Translator for PcapTranslator {
     type Input = Vec<u8>;
     type Output = Vec<u8>;
 
     /// https://tshark.dev/capture/tshark/
-    ///
+    /// Translate pcap file to json format
     /// # Arguments
     ///
     /// * `buf`:
@@ -21,7 +20,7 @@ impl Decoder for JsonDecoder {
     /// ```
     ///
     /// ```
-    fn decode(buf: Vec<u8>) -> Vec<u8> {
+    fn translate(buf: Vec<u8>) -> Vec<u8> {
         Exec::cmd("tshark")
             .arg("-V") //add output of packet tree        (Packet Details)
             // .arg("-c1") //add output of packet tree        (Packet Details)
@@ -46,21 +45,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn expected_decode_arp_pcap() {
+    fn expected_translate_arp_packet() {
         let pcap_buffer = Files::read(test_resources!("captures/arp.pcap"));
         let json_buffer = Files::read(test_resources!("captures/arp.json"));
 
-        let json_result = JsonDecoder::decode(pcap_buffer);
+        let json_result = PcapTranslator::translate(pcap_buffer);
 
         assert_eq!(std::str::from_utf8(&json_result).unwrap(), std::str::from_utf8(&json_buffer).unwrap());
     }
 
     #[test]
-    fn expected_decode_dhcp_pcap() {
+    fn expected_translate_dhcp_packet() {
         let pcap_buffer = Files::read(test_resources!("captures/dhcp.pcap"));
         let json_buffer = Files::read(test_resources!("captures/dhcp.json"));
 
-        let json_result = JsonDecoder::decode(pcap_buffer);
+        let json_result = PcapTranslator::translate(pcap_buffer);
 
         assert_eq!(std::str::from_utf8(&json_result).unwrap(), std::str::from_utf8(&json_buffer).unwrap());
     }
