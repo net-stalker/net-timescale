@@ -1,3 +1,6 @@
 pub trait Decoder {
-    fn decode(data: Vec<u8>) -> String;
+    type Input;
+    type Output;
+
+    fn decode(data: Self::Input) -> Self::Output;
 }

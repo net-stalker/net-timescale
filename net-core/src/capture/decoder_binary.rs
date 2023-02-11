@@ -5,6 +5,9 @@ use crate::translator::Decoder;
 pub struct JsonDecoder;
 
 impl Decoder for JsonDecoder {
+    type Input = Vec<u8>;
+    type Output = Vec<u8>;
+
     /// https://tshark.dev/capture/tshark/
     ///
     /// # Arguments
@@ -18,8 +21,8 @@ impl Decoder for JsonDecoder {
     /// ```
     ///
     /// ```
-    fn decode(buf: Vec<u8>) -> String {
-        return Exec::cmd("tshark")
+    fn decode(buf: Vec<u8>) -> Vec<u8> {
+        Exec::cmd("tshark")
             .arg("-V") //add output of packet tree        (Packet Details)
             // .arg("-c1") //add output of packet tree        (Packet Details)
             // .arg("-rcaptures/arp.pcap") // set the filename to read from (or '-' for stdin)
@@ -30,9 +33,8 @@ impl Decoder for JsonDecoder {
             .arg("--no-duplicate-keys") // If -T json is specified, merge duplicate keys in an object into a single key with as value a json array containing all values
             .stdin(buf)
             .stdout(Redirection::Pipe)
-            .capture()
-            .unwrap()
-            .stdout_str();
+            .capture().unwrap()
+            .stdout
     }
 }
 
@@ -43,7 +45,6 @@ mod tests {
 
     use super::*;
 
-
     #[test]
     fn expected_decode_arp_pcap() {
         let pcap_buffer = Files::read(test_resources!("captures/arp.pcap"));
@@ -51,7 +52,7 @@ mod tests {
 
         let json_result = JsonDecoder::decode(pcap_buffer);
 
-        assert_eq!(json_result, std::str::from_utf8(&json_buffer).unwrap());
+        assert_eq!(std::str::from_utf8(&json_result).unwrap(), std::str::from_utf8(&json_buffer).unwrap());
     }
 
     #[test]
@@ -61,6 +62,6 @@ mod tests {
 
         let json_result = JsonDecoder::decode(pcap_buffer);
 
-        assert_eq!(json_result, std::str::from_utf8(&json_buffer).unwrap());
+        assert_eq!(std::str::from_utf8(&json_result).unwrap(), std::str::from_utf8(&json_buffer).unwrap());
     }
 }
