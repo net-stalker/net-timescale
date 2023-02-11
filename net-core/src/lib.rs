@@ -2,6 +2,7 @@ pub mod capture;
 pub mod config;
 pub mod transport;
 pub mod file;
+pub mod json_parser;
 
 #[macro_export]
 macro_rules! test_resources {($fname:expr) => (
