@@ -1,12 +1,14 @@
 use subprocess::{Exec, Redirection};
+use crate::capture::translator::translator::Translator;
 
-use crate::translator::Decoder;
+pub struct PcapTranslator;
 
-pub struct JsonDecoder;
+impl Translator for PcapTranslator {
+    type Input = Vec<u8>;
+    type Output = Vec<u8>;
 
-impl Decoder for JsonDecoder {
     /// https://tshark.dev/capture/tshark/
-    ///
+    /// Translate pcap file to json format
     /// # Arguments
     ///
     /// * `buf`:
@@ -18,8 +20,8 @@ impl Decoder for JsonDecoder {
     /// ```
     ///
     /// ```
-    fn decode(buf: Vec<u8>) -> String {
-        return Exec::cmd("tshark")
+    fn translate(buf: Vec<u8>) -> Vec<u8> {
+        Exec::cmd("tshark")
             .arg("-V") //add output of packet tree        (Packet Details)
             // .arg("-c1") //add output of packet tree        (Packet Details)
             // .arg("-rcaptures/arp.pcap") // set the filename to read from (or '-' for stdin)
@@ -27,11 +29,11 @@ impl Decoder for JsonDecoder {
             .arg("-")
             // .arg("-x") //add output of hex and ASCII dump (Packet Bytes)
             .arg("-Tjson") //pdml|ps|psml|json|jsonraw|ek|tabs|text|fields| format of text output (def: text)
+            .arg("--no-duplicate-keys") // If -T json is specified, merge duplicate keys in an object into a single key with as value a json array containing all values
             .stdin(buf)
             .stdout(Redirection::Pipe)
-            .capture()
-            .unwrap()
-            .stdout_str();
+            .capture().unwrap()
+            .stdout
     }
 }
 
@@ -42,14 +44,23 @@ mod tests {
 
     use super::*;
 
-
     #[test]
-    fn expected_decode_pcap() {
+    fn expected_translate_arp_packet() {
         let pcap_buffer = Files::read(test_resources!("captures/arp.pcap"));
         let json_buffer = Files::read(test_resources!("captures/arp.json"));
 
-        let json_result = JsonDecoder::decode(pcap_buffer);
+        let json_result = PcapTranslator::translate(pcap_buffer);
 
-        assert_eq!(json_result, std::str::from_utf8(&json_buffer).unwrap());
+        assert_eq!(std::str::from_utf8(&json_result).unwrap(), std::str::from_utf8(&json_buffer).unwrap());
+    }
+
+    #[test]
+    fn expected_translate_dhcp_packet() {
+        let pcap_buffer = Files::read(test_resources!("captures/dhcp.pcap"));
+        let json_buffer = Files::read(test_resources!("captures/dhcp.json"));
+
+        let json_result = PcapTranslator::translate(pcap_buffer);
+
+        assert_eq!(std::str::from_utf8(&json_result).unwrap(), std::str::from_utf8(&json_buffer).unwrap());
     }
 }

@@ -41,8 +41,10 @@
             "fr.control.u_modifier_cmd": "0x00",
             "fr.control.ftype": "0x03"
           },
-          "fr.nlpid": "0x00",
-          "fr.nlpid": "0x80",
+          "fr.nlpid": [
+            "0x00",
+            "0x80"
+          ],
           "fr.snap.oui": "0",
           "fr.snaptype": "0x0806"
         },

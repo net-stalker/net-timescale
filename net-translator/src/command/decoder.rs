@@ -1,7 +1,9 @@
-use std::sync::{Arc};
+use std::sync::Arc;
 
-use net_core::capture::decoder_binary::JsonDecoder;
-use net_core::translator::Decoder;
+use net_core::capture::translator::pcap_translator::PcapTranslator;
+use net_core::capture::translator::translator::Translator;
+use net_core::json_parser::JsonParser;
+use net_core::json_pcap_parser::JsonPcapParser;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
 pub struct DecoderCommand<S> {
@@ -13,9 +15,12 @@ impl<S: Sender> Handler for DecoderCommand<S> {
         let data = receiver.recv();
         println!("received from agent {:?}", data);
 
-        let json_result = JsonDecoder::decode(data);
-        println!("decoded data {:?}", json_result);
+        let json_as_bytes = PcapTranslator::translate(data);
+        let json_value = JsonPcapParser::find_source_layer(json_as_bytes);
+        let json_vec = JsonParser::get_vec(json_value);
+        // let json = JsonParser::print(json_value);
+        // println!("decoded data {:?}", json);
 
-        self.push.send(json_result.into_bytes())
+        self.push.send(json_vec)
     }
 }

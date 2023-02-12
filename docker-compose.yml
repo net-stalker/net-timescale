@@ -32,6 +32,22 @@ services:
     networks:
       - skynet
 
+  # https://docs.timescale.com/install/latest/installation-docker/
+  # To run container execute command: docker-compose up timescaledb
+  # To check that timescaleDB is up execute command: nc -vz localhost 5432
+  # Connect to timescaleDB execute command: psql -U postgres -h localhost
+  # or you can use https://dbeaver.io/
+  timescaledb:
+    #    image: timescale/timescaledb-pg14-latest
+    image: timescale/timescaledb-ha:pg14-latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=PsWDgxZb
+    #    -v /your/data/dir:/home/postgres/pgdata/data \
+    networks:
+      - skynet
+
 networks:
   skynet:
     driver: bridge
