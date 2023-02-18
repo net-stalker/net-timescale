@@ -4,7 +4,6 @@ use std::sync::Arc;
 use nng::{Protocol, Socket};
 use nng::options::{Options, RecvFd};
 
-
 use crate::transport::sockets;
 use crate::transport::sockets::{Handler, Receiver, Sender};
 
