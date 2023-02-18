@@ -4,8 +4,6 @@ use chrono::{DateTime, Local};
 use postgres::Client;
 use serde_json::Value;
 
-use net_core::json_pcap_parser::JsonPcapParser;
-
 pub struct InsertPacket {
     pub conn: Arc<Mutex<Client>>,
 }
@@ -31,6 +29,7 @@ mod tests {
     use postgres::NoTls;
 
     use net_core::file::files::{Files, Reader};
+    use net_core::json_pcap_parser::JsonPcapParser;
 
     use super::*;
 

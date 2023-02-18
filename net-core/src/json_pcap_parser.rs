@@ -1,6 +1,6 @@
 use std::str::from_utf8;
 
-use chrono::{DateTime, Local, NaiveDateTime};
+use chrono::{DateTime, Local};
 use serde_json::Value;
 
 use crate::json_parser::JsonParser;
