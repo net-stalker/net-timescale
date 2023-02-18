@@ -1,7 +1,3 @@
-
-
-
-
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
 pub struct DummyCommand;
