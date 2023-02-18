@@ -4,5 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sqlx = { version = "0.6", features = ["runtime-async-std-native-tls", "postgres"] }
-async-std = { version = "1", features = ["attributes"] }
+net-core = { path = "../net-core" }
+
+chrono = "0.4.23"
+postgres = { version = "0.19.4", features = ["with-chrono-0_4", "with-serde_json-1"] }
+serde_json = "1.0.91"
