@@ -29,6 +29,7 @@ zmq = "0.10.0"
 nng = "1.0.1"
 polling = "2.5.2"
 unescape = "0.1.0"
+chrono = "0.4.23"
 
 [dev-dependencies]
 mockall = "0.11.2"

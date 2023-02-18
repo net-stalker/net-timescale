@@ -4,20 +4,19 @@ use std::{
     thread::{self},
 };
 
-use simple_websockets::{Event};
+use simple_websockets::Event;
 
 use net_core::config::{ConfigFile, ConfigManager, ConfigSpec, FileReader};
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
-
-
 use net_core::transport::polling::Poller;
 use net_hub::command::agent::AgentCommand;
+use net_hub::command::dummy::DummyCommand;
 use net_hub::command::pull::PullCommand;
 use net_hub::command::translator::TranslatorCommand;
 
 fn main() {
     //Global for the project
-    let config = Arc::new(ConfigManager { application_name: "net-hub", file_loader: Box::new(ConfigFile) as Box<dyn FileReader> }.load());
+    // let config = Arc::new(ConfigManager { application_name: "net-hub", file_loader: Box::new(ConfigFile) as Box<dyn FileReader> }.load());
 
     // //Global for the project
     // let config = hub_context.clone().config.clone();
@@ -73,17 +72,26 @@ fn main() {
 
     let server_command = AgentCommand { translator: translator_clone };
     let server = ConnectorNNG::builder()
-        .with_endpoint(config.dealer.endpoint.clone())
+        .with_endpoint("tcp://0.0.0.0:5555".to_string())
         .with_proto(Proto::Rep)
         .with_handler(server_command)
         .build()
         .bind()
         .into_inner();
 
+    let db_service = ConnectorNNG::builder()
+        .with_endpoint("tcp://0.0.0.0:5556".to_string())
+        .with_proto(Proto::Req)
+        .with_handler(DummyCommand)
+        .build()
+        .connect()
+        .into_inner();
+    let db_service_clone = db_service.clone();
+
     let pull = ConnectorNNG::builder()
         .with_endpoint("tcp://0.0.0.0:5558".to_string())
         .with_proto(Proto::Rep)
-        .with_handler(PullCommand { clients })
+        .with_handler(PullCommand { clients, db_service })
         .build()
         .bind()
         .into_inner();
@@ -93,6 +101,7 @@ fn main() {
             .add(server)
             .add(translator)
             .add(pull)
+            .add(db_service_clone)
             .poll();
     }).join().unwrap();
 }

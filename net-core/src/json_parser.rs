@@ -1,7 +1,7 @@
-use std::mem::take;
 use std::str::from_utf8;
 
-use jsonpath_rust::{json_path_value, JsonPathFinder};
+use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
+use jsonpath_rust::JsonPathFinder;
 use serde_json::Value;
 use unescape::unescape;
 
@@ -33,11 +33,20 @@ impl JsonParser {
 
         unescape(value.as_str().unwrap()).unwrap()
     }
+
+    pub fn get_timestamp_with_tz(json_path_value: Value) -> DateTime<Local> {
+        let format_str = "%b %d, %Y %H:%M:%S.%f %Z";
+        let datetime_str = Self::get_string(json_path_value);
+
+        Local.datetime_from_str(&*datetime_str, format_str).unwrap()
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use serde_json::{json, Value};
+    use std::str::FromStr;
+
+    use chrono::{DateTime, FixedOffset, Local, NaiveDateTime, TimeZone, Utc};
 
     use crate::file::files::{Files, Reader};
     use crate::test_resources;
@@ -88,7 +97,7 @@ mod tests {
         let pcap_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let unknown_path = "$..frame1";
-        let time = JsonParser::get_string(JsonParser::find(pcap_buffer, unknown_path));
+        JsonParser::get_string(JsonParser::find(pcap_buffer, unknown_path));
     }
 
     #[test]
@@ -99,5 +108,22 @@ mod tests {
         let json = JsonParser::get_vec(JsonParser::find(pcap_buffer, "$.._source.layers"));
 
         assert_eq!(json, json_buffer);
+    }
+
+    #[test]
+    fn expected_convert_frame_time_to_date_time() {
+        let time = Local.datetime_from_str("Sat, 11 Feb 2023 23:40:00.000000000 EEST", "%a, %d %b %Y %H:%M:%S.%f %Z").unwrap();
+        println!("{:?}", time);
+
+        let time = Local.datetime_from_str("Sep 18, 2013 07:49:07.000000000 EEST", "%b %d, %Y %H:%M:%S.%f %Z").unwrap();
+        println!("{:?}", time);
+
+        let time = Local.datetime_from_str("Dec  5, 2004 21:16:24.317453000 EET", "%b %d, %Y %H:%M:%S.%f %Z").unwrap();
+        println!("{:?}", time);
+
+        let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
+        let time = JsonParser::get_timestamp_with_tz(JsonParser::find(pcap_buffer, "$..frame['frame.time']"));
+        println!("{:?}", time);
+        assert_eq!(time.to_string(), "2013-09-18 07:49:07 +03:00".to_string());
     }
 }
