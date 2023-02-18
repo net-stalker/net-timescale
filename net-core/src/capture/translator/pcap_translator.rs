@@ -1,4 +1,5 @@
 use subprocess::{Exec, Redirection};
+
 use crate::capture::translator::translator::Translator;
 
 pub struct PcapTranslator;
@@ -39,8 +40,8 @@ impl Translator for PcapTranslator {
 
 #[cfg(test)]
 mod tests {
-    use crate::test_resources;
     use crate::file::files::{Files, Reader};
+    use crate::test_resources;
 
     use super::*;
 
