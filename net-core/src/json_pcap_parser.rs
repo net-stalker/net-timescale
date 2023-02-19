@@ -11,8 +11,8 @@ pub const PATH_FRAME_TIME: &str = "$..frame['frame.time']";
 pub struct JsonPcapParser;
 
 impl JsonPcapParser {
-    pub fn find_source_layer(json_binary: Vec<u8>) -> (Value, Vec<u8>) {
-        JsonParser::find(json_binary, PATH_SOURCE_LAYER)
+    pub fn find_source_layer(json_binary: Vec<u8>) -> Value {
+        JsonParser::find(json_binary, PATH_SOURCE_LAYER).0
     }
 
     pub fn find_frame_time(json_binary: Vec<u8>) -> (DateTime<Local>, Vec<u8>) {
@@ -35,7 +35,7 @@ mod tests {
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted.json"));
 
         let result = JsonPcapParser::find_source_layer(pcap_buffer);
-        let json = JsonParser::print(result.0);
+        let json = JsonParser::print(result);
 
         assert_eq!(json, from_utf8(&json_buffer).unwrap());
     }
@@ -46,7 +46,7 @@ mod tests {
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let result = JsonPcapParser::find_source_layer(pcap_buffer);
-        let json = JsonParser::pretty(result.0);
+        let json = JsonParser::pretty(result);
 
         assert_eq!(json, from_utf8(&json_buffer).unwrap());
     }

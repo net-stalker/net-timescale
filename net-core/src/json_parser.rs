@@ -1,6 +1,6 @@
 use std::str::from_utf8;
 
-use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
+use chrono::{DateTime, Local, TimeZone};
 use jsonpath_rust::JsonPathFinder;
 use serde_json::Value;
 use unescape::unescape;
@@ -44,9 +44,7 @@ impl JsonParser {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
-    use chrono::{DateTime, FixedOffset, Local, NaiveDateTime, TimeZone, Utc};
+    use chrono::{Local, TimeZone};
 
     use crate::file::files::{Files, Reader};
     use crate::test_resources;
