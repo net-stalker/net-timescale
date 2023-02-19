@@ -5,14 +5,14 @@ use postgres::Client;
 use serde_json::Value;
 
 pub struct InsertPacket {
-    pub conn: Arc<Mutex<Client>>,
+    pub client: Arc<Mutex<Client>>,
 }
 
 impl InsertPacket {
     pub fn insert(&self, frame_time: DateTime<Local>, packet_json: Vec<u8>) {
         let json_value = Self::convert_to_value(packet_json).unwrap();
 
-        self.conn.lock().unwrap()
+        self.client.lock().unwrap()
             .execute(
                 "INSERT INTO CAPTURED_TRAFFIC (frame_time, binary_data) VALUES ($1, $2)",
                 &[&frame_time, &json_value],
@@ -35,8 +35,8 @@ mod tests {
 
     #[test]
     fn expected_insert_packet() {
-        let mut conn = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
-        let insert_packet = InsertPacket { conn: Arc::new(Mutex::new(conn)) };
+        let mut client = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
+        let insert_packet = InsertPacket { client: Arc::new(Mutex::new(client)) };
 
 
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/resources/captures/arp_layer_extracted.json");
