@@ -11,14 +11,14 @@ pub const PATH_FRAME_TIME: &str = "$..frame['frame.time']";
 pub struct JsonPcapParser;
 
 impl JsonPcapParser {
-    pub fn find_source_layer(json_binary: Vec<u8>) -> Value {
+    pub fn find_source_layer(json_binary: Vec<u8>) -> (Value, Vec<u8>) {
         JsonParser::find(json_binary, PATH_SOURCE_LAYER)
     }
 
-    pub fn find_frame_time(json_binary: Vec<u8>) -> DateTime<Local> {
+    pub fn find_frame_time(json_binary: Vec<u8>) -> (DateTime<Local>, Vec<u8>) {
         let value = JsonParser::find(json_binary, PATH_FRAME_TIME);
 
-        JsonParser::get_timestamp_with_tz(value)
+        (JsonParser::get_timestamp_with_tz(value.0), value.1)
     }
 }
 
@@ -34,7 +34,8 @@ mod tests {
         let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted.json"));
 
-        let json = JsonParser::print(JsonPcapParser::find_source_layer(pcap_buffer));
+        let result = JsonPcapParser::find_source_layer(pcap_buffer);
+        let json = JsonParser::print(result.0);
 
         assert_eq!(json, from_utf8(&json_buffer).unwrap());
     }
@@ -44,7 +45,8 @@ mod tests {
         let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
-        let json = JsonParser::pretty(JsonPcapParser::find_source_layer(pcap_buffer));
+        let result = JsonPcapParser::find_source_layer(pcap_buffer);
+        let json = JsonParser::pretty(result.0);
 
         assert_eq!(json, from_utf8(&json_buffer).unwrap());
     }
@@ -53,8 +55,8 @@ mod tests {
     fn expected_extract_frame_time() {
         let pcap_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
-        let time = JsonPcapParser::find_frame_time(pcap_buffer);
+        let result = JsonPcapParser::find_frame_time(pcap_buffer);
 
-        assert_eq!(time.to_string(), "2013-09-18 07:49:07 +03:00");
+        assert_eq!(result.0.to_string(), "2013-09-18 07:49:07 +03:00");
     }
 }

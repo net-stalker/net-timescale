@@ -8,11 +8,11 @@ use unescape::unescape;
 pub struct JsonParser;
 
 impl JsonParser {
-    pub fn find(json_binary: Vec<u8>, path: &str) -> Value {
+    pub fn find(json_binary: Vec<u8>, path: &str) -> (Value, Vec<u8>) {
         let json = from_utf8(&json_binary).unwrap();
         let finder = JsonPathFinder::from_str(json, path).expect("path not found");
 
-        finder.find()
+        (finder.find(), json_binary)
     }
 
     pub fn print(json_path_value: Value) -> String {
@@ -58,7 +58,8 @@ mod tests {
         let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted.json"));
 
-        let json = JsonParser::print(JsonParser::find(pcap_buffer, "$.._source.layers"));
+        let result = JsonParser::find(pcap_buffer, "$.._source.layers");
+        let json = JsonParser::print(result.0);
 
         assert_eq!(json, from_utf8(&json_buffer).unwrap());
     }
@@ -68,7 +69,8 @@ mod tests {
         let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
-        let json = JsonParser::pretty(JsonParser::find(pcap_buffer, "$.._source.layers"));
+        let result = JsonParser::find(pcap_buffer, "$.._source.layers");
+        let json = JsonParser::pretty(result.0);
 
         assert_eq!(json, from_utf8(&json_buffer).unwrap());
     }
@@ -77,7 +79,8 @@ mod tests {
     fn expected_extract_frame_time() {
         let pcap_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
-        let time = JsonParser::get_string(JsonParser::find(pcap_buffer, "$..frame['frame.time']"));
+        let result = JsonParser::find(pcap_buffer, "$..frame['frame.time']");
+        let time = JsonParser::get_string(result.0);
 
         assert_eq!(time, "Sep 18, 2013 07:49:07.000000000 EEST");
     }
@@ -97,7 +100,8 @@ mod tests {
         let pcap_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let unknown_path = "$..frame1";
-        JsonParser::get_string(JsonParser::find(pcap_buffer, unknown_path));
+        let result = JsonParser::find(pcap_buffer, unknown_path);
+        JsonParser::get_string(result.0);
     }
 
     #[test]
@@ -105,7 +109,8 @@ mod tests {
         let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted.json"));
 
-        let json = JsonParser::get_vec(JsonParser::find(pcap_buffer, "$.._source.layers"));
+        let result = JsonParser::find(pcap_buffer, "$.._source.layers");
+        let json = JsonParser::get_vec(result.0);
 
         assert_eq!(json, json_buffer);
     }
@@ -122,7 +127,8 @@ mod tests {
         println!("{:?}", time);
 
         let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
-        let time = JsonParser::get_timestamp_with_tz(JsonParser::find(pcap_buffer, "$..frame['frame.time']"));
+        let result = JsonParser::find(pcap_buffer, "$..frame['frame.time']");
+        let time = JsonParser::get_timestamp_with_tz(result.0);
         println!("{:?}", time);
         assert_eq!(time.to_string(), "2013-09-18 07:49:07 +03:00".to_string());
     }

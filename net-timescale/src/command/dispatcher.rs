@@ -13,11 +13,10 @@ pub struct CommandDispatcher {
 impl Handler for CommandDispatcher {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let json_binary = receiver.recv();
-        let json_binary_clone = json_binary.clone();
-        let frame_time = JsonPcapParser::find_frame_time(json_binary);
+        let result = JsonPcapParser::find_frame_time(json_binary);
 
         self.queries.read().unwrap()
             .get("insert_packet").unwrap()
-            .insert(frame_time, json_binary_clone);
+            .insert(result.0, result.1);
     }
 }

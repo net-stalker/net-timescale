@@ -40,9 +40,9 @@ mod tests {
 
 
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/resources/captures/arp_layer_extracted.json");
-        let frame_time = JsonPcapParser::find_frame_time(Files::read(path));
         let json_bytes = Files::read(path);
+        let result = JsonPcapParser::find_frame_time(json_bytes);
 
-        insert_packet.insert(frame_time, json_bytes);
+        insert_packet.insert(result.0, result.1);
     }
 }
