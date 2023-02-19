@@ -16,10 +16,8 @@ impl<S: Sender> Handler for DecoderCommand<S> {
         println!("received from agent {:?}", data);
 
         let json_as_bytes = PcapTranslator::translate(data);
-        let json_value = JsonPcapParser::find_source_layer(json_as_bytes);
-        let json_vec = JsonParser::get_vec(json_value);
-        // let json = JsonParser::print(json_value);
-        // println!("decoded data {:?}", json);
+        let result = JsonPcapParser::find_source_layer(json_as_bytes);
+        let json_vec = JsonParser::get_vec(result.0);
 
         self.push.send(json_vec)
     }

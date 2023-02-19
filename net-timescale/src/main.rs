@@ -12,7 +12,6 @@ use net_timescale::query::insert_packet::InsertPacket;
 fn main() {
     thread::spawn(move || {
         let client = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
-        client.enable_logger(tokio_postgres::LoggingLevel::Debug);
 
         let insert_packet = InsertPacket { client: Arc::new(Mutex::new(client)) };
 
