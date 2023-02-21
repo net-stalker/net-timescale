@@ -1,7 +1,4 @@
-
 use std::thread;
-
-
 
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
