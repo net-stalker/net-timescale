@@ -54,7 +54,6 @@ impl JsonParser {
 #[cfg(test)]
 mod tests {
     use chrono::{Local, TimeZone};
-    use serde_json::json;
 
     use crate::file::files::{Files, Reader};
     use crate::test_resources;

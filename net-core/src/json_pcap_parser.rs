@@ -22,16 +22,15 @@ impl JsonPcapParser {
     }
 
     pub fn split_into_layers(value_json: &Value) -> Value {
-        let json_obj = value_json.as_object().unwrap();
-
         let mut new_json = json!({});
-        json_obj.keys()
+        let object_json = new_json.as_object_mut().unwrap();
+
+        value_json.as_object().unwrap()
+            .keys()
             .map(|k| k.as_str())
             .enumerate()
             .for_each(|(index, field)| {
-                if let Some(object) = new_json.as_object_mut() {
-                    object.insert(format!("l{}", index + 1), json!({ field: &value_json[field] }));
-                }
+                object_json.insert(format!("l{}", index + 1), json!({ field: &value_json[field] }));
             });
 
         new_json
@@ -40,9 +39,6 @@ impl JsonPcapParser {
 
 #[cfg(test)]
 mod tests {
-    use jsonpath_rust::JsonPathFinder;
-    use serde_json::{Deserializer, json};
-
     use crate::file::files::{Files, Reader};
     use crate::test_resources;
 
