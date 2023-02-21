@@ -2,8 +2,7 @@ use std::str::from_utf8;
 
 use chrono::{DateTime, Local};
 use serde_json::{json, Value};
-
-use crate::json_parser::JsonParser;
+use crate::jsons::json_parser::JsonParser;
 
 pub const PATH_SOURCE_LAYER: &str = "$.._source.layers";
 pub const PATH_FRAME_TIME: &str = "$..frame['frame.time']";
