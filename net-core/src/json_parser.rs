@@ -15,11 +15,20 @@ impl JsonParser {
         (finder.find(), json_binary)
     }
 
-    pub fn print(json_path_value: Value) -> String {
+    pub fn first(value: &Value) -> Option<&Value> {
+        let value_json = value.as_array().unwrap();
+        if value_json.len() > 1 {
+            panic!("currently supported only one packet in the file: CU-861mdc6t7")
+        }
+
+        value_json.first()
+    }
+
+    pub fn print(json_path_value: &Value) -> String {
         format!("{}", json_path_value)
     }
 
-    pub fn pretty(json_path_value: Value) -> String {
+    pub fn pretty(json_path_value: &Value) -> String {
         format!("{:#}", json_path_value)
     }
 
@@ -45,6 +54,7 @@ impl JsonParser {
 #[cfg(test)]
 mod tests {
     use chrono::{Local, TimeZone};
+    use serde_json::json;
 
     use crate::file::files::{Files, Reader};
     use crate::test_resources;
@@ -57,9 +67,18 @@ mod tests {
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted.json"));
 
         let result = JsonParser::find(pcap_buffer, "$.._source.layers");
-        let json = JsonParser::print(result.0);
+        let json = JsonParser::print(&result.0);
 
         assert_eq!(json, from_utf8(&json_buffer).unwrap());
+    }
+
+    #[test]
+    #[should_panic]
+    fn support_only_one_packet_in_file() {
+        let pcap_buffer = Files::read(test_resources!("captures/dhcp.pcap"));
+
+        let value = JsonParser::find(pcap_buffer, "$.._source.layers").0;
+        JsonParser::first(&value);
     }
 
     #[test]
@@ -68,7 +87,7 @@ mod tests {
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let result = JsonParser::find(pcap_buffer, "$.._source.layers");
-        let json = JsonParser::pretty(result.0);
+        let json = JsonParser::pretty(&result.0);
 
         assert_eq!(json, from_utf8(&json_buffer).unwrap());
     }

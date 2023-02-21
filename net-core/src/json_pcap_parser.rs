@@ -1,7 +1,7 @@
 use std::str::from_utf8;
 
 use chrono::{DateTime, Local};
-use serde_json::Value;
+use serde_json::{json, Value};
 
 use crate::json_parser::JsonParser;
 
@@ -20,10 +20,29 @@ impl JsonPcapParser {
 
         (JsonParser::get_timestamp_with_tz(value.0), value.1)
     }
+
+    pub fn split_into_layers(value_json: &Value) -> Value {
+        let json_obj = value_json.as_object().unwrap();
+
+        let mut new_json = json!({});
+        json_obj.keys()
+            .map(|k| k.as_str())
+            .enumerate()
+            .for_each(|(index, field)| {
+                if let Some(object) = new_json.as_object_mut() {
+                    object.insert(format!("l{}", index + 1), json!({ field: &value_json[field] }));
+                }
+            });
+
+        new_json
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use jsonpath_rust::JsonPathFinder;
+    use serde_json::{Deserializer, json};
+
     use crate::file::files::{Files, Reader};
     use crate::test_resources;
 
@@ -35,7 +54,7 @@ mod tests {
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted.json"));
 
         let result = JsonPcapParser::find_source_layer(pcap_buffer);
-        let json = JsonParser::print(result);
+        let json = JsonParser::print(&result);
 
         assert_eq!(json, from_utf8(&json_buffer).unwrap());
     }
@@ -46,7 +65,7 @@ mod tests {
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let result = JsonPcapParser::find_source_layer(pcap_buffer);
-        let json = JsonParser::pretty(result);
+        let json = JsonParser::pretty(&result);
 
         assert_eq!(json, from_utf8(&json_buffer).unwrap());
     }
@@ -58,5 +77,18 @@ mod tests {
         let result = JsonPcapParser::find_frame_time(pcap_buffer);
 
         assert_eq!(result.0.to_string(), "2013-09-18 07:49:07 +03:00");
+    }
+
+    #[test]
+    fn expected_splited_json_into_layers() {
+        let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
+        let json_buffer = Files::read(test_resources!("captures/arp_splied_into_layers.json"));
+
+        let result = JsonParser::find(pcap_buffer, "$.._source.layers");
+        let first_value = JsonParser::first(&result.0).unwrap();
+        let splited_json = JsonPcapParser::split_into_layers(&first_value);
+        let json = JsonParser::pretty(&splited_json);
+
+        assert_eq!(json, from_utf8(&json_buffer).unwrap());
     }
 }
