@@ -10,7 +10,7 @@ pub const PATH_FRAME_TIME: &str = "$..frame['frame.time']";
 pub struct JsonPcapParser;
 
 impl JsonPcapParser {
-    pub fn find_source_layer(json_binary: Vec<u8>) -> Value {
+    pub fn filter_source_layer(json_binary: Vec<u8>) -> Value {
         JsonParser::find(json_binary, PATH_SOURCE_LAYER).0
     }
 
@@ -44,22 +44,22 @@ mod tests {
     use super::*;
 
     #[test]
-    fn expected_extract_layer() {
+    fn expected_filter_source_layer() {
         let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted.json"));
 
-        let result = JsonPcapParser::find_source_layer(pcap_buffer);
+        let result = JsonPcapParser::filter_source_layer(pcap_buffer);
         let json = JsonParser::print(&result);
 
         assert_eq!(json, from_utf8(&json_buffer).unwrap());
     }
 
     #[test]
-    fn expected_extract_layer_pretty() {
+    fn expected_filter_source_layer_pretty() {
         let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
-        let result = JsonPcapParser::find_source_layer(pcap_buffer);
+        let result = JsonPcapParser::filter_source_layer(pcap_buffer);
         let json = JsonParser::pretty(&result);
 
         assert_eq!(json, from_utf8(&json_buffer).unwrap());
