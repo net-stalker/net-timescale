@@ -1,8 +1,8 @@
 use std::sync::{Arc, Mutex};
 
 use chrono::{DateTime, Local};
-use postgres::Client;
-use serde_json::Value;
+use postgres::{Client, Error};
+use serde_json::{json, Value};
 
 pub struct InsertPacket {
     pub client: Arc<Mutex<Client>>,
@@ -12,11 +12,18 @@ impl InsertPacket {
     pub fn insert(&self, frame_time: DateTime<Local>, packet_json: Vec<u8>) {
         let json_value = Self::convert_to_value(packet_json).unwrap();
 
-        self.client.lock().unwrap()
+        let result = self.client.lock().unwrap()
             .execute(
                 "INSERT INTO CAPTURED_TRAFFIC (frame_time, binary_data) VALUES ($1, $2)",
                 &[&frame_time, &json_value],
-            ).unwrap();
+            );
+
+        match result {
+            Ok(_) => {}
+            Err(error) => {
+                println!("{}", error)
+            }
+        }
     }
 
     fn convert_to_value(packet_json: Vec<u8>) -> serde_json::Result<Value> {
@@ -29,7 +36,7 @@ mod tests {
     use postgres::NoTls;
 
     use net_core::file::files::{Files, Reader};
-    use net_core::json_pcap_parser::JsonPcapParser;
+    use net_core::jsons::json_pcap_parser::JsonPcapParser;
 
     use super::*;
 

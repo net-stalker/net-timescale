@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
+use net_core::jsons::json_pcap_parser::JsonPcapParser;
 
-use net_core::json_pcap_parser::JsonPcapParser;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
 use crate::query::insert_packet::InsertPacket;
