@@ -1,5 +1,5 @@
-[
-  {
+{
+  "l1": {
     "frame": {
       "frame.encap_type": "26",
       "frame.time": "Sep 18, 2013 07:49:07.000000000 EEST",
@@ -14,7 +14,9 @@
       "frame.marked": "0",
       "frame.ignored": "0",
       "frame.protocols": "fr:arp"
-    },
+    }
+  },
+  "l2": {
     "fr": {
       "fr.first_addr_octet": "0x18",
       "fr.first_addr_octet_tree": {
@@ -42,7 +44,9 @@
       ],
       "fr.snap.oui": "0",
       "fr.snaptype": "0x0806"
-    },
+    }
+  },
+  "l3": {
     "arp": {
       "arp.hw.type": "15",
       "arp.proto.type": "0x0800",
@@ -55,4 +59,4 @@
       "arp.dst.proto_ipv4": "0.0.0.0"
     }
   }
-]
+}
