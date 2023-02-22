@@ -2,10 +2,13 @@ use std::str::from_utf8;
 
 use chrono::{DateTime, Local};
 use serde_json::{json, Value};
+use unescape::unescape;
+
 use crate::jsons::json_parser::JsonParser;
 
 pub const PATH_SOURCE_LAYER: &str = "$.._source.layers";
 pub const PATH_FRAME_TIME: &str = "$..frame['frame.time']";
+const L3_PATH: &'static str = "/l3";
 
 pub struct JsonPcapParser;
 
@@ -33,6 +36,58 @@ impl JsonPcapParser {
             });
 
         new_json
+    }
+
+    fn extract_field_name(l3_value: &Value) -> &str {
+        l3_value.as_object().unwrap()
+            .keys()
+            .map(|k| k.as_str())
+            .last().unwrap()
+    }
+
+    ///
+    ///
+    /// # Arguments
+    ///
+    /// * `l3_field_name`:
+    ///
+    /// returns: &str
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// {
+    ///     "ip": {
+    //          "ip.version": "4",
+    //          "ip.src": "0.0.0.0",
+    //          "ip.hdr_len": "20",
+    //          "ip.dsfield": "0x00"
+    //      }
+    //  }
+    //
+    // /ip/ip.src
+    // /ip/ip.dst
+    //
+    /// ```
+    fn create_src_addr_path(field_name_prefix: &str, field_name_suffix: &str) -> String {
+        format!("/{}/{}.{}", field_name_prefix, field_name_prefix, field_name_suffix)
+    }
+
+    fn extract_ip_addr_l3(json_value: Value, target: &str) -> String {
+        let l3_value = json_value.pointer(L3_PATH).unwrap();
+        let l3_field_name = Self::extract_field_name(l3_value);
+        let src_addr_path = Self::create_src_addr_path(l3_field_name, target);
+        let src_addr_value = l3_value.pointer(src_addr_path.as_str()).unwrap();
+
+        unescape(src_addr_value.as_str().unwrap()).unwrap()
+    }
+
+    pub fn extract_src_addr_l3(json_value: Value) -> String {
+        Self::extract_ip_addr_l3(json_value, "src")
+    }
+
+    pub fn extract_dst_addr_l3(json_value: Value) -> String {
+        Self::extract_ip_addr_l3(json_value, "dst")
     }
 }
 
@@ -77,7 +132,7 @@ mod tests {
     #[test]
     fn expected_splited_json_into_layers() {
         let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
-        let json_buffer = Files::read(test_resources!("captures/arp_splied_into_layers.json"));
+        let json_buffer = Files::read(test_resources!("captures/arp_splited_into_layers.json"));
 
         let result = JsonParser::find(pcap_buffer, "$.._source.layers");
         let first_value = JsonParser::first(&result.0).unwrap();
@@ -85,5 +140,31 @@ mod tests {
         let json = JsonParser::pretty(&splited_json);
 
         assert_eq!(json, from_utf8(&json_buffer).unwrap());
+    }
+
+    #[test]
+    fn expected_extract_src_address_from_l3() {
+        let pcap_buffer = Files::read(test_resources!("captures/dhcp_one_packet.json"));
+
+        let result = JsonParser::find(pcap_buffer, "$.._source.layers");
+        let first_value = JsonParser::first(&result.0).unwrap();
+        let splited_json = JsonPcapParser::split_into_layers(&first_value);
+
+        let string = JsonPcapParser::extract_src_addr_l3(splited_json);
+
+        assert_eq!(string, "0.0.0.0");
+    }
+
+    #[test]
+    fn expected_extract_dst_address_from_l3() {
+        let pcap_buffer = Files::read(test_resources!("captures/dhcp_one_packet.json"));
+
+        let result = JsonParser::find(pcap_buffer, "$.._source.layers");
+        let first_value = JsonParser::first(&result.0).unwrap();
+        let splited_json = JsonPcapParser::split_into_layers(&first_value);
+
+        let string = JsonPcapParser::extract_dst_addr_l3(splited_json);
+
+        assert_eq!(string, "255.255.255.255");
     }
 }
