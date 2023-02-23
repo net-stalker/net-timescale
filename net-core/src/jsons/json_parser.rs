@@ -8,11 +8,11 @@ use unescape::unescape;
 pub struct JsonParser;
 
 impl JsonParser {
-    pub fn find(json_binary: Vec<u8>, path: &str) -> (Value, Vec<u8>) {
+    pub fn find(json_binary: &Vec<u8>, path: &str) -> Value {
         let json = from_utf8(&json_binary).unwrap();
         let finder = JsonPathFinder::from_str(json, path).expect("path not found");
 
-        (finder.find(), json_binary)
+        finder.find()
     }
 
     pub fn first(value: &Value) -> Option<&Value> {
@@ -65,8 +65,8 @@ mod tests {
         let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted.json"));
 
-        let result = JsonParser::find(pcap_buffer, "$.._source.layers");
-        let json = JsonParser::print(&result.0);
+        let result = JsonParser::find(&pcap_buffer, "$.._source.layers");
+        let json = JsonParser::print(&result);
 
         assert_eq!(json, from_utf8(&json_buffer).unwrap());
     }
@@ -76,7 +76,7 @@ mod tests {
     fn support_only_one_packet_in_file() {
         let pcap_buffer = Files::read(test_resources!("captures/dhcp.pcap"));
 
-        let value = JsonParser::find(pcap_buffer, "$.._source.layers").0;
+        let value = JsonParser::find(&pcap_buffer, "$.._source.layers");
         JsonParser::first(&value);
     }
 
@@ -85,8 +85,8 @@ mod tests {
         let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
-        let result = JsonParser::find(pcap_buffer, "$.._source.layers");
-        let json = JsonParser::pretty(&result.0);
+        let result = JsonParser::find(&pcap_buffer, "$.._source.layers");
+        let json = JsonParser::pretty(&result);
 
         assert_eq!(json, from_utf8(&json_buffer).unwrap());
     }
@@ -95,8 +95,8 @@ mod tests {
     fn expected_extract_frame_time() {
         let pcap_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
-        let result = JsonParser::find(pcap_buffer, "$..frame['frame.time']");
-        let time = JsonParser::get_string(result.0);
+        let result = JsonParser::find(&pcap_buffer, "$..frame['frame.time']");
+        let time = JsonParser::get_string(result);
 
         assert_eq!(time, "Sep 18, 2013 07:49:07.000000000 EEST");
     }
@@ -107,7 +107,7 @@ mod tests {
         let pcap_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let unknown_path = "";
-        JsonParser::find(pcap_buffer, unknown_path);
+        JsonParser::find(&pcap_buffer, unknown_path);
     }
 
     #[test]
@@ -116,8 +116,8 @@ mod tests {
         let pcap_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let unknown_path = "$..frame1";
-        let result = JsonParser::find(pcap_buffer, unknown_path);
-        JsonParser::get_string(result.0);
+        let result = JsonParser::find(&pcap_buffer, unknown_path);
+        JsonParser::get_string(result);
     }
 
     #[test]
@@ -125,8 +125,8 @@ mod tests {
         let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
         let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted.json"));
 
-        let result = JsonParser::find(pcap_buffer, "$.._source.layers");
-        let json = JsonParser::get_vec(result.0);
+        let result = JsonParser::find(&pcap_buffer, "$.._source.layers");
+        let json = JsonParser::get_vec(result);
 
         assert_eq!(json, json_buffer);
     }
@@ -143,8 +143,8 @@ mod tests {
         println!("{:?}", time);
 
         let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
-        let result = JsonParser::find(pcap_buffer, "$..frame['frame.time']");
-        let time = JsonParser::get_timestamp_with_tz(result.0);
+        let result = JsonParser::find(&pcap_buffer, "$..frame['frame.time']");
+        let time = JsonParser::get_timestamp_with_tz(result);
         println!("{:?}", time);
         assert_eq!(time.to_string(), "2013-09-18 07:49:07 +03:00".to_string());
     }
