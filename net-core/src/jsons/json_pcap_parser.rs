@@ -73,20 +73,25 @@ impl JsonPcapParser {
         format!("/{}/{}.{}", field_name_prefix, field_name_prefix, field_name_suffix)
     }
 
-    fn extract_ip_addr_l3(json_value: &Value, target: &str) -> String {
+    fn extract_ip_addr_l3(json_value: &Value, target: &str) -> Option<String> {
         let l3_value = json_value.pointer(L3_PATH).unwrap();
         let l3_field_name = Self::extract_field_name(l3_value);
         let addr_path = Self::create_src_addr_path(l3_field_name, target);
-        let addr_value = l3_value.pointer(addr_path.as_str()).unwrap();
+        let addr_value = l3_value.pointer(addr_path.as_str());
 
-        unescape(addr_value.as_str().unwrap()).unwrap()
+        match addr_value {
+            None => None,
+            Some(addr_value) => {
+                unescape(addr_value.as_str().unwrap())
+            }
+        }
     }
 
-    pub fn extract_src_addr_l3(json_value: &Value) -> String {
+    pub fn extract_src_addr_l3(json_value: &Value) -> Option<String> {
         Self::extract_ip_addr_l3(json_value, "src")
     }
 
-    pub fn extract_dst_addr_l3(json_value: &Value) -> String {
+    pub fn extract_dst_addr_l3(json_value: &Value) -> Option<String> {
         Self::extract_ip_addr_l3(json_value, "dst")
     }
 }
@@ -150,7 +155,7 @@ mod tests {
         let first_value = JsonParser::first(&result).unwrap();
         let layered_json = JsonPcapParser::split_into_layers(&first_value);
 
-        let string = JsonPcapParser::extract_src_addr_l3(&layered_json);
+        let string = JsonPcapParser::extract_src_addr_l3(&layered_json).unwrap();
 
         assert_eq!(string, "0.0.0.0");
     }
@@ -163,8 +168,21 @@ mod tests {
         let first_value = JsonParser::first(&result).unwrap();
         let layered_json = JsonPcapParser::split_into_layers(&first_value);
 
-        let string = JsonPcapParser::extract_dst_addr_l3(&layered_json);
+        let string = JsonPcapParser::extract_dst_addr_l3(&layered_json).unwrap();
 
         assert_eq!(string, "255.255.255.255");
+    }
+
+    #[test]
+    fn expected_none_when_path_invalid() {
+        let pcap_buffer = Files::read(test_resources!("captures/dhcp_one_packet.json"));
+
+        let result = JsonParser::find(&pcap_buffer, "$.._source.layers");
+        let first_value = JsonParser::first(&result).unwrap();
+        let layered_json = JsonPcapParser::split_into_layers(&first_value);
+
+        let string = JsonPcapParser::extract_ip_addr_l3(&layered_json, "any");
+
+        assert_eq!(string, None);
     }
 }
