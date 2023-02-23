@@ -16,11 +16,18 @@ impl<S: Sender> Handler for DecoderCommand<S> {
         println!("received from agent {:?}", data);
 
         let json_bytes = PcapTranslator::translate(data);
-        let filtered_value_json = JsonPcapParser::filter_source_layer(json_bytes);
-        let first_json_value = JsonParser::first(&filtered_value_json).unwrap();
-        let splited_json = JsonPcapParser::split_into_layers(first_json_value);
-        let json_vec = JsonParser::get_vec(splited_json);
+        // let filtered_value_json = JsonPcapParser::filter_source_layer(&json_bytes);
+        // let first_json_value = JsonParser::first(&filtered_value_json).unwrap();
+        // let layered_json = JsonPcapParser::split_into_layers(first_json_value);
 
-        self.push.send(json_vec)
+        // let frame_time = JsonPcapParser::find_frame_time(&json_bytes);
+        // let src_addr = JsonPcapParser::extract_src_addr_l3(&layered_json);
+        // let dst_addr = JsonPcapParser::extract_src_addr_l3(&layered_json);
+        // let binary_json = JsonParser::get_vec(layered_json);
+
+        // println!("{:?} {:?} {:?} {:?}", frame_time, src_addr, dst_addr, binary_json);
+
+        // self.push.send(binary_json)
+        self.push.send(json_bytes)
     }
 }
