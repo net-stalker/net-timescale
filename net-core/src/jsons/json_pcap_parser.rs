@@ -76,10 +76,10 @@ impl JsonPcapParser {
     fn extract_ip_addr_l3(json_value: Value, target: &str) -> String {
         let l3_value = json_value.pointer(L3_PATH).unwrap();
         let l3_field_name = Self::extract_field_name(l3_value);
-        let src_addr_path = Self::create_src_addr_path(l3_field_name, target);
-        let src_addr_value = l3_value.pointer(src_addr_path.as_str()).unwrap();
+        let addr_path = Self::create_src_addr_path(l3_field_name, target);
+        let addr_value = l3_value.pointer(addr_path.as_str()).unwrap();
 
-        unescape(src_addr_value.as_str().unwrap()).unwrap()
+        unescape(addr_value.as_str().unwrap()).unwrap()
     }
 
     pub fn extract_src_addr_l3(json_value: Value) -> String {
