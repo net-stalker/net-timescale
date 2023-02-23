@@ -1,4 +1,5 @@
-use russh::{self, Channel, server::{Msg, Session}};
+use russh::{self, Channel, server::{Msg, Session, Auth}, MethodSet, ChannelId};
+use russh_keys::key;
 
 
 pub struct CLIServer 
@@ -13,9 +14,10 @@ impl CLIServer {
     }
 
     #[tokio::main]
-    pub async fn start_server(self) {
+    pub async fn start_server(self, ip: &str, port: &str) {
         let arc_config = std::sync::Arc::new(self.config.russh_config);
-        let _run_result = russh::server::run(arc_config, "0.0.0.0:2222", self.server).await;
+        let addrs = format!("{}:{}", ip, port);
+        let _run_result = russh::server::run(arc_config, addrs, self.server).await;
     }
 }
 
@@ -25,7 +27,19 @@ struct ServerConfig {
 
 impl ServerConfig {
     fn new() -> Self {
-        ServerConfig { russh_config: russh::server::Config::default() }
+        let mut russh_config = russh::server::Config::default();
+
+        russh_config.methods = MethodSet::NONE; 
+        russh_config.connection_timeout = Some(std::time::Duration::from_secs(30));
+        russh_config.auth_rejection_time = std::time::Duration::from_secs(30);
+
+        let path_to_the_secret_key = concat!(env!("CARGO_MANIFEST_DIR"), "/id_ed25519");
+        let russh_key_pair = russh_keys::load_secret_key(path_to_the_secret_key, None).unwrap();
+        russh_config.keys.push(russh_key_pair);
+
+        ServerConfig { 
+             russh_config
+        }
     }
 }
 
@@ -60,7 +74,23 @@ impl ServerHandler {
 impl russh::server::Handler for ServerHandler {
     type Error = anyhow::Error;
 
+    async fn data(self, channel: ChannelId, data: &[u8], session: Session) -> Result<(Self, Session), Self::Error> {
+        Ok((self, session))
+    }
+
     async fn channel_open_session(self, _channel: Channel<Msg>, session: Session) -> Result<(Self, bool, Session), Self::Error> {
         Ok((self, true, session))
+    }
+
+    async fn auth_none(self, user: &str) -> Result<(Self, Auth), Self::Error> {
+        Ok((self, Auth::Accept))
+    }
+
+    async fn auth_password(self, user: &str, password: &str) -> Result<(Self, Auth), Self::Error> {
+        Ok((self, Auth::Accept))
+    }
+
+    async fn auth_publickey(self, user: &str, public_key: &key::PublicKey) -> Result<(Self, Auth), Self::Error> {
+        Ok((self, Auth::Accept))
     }
 }
