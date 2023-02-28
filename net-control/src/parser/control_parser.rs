@@ -1,4 +1,4 @@
-use std::{sync::{Mutex, Once}, mem::MaybeUninit};
+use std::{sync::{Mutex, Once}, mem::MaybeUninit, collections::HashMap};
 use clap::{Command, ArgMatches};
 
 
@@ -8,6 +8,7 @@ trait Parser {
 }
 
 struct CLIParser{
+    config: ParserConfig
 }
 
 impl CLIParser {
@@ -25,10 +26,26 @@ impl CLIParser {
     }
 
     fn new() -> Self {
-        CLIParser{}
+        CLIParser{
+            config: ParserConfig::new()
+        }
     }
 }
 
 impl Parser for CLIParser {
 
+}
+
+struct ParserConfig {
+    commands: HashMap<String, Command>
+}
+
+impl ParserConfig {
+    fn new() -> Self {
+        ParserConfig { commands: HashMap::new() }
+    }
+
+    fn reconfigure() {
+        todo!("Currently unable to configure the parser")
+    }
 }
