@@ -1,7 +1,14 @@
 use std::{sync::{Mutex, Once}, mem::MaybeUninit};
+use clap::{Command, ArgMatches};
 
 
-struct CLIParser{}
+trait Parser {
+    fn parse_string_vector(data: Vec<String>) -> Option<clap::error::Result<ArgMatches>> { None }
+    fn parse_string (data: String) -> Option<clap::error::Result<ArgMatches>> { None }
+}
+
+struct CLIParser{
+}
 
 impl CLIParser {
     pub fn get_cli_parser() -> &'static Mutex<Self> {
@@ -20,4 +27,8 @@ impl CLIParser {
     fn new() -> Self {
         CLIParser{}
     }
+}
+
+impl Parser for CLIParser {
+
 }
