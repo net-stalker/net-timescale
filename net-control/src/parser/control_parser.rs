@@ -1,10 +1,10 @@
-use std::{sync::{Mutex, Once}, mem::MaybeUninit, collections::HashMap};
-use clap::{Command, ArgMatches};
+use std::{sync::{Mutex, Once}, mem::MaybeUninit, collections::HashMap, error::Error};
+use clap::{Command, ArgMatches, command, error::ErrorKind};
 
 
 trait Parser {
-    fn parse_string_vector(data: Vec<String>) -> Option<clap::error::Result<ArgMatches>> { None }
-    fn parse_string (data: String) -> Option<clap::error::Result<ArgMatches>> { None }
+    fn parse_string_vector(&self, data: &Vec<&str>) -> Option<clap::error::Result<ArgMatches>> { None }
+    fn parse_string (&self, data: &str) -> Option<clap::error::Result<ArgMatches>> { None }
 }
 
 struct CLIParser{
@@ -33,11 +33,21 @@ impl CLIParser {
 }
 
 impl Parser for CLIParser {
+    fn parse_string_vector(&self, data: &Vec<&str>) -> Option<clap::error::Result<ArgMatches>> {
+        let service_name = data[0];
+        let mut service_command: Command;
 
+        match self.config.commands.get(&service_name) {
+            Some(command) => service_command = command.clone(),
+            None => return Some(Err(clap::error::Error::new(ErrorKind::InvalidValue)))
+        }
+
+        Some(service_command.try_get_matches_from_mut(data))
+    }
 }
 
 struct ParserConfig {
-    commands: HashMap<String, Command>
+    commands: HashMap<&'static str, Command>
 }
 
 impl ParserConfig {
