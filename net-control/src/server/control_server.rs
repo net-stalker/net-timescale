@@ -1,4 +1,4 @@
-use russh::{self, Channel, server::{Msg, Session, Auth}, MethodSet, ChannelId};
+use russh::{self, Channel, server::{Msg, Session, Auth}, MethodSet, ChannelId, CryptoVec};
 use russh_keys::key;
 
 
@@ -30,7 +30,7 @@ impl ServerConfig {
         let mut russh_config = russh::server::Config::default();
 
         russh_config.methods = MethodSet::NONE; 
-        russh_config.connection_timeout = Some(std::time::Duration::from_secs(30));
+        russh_config.connection_timeout = None;
         russh_config.auth_rejection_time = std::time::Duration::from_secs(30);
 
         let path_to_the_secret_key = concat!(env!("CARGO_MANIFEST_DIR"), "/id_ed25519");
@@ -70,16 +70,13 @@ impl ServerHandler {
     }
 }
 
+
 #[async_trait::async_trait]
 impl russh::server::Handler for ServerHandler {
     type Error = anyhow::Error;
 
-    async fn data(self, channel: ChannelId, data: &[u8], session: Session) -> Result<(Self, Session), Self::Error> {
+    async fn disconnected(self, session: Session) -> Result<(Self, Session), Self::Error> {
         Ok((self, session))
-    }
-
-    async fn channel_open_session(self, _channel: Channel<Msg>, session: Session) -> Result<(Self, bool, Session), Self::Error> {
-        Ok((self, true, session))
     }
 
     async fn auth_none(self, user: &str) -> Result<(Self, Auth), Self::Error> {
@@ -92,5 +89,22 @@ impl russh::server::Handler for ServerHandler {
 
     async fn auth_publickey(self, user: &str, public_key: &key::PublicKey) -> Result<(Self, Auth), Self::Error> {
         Ok((self, Auth::Accept))
+    }
+
+    async fn channel_open_session(self, channel: Channel<Msg>, mut session: Session) -> Result<(Self, bool, Session), Self::Error> {
+        session.data(channel.id(), CryptoVec::from("Hello from CLI!".to_string()));
+        Ok((self, true, session))
+    }
+
+    async fn channel_close(self, channel: ChannelId, mut session: Session) -> Result<(Self, Session), Self::Error> {
+        session.data(channel, CryptoVec::from("Goodbye, user!".to_string()));
+        Ok((self, session))
+    }
+
+    async fn data(self, channel: ChannelId, data: &[u8], mut session: Session) -> Result<(Self, Session), Self::Error> {
+        //println!("{}", std::str::from_utf8(data).unwrap());
+        session.data(channel, CryptoVec::from(std::str::from_utf8(data).unwrap().to_string()));
+        
+        Ok((self, session))
     }
 }
