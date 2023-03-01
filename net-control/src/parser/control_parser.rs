@@ -1,4 +1,4 @@
-use std::{sync::{Mutex, Once}, mem::MaybeUninit, collections::HashMap, error::Error};
+use std::{sync::{Mutex, Once}, mem::MaybeUninit, collections::HashMap, error::Error, fmt::Debug};
 use clap::{Command, ArgMatches, command, error::ErrorKind};
 
 
@@ -7,6 +7,7 @@ trait Parser {
     fn parse_string (&self, data: &str) -> Option<clap::error::Result<ArgMatches>> { None }
 }
 
+#[derive(Debug)]
 struct CLIParser{
     config: ParserConfig
 }
@@ -46,6 +47,7 @@ impl Parser for CLIParser {
     }
 }
 
+#[derive(Debug)]
 struct ParserConfig {
     commands: HashMap<&'static str, Command>
 }
@@ -55,7 +57,47 @@ impl ParserConfig {
         ParserConfig { commands: HashMap::new() }
     }
 
-    fn reconfigure() {
+    fn reconfigure(&self, ) {
         todo!("Currently unable to configure the parser")
+    }
+
+    fn add_command (&mut self, service_name: &'static str, service_parser: Command ) {
+        self.commands.insert(service_name, service_parser);
+    }
+}
+
+//TODO: Insert command for the CLI
+impl Default for ParserConfig {
+    fn default() -> Self {
+        let config = ParserConfig::new();
+        config
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use clap::Command;
+
+    use super::CLIParser;
+    use super::ParserConfig;
+
+    #[test]
+    fn expect_parser_to_be_singleton()
+    {
+        let first_parser = CLIParser::get_cli_parser();
+        let second_parser = CLIParser::get_cli_parser();
+
+        assert!(std::ptr::eq(first_parser, second_parser));
+    }
+
+    #[test]
+    fn parser_config_command_addition()
+    {
+        let mut config = ParserConfig::new();
+        assert!(config.commands.is_empty());
+
+        config.add_command("SomeService", Command::new("SomeService"));
+        assert_eq!(config.commands.len(), 1);
     }
 }
