@@ -32,7 +32,7 @@ impl Parser for CLIParser {
         D : ToString 
     {
         let data_vector: Vec<String> = data.iter().map(|x| x.to_string()).collect();
-        let mut service_command: Command;
+        let service_command: Command;
 
         let service_name: &str = data_vector[0].as_str();
         let service_commands = command_holder.get_commands().unwrap().unwrap();
@@ -42,7 +42,7 @@ impl Parser for CLIParser {
             None => return Some(Err(clap::error::Error::new(ErrorKind::InvalidValue)))
         }
 
-        Some(service_command.try_get_matches_from_mut(data_vector))
+        Some(service_command.try_get_matches_from(data_vector))
     }
 }
 
