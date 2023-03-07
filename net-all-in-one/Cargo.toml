@@ -1,0 +1,11 @@
+[package]
+name = "net-all-in-one"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+log = "0.4"
+
+quote = "1.0.23"
+syn = { version = "1.0.109", features = ["parsing", "full", "visit"] }
+walkdir = "2.3.2"
