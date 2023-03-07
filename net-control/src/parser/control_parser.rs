@@ -7,6 +7,7 @@ use clap::{Command, ArgMatches, command, error::ErrorKind};
 // Add Error type
 trait CommandHolder{
     fn get_commands (&self) -> Option<Result<&HashMap<&str, Command>, &str>> { None }
+    fn get_commands_mut (&'static mut self) -> Option<Result<&mut HashMap<&str, Command>, &str>> { None }
 }
 #[allow(unused)]
 trait Parser{
@@ -54,6 +55,10 @@ struct ParserConfig {
 impl CommandHolder for ParserConfig {
     fn get_commands (&self) -> Option<Result<&HashMap<&str, Command>, &str>> {
         Some(Ok(&self.commands))
+    }
+
+    fn get_commands_mut (&'static mut self) -> Option<Result<&mut HashMap<&str, Command>, &str>> {
+        Some(Ok(&mut self.commands))
     }
 }
 
