@@ -55,15 +55,15 @@ impl JsonParser {
 mod tests {
     use chrono::{Local, TimeZone};
 
-    use crate::file::files::{Files, Reader};
+    use crate::file::files::{Files};
     use crate::test_resources;
 
     use super::*;
 
     #[test]
     fn expected_extract_layer() {
-        let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
-        let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/arp.json"));
+        let json_buffer = Files::read_vector(test_resources!("captures/arp_layer_extracted.json"));
 
         let result = JsonParser::find(&pcap_buffer, "$.._source.layers");
         let json = JsonParser::print(&result);
@@ -74,7 +74,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn support_only_one_packet_in_file() {
-        let pcap_buffer = Files::read(test_resources!("captures/dhcp.pcap"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/dhcp.pcap"));
 
         let value = JsonParser::find(&pcap_buffer, "$.._source.layers");
         JsonParser::first(&value);
@@ -82,8 +82,8 @@ mod tests {
 
     #[test]
     fn expected_extract_layer_pretty() {
-        let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
-        let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/arp.json"));
+        let json_buffer = Files::read_vector(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let result = JsonParser::find(&pcap_buffer, "$.._source.layers");
         let json = JsonParser::pretty(&result);
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn expected_extract_frame_time() {
-        let pcap_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let result = JsonParser::find(&pcap_buffer, "$..frame['frame.time']");
         let time = JsonParser::get_string(result);
@@ -104,7 +104,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn panic_if_unknown_path() {
-        let pcap_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let unknown_path = "";
         JsonParser::find(&pcap_buffer, unknown_path);
@@ -113,7 +113,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn panic_if_value_not_found() {
-        let pcap_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let unknown_path = "$..frame1";
         let result = JsonParser::find(&pcap_buffer, unknown_path);
@@ -122,8 +122,8 @@ mod tests {
 
     #[test]
     fn expected_extract_layer_and_return_vec() {
-        let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
-        let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/arp.json"));
+        let json_buffer = Files::read_vector(test_resources!("captures/arp_layer_extracted.json"));
 
         let result = JsonParser::find(&pcap_buffer, "$.._source.layers");
         let json = JsonParser::get_vec(result);
@@ -142,7 +142,7 @@ mod tests {
         let time = Local.datetime_from_str("Dec  5, 2004 21:16:24.317453000 EET", "%b %d, %Y %H:%M:%S.%f %Z").unwrap();
         println!("{:?}", time);
 
-        let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/arp.json"));
         let result = JsonParser::find(&pcap_buffer, "$..frame['frame.time']");
         let time = JsonParser::get_timestamp_with_tz(result);
         println!("{:?}", time);

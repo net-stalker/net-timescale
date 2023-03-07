@@ -40,15 +40,15 @@ impl Translator for PcapTranslator {
 
 #[cfg(test)]
 mod tests {
-    use crate::file::files::{Files, Reader};
+    use crate::file::files::Files;
     use crate::test_resources;
 
     use super::*;
 
     #[test]
     fn expected_translate_arp_packet() {
-        let pcap_buffer = Files::read(test_resources!("captures/arp.pcap"));
-        let json_buffer = Files::read(test_resources!("captures/arp.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/arp.pcap"));
+        let json_buffer = Files::read_vector(test_resources!("captures/arp.json"));
 
         let json_result = PcapTranslator::translate(pcap_buffer);
 
@@ -57,8 +57,8 @@ mod tests {
 
     #[test]
     fn expected_translate_dhcp_packet() {
-        let pcap_buffer = Files::read(test_resources!("captures/dhcp.pcap"));
-        let json_buffer = Files::read(test_resources!("captures/dhcp.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/dhcp.pcap"));
+        let json_buffer = Files::read_vector(test_resources!("captures/dhcp.json"));
 
         let json_result = PcapTranslator::translate(pcap_buffer);
 

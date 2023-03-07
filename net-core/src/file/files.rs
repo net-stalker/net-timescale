@@ -1,14 +1,18 @@
 use std::fs::File;
 use std::io::Read;
 
-pub trait Reader {
-    fn read(path: &str) -> Vec<u8>;
-}
-
 pub struct Files;
 
-impl Reader for Files {
-    fn read(path: &str) -> Vec<u8> {
+impl Files {
+    pub fn read_string(path: &str) -> String {
+        let mut f = File::open(path).unwrap();
+        let mut content = String::new();
+        f.read_to_string(&mut content).unwrap();
+
+        content
+    }
+
+    pub fn read_vector(path: &str) -> Vec<u8> {
         let mut f = File::open(path).unwrap();
         let mut buffer = Vec::new();
         f.read_to_end(&mut buffer).unwrap();
@@ -20,11 +24,12 @@ impl Reader for Files {
 #[cfg(test)]
 mod tests {
     use crate::test_resources;
+
     use super::*;
 
     #[test]
-    fn expected_read_file() {
-        let buf = Files::read(test_resources!("captures/arp.pcap"));
+    fn expected_read_file_as_binary() {
+        let buf = Files::read_vector(test_resources!("captures/arp.pcap"));
 
         println!("full packet {:?}", buf);
         assert_eq!(buf.len(), 70);
@@ -39,5 +44,13 @@ mod tests {
 
         let ethernet_header = &buf[40..54];
         println!("ethernet header {:?}", ethernet_header);
+    }
+
+    #[test]
+    fn expected_read_file_string() {
+        let content = Files::read_string(test_resources!("captures/arp.json"));
+
+        println!("full packet {:?}", content);
+        assert_eq!(content.len(), 1834);
     }
 }
