@@ -1,10 +1,13 @@
 use std::fs::File;
 use std::io::Read;
-use log::{info, trace};
 
+use log::{info, trace};
 use syn::{Expr, Item, ItemFn, ItemTrait, parse_file, visit};
 use syn::visit::{Visit, visit_file};
+use toml::Value;
 use walkdir::WalkDir;
+
+use net_core::file::files::Files;
 
 mod traits;
 
@@ -18,12 +21,15 @@ fn main() {
     //     }
     // }
 
-    let mut file = File::open(source_dir).unwrap();
-    let mut content = String::new();
-    file.read_to_string(&mut content).unwrap();
-
+    let content = Files::read_string(source_dir);
     let traits = count_traits(&content);
     println!("Number of traits {:?}", traits);
+
+    let cargo = concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml");
+    let content = Files::read_string(cargo);
+
+    let value = content.parse::<Value>().unwrap();
+    println!("{:#?}", value);
 }
 
 fn count_traits(content: &str) -> TraitCounter {
