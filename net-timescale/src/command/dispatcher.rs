@@ -23,7 +23,7 @@ impl Handler for CommandDispatcher {
         let frame_time = JsonPcapParser::find_frame_time(&data);
         let mut src_addr = JsonPcapParser::extract_src_addr_l3(&layered_json)
             .or(Some("".to_string()));
-        let mut dst_addr = JsonPcapParser::extract_src_addr_l3(&layered_json)
+        let mut dst_addr = JsonPcapParser::extract_dst_addr_l3(&layered_json)
             .or(Some("".to_string()));
         let binary_json = JsonParser::get_vec(layered_json);
 

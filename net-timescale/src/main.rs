@@ -8,6 +8,7 @@ use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
 use net_timescale::command::dispatcher::CommandDispatcher;
 use net_timescale::query::insert_packet::InsertPacket;
+use net_timescale::query::query_packet::QueryPacket;
 
 fn main() {
     thread::spawn(move || {
@@ -17,6 +18,13 @@ fn main() {
 
         let queries = Arc::new(RwLock::new(HashMap::new()));
         queries.write().unwrap().insert("insert_packet".to_string(), insert_packet);
+
+
+        //TODO should use pool of connections
+        let client = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
+        let packet = QueryPacket { client: Arc::new(Mutex::new(client)) };
+
+        packet.subscribe();
 
         let command_dispatcher = CommandDispatcher { queries };
 
