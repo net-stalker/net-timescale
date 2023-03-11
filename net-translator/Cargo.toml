@@ -14,4 +14,6 @@ readme = "README.md"
 [dependencies]
 net-core = { path = "../net-core" }
 
+shaku = "0.6.1"
+
 #zmq = "0.9.2"
