@@ -11,7 +11,4 @@ net-timescale = { path = "../net-timescale" }
 net-translator = { path = "../net-translator" }
 
 log = "0.4"
-quote = "1.0.23"
-syn = { version = "1.0.109", features = ["parsing", "full", "visit"] }
-toml = "0.7.2"
 shaku = "0.6.1"
