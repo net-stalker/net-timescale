@@ -1,5 +1,7 @@
 use std::fs::File;
 use std::io::Read;
+use std::path::PathBuf;
+use walkdir::WalkDir;
 
 pub struct Files;
 
@@ -18,6 +20,19 @@ impl Files {
         f.read_to_end(&mut buffer).unwrap();
 
         buffer
+    }
+
+    pub fn find_files(path_buf: &PathBuf, extension: &str) -> Vec<String> {
+        WalkDir::new(path_buf)
+            .into_iter()
+            .map(|entry| { entry.unwrap() })
+            .filter(|entry| { entry.file_type().is_file() && entry.path().extension().map_or(false, |ext| ext == extension) })
+            .map(|entry| { entry.path().to_path_buf().to_string_lossy().to_string() })
+            .collect()
+    }
+
+    pub fn find_rs_files(path_buf: &PathBuf) -> Vec<String> {
+        Self::find_files(path_buf, "rs")
     }
 }
 
