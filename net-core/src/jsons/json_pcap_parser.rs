@@ -98,15 +98,15 @@ impl JsonPcapParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::file::files::{Files, Reader};
+    use crate::file::files::{Files};
     use crate::test_resources;
 
     use super::*;
 
     #[test]
     fn expected_filter_source_layer() {
-        let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
-        let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/arp.json"));
+        let json_buffer = Files::read_vector(test_resources!("captures/arp_layer_extracted.json"));
 
         let result = JsonPcapParser::filter_source_layer(&pcap_buffer);
         let json = JsonParser::print(&result);
@@ -116,8 +116,8 @@ mod tests {
 
     #[test]
     fn expected_filter_source_layer_pretty() {
-        let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
-        let json_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/arp.json"));
+        let json_buffer = Files::read_vector(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let result = JsonPcapParser::filter_source_layer(&pcap_buffer);
         let json = JsonParser::pretty(&result);
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn expected_extract_frame_time() {
-        let pcap_buffer = Files::read(test_resources!("captures/arp_layer_extracted_pretty.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let result = JsonPcapParser::find_frame_time(&pcap_buffer);
 
@@ -136,8 +136,8 @@ mod tests {
 
     #[test]
     fn expected_layered_json_into_layers() {
-        let pcap_buffer = Files::read(test_resources!("captures/arp.json"));
-        let json_buffer = Files::read(test_resources!("captures/arp_layers.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/arp.json"));
+        let json_buffer = Files::read_vector(test_resources!("captures/arp_layers.json"));
 
         let result = JsonParser::find(&pcap_buffer, "$.._source.layers");
         let first_value = JsonParser::first(&result).unwrap();
@@ -149,7 +149,7 @@ mod tests {
 
     #[test]
     fn expected_extract_src_address_from_l3() {
-        let pcap_buffer = Files::read(test_resources!("captures/dhcp_one_packet.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/dhcp_one_packet.json"));
 
         let result = JsonParser::find(&pcap_buffer, "$.._source.layers");
         let first_value = JsonParser::first(&result).unwrap();
@@ -162,7 +162,7 @@ mod tests {
 
     #[test]
     fn expected_extract_dst_address_from_l3() {
-        let pcap_buffer = Files::read(test_resources!("captures/dhcp_one_packet.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/dhcp_one_packet.json"));
 
         let result = JsonParser::find(&pcap_buffer, "$.._source.layers");
         let first_value = JsonParser::first(&result).unwrap();
@@ -175,7 +175,7 @@ mod tests {
 
     #[test]
     fn expected_none_when_path_invalid() {
-        let pcap_buffer = Files::read(test_resources!("captures/dhcp_one_packet.json"));
+        let pcap_buffer = Files::read_vector(test_resources!("captures/dhcp_one_packet.json"));
 
         let result = JsonParser::find(&pcap_buffer, "$.._source.layers");
         let first_value = JsonParser::first(&result).unwrap();

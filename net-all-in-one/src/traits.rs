@@ -1,0 +1,3 @@
+trait Starter {}
+
+trait Handler {}

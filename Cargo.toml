@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "net-all-in-one",
     "net-core",
     "net-agent",
     "net-hub",
