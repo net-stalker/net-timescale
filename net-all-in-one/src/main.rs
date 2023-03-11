@@ -13,10 +13,13 @@ use net_core::file::files::Files;
 mod traits;
 
 fn main() {
-    let agent_module = net_agent::module::AgentModule::builder().build();
-    agent_module.resolve_ref().start();
+    let module = net_agent::module::AgentModule::builder().build();
+    module.resolve_ref().start();
 
     let module = net_hub::module::HubModule::builder().build();
+    module.resolve_ref().start();
+
+    let module = net_timescale::module::TimescaleModule::builder().build();
     module.resolve_ref().start().join().unwrap();
 }
 
