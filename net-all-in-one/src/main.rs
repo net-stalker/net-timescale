@@ -15,6 +15,9 @@ mod traits;
 fn main() {
     let agent_module = net_agent::module::AgentModule::builder().build();
     agent_module.resolve_ref().start();
+
+    let module = net_hub::module::HubModule::builder().build();
+    module.resolve_ref().start().join().unwrap();
 }
 
 fn find_sub_crates_path_with_net_prefix(toml_content: String) -> Vec<PathBuf> {

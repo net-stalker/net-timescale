@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 net-core = { path = "../net-core" }
 net-agent = { path = "../net-agent" }
+net-hub = { path = "../net-hub" }
 
 log = "0.4"
 quote = "1.0.23"

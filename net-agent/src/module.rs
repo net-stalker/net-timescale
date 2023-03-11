@@ -1,4 +1,5 @@
 use std::thread;
+use std::thread::JoinHandle;
 
 use shaku::{Component, module};
 
@@ -23,7 +24,7 @@ module! {
 pub struct Agent;
 
 impl Starter for Agent {
-    fn start(&self) {
+    fn start(&self) -> JoinHandle<()> {
         let config = ConfigManager { application_name: "net-agent", file_loader: Box::new(ConfigFile) as Box<dyn FileReader> }.load();
         // let config: String = (&self.config.dealer.endpoint).parse().unwrap();
         let client = ConnectorNNG::builder()
@@ -55,6 +56,6 @@ impl Starter for Agent {
             Poller::new()
                 .add(client)
                 .poll();
-        }).join().unwrap();
+        })
     }
 }
