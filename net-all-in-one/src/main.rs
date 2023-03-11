@@ -21,6 +21,9 @@ fn main() {
 
     let module = net_timescale::module::TimescaleModule::builder().build();
     module.resolve_ref().start().join().unwrap();
+
+    let module = net_translator::module::TranslatorModule::builder().build();
+    module.resolve_ref().start().join().unwrap();
 }
 
 fn find_sub_crates_path_with_net_prefix(toml_content: String) -> Vec<PathBuf> {
