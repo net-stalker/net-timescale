@@ -5,7 +5,7 @@ fn main() {
     env_logger::init();
     info!("Run service");
 
-    //FIME Currently OCP is violated. The modules should be scanned based on dependencies, iterate through it and start it dynamically
+    //FIXME Currently OCP is violated. The modules should be scanned based on dependencies, iterate through it and start it dynamically
     let module = net_hub::module::NetHubModule::builder().build();
     module.resolve_ref().start();
 
