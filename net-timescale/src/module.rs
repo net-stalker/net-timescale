@@ -16,7 +16,7 @@ use crate::query::insert_packet::InsertPacket;
 use crate::query::query_packet::QueryPacket;
 
 module! {
-    pub TimescaleModule {
+    pub NetTimescaleModule {
         components = [Timescale],
         providers = []
     }

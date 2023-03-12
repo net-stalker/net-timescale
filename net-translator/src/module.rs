@@ -12,7 +12,7 @@ use crate::command::decoder::DecoderCommand;
 use crate::command::dummy::DummyCommand;
 
 module! {
-    pub TranslatorModule {
+    pub NetTranslatorModule {
         components = [Translator],
         providers = []
     }

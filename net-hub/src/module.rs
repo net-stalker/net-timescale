@@ -19,7 +19,7 @@ use crate::command::pull::PullCommand;
 use crate::command::translator::TranslatorCommand;
 
 module! {
-    pub HubModule {
+    pub NetHubModule {
         components = [Hub],
         providers = []
     }

@@ -13,7 +13,7 @@ use crate::codec::Codec;
 use crate::command::dummy::DummyCommand;
 
 module! {
-    pub AgentModule {
+    pub NetAgentModule {
         components = [Agent],
         providers = []
     }

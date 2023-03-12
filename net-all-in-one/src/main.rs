@@ -5,15 +5,16 @@ fn main() {
     env_logger::init();
     info!("Run service");
 
-    let module = net_hub::module::HubModule::builder().build();
+    //FIME Currently OCP is violated. The modules should be scanned based on dependencies, iterate through it and start it dynamically
+    let module = net_hub::module::NetHubModule::builder().build();
     module.resolve_ref().start();
 
-    let module = net_agent::module::AgentModule::builder().build();
+    let module = net_agent::module::NetAgentModule::builder().build();
     module.resolve_ref().start();
 
-    let module = net_timescale::module::TimescaleModule::builder().build();
+    let module = net_timescale::module::NetTimescaleModule::builder().build();
     module.resolve_ref().start();
 
-    let module = net_translator::module::TranslatorModule::builder().build();
+    let module = net_translator::module::NetTranslatorModule::builder().build();
     module.resolve_ref().start().join().unwrap();
 }
