@@ -2,6 +2,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 
 use chrono::{DateTime, Local};
+use log::{info, debug, error};
 use postgres::Client;
 use postgres::fallible_iterator::FallibleIterator;
 use serde_json::Value;
@@ -24,7 +25,7 @@ impl QueryPacket {
         // match result {
         //     Ok(_) => {}
         //     Err(error) => {
-        //         println!("{}", error)
+        //         error!("{}", error)
         //     }
         // }
         let arc = self.client.clone();
@@ -36,13 +37,13 @@ impl QueryPacket {
             let mut it = notifications.blocking_iter();
 
             loop {
-                println!("Waiting for notifications...");
+                info!("Waiting for notifications...");
                 let a = it.next();
                 match a {
                     Ok(Some(b)) => {
-                        println!("{:?}", b);
+                        debug!("{:?}", b);
                     }
-                    Err(e) => println!("Got error {:?}", e),
+                    Err(e) => error!("Got error {:?}", e),
                     _ => panic!("Unexpected operation!!!")
                 }
             }

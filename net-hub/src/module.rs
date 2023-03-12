@@ -5,7 +5,7 @@ use std::{
     thread::{self},
 };
 
-use log::info;
+use log::{info, debug};
 use shaku::{module, Component};
 use simple_websockets::Event;
 
@@ -38,7 +38,7 @@ impl Starter for Hub {
         // //Global for the project
         // let config = hub_context.clone().config.clone();
         // if !config.dealer.enable {
-        //     println!("Dealer is disabled!");
+        //     debug!("Dealer is disabled!");
         //     return;
         // }
 
@@ -53,7 +53,7 @@ impl Starter for Hub {
             loop {
                 match event_hub.poll_event() {
                     Event::Connect(client_id, responder) => {
-                        println!("A client connected with id #{}", client_id);
+                        info!("A client connected with id #{}", client_id);
                         clients_inner
                             .write()
                             .unwrap()
@@ -62,11 +62,11 @@ impl Starter for Hub {
                         //TODO for every websocket conn should be created new zmq socket referenced to the websocket client connection.
                     }
                     Event::Disconnect(client_id) => {
-                        println!("Client #{} disconnected.", client_id);
+                        info!("Client #{} disconnected.", client_id);
                         clients_inner.write().unwrap().remove(&client_id);
                     }
                     Event::Message(client_id, message) => {
-                        println!(
+                        debug!(
                             "Received a message from client #{}: {:?}",
                             client_id, message
                         );

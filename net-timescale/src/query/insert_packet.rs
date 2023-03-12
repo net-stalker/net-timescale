@@ -21,7 +21,7 @@ impl InsertPacket {
         match result {
             Ok(_) => {}
             Err(error) => {
-                println!("{}", error)
+                log::error!("{}", error)
             }
         }
     }
