@@ -12,6 +12,8 @@ readme = "README.md"
 #license-file = "LICENSE.txt"
 
 [dependencies]
+log = "0.4.17"
+env_logger = "0.10.0"
 net-core = { path = "../net-core" }
 
 shaku = "0.6.1"

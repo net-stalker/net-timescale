@@ -10,5 +10,6 @@ net-hub = { path = "../net-hub" }
 net-timescale = { path = "../net-timescale" }
 net-translator = { path = "../net-translator" }
 
-log = "0.4"
 shaku = "0.6.1"
+log = "0.4"
+env_logger = "0.10.0"

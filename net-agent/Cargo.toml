@@ -31,8 +31,10 @@ deb_depends = ["libpcap-dev", "libzmq3-dev"]
 
 [dependencies]
 net-core = { path = "../net-core" }
+
 pcap = "1.0.0"
 shaku = "0.6.1"
-
 derivative = "2.2.0"
 directories = "4.0.1"
+log = "0.4.17"
+env_logger = "0.10.0"

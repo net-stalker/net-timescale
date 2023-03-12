@@ -9,8 +9,9 @@ net-core = { path = "../net-core" }
 chrono = "0.4.23"
 postgres = { version = "0.19.4", features = ["with-chrono-0_4", "with-serde_json-1"] }
 serde_json = "1.0.91"
-log = "0.4"
 shaku = "0.6.1"
+log = "0.4"
+env_logger = "0.10.0"
 
 [dev-dependencies]
 mockall = "0.11.2"

@@ -1,14 +1,14 @@
+use std::thread::JoinHandle;
 use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
     thread::{self},
 };
-use std::thread::JoinHandle;
 
-use shaku::{Component, module};
+use log::info;
+use shaku::{module, Component};
 use simple_websockets::Event;
 
-use net_core::config::{ConfigFile, ConfigManager, ConfigSpec, FileReader};
 use net_core::starter::starter::Starter;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
@@ -31,6 +31,7 @@ pub struct Hub;
 
 impl Starter for Hub {
     fn start(&self) -> JoinHandle<()> {
+        info!("Start module");
         //Global for the project
         // let config = Arc::new(ConfigManager { application_name: "net-hub", file_loader: Box::new(ConfigFile) as Box<dyn FileReader> }.load());
 

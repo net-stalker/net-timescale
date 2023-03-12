@@ -1,7 +1,8 @@
 use std::thread;
 use std::thread::JoinHandle;
 
-use shaku::{Component, module};
+use log::info;
+use shaku::{module, Component};
 
 use net_core::starter::starter::Starter;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
@@ -23,6 +24,8 @@ pub struct Translator;
 
 impl Starter for Translator {
     fn start(&self) -> JoinHandle<()> {
+        info!("Start module");
+
         let push = ConnectorNNG::builder()
             .with_endpoint("tcp://0.0.0.0:5558".to_string())
             .with_proto(Proto::Req)
