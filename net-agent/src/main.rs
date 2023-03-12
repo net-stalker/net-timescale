@@ -1,11 +1,12 @@
-use std::thread;
-
-use shaku::{HasComponent, module};
+use log::{info};
+use shaku::HasComponent;
 
 use net_agent::module::AgentModule;
-use net_core::starter::starter::Starter;
 
 fn main() {
+    env_logger::init();
+    info!("Run service");
+
     let module = AgentModule::builder().build();
     let starter = module.resolve_ref();
     starter.start().join().unwrap();

@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use log::debug;
 use net_core::capture::translator::pcap_translator::PcapTranslator;
 use net_core::capture::translator::translator::Translator;
 use net_core::jsons::json_parser::JsonParser;
@@ -13,7 +14,7 @@ pub struct DecoderCommand<S> {
 impl<S: Sender> Handler for DecoderCommand<S> {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        println!("received from agent {:?}", data);
+        debug!("received from agent {:?}", data);
 
         let json_bytes = PcapTranslator::translate(data);
         // let filtered_value_json = JsonPcapParser::filter_source_layer(&json_bytes);
@@ -25,7 +26,7 @@ impl<S: Sender> Handler for DecoderCommand<S> {
         // let dst_addr = JsonPcapParser::extract_src_addr_l3(&layered_json);
         // let binary_json = JsonParser::get_vec(layered_json);
 
-        // println!("{:?} {:?} {:?} {:?}", frame_time, src_addr, dst_addr, binary_json);
+        // debug!("{:?} {:?} {:?} {:?}", frame_time, src_addr, dst_addr, binary_json);
 
         // self.push.send(binary_json)
         self.push.send(json_bytes)

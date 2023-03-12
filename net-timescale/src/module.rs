@@ -3,8 +3,9 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::thread::JoinHandle;
 
+use log::info;
 use postgres::{Client, NoTls};
-use shaku::{Component, module};
+use shaku::{module, Component};
 
 use net_core::starter::starter::Starter;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
@@ -28,17 +29,25 @@ pub struct Timescale;
 impl Starter for Timescale {
     fn start(&self) -> JoinHandle<()> {
         thread::spawn(move || {
+            info!("Start module");
+
             let client = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
 
-            let insert_packet = InsertPacket { client: Arc::new(Mutex::new(client)) };
+            let insert_packet = InsertPacket {
+                client: Arc::new(Mutex::new(client)),
+            };
 
             let queries = Arc::new(RwLock::new(HashMap::new()));
-            queries.write().unwrap().insert("insert_packet".to_string(), insert_packet);
-
+            queries
+                .write()
+                .unwrap()
+                .insert("insert_packet".to_string(), insert_packet);
 
             //TODO should use pool of connections
             let client = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
-            let packet = QueryPacket { client: Arc::new(Mutex::new(client)) };
+            let packet = QueryPacket {
+                client: Arc::new(Mutex::new(client)),
+            };
 
             packet.subscribe();
 

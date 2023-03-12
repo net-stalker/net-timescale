@@ -1,5 +1,3 @@
-use std::str::from_utf8;
-
 use chrono::{DateTime, Local};
 use serde_json::{json, Value};
 use unescape::unescape;
@@ -27,22 +25,30 @@ impl JsonPcapParser {
         let mut new_json = json!({});
         let object_json = new_json.as_object_mut().unwrap();
 
-        value_json.as_object().unwrap()
+        value_json
+            .as_object()
+            .unwrap()
             .keys()
             .map(|k| k.as_str())
             .enumerate()
             .for_each(|(index, field)| {
-                object_json.insert(format!("l{}", index + 1), json!({ field: &value_json[field] }));
+                object_json.insert(
+                    format!("l{}", index + 1),
+                    json!({ field: &value_json[field] }),
+                );
             });
 
         new_json
     }
 
     fn extract_field_name(l3_value: &Value) -> &str {
-        l3_value.as_object().unwrap()
+        l3_value
+            .as_object()
+            .unwrap()
             .keys()
             .map(|k| k.as_str())
-            .last().unwrap()
+            .last()
+            .unwrap()
     }
 
     ///
@@ -70,7 +76,10 @@ impl JsonPcapParser {
     //
     /// ```
     fn create_src_addr_path(field_name_prefix: &str, field_name_suffix: &str) -> String {
-        format!("/{}/{}.{}", field_name_prefix, field_name_prefix, field_name_suffix)
+        format!(
+            "/{}/{}.{}",
+            field_name_prefix, field_name_prefix, field_name_suffix
+        )
     }
 
     fn extract_ip_addr_l3(json_value: &Value, target: &str) -> Option<String> {
@@ -81,9 +90,7 @@ impl JsonPcapParser {
 
         match addr_value {
             None => None,
-            Some(addr_value) => {
-                unescape(addr_value.as_str().unwrap())
-            }
+            Some(addr_value) => unescape(addr_value.as_str().unwrap()),
         }
     }
 
@@ -98,7 +105,7 @@ impl JsonPcapParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::file::files::{Files};
+    use crate::file::files::Files;
     use crate::test_resources;
 
     use super::*;
@@ -117,7 +124,8 @@ mod tests {
     #[test]
     fn expected_filter_source_layer_pretty() {
         let pcap_buffer = Files::read_vector(test_resources!("captures/arp.json"));
-        let json_buffer = Files::read_vector(test_resources!("captures/arp_layer_extracted_pretty.json"));
+        let json_buffer =
+            Files::read_vector(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let result = JsonPcapParser::filter_source_layer(&pcap_buffer);
         let json = JsonParser::pretty(&result);
@@ -127,7 +135,8 @@ mod tests {
 
     #[test]
     fn expected_extract_frame_time() {
-        let pcap_buffer = Files::read_vector(test_resources!("captures/arp_layer_extracted_pretty.json"));
+        let pcap_buffer =
+            Files::read_vector(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let result = JsonPcapParser::find_frame_time(&pcap_buffer);
 
