@@ -1,6 +1,3 @@
-use std::sync::Arc;
-use std::thread;
-
 use log::info;
 use pcap::Active;
 use threadpool::ThreadPool;
@@ -8,7 +5,6 @@ use threadpool::ThreadPool;
 use net_core::capture;
 use net_core::layer::NetComponent;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
-use net_core::transport::sockets::Sender;
 
 use crate::codec::Codec;
 use crate::command::dummy::DummyCommand;

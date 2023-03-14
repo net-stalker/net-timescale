@@ -1,5 +1,3 @@
-use std::thread::JoinHandle;
-
 use log::info;
 use threadpool::ThreadPool;
 
