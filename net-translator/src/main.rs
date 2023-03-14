@@ -1,12 +1,16 @@
 use log::info;
-use net_translator::module::TranslatorModule;
-use shaku::HasComponent;
+use threadpool::ThreadPool;
+use net_core::layer::NetComponent;
+
+use net_translator::component::translator::Translator;
 
 fn main() {
     env_logger::init();
-    info!("Run service");
+    info!("Run module");
 
-    let module = TranslatorModule::builder().build();
-    let starter = module.resolve_ref();
-    starter.start().join().unwrap();
+    let pool = ThreadPool::with_name("worker".into(), 5);
+
+    Translator::new(pool.clone()).run();
+
+    pool.join();
 }

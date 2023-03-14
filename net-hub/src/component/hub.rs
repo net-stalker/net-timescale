@@ -1,15 +1,14 @@
-use std::thread::JoinHandle;
 use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
     thread::{self},
 };
 
-use log::{info, debug};
-use shaku::{module, Component};
+use log::{debug, info};
 use simple_websockets::Event;
+use threadpool::ThreadPool;
+use net_core::layer::NetComponent;
 
-use net_core::starter::starter::Starter;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
 
@@ -18,20 +17,20 @@ use crate::command::dummy::DummyCommand;
 use crate::command::pull::PullCommand;
 use crate::command::translator::TranslatorCommand;
 
-module! {
-    pub HubModule {
-        components = [Hub],
-        providers = []
+pub struct Hub {
+    pub pool: ThreadPool,
+}
+
+impl Hub {
+    pub fn new(pool: ThreadPool) -> Self {
+        Hub { pool }
     }
 }
 
-#[derive(Component)]
-#[shaku(interface = Starter)]
-pub struct Hub;
+impl NetComponent for Hub {
+    fn run(self) {
+        info!("Run component");
 
-impl Starter for Hub {
-    fn start(&self) -> JoinHandle<()> {
-        info!("Start module");
         //Global for the project
         // let config = Arc::new(ConfigManager { application_name: "net-hub", file_loader: Box::new(ConfigFile) as Box<dyn FileReader> }.load());
 
@@ -46,7 +45,7 @@ impl Starter for Hub {
         let clients_inner = clients.clone();
 
         //TODO use instead ws from ConnectoNNG
-        thread::spawn(move || {
+        self.pool.execute(move || {
             let event_hub = simple_websockets::launch(9091)
                 .expect("failed to listen on port 9091");
 
@@ -113,13 +112,13 @@ impl Starter for Hub {
             .bind()
             .into_inner();
 
-        thread::spawn(move || {
+        self.pool.execute(move || {
             Poller::new()
                 .add(server)
                 .add(translator)
                 .add(pull)
                 .add(db_service_clone)
                 .poll();
-        })
+        });
     }
 }

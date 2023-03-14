@@ -5,9 +5,9 @@ use std::thread::JoinHandle;
 
 use log::info;
 use postgres::{Client, NoTls};
-use shaku::{module, Component};
+use threadpool::ThreadPool;
+use net_core::layer::NetComponent;
 
-use net_core::starter::starter::Starter;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
 
@@ -15,21 +15,20 @@ use crate::command::dispatcher::CommandDispatcher;
 use crate::query::insert_packet::InsertPacket;
 use crate::query::query_packet::QueryPacket;
 
-module! {
-    pub TimescaleModule {
-        components = [Timescale],
-        providers = []
+pub struct Timescale {
+    pub pool: ThreadPool,
+}
+
+impl Timescale {
+    pub fn new(pool: ThreadPool) -> Self {
+        Self { pool }
     }
 }
 
-#[derive(Component)]
-#[shaku(interface = Starter)]
-pub struct Timescale;
-
-impl Starter for Timescale {
-    fn start(&self) -> JoinHandle<()> {
-        thread::spawn(move || {
-            info!("Start module");
+impl NetComponent for Timescale {
+    fn run(self) {
+        self.pool.execute(move || {
+            info!("Run component");
 
             let client = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
 
@@ -64,6 +63,6 @@ impl Starter for Timescale {
             Poller::new()
                 .add(db_service)
                 .poll();
-        })
+        });
     }
 }
