@@ -4,7 +4,7 @@ use log::info;
 use threadpool::ThreadPool;
 
 use net_agent::component::capture::Capture;
-use net_core::starter::starter::NetComponent;
+use net_core::layer::NetComponent;
 
 fn main() {
     env_logger::init();

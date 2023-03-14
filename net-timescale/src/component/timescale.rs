@@ -6,8 +6,8 @@ use std::thread::JoinHandle;
 use log::info;
 use postgres::{Client, NoTls};
 use threadpool::ThreadPool;
+use net_core::layer::NetComponent;
 
-use net_core::starter::starter::NetComponent;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
 

@@ -3,7 +3,7 @@ pub mod config;
 pub mod transport;
 pub mod file;
 pub mod jsons;
-pub mod starter;
+pub mod layer;
 
 #[macro_export]
 macro_rules! test_resources {($fname:expr) => (

@@ -6,7 +6,7 @@ use pcap::Active;
 use threadpool::ThreadPool;
 
 use net_core::capture;
-use net_core::starter::starter::NetComponent;
+use net_core::layer::NetComponent;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::sockets::Sender;
 

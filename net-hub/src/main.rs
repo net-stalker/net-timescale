@@ -1,7 +1,7 @@
 use log::info;
 use threadpool::ThreadPool;
+use net_core::layer::NetComponent;
 
-use net_core::starter::starter::NetComponent;
 use net_hub::component::hub::Hub;
 
 fn main() {

@@ -1,9 +1,8 @@
 use log::info;
-use shaku::HasComponent;
 use threadpool::ThreadPool;
 
 use net_agent::component::capture::Capture;
-use net_core::starter::starter::NetComponent;
+use net_core::layer::NetComponent;
 use net_hub::component::hub::Hub;
 use net_timescale::component::timescale::Timescale;
 use net_translator::component::translator::Translator;
