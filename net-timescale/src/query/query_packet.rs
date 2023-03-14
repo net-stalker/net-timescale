@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 
 use chrono::{DateTime, Local};
-use log::{info, debug, error};
+use log::{debug, error, info};
 use postgres::Client;
 use postgres::fallible_iterator::FallibleIterator;
 use serde_json::Value;
@@ -59,7 +59,7 @@ impl QueryPacket {
 mod tests {
     use postgres::NoTls;
 
-    use net_core::file::files::{Files, Reader};
+    use net_core::file::files::Files;
     use net_core::jsons::json_pcap_parser::JsonPcapParser;
 
     use super::*;

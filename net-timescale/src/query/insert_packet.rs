@@ -35,7 +35,7 @@ impl InsertPacket {
 mod tests {
     use postgres::NoTls;
 
-    use net_core::file::files::{Files, Reader};
+    use net_core::file::files::{Files};
     use net_core::jsons::json_pcap_parser::JsonPcapParser;
 
     use super::*;
@@ -47,8 +47,8 @@ mod tests {
 
 
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/resources/captures/arp_layer_extracted.json");
-        let json_bytes = Files::read(path);
-        let result = JsonPcapParser::find_frame_time(json_bytes);
+        let json_bytes = Files::read_vector(path);
+        let result = JsonPcapParser::find_frame_time(&json_bytes);
 
         // insert_packet.insert(result.0, , , result.1);
     }
