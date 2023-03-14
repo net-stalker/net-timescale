@@ -102,9 +102,11 @@ impl russh::server::Handler for ServerHandler {
     }
 
     async fn data(self, channel: ChannelId, data: &[u8], mut session: Session) -> Result<(Self, Session), Self::Error> {
-        //println!("{}", std::str::from_utf8(data).unwrap());
-        session.data(channel, CryptoVec::from(std::str::from_utf8(data).unwrap().to_string()));
-        
+        let data_cooked = std::str::from_utf8(data).unwrap().to_string();
+
+        //For now just echo everything received
+        session.data(channel, CryptoVec::from(data_cooked));
+
         Ok((self, session))
     }
 }
