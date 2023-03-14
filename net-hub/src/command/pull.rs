@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
-use log::{trace, debug};
+use log::debug;
 use simple_websockets::{Message, Responder};
 
 use net_core::transport::sockets::{Handler, Receiver, Sender};

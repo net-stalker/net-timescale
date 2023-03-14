@@ -16,6 +16,5 @@ log = "0.4.17"
 env_logger = "0.10.0"
 net-core = { path = "../net-core" }
 
-shaku = "0.6.1"
-
+threadpool = "1.8.1"
 #zmq = "0.9.2"

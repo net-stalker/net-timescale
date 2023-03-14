@@ -31,7 +31,6 @@ polling = "2.5.2"
 unescape = "0.1.0"
 chrono = "0.4.23"
 walkdir = "2.3.2"
-shaku = "0.6.1"
 log = "0.4.17"
 
 [dev-dependencies]

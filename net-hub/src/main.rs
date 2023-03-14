@@ -1,9 +1,16 @@
-use shaku::HasComponent;
+use log::info;
+use threadpool::ThreadPool;
 
-use net_hub::module::NetHubModule;
+use net_core::starter::starter::NetComponent;
+use net_hub::component::hub::Hub;
 
 fn main() {
-    let module = NetHubModule::builder().build();
-    let starter = module.resolve_ref();
-    starter.start().join().unwrap();
+    env_logger::init();
+    info!("Run module");
+
+    let pool = ThreadPool::with_name("worker".into(), 20);
+
+    Hub::new(pool.clone()).run();
+
+    pool.join();
 }

@@ -1,13 +1,18 @@
-use log::{info};
-use shaku::HasComponent;
+use std::thread::JoinHandle;
 
-use net_agent::module::NetAgentModule;
+use log::info;
+use threadpool::ThreadPool;
+
+use net_agent::component::capture::Capture;
+use net_core::starter::starter::NetComponent;
 
 fn main() {
     env_logger::init();
-    info!("Run service");
+    info!("Run module");
 
-    let module = NetAgentModule::builder().build();
-    let starter = module.resolve_ref();
-    starter.start().join().unwrap();
+    let pool = ThreadPool::with_name("worker".into(), 2);
+
+    Capture::new(pool.clone()).run();
+
+    pool.join();
 }
