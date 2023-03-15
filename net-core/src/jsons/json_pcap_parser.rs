@@ -61,7 +61,7 @@ impl JsonPcapParser {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```json
     /// {
     ///     "ip": {
     //          "ip.version": "4",
@@ -105,6 +105,7 @@ impl JsonPcapParser {
 
 #[cfg(test)]
 mod tests {
+    use std::str::from_utf8;
     use crate::file::files::Files;
     use crate::test_resources;
 

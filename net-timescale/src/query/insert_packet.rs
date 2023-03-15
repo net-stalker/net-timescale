@@ -41,6 +41,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore]
     fn expected_insert_packet() {
         let mut client = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
         let insert_packet = InsertPacket { client: Arc::new(Mutex::new(client)) };
