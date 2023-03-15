@@ -47,8 +47,12 @@ mod tests {
 
     #[test]
     fn expected_translate_arp_packet() {
-        let pcap_buffer = Files::read_vector(test_resources!("captures/arp.pcap"));
-        let json_buffer = Files::read_vector(test_resources!("captures/arp.json"));
+        let arp_pcap_path = test_resources!("captures/arp.pcap");
+        println!("arp_pcap_path {}", arp_pcap_path);
+        let pcap_buffer = Files::read_vector(arp_pcap_path);
+        let arp_json_path = test_resources!("captures/arp.json");
+        println!("arp_json_path {}", arp_json_path);
+        let json_buffer = Files::read_vector(arp_json_path);
 
         let json_result = PcapTranslator::translate(pcap_buffer);
 
