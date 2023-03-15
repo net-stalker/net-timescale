@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "develop" ]
   pull_request:
-    branches: [ "develop" ]
+    branches: [ "*" ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -25,7 +25,14 @@ jobs:
       - name: Update platform
         run: sudo apt-get update && sudo apt-get install libpcap-dev libzmq3-dev build-essential cmake
       - name: Build and Install NNG
-        run: git clone https://github.com/nanomsg/nng.git && cd nng && mkdir build && cd build && cmake .. && make && make install
+        run: |
+          git clone https://github.com/nanomsg/nng.git
+          cd nng
+          mkdir build
+          cd build
+          cmake ..
+          make
+          sudo make install
       - name: Build
         run: cargo build
       - name: Run tests
