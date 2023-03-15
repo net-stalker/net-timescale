@@ -16,6 +16,8 @@ commands:
 
 ``
 docker-compose build timescaledb && docker-compose up timescaledb
+``  
+``
 docker-compose build timescaledb-migrations && docker-compose up timescaledb-migrations
 ``
 
