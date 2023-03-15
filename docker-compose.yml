@@ -39,7 +39,9 @@ services:
   # or you can use https://dbeaver.io/
   timescaledb:
     #    image: timescale/timescaledb-pg14-latest
-    image: timescale/timescaledb-ha:pg14-latest
+#    image: timescale/timescaledb-ha:pg14-latest
+    build:
+      context: ./net-timescale/timescaledb
     hostname: timescaledb
     ports:
       - "5432:5432"
@@ -56,7 +58,7 @@ services:
     environment:
       # https://docs.liquibase.com/parameters/home.html
       - LIQUIBASE_COMMAND_URL=jdbc:postgresql://timescaledb:5432/postgres
-      - LIQUIBASE_COMMAND_USERNAME=postgres
+      - LIQUIBASE_COMMAND_USERNAME=liquibase
       - LIQUIBASE_COMMAND_PASSWORD=PsWDgxZb
       - LIQUIBASE_LOG_LEVEL=INFO
     depends_on:
