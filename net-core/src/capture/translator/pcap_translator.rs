@@ -1,8 +1,11 @@
 use subprocess::{Exec, Redirection};
 
 use crate::capture::translator::translator::Translator;
+use crate::file::files::Files;
 
 pub struct PcapTranslator;
+
+const TSHARK_APP_NAME: &str = "tshark";
 
 impl Translator for PcapTranslator {
     type Input = Vec<u8>;
@@ -22,7 +25,11 @@ impl Translator for PcapTranslator {
     ///
     /// ```
     fn translate(buf: Vec<u8>) -> Vec<u8> {
-        Exec::cmd("tshark")
+        if !Files::which(TSHARK_APP_NAME).success() {
+            panic!("Application {} is not installed", TSHARK_APP_NAME)
+        }
+
+        Exec::cmd(TSHARK_APP_NAME)
             .arg("-V") //add output of packet tree        (Packet Details)
             // .arg("-c1") //add output of packet tree        (Packet Details)
             // .arg("-rcaptures/arp.pcap") // set the filename to read from (or '-' for stdin)
@@ -56,7 +63,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn expected_translate_dhcp_packet() {
         let pcap_buffer = Files::read_vector(test_resources!("captures/dhcp.pcap"));
         let json_buffer = Files::read_vector(test_resources!("captures/dhcp.json"));

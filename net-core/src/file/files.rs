@@ -1,7 +1,8 @@
-use std::fs::{File};
+use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 
+use subprocess::{Exec, ExitStatus};
 use walkdir::WalkDir;
 
 pub struct Files;
@@ -34,6 +35,12 @@ impl Files {
 
     pub fn find_rs_files(path_buf: &PathBuf) -> Vec<String> {
         Self::find_files(path_buf, "rs")
+    }
+
+    pub fn which(app_name: &str) -> ExitStatus {
+        Exec::cmd("which")
+            .arg(app_name)
+            .capture().unwrap().exit_status
     }
 }
 
