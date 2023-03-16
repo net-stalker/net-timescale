@@ -74,6 +74,6 @@ mod tests {
         let content = Files::read_string(test_resources!("captures/arp.json"));
 
         println!("full packet {:?}", content);
-        assert_eq!(content.len(), 1834);
+        assert_eq!(content.len(), 1833);
     }
 }

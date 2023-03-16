@@ -135,14 +135,13 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn expected_extract_frame_time() {
         let pcap_buffer =
             Files::read_vector(test_resources!("captures/arp_layer_extracted_pretty.json"));
 
         let result = JsonPcapParser::find_frame_time(&pcap_buffer);
 
-        assert_eq!(result.to_string(), "2013-09-18 07:49:07 +03:00");
+        assert_eq!(result.to_string(), "2013-09-18 04:49:07 +00:00");
     }
 
     #[test]
