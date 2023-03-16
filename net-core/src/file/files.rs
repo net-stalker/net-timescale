@@ -1,6 +1,8 @@
 use std::fs::{File, metadata};
 use std::io::Read;
 use std::path::PathBuf;
+
+use log::error;
 use walkdir::WalkDir;
 
 pub struct Files;
