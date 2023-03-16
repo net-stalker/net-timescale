@@ -6,7 +6,7 @@ use crate::file::files::Files;
 pub struct PcapTranslator;
 
 const TSHARK_APP_NAME: &str = "tshark";
-const TSHARK_CMD: &'static str = "TZ=UTC tshark -V --no-duplicate-keys -Tjson -r -";
+const TSHARK_CMD: &'static str = "TZ=UTC tshark -V --no-duplicate-keys -Tjson -n -r -";
 
 impl Translator for PcapTranslator {
     type Input = Vec<u8>;

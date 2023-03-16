@@ -23,10 +23,10 @@
         "eth": {
           "eth.dst": "ff:ff:ff:ff:ff:ff",
           "eth.dst_tree": {
-            "eth.dst_resolved": "Broadcast",
+            "eth.dst_resolved": "ff:ff:ff:ff:ff:ff",
             "eth.dst.oui": "16777215",
             "eth.addr": "ff:ff:ff:ff:ff:ff",
-            "eth.addr_resolved": "Broadcast",
+            "eth.addr_resolved": "ff:ff:ff:ff:ff:ff",
             "eth.addr.oui": "16777215",
             "eth.dst.lg": "1",
             "eth.lg": "1",
@@ -35,11 +35,11 @@
           },
           "eth.src": "00:0b:82:01:fc:42",
           "eth.src_tree": {
-            "eth.src_resolved": "Grandstr_01:fc:42",
+            "eth.src_resolved": "00:0b:82:01:fc:42",
             "eth.src.oui": "2946",
             "eth.src.oui_resolved": "Grandstream Networks, Inc.",
             "eth.addr": "00:0b:82:01:fc:42",
-            "eth.addr_resolved": "Grandstr_01:fc:42",
+            "eth.addr_resolved": "00:0b:82:01:fc:42",
             "eth.addr.oui": "2946",
             "eth.addr.oui_resolved": "Grandstream Networks, Inc.",
             "eth.src.lg": "0",
@@ -78,10 +78,10 @@
           "ip.src_host": "0.0.0.0",
           "ip.host": [
             "0.0.0.0",
-            "broadcasthost"
+            "255.255.255.255"
           ],
           "ip.dst": "255.255.255.255",
-          "ip.dst_host": "broadcasthost"
+          "ip.dst_host": "255.255.255.255"
         },
         "udp": {
           "udp.srcport": "68",
@@ -188,11 +188,11 @@
         "eth": {
           "eth.dst": "00:0b:82:01:fc:42",
           "eth.dst_tree": {
-            "eth.dst_resolved": "Grandstr_01:fc:42",
+            "eth.dst_resolved": "00:0b:82:01:fc:42",
             "eth.dst.oui": "2946",
             "eth.dst.oui_resolved": "Grandstream Networks, Inc.",
             "eth.addr": "00:0b:82:01:fc:42",
-            "eth.addr_resolved": "Grandstr_01:fc:42",
+            "eth.addr_resolved": "00:0b:82:01:fc:42",
             "eth.addr.oui": "2946",
             "eth.addr.oui_resolved": "Grandstream Networks, Inc.",
             "eth.dst.lg": "0",
@@ -202,11 +202,11 @@
           },
           "eth.src": "00:08:74:ad:f1:9b",
           "eth.src_tree": {
-            "eth.src_resolved": "Dell_ad:f1:9b",
+            "eth.src_resolved": "00:08:74:ad:f1:9b",
             "eth.src.oui": "2164",
             "eth.src.oui_resolved": "Dell Inc.",
             "eth.addr": "00:08:74:ad:f1:9b",
-            "eth.addr_resolved": "Dell_ad:f1:9b",
+            "eth.addr_resolved": "00:08:74:ad:f1:9b",
             "eth.addr.oui": "2164",
             "eth.addr.oui_resolved": "Dell Inc.",
             "eth.src.lg": "0",
@@ -361,10 +361,10 @@
         "eth": {
           "eth.dst": "ff:ff:ff:ff:ff:ff",
           "eth.dst_tree": {
-            "eth.dst_resolved": "Broadcast",
+            "eth.dst_resolved": "ff:ff:ff:ff:ff:ff",
             "eth.dst.oui": "16777215",
             "eth.addr": "ff:ff:ff:ff:ff:ff",
-            "eth.addr_resolved": "Broadcast",
+            "eth.addr_resolved": "ff:ff:ff:ff:ff:ff",
             "eth.addr.oui": "16777215",
             "eth.dst.lg": "1",
             "eth.lg": "1",
@@ -373,11 +373,11 @@
           },
           "eth.src": "00:0b:82:01:fc:42",
           "eth.src_tree": {
-            "eth.src_resolved": "Grandstr_01:fc:42",
+            "eth.src_resolved": "00:0b:82:01:fc:42",
             "eth.src.oui": "2946",
             "eth.src.oui_resolved": "Grandstream Networks, Inc.",
             "eth.addr": "00:0b:82:01:fc:42",
-            "eth.addr_resolved": "Grandstr_01:fc:42",
+            "eth.addr_resolved": "00:0b:82:01:fc:42",
             "eth.addr.oui": "2946",
             "eth.addr.oui_resolved": "Grandstream Networks, Inc.",
             "eth.src.lg": "0",
@@ -416,10 +416,10 @@
           "ip.src_host": "0.0.0.0",
           "ip.host": [
             "0.0.0.0",
-            "broadcasthost"
+            "255.255.255.255"
           ],
           "ip.dst": "255.255.255.255",
-          "ip.dst_host": "broadcasthost"
+          "ip.dst_host": "255.255.255.255"
         },
         "udp": {
           "udp.srcport": "68",
@@ -532,11 +532,11 @@
         "eth": {
           "eth.dst": "00:0b:82:01:fc:42",
           "eth.dst_tree": {
-            "eth.dst_resolved": "Grandstr_01:fc:42",
+            "eth.dst_resolved": "00:0b:82:01:fc:42",
             "eth.dst.oui": "2946",
             "eth.dst.oui_resolved": "Grandstream Networks, Inc.",
             "eth.addr": "00:0b:82:01:fc:42",
-            "eth.addr_resolved": "Grandstr_01:fc:42",
+            "eth.addr_resolved": "00:0b:82:01:fc:42",
             "eth.addr.oui": "2946",
             "eth.addr.oui_resolved": "Grandstream Networks, Inc.",
             "eth.dst.lg": "0",
@@ -546,11 +546,11 @@
           },
           "eth.src": "00:08:74:ad:f1:9b",
           "eth.src_tree": {
-            "eth.src_resolved": "Dell_ad:f1:9b",
+            "eth.src_resolved": "00:08:74:ad:f1:9b",
             "eth.src.oui": "2164",
             "eth.src.oui_resolved": "Dell Inc.",
             "eth.addr": "00:08:74:ad:f1:9b",
-            "eth.addr_resolved": "Dell_ad:f1:9b",
+            "eth.addr_resolved": "00:08:74:ad:f1:9b",
             "eth.addr.oui": "2164",
             "eth.addr.oui_resolved": "Dell Inc.",
             "eth.src.lg": "0",
