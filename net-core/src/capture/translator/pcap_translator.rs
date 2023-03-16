@@ -50,14 +50,14 @@ mod tests {
     #[test]
     fn expected_translate_arp_packet() {
         let arp_pcap_path = test_resources!("captures/arp.pcap");
-        let metadata = fs::metadata(arp_pcap_path).unwrap();
+        // let metadata = fs::metadata(arp_pcap_path).unwrap();
         // let permissions = metadata.permissions();
-        println!("file metadata {:?}", metadata);
-        println!("arp_pcap_path {}", arp_pcap_path);
+        // println!("file metadata {:?}", metadata);
+        // println!("arp_pcap_path {}", arp_pcap_path);
         // println!("found files {:?}", Files::find_files(&PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/test/resources/")), "pcap"));
         let pcap_buffer = Files::read_vector(arp_pcap_path);
         let arp_json_path = test_resources!("captures/arp.json");
-        println!("arp_json_path {}", arp_json_path);
+        // println!("arp_json_path {}", arp_json_path);
         // let json_buffer = Files::read_vector(arp_json_path);
 
         // let json_result = PcapTranslator::translate(pcap_buffer);

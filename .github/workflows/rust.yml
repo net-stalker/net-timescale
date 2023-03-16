@@ -40,8 +40,4 @@ jobs:
       - name: Run tests
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
-        run: |
-          echo "CARGO_MANIFEST_DIR is: $CARGO_MANIFEST_DIR"
-          find . -name arp.json
-          cat /home/runner/work/net-monitor/net-monitor/net-core/test/resources/captures/arp.pcap
-          cargo test
+        run: cargo test
