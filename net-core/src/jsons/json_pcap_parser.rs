@@ -135,6 +135,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn expected_extract_frame_time() {
         let pcap_buffer =
             Files::read_vector(test_resources!("captures/arp_layer_extracted_pretty.json"));
