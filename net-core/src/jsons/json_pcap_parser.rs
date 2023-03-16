@@ -61,7 +61,7 @@ impl JsonPcapParser {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```json
     /// {
     ///     "ip": {
     //          "ip.version": "4",
@@ -105,6 +105,7 @@ impl JsonPcapParser {
 
 #[cfg(test)]
 mod tests {
+    use std::str::from_utf8;
     use crate::file::files::Files;
     use crate::test_resources;
 
@@ -140,7 +141,7 @@ mod tests {
 
         let result = JsonPcapParser::find_frame_time(&pcap_buffer);
 
-        assert_eq!(result.to_string(), "2013-09-18 07:49:07 +03:00");
+        assert_eq!(result.to_string(), "2013-09-18 04:49:07 +00:00");
     }
 
     #[test]

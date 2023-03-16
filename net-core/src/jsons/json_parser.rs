@@ -98,7 +98,7 @@ mod tests {
         let result = JsonParser::find(&pcap_buffer, "$..frame['frame.time']");
         let time = JsonParser::get_string(result);
 
-        assert_eq!(time, "Sep 18, 2013 07:49:07.000000000 EEST");
+        assert_eq!(time, "Sep 18, 2013 04:49:07.000000000 UTC");
     }
 
     #[test]
@@ -146,6 +146,6 @@ mod tests {
         let result = JsonParser::find(&pcap_buffer, "$..frame['frame.time']");
         let time = JsonParser::get_timestamp_with_tz(result);
         println!("{:?}", time);
-        assert_eq!(time.to_string(), "2013-09-18 07:49:07 +03:00".to_string());
+        assert_eq!(time.to_string(), "2013-09-18 04:49:07 +00:00".to_string());
     }
 }
