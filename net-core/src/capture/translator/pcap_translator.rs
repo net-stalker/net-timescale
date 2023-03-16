@@ -40,6 +40,7 @@ impl Translator for PcapTranslator {
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
     use crate::file::files::Files;
     use crate::test_resources;
 
@@ -49,6 +50,7 @@ mod tests {
     fn expected_translate_arp_packet() {
         let arp_pcap_path = test_resources!("captures/arp.pcap");
         println!("arp_pcap_path {}", arp_pcap_path);
+        println!("found files {:?}", Files::find_files(&PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/test/resources/")), "pcap"));
         let pcap_buffer = Files::read_vector(arp_pcap_path);
         let arp_json_path = test_resources!("captures/arp.json");
         println!("arp_json_path {}", arp_json_path);
