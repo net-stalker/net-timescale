@@ -26,7 +26,7 @@ impl Translator for PcapTranslator {
     /// ```
     fn translate(buf: Vec<u8>) -> Vec<u8> {
         if !Files::which(TSHARK_APP_NAME).success() {
-            panic!("Application {} is not installed", TSHARK_APP_NAME)
+            panic!("An application {} is not installed", TSHARK_APP_NAME)
         }
 
         Exec::cmd(TSHARK_APP_NAME)
