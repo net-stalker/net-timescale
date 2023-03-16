@@ -1,35 +1,16 @@
+use log::info;
+use threadpool::ThreadPool;
+use net_core::layer::NetComponent;
 
-use std::thread;
-
-
-
-use net_core::transport::connector_nng::{ConnectorNNG, Proto};
-use net_core::transport::polling::Poller;
-use net_translator::command::decoder::DecoderCommand;
-use net_translator::command::dummy::DummyCommand;
+use net_translator::component::translator::Translator;
 
 fn main() {
-    let push = ConnectorNNG::builder()
-        .with_endpoint("tcp://0.0.0.0:5558".to_string())
-        .with_proto(Proto::Req)
-        .with_handler(DummyCommand)
-        .build()
-        .connect()
-        .into_inner();
-    let push_clone = push.clone();
+    env_logger::init();
+    info!("Run module");
 
-    let server = ConnectorNNG::builder()
-        .with_endpoint("tcp://0.0.0.0:5557".to_string())
-        .with_proto(Proto::Rep)
-        .with_handler(DecoderCommand { push: push_clone })
-        .build()
-        .bind()
-        .into_inner();
+    let pool = ThreadPool::with_name("worker".into(), 5);
 
-    thread::spawn(move || {
-        Poller::new()
-            .add(server)
-            .add(push)
-            .poll();
-    }).join().unwrap();
+    Translator::new(pool.clone()).run();
+
+    pool.join();
 }

@@ -1,39 +1,16 @@
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex, RwLock};
-use std::thread;
+use log::info;
+use threadpool::ThreadPool;
+use net_core::layer::NetComponent;
 
-use chrono::NaiveDateTime;
-use postgres::{Client, NoTls};
-use serde_json::Value;
-
-use net_core::file::files::{Files, Reader};
-use net_core::json_parser::JsonParser;
-use net_core::json_pcap_parser::JsonPcapParser;
-use net_core::transport::connector_nng::{ConnectorNNG, Proto};
-use net_core::transport::polling::Poller;
-use net_timescale::command::dispatcher::CommandDispatcher;
-use net_timescale::query::insert_packet::InsertPacket;
+use net_timescale::component::timescale::Timescale;
 
 fn main() {
-    thread::spawn(move || {
-        let connection = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
-        let insert_packet = InsertPacket { conn: Arc::new(Mutex::new(connection)) };
+    env_logger::init();
+    info!("Run module");
 
-        let queries = Arc::new(RwLock::new(HashMap::new()));
-        queries.write().unwrap().insert("insert_packet".to_string(), insert_packet);
+    let pool = ThreadPool::with_name("worker".into(), 5);
 
-        let command_dispatcher = CommandDispatcher { queries };
+    Timescale::new(pool.clone()).run();
 
-        let db_service = ConnectorNNG::builder()
-            .with_endpoint("tcp://0.0.0.0:5556".to_string())
-            .with_proto(Proto::Rep)
-            .with_handler(command_dispatcher)
-            .build()
-            .bind()
-            .into_inner();
-
-        Poller::new()
-            .add(db_service)
-            .poll();
-    }).join().unwrap();
+    pool.join();
 }
