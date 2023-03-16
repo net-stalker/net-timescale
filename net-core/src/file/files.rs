@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::fs::{File, metadata};
 use std::io::Read;
 use std::path::PathBuf;
 use walkdir::WalkDir;
@@ -16,6 +16,8 @@ impl Files {
 
     pub fn read_vector(path: &str) -> Vec<u8> {
         let mut f = File::open(path).unwrap();
+        let metadata = metadata(f).unwrap();
+        println!("file metadata {:?}", metadata);
         let mut buffer = Vec::new();
         f.read_to_end(&mut buffer).unwrap();
 
