@@ -11,8 +11,9 @@ env:
 
 jobs:
   build:
-
+    #Should be changed by preconfigured docker image
     runs-on: ubuntu-latest
+#    container: net-stalker/net-parent
 
     steps:
       - name: Check out
