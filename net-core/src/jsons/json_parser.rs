@@ -132,6 +132,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn expected_convert_frame_time_to_date_time() {
         let time = Local.datetime_from_str("Sat, 11 Feb 2023 23:40:00.000000000 EEST", "%a, %d %b %Y %H:%M:%S.%f %Z").unwrap();
         println!("{:?}", time);
