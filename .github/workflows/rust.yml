@@ -42,4 +42,5 @@ jobs:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
         run: |
           echo "CARGO_MANIFEST_DIR is: $CARGO_MANIFEST_DIR"
+          find . -name arp.json 
           cargo test
