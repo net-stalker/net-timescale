@@ -41,6 +41,8 @@ To access to the service you can use netcat util. Example, how to check if Times
 
 Troubleshooting:  
 
+## [SQL Migrations](net-timescale%2Fmigrations)
+
 ## A Framework for Writing Distributed Applications
 
 Project is in monorepo.
@@ -55,5 +57,3 @@ library contains a set **modules**. There are reserved module names in the syste
 be localed in the rust appropriate directory and implemented appropriate trait. For instance, the
 component should be located in the component directory and should implement net_core::layer::
 NetComponent. In the future will be created some set of rules to check it and restrict in CI flow.
-
-## [SQL Migrations](net-timescale%2Fmigrations)
