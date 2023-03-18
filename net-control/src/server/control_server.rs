@@ -13,6 +13,8 @@ impl CLIServer {
         CLIServer { config: ServerConfig::new(), server: ControlServer::new() }
     }
 
+//TODO: Get rid of a tokio usage (not sure, if possible)
+
     #[tokio::main]
     pub async fn start_server(self, ip: &str, port: &str) {
         let arc_config = std::sync::Arc::new(self.config.russh_config);
@@ -21,6 +23,7 @@ impl CLIServer {
     }
 }
 
+//TODO: All the parameters should be configurable from the server side (Add russh::server::Config setters)
 struct ServerConfig {
     russh_config: russh::server::Config
 }
@@ -55,7 +58,7 @@ impl ControlServer {
 
 impl russh::server::Server for ControlServer {
     type Handler = ServerHandler;
-
+//TODO: Change Handler type to a reference (Get rid of .clone())
     fn new_client(&mut self, _peer_addr: Option<std::net::SocketAddr>) -> Self::Handler {
         self.handler.clone()
     }
