@@ -40,52 +40,64 @@ impl ServerConfig {
     }
 
 
-    fn set_auth_metods (mut self, metods: MethodSet) {
+    fn set_auth_metods (mut self, metods: MethodSet) -> Self {
         self.russh_config.methods = metods;
+        self
     }
 
-    fn set_auth_banner (mut self, banner: Option<&'static str>) {
+    fn set_auth_banner (mut self, banner: Option<&'static str>) -> Self  {
         self.russh_config.auth_banner = banner;
+        self
     }
 
-    fn set_auth_rejection_time (mut self, rejection_time: std::time::Duration) {
+    fn set_auth_rejection_time (mut self, rejection_time: std::time::Duration) -> Self {
         self.russh_config.auth_rejection_time = rejection_time;
+        self
     }
 
-    fn set_auth_rejection_time_initial (mut self, rejection_time_initial: Option<std::time::Duration>) {
+    fn set_auth_rejection_time_initial (mut self, rejection_time_initial: Option<std::time::Duration>) -> Self {
         self.russh_config.auth_rejection_time_initial = rejection_time_initial;
+        self
     }
 
-    fn set_keys (mut self, keys: Vec<key::KeyPair>) {
+    fn set_keys (mut self, keys: Vec<key::KeyPair>) -> Self {
         self.russh_config.keys = keys;
+        self
     }
 
-    fn set_limits (mut self, limits: Limits) {
+    fn set_limits (mut self, limits: Limits) -> Self {
         self.russh_config.limits = limits;
+        self
     }
 
-    fn set_window_size (mut self, windos_size: u32) {
+    fn set_window_size (mut self, windos_size: u32) -> Self {
         self.russh_config.window_size = windos_size;
+        self
     }
     
-    fn set_maximum_packet_size (mut self, maximum_packet_size: u32) {
+    fn set_maximum_packet_size (mut self, maximum_packet_size: u32) -> Self {
         self.russh_config.maximum_packet_size = maximum_packet_size;
+        self
     }
 
-    fn set_event_buffer_size (mut self, event_buffer_size: usize) {
+    fn set_event_buffer_size (mut self, event_buffer_size: usize) -> Self {
         self.russh_config.event_buffer_size = event_buffer_size;
+        self
     }
 
-    fn set_preferred (mut self, preferred: Preferred) {
+    fn set_preferred (mut self, preferred: Preferred) -> Self {
         self.russh_config.preferred = preferred;
+        self
     }
 
-    fn set_max_auth_attempts (mut self, max_auth_attempts: usize) {
+    fn set_max_auth_attempts (mut self, max_auth_attempts: usize) -> Self {
         self.russh_config.max_auth_attempts = max_auth_attempts;
+        self
     }
 
-    fn set_connection_timeout (mut self, connection_timeout: Option<std::time::Duration>) {
+    fn set_connection_timeout (mut self, connection_timeout: Option<std::time::Duration>) -> Self {
         self.russh_config.connection_timeout = connection_timeout;
+        self
     }
 }
 
