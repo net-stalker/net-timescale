@@ -16,10 +16,23 @@ impl CLIServer {
 //TODO: Get rid of a tokio usage (not sure, if possible)
 
     #[tokio::main]
-    pub async fn start_server(self, ip: &str, port: &str) {
-        let arc_config = std::sync::Arc::new(self.config.get_config());
+    pub async fn start_server(self) {
+        let ip = self.config.get_server_ip();
+        let port = self.config.get_server_port();
+
         let addrs = format!("{}:{}", ip, port);
+
+        let arc_config = std::sync::Arc::new(self.config.get_config());
         let _run_result = russh::server::run(arc_config, addrs, self.server).await;
+    }
+
+    fn bind_on_ip (mut self, ip: &'static str) -> Self {
+        self.config.set_server_ip(ip);
+        self
+    }
+    fn bind_on_port (mut self, port: &'static str) -> Self {
+        self.config.set_server_port(port);
+        self
     }
 
     /// Authentication methods proposed to the client.
