@@ -1,0 +1,15 @@
+[package]
+name = "net-all-in-one"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+net-core = { path = "../net-core" }
+net-agent = { path = "../net-agent" }
+net-hub = { path = "../net-hub" }
+net-timescale = { path = "../net-timescale" }
+net-translator = { path = "../net-translator" }
+
+log = "0.4"
+env_logger = "0.10.0"
+threadpool = "1.8.1"
