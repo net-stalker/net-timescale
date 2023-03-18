@@ -23,7 +23,8 @@ impl CLIServer {
     }
 
     fn with_auth_metods (mut self, metods: MethodSet) -> Self {
-        self.config.set_auth_metods(metods)
+        self.config.set_auth_metods(metods);
+        self
     }
 
     fn with_auth_banner (mut self, banner: Option<&'static str>) -> Self  {
