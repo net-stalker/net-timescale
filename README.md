@@ -26,9 +26,26 @@ to find some data in the captured_traffic table in TimescaleDB.
 
 Enjoy developing!
 
+## How to run a platform using docker-compose
+
+Prerequisites: **docker** and **docker-compose** should be installed to local machine.
+
+Configuration: zero configuration.
+
+Usage: To start platform you need to execute command in a terminal
+run ``docker-compose build && docker-compose up``.
+
+To access to the service you can use netcat util. Example, how to check if Timescaledb is up:
+
+``nc -vz localhost 5432``
+
+Troubleshooting:  
+
+## [SQL Migrations](net-timescale%2Fmigrations)
+
 ## A Framework for Writing Distributed Applications
 
-Project is in monorepo.
+Project is in monorepo.  
 You write a single package, using only language-native data structures and method calls.
 A **package** is a bundle of one or more crates that provides a set of functionality. A package
 contains a Cargo.toml file that describes how to build those crates. Cargo is actually a package
