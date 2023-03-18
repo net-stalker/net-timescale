@@ -1,3 +1,5 @@
+![Build](https://github.com/net-stalker/net-monitor/actions/workflows/rust.yml/badge.svg?branch=develop)
+
 # net-monitor
 
 Capture packets and redirect them to the cloud for the feature analyze.
