@@ -4,8 +4,10 @@
 FROM rust as build
 
 RUN apt-get update
+RUN apt-get install -y tcpdump netcat libpcap-dev libzmq3-dev build-essential cmake
 # install nng https://launchpad.net/ubuntu/+source/nng
-RUN apt-get install -y tcpdump netcat libpcap-dev libzmq3-dev libnng-dev
+RUN git clone https://github.com/nanomsg/nng.git && cd nng && mkdir build && cd build && cmake .. && make && make install
+
 
 ARG PROJ_NAME
 
