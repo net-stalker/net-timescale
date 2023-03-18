@@ -1,6 +1,6 @@
-use russh::{self, Channel, server::{Msg, Session, Auth}, MethodSet, ChannelId, CryptoVec, Limits, Preferred};
+use russh::{self, MethodSet, Limits, Preferred};
 use russh_keys::key;
-use super::server_config::{ServerConfig};
+use super::{server_config::{ServerConfig}, control_server::ControlServer};
 
 pub struct CLIServer 
 {
@@ -100,73 +100,5 @@ impl CLIServer {
 impl Default for CLIServer {
     fn default() -> Self {
         CLIServer { config: ServerConfig::default(), server: ControlServer::new() }
-    }
-}
-
-struct ControlServer {
-    handler: ServerHandler
-}
-
-impl ControlServer {
-    fn new() -> Self {
-        ControlServer { handler: ServerHandler::new() }
-    }
-}
-
-impl russh::server::Server for ControlServer {
-    type Handler = ServerHandler;
-//TODO: Change Handler type to a reference (Get rid of .clone())
-    fn new_client(&mut self, _peer_addr: Option<std::net::SocketAddr>) -> Self::Handler {
-        self.handler.clone()
-    }
-}
-
-#[derive(Clone)]
-struct ServerHandler {}
-
-impl ServerHandler {
-    fn new() -> Self {
-        ServerHandler {}
-    }
-}
-
-
-#[async_trait::async_trait]
-impl russh::server::Handler for ServerHandler {
-    type Error = anyhow::Error;
-
-    async fn disconnected(self, session: Session) -> Result<(Self, Session), Self::Error> {
-        Ok((self, session))
-    }
-
-    async fn auth_none(self, user: &str) -> Result<(Self, Auth), Self::Error> {
-        Ok((self, Auth::Accept))
-    }
-
-    async fn auth_password(self, user: &str, password: &str) -> Result<(Self, Auth), Self::Error> {
-        Ok((self, Auth::Accept))
-    }
-
-    async fn auth_publickey(self, user: &str, public_key: &key::PublicKey) -> Result<(Self, Auth), Self::Error> {
-        Ok((self, Auth::Accept))
-    }
-
-    async fn channel_open_session(self, channel: Channel<Msg>, mut session: Session) -> Result<(Self, bool, Session), Self::Error> {
-        session.data(channel.id(), CryptoVec::from("Hello from CLI!".to_string()));
-        Ok((self, true, session))
-    }
-
-    async fn channel_close(self, channel: ChannelId, mut session: Session) -> Result<(Self, Session), Self::Error> {
-        session.data(channel, CryptoVec::from("Goodbye, user!".to_string()));
-        Ok((self, session))
-    }
-
-    async fn data(self, channel: ChannelId, data: &[u8], mut session: Session) -> Result<(Self, Session), Self::Error> {
-        let data_cooked = std::str::from_utf8(data).unwrap().to_string();
-
-        //For now just echo everything received
-        session.data(channel, CryptoVec::from(data_cooked));
-
-        Ok((self, session))
     }
 }
