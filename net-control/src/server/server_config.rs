@@ -1,15 +1,42 @@
 pub struct ServerConfig {
-    russh_config: russh::server::Config
+    russh_config: russh::server::Config,
+
+    server_ip: Option<&'static str>,
+    server_port: Option<&'static str>
 }
 
 impl ServerConfig {
     pub (super) fn new() -> Self {
-        ServerConfig { russh_config: russh::server::Config::default() }
+        ServerConfig {
+             russh_config: russh::server::Config::default(),
+             server_ip: None,
+             server_port: None 
+        }
     }
 
     pub (super) fn get_config(self) -> russh::server::Config {
         self.russh_config
     }
+    pub (super) fn get_server_ip(& self) -> &'static str {
+        match self.server_ip {
+            Some(ip) => ip,
+            None => "2222",
+        }
+    }
+    pub (super) fn get_server_port(& self) -> &'static str {
+        match self.server_port {
+            Some(port) => port,
+            None => "0.0.0.0",
+        }
+    }
+
+    pub (super) fn set_server_ip(&mut self, ip: &'static str) {
+        self.server_ip = Some(ip);
+    }
+    pub (super) fn set_server_port(&mut self, port: &'static str) {
+        self.server_port = Some(port);
+    }
+
 
     pub (super) fn set_auth_metods (&mut self, metods: russh::MethodSet) {
         self.russh_config.methods = metods;
@@ -73,7 +100,9 @@ impl Default for ServerConfig {
         russh_config.keys.push(russh_key_pair);
 
         ServerConfig { 
-             russh_config
+             russh_config,
+             server_ip: Some("0.0.0.0"),
+             server_port: Some("2222")
         }
     }
 }
