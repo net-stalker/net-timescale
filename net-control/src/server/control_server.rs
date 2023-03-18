@@ -1,4 +1,4 @@
-use russh::{self, Channel, server::{Msg, Session, Auth}, MethodSet, ChannelId, CryptoVec};
+use russh::{self, Channel, server::{Msg, Session, Auth}, MethodSet, ChannelId, CryptoVec, Limits, Preferred};
 use russh_keys::key;
 
 
@@ -43,6 +43,54 @@ impl ServerConfig {
         ServerConfig { 
              russh_config
         }
+    }
+
+    fn set_auth_metods (mut self, metods: MethodSet) {
+        self.russh_config.methods = metods;
+    }
+
+    fn set_auth_banner (mut self, banner: Option<&'static str>) {
+        self.russh_config.auth_banner = banner;
+    }
+
+    fn set_auth_rejection_time (mut self, rejection_time: std::time::Duration) {
+        self.russh_config.auth_rejection_time = rejection_time;
+    }
+
+    fn set_auth_rejection_time_initial (mut self, rejection_time_initial: Option<std::time::Duration>) {
+        self.russh_config.auth_rejection_time_initial = rejection_time_initial;
+    }
+
+    fn set_keys (mut self, keys: Vec<key::KeyPair>) {
+        self.russh_config.keys = keys;
+    }
+
+    fn set_limits (mut self, limits: Limits) {
+        self.russh_config.limits = limits;
+    }
+
+    fn set_window_size (mut self, windos_size: u32) {
+        self.russh_config.window_size = windos_size;
+    }
+
+    fn set_maximum_packet_size (mut self, maximum_packet_size: u32) {
+        self.russh_config.maximum_packet_size = maximum_packet_size;
+    }
+
+    fn set_event_buffer_size (mut self, event_buffer_size: usize) {
+        self.russh_config.event_buffer_size = event_buffer_size;
+    }
+
+    fn set_preferred (mut self, preferred: Preferred) {
+        self.russh_config.preferred = preferred;
+    }
+
+    fn set_max_auth_attempts (mut self, max_auth_attempts: usize) {
+        self.russh_config.max_auth_attempts = max_auth_attempts;
+    }
+
+    fn set_connection_timeout (mut self, connection_timeout: Option<std::time::Duration>) {
+        self.russh_config.connection_timeout = connection_timeout;
     }
 }
 
