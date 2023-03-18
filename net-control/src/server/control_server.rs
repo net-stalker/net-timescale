@@ -23,6 +23,12 @@ impl CLIServer {
     }
 }
 
+impl Default for CLIServer {
+    fn default() -> Self {
+        CLIServer { config: ServerConfig::default(), server: ControlServer::new() }
+    }
+}
+
 //TODO: All the parameters should be configurable from the server side (Add russh::server::Config setters)
 struct ServerConfig {
     russh_config: russh::server::Config
@@ -30,20 +36,9 @@ struct ServerConfig {
 
 impl ServerConfig {
     fn new() -> Self {
-        let mut russh_config = russh::server::Config::default();
-
-        russh_config.methods = MethodSet::NONE; 
-        russh_config.connection_timeout = None;
-        russh_config.auth_rejection_time = std::time::Duration::from_secs(30);
-
-        let path_to_the_secret_key = concat!(env!("CARGO_MANIFEST_DIR"), "/id_ed25519");
-        let russh_key_pair = russh_keys::load_secret_key(path_to_the_secret_key, None).unwrap();
-        russh_config.keys.push(russh_key_pair);
-
-        ServerConfig { 
-             russh_config
-        }
+        ServerConfig { russh_config: russh::server::Config::default() }
     }
+
 
     fn set_auth_metods (mut self, metods: MethodSet) {
         self.russh_config.methods = metods;
@@ -72,7 +67,7 @@ impl ServerConfig {
     fn set_window_size (mut self, windos_size: u32) {
         self.russh_config.window_size = windos_size;
     }
-
+    
     fn set_maximum_packet_size (mut self, maximum_packet_size: u32) {
         self.russh_config.maximum_packet_size = maximum_packet_size;
     }
@@ -91,6 +86,24 @@ impl ServerConfig {
 
     fn set_connection_timeout (mut self, connection_timeout: Option<std::time::Duration>) {
         self.russh_config.connection_timeout = connection_timeout;
+    }
+}
+
+impl Default for ServerConfig {
+    fn default() -> Self {
+        let mut russh_config = russh::server::Config::default();
+
+        russh_config.methods = MethodSet::NONE; 
+        russh_config.connection_timeout = None;
+        russh_config.auth_rejection_time = std::time::Duration::from_secs(30);
+
+        let path_to_the_secret_key = concat!(env!("CARGO_MANIFEST_DIR"), "/id_ed25519");
+        let russh_key_pair = russh_keys::load_secret_key(path_to_the_secret_key, None).unwrap();
+        russh_config.keys.push(russh_key_pair);
+
+        ServerConfig { 
+             russh_config
+        }
     }
 }
 
