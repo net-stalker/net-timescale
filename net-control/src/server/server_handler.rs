@@ -12,14 +12,14 @@ impl ServerHandler {
         }
     }
 
-    pub (super) fn add_new_client_to_the_aggregator(&self, channel: russh::ChannelId) -> Option<Result<bool, ()>> {
+    pub (super) fn push_new_client_to_the_aggregator(&self, channel: russh::ChannelId) -> Option<Result<bool, ()>> {
         let mut aggregator = self.aggregator.lock().unwrap();
-        aggregator.add_new_client(channel)
+        aggregator.pull_new_client(channel)
     }
 
-    pub (super) fn send_symbol_to_aggregator(&self, channel: russh::ChannelId, data: &[u8]) -> Option<Result<super::aggregator::Full, ()>> {
+    pub (super) fn push_symbol_to_aggregator(&self, channel: russh::ChannelId, data: &[u8]) -> Option<Result<super::aggregator::Full, ()>> {
         let mut aggregator = self.aggregator.lock().unwrap();
-        aggregator.catch_symbol_for(channel, data)
+        aggregator.pull_symbol_for(channel, data)
     }
 }
 
@@ -62,7 +62,7 @@ impl russh::server::Handler for ServerHandler {
             Err(_) => todo!(),
         }
 
-        self.add_new_client_to_the_aggregator(channel.id());
+        self.push_new_client_to_the_aggregator(channel.id());
 
         Ok((self, true, session))
     }
@@ -82,7 +82,14 @@ impl russh::server::Handler for ServerHandler {
         // //For now just echo everything received
         // session.data(channel, russh::CryptoVec::from(data_cooked));
 
-        self.send_symbol_to_aggregator(channel, data);
+        let push_result = 
+            match self.push_symbol_to_aggregator(channel, data) {
+                Some(Ok(R)) => R,
+                Some(Err(R)) => todo!(),
+                None => todo!()
+            };
+        
+
 
         Ok((self, session))
     }
