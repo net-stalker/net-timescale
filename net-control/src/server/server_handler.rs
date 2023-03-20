@@ -1,4 +1,4 @@
-use super::aggregator::Aggregator;
+use super::aggregator::{Aggregator, self};
 
 #[derive(Clone)]
 pub struct ServerHandler {
@@ -10,6 +10,11 @@ impl ServerHandler {
         ServerHandler {
             aggregator: std::sync::Arc::new(std::sync::Mutex::new(Aggregator::new()))
         }
+    }
+
+    pub (super) fn add_new_client_to_the_aggregator(& self) -> Option<Result<(), ()>> {
+        let mut aggregator = self.aggregator.lock().unwrap();
+        aggregator.add_new_client()
     }
 }
 

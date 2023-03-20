@@ -6,6 +6,10 @@ impl Aggregator {
     pub (super) fn new() -> Self {
         Aggregator {}
     }   
+
+    pub (super) fn add_new_client(& self) -> Option<Result<(), ()>> {
+        None
+    }
 }
 
 impl Default for Aggregator {
