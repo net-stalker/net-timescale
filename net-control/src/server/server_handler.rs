@@ -16,6 +16,11 @@ impl ServerHandler {
         let mut aggregator = self.aggregator.lock().unwrap();
         aggregator.add_new_client(channel)
     }
+
+    pub (super) fn send_symbol_to_aggregator(&self, channel: russh::ChannelId, data: &[u8]) -> Option<Result<super::aggregator::Full, ()>> {
+        let mut aggregator = self.aggregator.lock().unwrap();
+        aggregator.catch_symbol_for(channel, data)
+    }
 }
 
 impl Default for ServerHandler {
@@ -68,14 +73,16 @@ impl russh::server::Handler for ServerHandler {
     }
 
     async fn data(self, channel: russh::ChannelId, data: &[u8], mut session: russh::server::Session) -> Result<(Self, russh::server::Session), Self::Error> {
-        let mut data_cooked = std::str::from_utf8(data).unwrap().to_string();
+        // let mut data_cooked = std::str::from_utf8(data).unwrap().to_string();
 
-        if data_cooked == "\r" {
-            data_cooked = "\r\n>promt ".to_string();
-        }
+        // if data_cooked == "\r" {
+        //     data_cooked = "\r\n>promt ".to_string();
+        // }
         
-        //For now just echo everything received
-        session.data(channel, russh::CryptoVec::from(data_cooked));
+        // //For now just echo everything received
+        // session.data(channel, russh::CryptoVec::from(data_cooked));
+
+        self.send_symbol_to_aggregator(channel, data);
 
         Ok((self, session))
     }
