@@ -42,8 +42,16 @@ impl russh::server::Handler for ServerHandler {
         Ok((self, russh::server::Auth::Accept))
     }
 
-    async fn channel_open_session(self, channel: russh::Channel<russh::server::Msg> , mut session: russh::server::Session) -> Result<(Self, bool, russh::server::Session), Self::Error> {
-        session.data(channel.id(), russh::CryptoVec::from("Hello from CLI!".to_string()));
+    async fn auth_succeeded(self, session: russh::server::Session) -> Result<(Self, russh::server::Session), Self::Error> {
+        Ok((self, session))
+    }
+
+    async fn channel_open_session(self, mut channel: russh::Channel<russh::server::Msg> , session: russh::server::Session) -> Result<(Self, bool, russh::server::Session), Self::Error> {
+        match channel.data("\nHello from the CLI!\r\n".as_bytes()).await {
+            Ok(_) => (),
+            Err(_) => todo!(),
+        }
+
         Ok((self, true, session))
     }
 
@@ -53,8 +61,12 @@ impl russh::server::Handler for ServerHandler {
     }
 
     async fn data(self, channel: russh::ChannelId, data: &[u8], mut session: russh::server::Session) -> Result<(Self, russh::server::Session), Self::Error> {
-        let data_cooked = std::str::from_utf8(data).unwrap().to_string();
+        let mut data_cooked = std::str::from_utf8(data).unwrap().to_string();
 
+        if data_cooked == "\r" {
+            data_cooked = ">promt \r\n".to_string();
+        }
+        
         //For now just echo everything received
         session.data(channel, russh::CryptoVec::from(data_cooked));
 
