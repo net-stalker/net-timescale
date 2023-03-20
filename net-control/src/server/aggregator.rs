@@ -9,6 +9,7 @@ pub struct Aggregator {
     clients: std::collections::HashMap<russh::ChannelId, String>
 }
 
+#[derive(PartialEq)]
 pub (super) enum Full {
     Ended,
     NotEnded
@@ -38,6 +39,17 @@ impl Aggregator {
         } else {
             Some(Ok(Full::NotEnded))
         }
+    }
+
+    pub (super) fn pull_reset_for(&mut self, channel: russh::ChannelId) -> Option<Result<bool, ()>> {
+        let client_buffer = self.clients.get_mut(&channel).unwrap();
+        client_buffer.clear();
+        Some(Ok(true))
+    }
+
+    pub (super) fn push_buffer_for(&self, channel: russh::ChannelId) -> Option<Result<String, ()>> {
+        let client_buffer = self.clients.get(&channel).unwrap();
+        Some(Ok(client_buffer.clone()))
     }
 }
 
