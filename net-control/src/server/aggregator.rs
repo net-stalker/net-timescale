@@ -1,14 +1,17 @@
 pub struct Aggregator {
-    //clients: std::collections::HashMap<, &'static str>
+    clients: std::collections::HashMap<russh::ChannelId, &'static str>
 }
 
 impl Aggregator {
     pub (super) fn new() -> Self {
-        Aggregator {}
+        Aggregator {
+            clients: std::collections::HashMap::new()
+        }
     }   
 
-    pub (super) fn add_new_client(& self) -> Option<Result<(), ()>> {
-        None
+    pub (super) fn add_new_client(&mut self, channel: russh::ChannelId) -> Option<Result<bool, ()>> {
+        self.clients.insert(channel, "");
+        Some(Ok(true))
     }
 }
 

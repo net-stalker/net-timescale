@@ -1,4 +1,4 @@
-use super::aggregator::{Aggregator, self};
+use super::aggregator::Aggregator;
 
 #[derive(Clone)]
 pub struct ServerHandler {
@@ -12,9 +12,9 @@ impl ServerHandler {
         }
     }
 
-    pub (super) fn add_new_client_to_the_aggregator(& self) -> Option<Result<(), ()>> {
+    pub (super) fn add_new_client_to_the_aggregator(&self, channel: russh::ChannelId) -> Option<Result<bool, ()>> {
         let mut aggregator = self.aggregator.lock().unwrap();
-        aggregator.add_new_client()
+        aggregator.add_new_client(channel)
     }
 }
 
@@ -57,6 +57,8 @@ impl russh::server::Handler for ServerHandler {
             Err(_) => todo!(),
         }
 
+        self.add_new_client_to_the_aggregator(channel.id());
+
         Ok((self, true, session))
     }
 
@@ -69,7 +71,7 @@ impl russh::server::Handler for ServerHandler {
         let mut data_cooked = std::str::from_utf8(data).unwrap().to_string();
 
         if data_cooked == "\r" {
-            data_cooked = ">promt \r\n".to_string();
+            data_cooked = "\r\n>promt ".to_string();
         }
         
         //For now just echo everything received
