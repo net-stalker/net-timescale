@@ -1,9 +1,23 @@
+use super::aggregator::Aggregator;
+
 #[derive(Clone)]
-pub struct ServerHandler {}
+pub struct ServerHandler {
+    aggregator: std::sync::Arc<std::sync::Mutex<Aggregator>>
+}
 
 impl ServerHandler {
     pub (super) fn new() -> Self {
-        ServerHandler {}
+        ServerHandler {
+            aggregator: std::sync::Arc::new(std::sync::Mutex::new(Aggregator::new()))
+        }
+    }
+}
+
+impl Default for ServerHandler {
+    fn default() -> Self {
+        ServerHandler {
+            aggregator: std::sync::Arc::new(std::sync::Mutex::new(Aggregator::default()))
+        }
     }
 }
 
