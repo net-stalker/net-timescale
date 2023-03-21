@@ -9,7 +9,7 @@ fn main() {
     env_logger::init();
     info!("Run module");
 
-    match Config::new(None) {
+    match Config::builder().build() {
         Ok(config) => {
             info!("{}", config)
         }

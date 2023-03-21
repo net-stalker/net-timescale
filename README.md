@@ -39,9 +39,11 @@ To access to the service you can use netcat util. Example, how to check if Times
 
 ``nc -vz localhost 5432``
 
-Troubleshooting:  
+Troubleshooting:
 
 ## [SQL Migrations](net-timescale%2Fmigrations)
+
+## Configuration
 
 ## A Framework for Writing Distributed Applications
 
