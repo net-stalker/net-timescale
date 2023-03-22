@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
-use std::thread;
-use std::thread::JoinHandle;
 
 use log::info;
 use postgres::{Client, NoTls};
@@ -12,6 +10,7 @@ use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
 
 use crate::command::dispatcher::CommandDispatcher;
+use crate::command::connection_pool::ConnectionPool;
 use crate::query::insert_packet::InsertPacket;
 use crate::query::query_packet::QueryPacket;
 
@@ -27,42 +26,55 @@ impl Timescale {
 
 impl NetComponent for Timescale {
     fn run(self) {
-        self.pool.execute(move || {
-            info!("Run component");
+        info!("Run component");
+        info!("Initialisating connection pool");
+        let pool = ConnectionPool::new("postgres://postgres:PsWDgxZb@localhost", 4);
+        pool.pool.ping().unwrap();
 
-            let client = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
+        // self.pool.execute(move ||{
+        //     info!("Run component");
+        //     info!("Initialisating connection pool");
+        //     let pool = ConnectionPool::new("postgres://postgres:PsWDgxZb@localhost", 10);
+        //     loop{
+                
+        //     }
+        // });
+        // self.pool.execute(move || {
+        //     info!("Run component");
 
-            let insert_packet = InsertPacket {
-                client: Arc::new(Mutex::new(client)),
-            };
+        //     let client = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
 
-            let queries = Arc::new(RwLock::new(HashMap::new()));
-            queries
-                .write()
-                .unwrap()
-                .insert("insert_packet".to_string(), insert_packet);
+        //     let insert_packet = InsertPacket {
+        //         client: Arc::new(Mutex::new(client)),
+        //     };
 
-            //TODO should use pool of connections
-            let client = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
-            let packet = QueryPacket {
-                client: Arc::new(Mutex::new(client)),
-            };
+        //     let queries = Arc::new(RwLock::new(HashMap::new()));
+        //     queries
+        //         .write()
+        //         .unwrap()
+        //         .insert("insert_packet".to_string(), insert_packet);
 
-            packet.subscribe();
+        //     //TODO should use pool of connections
+        //     let client = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
+        //     let packet = QueryPacket {
+        //         client: Arc::new(Mutex::new(client)),
+        //     };
 
-            let command_dispatcher = CommandDispatcher { queries };
+        //     packet.subscribe();
 
-            let db_service = ConnectorNNG::builder()
-                .with_endpoint("tcp://0.0.0.0:5556".to_string())
-                .with_proto(Proto::Rep)
-                .with_handler(command_dispatcher)
-                .build()
-                .bind()
-                .into_inner();
+        //     let command_dispatcher = CommandDispatcher { queries };
 
-            Poller::new()
-                .add(db_service)
-                .poll();
-        });
+        //     let db_service = ConnectorNNG::builder()
+        //         .with_endpoint("tcp://0.0.0.0:5556".to_string())
+        //         .with_proto(Proto::Rep)
+        //         .with_handler(command_dispatcher)
+        //         .build()
+        //         .bind()
+        //         .into_inner();
+
+        //     Poller::new()
+        //         .add(db_service)
+        //         .poll();
+        // });
     }
 }
