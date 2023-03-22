@@ -115,3 +115,24 @@ impl Default for CLIServer {
         CLIServer { config: ServerConfig::default(), server: ControlServer::new() }
     }
 }
+
+pub struct CLIServerBuilder {
+    config: Option<ServerConfig>,
+    server: Option<ControlServer>,
+}
+
+impl CLIServerBuilder {
+    pub fn new() -> CLIServerBuilder {
+        CLIServerBuilder { 
+            config: None, 
+            server: None 
+        }
+    }
+
+    pub fn build(self) -> CLIServer {
+        CLIServer {
+            config: self.config.unwrap(),
+            server: self.server.unwrap()
+        }
+    }
+}
