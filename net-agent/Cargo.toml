@@ -31,6 +31,7 @@ deb_depends = ["libpcap-dev", "libzmq3-dev"]
 
 [dependencies]
 net-core = { path = "../net-core" }
+net-config = { path = "../net-config" }
 
 pcap = "1.0.0"
 derivative = "2.2.0"

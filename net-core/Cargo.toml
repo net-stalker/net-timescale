@@ -13,6 +13,8 @@ readme = "README.md"
 #license-file = "LICENSE.txt"
 
 [dependencies]
+net-config = { path = "../net-config" }
+
 pcap = "1.0.0"
 
 serde = { version = "1.0.140", features = ["derive"] }

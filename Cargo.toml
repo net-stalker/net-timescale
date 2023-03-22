@@ -2,6 +2,7 @@
 
 members = [
     "net-all-in-one",
+    "net-config",
     "net-core",
     "net-agent",
     "net-hub",

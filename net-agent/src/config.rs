@@ -1,18 +1,10 @@
-use std::env;
 use std::fmt::{Debug, Display, Formatter};
-use std::ops::Deref;
-use std::path::PathBuf;
 
-use config::{ConfigError, File};
-use log::{debug, Level};
+use log::Level;
 use serde::{Deserialize, Serialize};
 use toml::to_string;
 
-use net_core::file::files::Files;
-
-const CONFIG_DIR: &str = ".config";
-
-const PKG_NAME: &str = env!("CARGO_PKG_NAME");
+use net_config::NetConfig;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Connector {
@@ -52,7 +44,7 @@ pub struct Capture {
     buffer_size: u32,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, NetConfig)]
 pub struct Config {
     connector: Connector,
     capture: Vec<Capture>,
@@ -62,73 +54,6 @@ pub struct Config {
 impl Display for Config {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", to_string(self).unwrap())
-    }
-}
-
-impl Config {
-    pub fn builder() -> ConfigBuilder {
-        ConfigBuilder::default()
-    }
-}
-
-#[derive(Debug)]
-pub struct ConfigBuilder {
-    config_path: PathBuf,
-}
-
-#[cfg(debug_assertions)]
-impl Default for ConfigBuilder {
-    fn default() -> Self {
-        ConfigBuilder { config_path: PathBuf::new().join(PKG_NAME).join(CONFIG_DIR) }
-    }
-}
-
-#[cfg(not(debug_assertions))]
-impl Default for ConfigBuilder {
-    fn default() -> Self {
-        if env::var("NET_CONFIG_DIR").is_ok() {
-            return ConfigBuilder { config_path: PathBuf::from(&env::var("NET_CONFIG_DIR").unwrap()) };
-        }
-
-        let base_dir = Self::get_base_dir().unwrap();
-        ConfigBuilder { config_path: PathBuf::from(base_dir.home_dir()).join(CONFIG_DIR).join(PKG_NAME) }
-    }
-}
-
-impl ConfigBuilder {
-    pub(crate) fn with_config_dir(mut self, config_path: String) -> Self {
-        self.config_path = PathBuf::from(config_path);
-        self
-    }
-
-    #[cfg(not(debug_assertions))]
-    fn get_base_dir() -> Option<directories::BaseDirs> {
-        directories::BaseDirs::new()
-    }
-}
-
-impl<'de> ConfigBuilder {
-    pub fn build(&self) -> Result<Config, ConfigError> {
-        debug!("{:?}", self);
-
-        let config_files = Files::find_files(&self.config_path, "toml");
-        debug!("found config files {:?}", config_files);
-
-        match Self::create_config(config_files) {
-            Ok(config) => { config.try_deserialize::<'de, Config>() }
-            Err(e) => { Err(e) }
-        }
-    }
-
-    fn create_config(config_files: Vec<PathBuf>) -> Result<config::Config, ConfigError> {
-        let mut builder = config::Config::builder();
-
-        for i in 0..config_files.len() {
-            let path_buf = config_files.get(i).unwrap().deref();
-            builder = builder.add_source(File::from(path_buf));
-        }
-
-        builder.build()
     }
 }
 
