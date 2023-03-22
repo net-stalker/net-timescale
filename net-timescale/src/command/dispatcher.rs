@@ -7,8 +7,11 @@ use net_core::transport::sockets::{Handler, Receiver, Sender};
 
 use crate::query::insert_packet::InsertPacket;
 
+use super::connection_pool::ConnectionPool;
+
 pub struct CommandDispatcher {
     pub queries: Arc<RwLock<HashMap<String, InsertPacket>>>,
+    pub connections: ConnectionPool
 }
 
 impl Handler for CommandDispatcher {
