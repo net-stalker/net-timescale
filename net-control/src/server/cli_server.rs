@@ -110,12 +110,6 @@ impl CLIServer {
     }
 }
 
-impl Default for CLIServer {
-    fn default() -> Self {
-        CLIServer { config: ServerConfig::default(), server: ControlServer::new() }
-    }
-}
-
 pub struct CLIServerBuilder {
     config: Option<ServerConfig>,
     server: Option<ControlServer>,
