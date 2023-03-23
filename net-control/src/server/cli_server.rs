@@ -1,14 +1,18 @@
-use russh::{self, MethodSet, Limits, Preferred};
-use russh_keys::key;
-use super::{server_config::{ServerConfig}, control_server::ControlServer};
+use russh;
+use super::{server_config::{ServerConfig}, control_server::ControlServer, server_handler::ServerHandler};
 
-pub struct CLIServer 
+pub struct CLIServer <H>
+where
+    H: russh::server::Handler
 {
     config: ServerConfig,
-    server: ControlServer,
+    server: ControlServer<H>,
 }
 
-impl CLIServer {
+impl <H> CLIServer<H> 
+where
+    H: russh::server::Handler + Send + Clone + 'static
+{
 //TODO: Get rid of a tokio usage (not sure, if possible)
 
     #[tokio::main]
@@ -22,18 +26,24 @@ impl CLIServer {
         let _run_result = russh::server::run(arc_config, addrs, self.server).await;
     }
 
-    pub fn builder() -> CLIServerBuilder {
+    pub fn builder() -> CLIServerBuilder<H> {
         CLIServerBuilder::new()
     }
 }
 
 
-pub struct CLIServerBuilder {
+pub struct CLIServerBuilder <H> 
+where
+    H: russh::server::Handler
+{
     config: Option<ServerConfig>,
-    server: Option<ControlServer>,
+    server: Option<ControlServer<H>>,
 }
 
-impl CLIServerBuilder {
+impl <H> CLIServerBuilder <H>
+where
+    H: russh::server::Handler 
+{
     pub fn new() -> Self {
         CLIServerBuilder { 
             config: None, 
@@ -46,25 +56,16 @@ impl CLIServerBuilder {
         self
     }
 
-    pub fn with_server(mut self, server: ControlServer) -> Self {
+    pub fn with_server(mut self, server: ControlServer<H>) -> Self {
         self.server = Some(server);
         self
     }
 
 
-    pub fn build(self) -> CLIServer {
+    pub fn build(self) -> CLIServer<H> {
         CLIServer {
             config: self.config.unwrap(),
             server: self.server.unwrap()
-        }
-    }
-}
-
-impl Default for CLIServerBuilder {
-    fn default() -> Self {
-        CLIServerBuilder { 
-            config: Some(ServerConfig::default()), 
-            server: Some(ControlServer::new()) 
         }
     }
 }

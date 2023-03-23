@@ -1,12 +1,11 @@
 #[derive(Clone)]
-pub struct ServerHandler {}
+pub struct ServerHandler;
 
-impl ServerHandler {
-    pub (super) fn new() -> Self {
-        ServerHandler {}
+impl Default for ServerHandler {
+    fn default() -> Self {
+        Self {}
     }
 }
-
 
 #[async_trait::async_trait]
 impl russh::server::Handler for ServerHandler {
