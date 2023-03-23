@@ -8,12 +8,6 @@ pub struct ServerHandler {
 }
 
 impl ServerHandler {
-    pub (super) fn new() -> Self {
-        ServerHandler {
-            aggregator: std::sync::Arc::new(std::sync::Mutex::new(Aggregator::new()))
-        }
-    }
-
     pub (super) fn push_new_client_to_the_aggregator(&self, channel: russh::ChannelId) -> Option<Result<bool, ()>> {
         let mut aggregator = self.aggregator.lock().unwrap();
         aggregator.pull_new_client(channel)
@@ -42,7 +36,6 @@ impl Default for ServerHandler {
         }
     }
 }
-
 
 #[async_trait::async_trait]
 impl russh::server::Handler for ServerHandler {
