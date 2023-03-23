@@ -1,5 +1,3 @@
-use std::sync::mpsc::channel;
-
 use super::aggregator::{Aggregator, Full};
 
 #[derive(Clone)]
