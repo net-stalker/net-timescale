@@ -9,10 +9,6 @@ pub struct CLIServer
 }
 
 impl CLIServer {
-    pub fn new() -> Self {
-        CLIServer { config: ServerConfig::new(), server: ControlServer::new() }
-    }
-
 //TODO: Get rid of a tokio usage (not sure, if possible)
 
     #[tokio::main]
@@ -108,6 +104,10 @@ impl CLIServer {
         self.config.set_connection_timeout(connection_timeout);
         self
     }
+
+    pub fn builder() -> CLIServerBuilder {
+        CLIServerBuilder::new()
+    }
 }
 
 impl Default for CLIServer {
@@ -122,17 +122,37 @@ pub struct CLIServerBuilder {
 }
 
 impl CLIServerBuilder {
-    pub fn new() -> CLIServerBuilder {
+    pub fn new() -> Self {
         CLIServerBuilder { 
             config: None, 
             server: None 
         }
     }
 
+    pub fn with_config(mut self, config: ServerConfig) -> Self {
+        self.config = Some(config);
+        self
+    }
+
+    pub fn with_server(mut self, server: ControlServer) -> Self {
+        self.server = Some(server);
+        self
+    }
+
+
     pub fn build(self) -> CLIServer {
         CLIServer {
             config: self.config.unwrap(),
             server: self.server.unwrap()
+        }
+    }
+}
+
+impl Default for CLIServerBuilder {
+    fn default() -> Self {
+        CLIServerBuilder { 
+            config: Some(ServerConfig::default()), 
+            server: Some(ControlServer::new()) 
         }
     }
 }
