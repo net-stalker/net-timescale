@@ -29,7 +29,7 @@ impl ServerHandler {
 
 impl Default for ServerHandler {
     fn default() -> Self {
-        ServerHandler {
+        Self {
             aggregator: std::sync::Arc::new(std::sync::Mutex::new(Aggregator::default()))
         }
     }
