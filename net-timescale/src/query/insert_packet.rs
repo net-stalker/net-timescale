@@ -9,6 +9,8 @@ pub struct InsertPacket {
 }
 
 impl InsertPacket {
+    // add connecton here as a new parameter
+    // https://docs.rs/elephantry/latest/elephantry/connection/struct.Connection.html
     pub fn insert(&self, frame_time: DateTime<Local>, src_addr: String, dst_addr: String, packet_json: Vec<u8>) {
         let json_value = Self::convert_to_value(packet_json).unwrap();
 
