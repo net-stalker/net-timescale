@@ -7,7 +7,7 @@ use net_core::layer::NetComponent;
 
 fn main() {
     env_logger::init();
-    info!("Run module");
+    info!("run module");
 
     match Config::builder().build() {
         Ok(config) => {
@@ -17,7 +17,6 @@ fn main() {
             warn!("{}", e)
         }
     }
-    // let config = Config::new(None).unwrap();
 
     let pool = ThreadPool::with_name("worker".into(), 2);
 

@@ -51,12 +51,6 @@ pub struct Config {
     log: Log,
 }
 
-impl Display for Config {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", to_string(self).unwrap())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
