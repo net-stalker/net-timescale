@@ -21,6 +21,12 @@ pub fn derive(input: TokenStream) -> TokenStream {
             }
         }
 
+        impl std::fmt::Display for #ident {
+            fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{}", to_string(self).unwrap())
+            }
+        }
+
         #[derive(std::fmt::Debug)]
         pub struct NetConfigBuilder {
             config_path: std::path::PathBuf,
