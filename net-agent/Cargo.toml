@@ -17,7 +17,7 @@ name = "netagent"
 identifier = "io.netagent"
 icon = ["32x32.png", "128x128.png", "128x128@2x.png"]
 resources = ["assets", "images/**/*.png", "debian"]
-copyright = "Copyright (c) Netstalker 2022. All rights reserved."
+copyright = "Copyright (c) NetStalker 2023. All rights reserved."
 category = "Developer Tool"
 short_description = "Capture packets and redirect them to the cloud for the feature analyze."
 long_description = """
@@ -38,7 +38,7 @@ derivative = "2.2.0"
 log = "0.4.17"
 env_logger = "0.10.0"
 threadpool = "1.8.1"
-directories = "4.0.1"
+directories = "5.0.0"
 config = "0.13.3"
 serde = { version = "1.0.156", features = ["derive"] }
 toml = "0.7.3"
