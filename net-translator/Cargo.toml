@@ -12,9 +12,10 @@ readme = "README.md"
 #license-file = "LICENSE.txt"
 
 [dependencies]
-log = "0.4.17"
-env_logger = "0.10.0"
 net-core = { path = "../net-core" }
 
-threadpool = "1.8.1"
+log = { workspace = true }
+env_logger = { workspace = true }
+threadpool = { workspace = true }
+
 #zmq = "0.9.2"
