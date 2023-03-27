@@ -36,8 +36,49 @@ pub struct CLIServerBuilder <H>
 where
     H: russh::server::Handler
 {
-    config: Option<ServerConfig>,
-    server: Option<ControlServer<H>>,
+    //Fields for ServerConfig:
+
+    // The server ID string sent at the beginning of the protocol.
+    server_id: russh::SshId,
+    // Authentication methods proposed to the client.
+    methods: russh::MethodSet,
+    // The authentication banner, usually a warning message shown to the client.
+    auth_banner: Option<&'static str>,
+    // Authentication rejections must happen in constant time for
+    // security reasons. Russh does not handle this by default.
+    auth_rejection_time: std::time::Duration,
+    // Authentication rejection time override for the initial "none" auth attempt.
+    // OpenSSH clients will send an initial "none" auth to probe for authentication methods.
+    auth_rejection_time_initial: Option<std::time::Duration>,
+    // The server's keys. The first key pair in the client's preference order will be chosen.
+    keys: Vec<russh_keys::key::KeyPair>,
+    // The bytes and time limits before key re-exchange.
+    limits: russh::Limits,
+    // The initial size of a channel (used for flow control).
+    window_size: u32,
+    // The maximal size of a single packet.
+    maximum_packet_size: u32,
+    // Internal event buffer size
+    event_buffer_size: usize,
+    // Lists of preferred algorithms.
+    preferred: russh::Preferred,
+    // Maximal number of allowed authentication attempts.
+    max_auth_attempts: usize,
+    // Time after which the connection is garbage-collected.
+    connection_timeout: Option<std::time::Duration>,
+
+    // Server Host
+    server_host: &'static str,
+    // Server Port
+    server_port: &'static str,
+
+
+
+    // Fields for ControlServer:
+
+    // Handler (type), that will be sent to the clients and handle all the events.
+    // It should be the russh::server::Handler.
+    control_handler: Box<H>
 }
 
 impl <H> CLIServerBuilder <H>
@@ -45,27 +86,28 @@ where
     H: russh::server::Handler 
 {
     pub fn new() -> Self {
-        CLIServerBuilder { 
-            config: None, 
-            server: None 
+        CLIServerBuilder {
+            server_id: todo!(),
+            methods: todo!(),
+            auth_banner: todo!(),
+            auth_rejection_time: todo!(),
+            auth_rejection_time_initial: todo!(),
+            keys: todo!(),
+            limits: todo!(),
+            window_size: todo!(),
+            maximum_packet_size: todo!(),
+            event_buffer_size: todo!(),
+            preferred: todo!(),
+            max_auth_attempts: todo!(),
+            connection_timeout: todo!(),
+            server_host: todo!(),
+            server_port: todo!(),
+            control_handler: todo!(),
         }
     }
 
-    pub fn with_config(mut self, config: ServerConfig) -> Self {
-        self.config = Some(config);
-        self
-    }
-
-    pub fn with_server(mut self, server: ControlServer<H>) -> Self {
-        self.server = Some(server);
-        self
-    }
-
-
-    pub fn build(self) -> CLIServer<H> {
-        CLIServer {
-            config: self.config.unwrap(),
-            server: self.server.unwrap()
-        }
-    }
+    // pub fn build(self) -> CLIServer<H> {
+    //     CLIServer {
+    //     }
+    // }
 }
