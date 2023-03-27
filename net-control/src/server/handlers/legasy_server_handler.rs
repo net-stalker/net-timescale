@@ -2,11 +2,11 @@ use super::super::aggregator::Aggregator;
 use super::super::aggregator::Full;
 
 #[derive(Clone)]
-pub struct ServerHandler {
+pub struct LegasyServerHandler {
     aggregator: std::sync::Arc<std::sync::Mutex<Aggregator>>
 }
 
-impl ServerHandler {
+impl LegasyServerHandler {
     pub (super) fn push_new_client_to_the_aggregator(&self, channel: russh::ChannelId) -> Option<Result<bool, ()>> {
         let mut aggregator = self.aggregator.lock().unwrap();
         aggregator.pull_new_client(channel)
@@ -28,7 +28,7 @@ impl ServerHandler {
     }
 }
 
-impl Default for ServerHandler {
+impl Default for LegasyServerHandler {
     fn default() -> Self {
         Self {
             aggregator: std::sync::Arc::new(std::sync::Mutex::new(Aggregator::default()))
@@ -37,7 +37,7 @@ impl Default for ServerHandler {
 }
 
 #[async_trait::async_trait]
-impl russh::server::Handler for ServerHandler {
+impl russh::server::Handler for LegasyServerHandler {
     type Error = anyhow::Error;
 
     async fn disconnected(self, session: russh::server::Session) -> Result<(Self, russh::server::Session), Self::Error> {
