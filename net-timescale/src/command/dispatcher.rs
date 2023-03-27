@@ -7,7 +7,6 @@ use net_core::transport::sockets::{Handler, Receiver, Sender};
 
 use crate::query::insert_packet::InsertPacket;
 
-
 pub struct CommandDispatcher {
     pub queries: Arc<RwLock<HashMap<String, InsertPacket>>>,
 }
@@ -22,9 +21,9 @@ impl Handler for CommandDispatcher {
         let layered_json = JsonPcapParser::split_into_layers(first_json_value);
 
         let frame_time = JsonPcapParser::find_frame_time(&data);
-        let mut src_addr = JsonPcapParser::extract_src_addr_l3(&layered_json)
+        let src_addr = JsonPcapParser::extract_src_addr_l3(&layered_json)
             .or(Some("".to_string()));
-        let mut dst_addr = JsonPcapParser::extract_dst_addr_l3(&layered_json)
+        let dst_addr = JsonPcapParser::extract_dst_addr_l3(&layered_json)
             .or(Some("".to_string()));
         let binary_json = JsonParser::get_vec(layered_json);
 

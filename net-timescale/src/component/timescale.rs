@@ -2,15 +2,15 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
 
 use log::info;
-use postgres::{Client, NoTls};
+use postgres::{NoTls};
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
+use r2d2_postgres::{PostgresConnectionManager};
 
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
 
 use crate::command::dispatcher::CommandDispatcher;
-use crate::command::connection_pool::ConnectionPool;
 use crate::query::insert_packet::InsertPacket;
 use crate::query::query_packet::QueryPacket;
 
@@ -26,27 +26,25 @@ impl Timescale {
 
 impl NetComponent for Timescale {
     fn run(self) {
-        info!("Run component");
         self.pool.execute(move || {
             info!("Run component");
-            // TODO: add file config for ConnectionPool
-            let connections = ConnectionPool::new("postgres://postgres:PsWDgxZb@localhost", 10);
-            let client = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
-            
-            let insert_packet = InsertPacket {
-                client: Arc::new(Mutex::new(client)),
-            };
+            let manager = PostgresConnectionManager::new(
+                "postgres://postgres:PsWDgxZb@localhost".parse().unwrap(),
+                NoTls
+            );
+            let pool = r2d2::Pool::builder().max_size(2).build(manager).unwrap();
 
+            let insert_packet = InsertPacket {
+                pool: Arc::new(Mutex::new(pool.clone())),
+            };
             let queries = Arc::new(RwLock::new(HashMap::new()));
             queries
                 .write()
                 .unwrap()
                 .insert("insert_packet".to_string(), insert_packet);
 
-            //TODO should use pool of connections
-            let client = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
             let packet = QueryPacket {
-                client: Arc::new(Mutex::new(client)),
+                pool: Arc::new(Mutex::new(pool.clone())),
             };
 
             packet.subscribe();
