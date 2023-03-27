@@ -79,7 +79,7 @@ where
 
     // Handler (type), that will be sent to the clients and handle all the events.
     // It should be the russh::server::Handler.
-    control_handler: H
+    control_handler: Box<H>
 }
 
 impl CLIServerBuilder <DefaultServerHandler> {
@@ -107,7 +107,7 @@ impl CLIServerBuilder <DefaultServerHandler> {
             server_port: "2222",
 
 //TODO: change it to new, "default" handler (echo handler)
-            control_handler: DefaultServerHandler,
+            control_handler: Box::new(DefaultServerHandler),
         }
     }
 }
@@ -119,7 +119,7 @@ where
     pub fn build(self) -> CLIServer<H> {
         CLIServer {
             server: ControlServer {
-                handler: self.control_handler,
+                handler: *self.control_handler,
             },
 
             config: ServerConfig {
@@ -207,7 +207,7 @@ where
 
     // Fields for ControlServer:
     pub fn with_handler(mut self, handler: H) -> Self {
-        self.control_handler = handler;
+        self.control_handler = Box::new(handler);
         self
     }
 }
