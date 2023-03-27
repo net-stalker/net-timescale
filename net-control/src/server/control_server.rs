@@ -1,6 +1,6 @@
 pub struct ControlServer<H>
 {
-    handler: H
+    pub(crate) handler: H
 }
 
 impl <H> ControlServer<H> 

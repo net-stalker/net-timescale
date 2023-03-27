@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use russh;
 use super::{server_config::{ServerConfig}, control_server::ControlServer, server_handler::ServerHandler};
 
@@ -13,8 +15,8 @@ impl <H> CLIServer<H>
 where
     H: russh::server::Handler + Send + Clone + 'static
 {
-//TODO: Get rid of a tokio usage (not sure, if possible)
-
+//TODO: Get rid of a tokio usage 
+    // It is not possible. Need to find another lib
     #[tokio::main]
     pub async fn start_server(self) {
         let ip = self.config.get_server_ip();
@@ -26,7 +28,7 @@ where
         let _run_result = russh::server::run(arc_config, addrs, self.server).await;
     }
 
-    pub fn builder() -> CLIServerBuilder<H> {
+    pub fn builder() -> CLIServerBuilder<ServerHandler> {
         CLIServerBuilder::new()
     }
 }
@@ -78,36 +80,68 @@ where
 
     // Handler (type), that will be sent to the clients and handle all the events.
     // It should be the russh::server::Handler.
-    control_handler: Box<H>
+    control_handler: H
+}
+
+impl CLIServerBuilder <ServerHandler> {
+    pub fn new() -> Self {
+        CLIServerBuilder {
+            server_id: russh::SshId::Standard(format!(
+                "SSH-2.0-{}_{}",
+                env!("CARGO_PKG_NAME"),
+                env!("CARGO_PKG_VERSION")
+            )),
+            methods: russh::MethodSet::all(),
+            auth_banner: None,
+            auth_rejection_time: std::time::Duration::from_secs(1),
+            auth_rejection_time_initial: None,
+            keys: Vec::new(),
+            window_size: 2097152,
+            maximum_packet_size: 32768,
+            event_buffer_size: 10,
+            limits: russh::Limits::default(),
+            preferred: Default::default(),
+            max_auth_attempts: 3,
+            connection_timeout: None,
+
+            server_host: "0.0.0.0",
+            server_port: "2222",
+
+            control_handler: ServerHandler,
+        }
+    }
 }
 
 impl <H> CLIServerBuilder <H>
 where
-    H: russh::server::Handler 
+    H: russh::server::Handler + Default
 {
-    pub fn new() -> Self {
-        CLIServerBuilder {
-            server_id: todo!(),
-            methods: todo!(),
-            auth_banner: todo!(),
-            auth_rejection_time: todo!(),
-            auth_rejection_time_initial: todo!(),
-            keys: todo!(),
-            limits: todo!(),
-            window_size: todo!(),
-            maximum_packet_size: todo!(),
-            event_buffer_size: todo!(),
-            preferred: todo!(),
-            max_auth_attempts: todo!(),
-            connection_timeout: todo!(),
-            server_host: todo!(),
-            server_port: todo!(),
-            control_handler: todo!(),
+    pub fn build(self) -> CLIServer<H> {
+        CLIServer {
+            server: ControlServer {
+                handler: self.control_handler,
+            },
+            
+            config: ServerConfig {
+                russh_config: russh::server::Config {
+                    server_id: self.server_id,
+                    methods: self.methods,
+                    auth_banner: self.auth_banner,
+                    auth_rejection_time: self.auth_rejection_time,
+                    auth_rejection_time_initial: self.auth_rejection_time_initial,
+                    keys: self.keys,
+                    limits: self.limits,
+                    window_size: self.window_size,
+                    maximum_packet_size: self.maximum_packet_size,
+                    event_buffer_size: self.event_buffer_size,
+                    preferred: self.preferred,
+                    max_auth_attempts: self.max_auth_attempts,
+                    connection_timeout: self.connection_timeout,
+                },
+
+                server_ip: self.server_host,
+                server_port: self.server_port,
+            },
         }
     }
-
-    // pub fn build(self) -> CLIServer<H> {
-    //     CLIServer {
-    //     }
-    // }
 }

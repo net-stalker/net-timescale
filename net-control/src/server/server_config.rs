@@ -1,8 +1,8 @@
 pub struct ServerConfig {
-    russh_config: russh::server::Config,
+    pub(crate) russh_config: russh::server::Config,
 
-    server_ip: &'static str,
-    server_port: &'static str
+    pub(crate) server_ip: &'static str,
+    pub(crate) server_port: &'static str
 }
 
 impl ServerConfig {
