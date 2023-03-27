@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use russh;
 use super::{server_config::{ServerConfig}, control_server::ControlServer, server_handler::ServerHandler};
 
@@ -107,6 +105,7 @@ impl CLIServerBuilder <ServerHandler> {
             server_host: "0.0.0.0",
             server_port: "2222",
 
+//TODO: change it to new, "default" handler (echo handler)
             control_handler: ServerHandler,
         }
     }
@@ -121,7 +120,7 @@ where
             server: ControlServer {
                 handler: self.control_handler,
             },
-            
+
             config: ServerConfig {
                 russh_config: russh::server::Config {
                     server_id: self.server_id,
@@ -143,5 +142,71 @@ where
                 server_port: self.server_port,
             },
         }
+    }
+
+    //Fields for ServerConfig:
+
+    pub fn with_host(mut self, ip: &'static str) -> Self {
+        self.server_host = ip;
+        self
+    }
+    pub fn with_port(mut self, port: &'static str) -> Self {
+        self.server_port = port;
+        self
+    }
+
+    pub fn with_auth_metods (mut self, metods: russh::MethodSet) -> Self {
+        self.methods = metods;
+        self
+    }
+    pub fn with_auth_banner (mut self, banner: Option<&'static str>) -> Self {
+        self.auth_banner = banner;
+        self
+    }
+    pub fn with_auth_rejection_time (mut self, rejection_time: std::time::Duration) -> Self {
+        self.auth_rejection_time = rejection_time;
+        self
+    }
+    pub fn with_auth_rejection_time_initial (mut self, rejection_time_initial: Option<std::time::Duration>) -> Self {
+        self.auth_rejection_time_initial = rejection_time_initial;
+        self
+    }
+    pub fn with_keys (mut self, keys: Vec<russh_keys::key::KeyPair>) -> Self {
+        self.keys = keys;
+        self
+    }
+    pub fn with_limits (mut self, limits: russh::Limits) -> Self {
+        self.limits = limits;
+        self
+    }
+    pub fn with_window_size (mut self, windos_size: u32) -> Self {
+        self.window_size = windos_size;
+        self
+    }
+    pub fn with_maximum_packet_size (mut self, maximum_packet_size: u32) -> Self {
+        self.maximum_packet_size = maximum_packet_size;
+        self
+    }
+    pub fn with_event_buffer_size (mut self, event_buffer_size: usize) -> Self {
+        self.event_buffer_size = event_buffer_size;
+        self
+    }
+    pub fn with_preferred (mut self, preferred: russh::Preferred) -> Self {
+        self.preferred = preferred;
+        self
+    }
+    pub fn with_max_auth_attempts (mut self, max_auth_attempts: usize) -> Self {
+        self.max_auth_attempts = max_auth_attempts;
+        self
+    }
+    pub fn with_connection_timeout (mut self, connection_timeout: Option<std::time::Duration>) -> Self {
+        self.connection_timeout = connection_timeout;
+        self
+    }
+
+    // Fields for ControlServer:
+    pub fn with_handler(mut self, handler: H) -> Self {
+        self.control_handler = handler;
+        self
     }
 }
