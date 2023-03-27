@@ -1,14 +1,14 @@
 #[derive(Clone)]
-pub struct ServerHandler;
+pub struct DefaultServerHandler;
 
-impl Default for ServerHandler {
+impl Default for DefaultServerHandler {
     fn default() -> Self {
         Self {}
     }
 }
 
 #[async_trait::async_trait]
-impl russh::server::Handler for ServerHandler {
+impl russh::server::Handler for DefaultServerHandler {
     type Error = anyhow::Error;
 
     async fn disconnected(self, session: russh::server::Session) -> Result<(Self, russh::server::Session), Self::Error> {

@@ -1,5 +1,6 @@
 use russh;
-use super::{server_config::{ServerConfig}, control_server::ControlServer, server_handler::ServerHandler};
+use super::{server_config::{ServerConfig}, control_server::ControlServer};
+use super::handlers::default_server_handler::DefaultServerHandler;
 
 pub struct CLIServer <H>
 where
@@ -26,7 +27,7 @@ where
         let _run_result = russh::server::run(arc_config, addrs, self.server).await;
     }
 
-    pub fn builder() -> CLIServerBuilder<ServerHandler> {
+    pub fn builder() -> CLIServerBuilder<DefaultServerHandler> {
         CLIServerBuilder::new()
     }
 }
@@ -81,7 +82,7 @@ where
     control_handler: H
 }
 
-impl CLIServerBuilder <ServerHandler> {
+impl CLIServerBuilder <DefaultServerHandler> {
     pub fn new() -> Self {
         CLIServerBuilder {
             server_id: russh::SshId::Standard(format!(
@@ -106,7 +107,7 @@ impl CLIServerBuilder <ServerHandler> {
             server_port: "2222",
 
 //TODO: change it to new, "default" handler (echo handler)
-            control_handler: ServerHandler,
+            control_handler: DefaultServerHandler,
         }
     }
 }
