@@ -23,7 +23,7 @@ impl ServerConfig {
 
 // impl Default for ServerConfig {
 //     fn default() -> Self {
-//         let path_to_the_secret_key = concat!(env!("CARGO_MANIFEST_DIR"), "/id_ed25519");
+//         let path_to_the_secret_key = concat!(env!("CARGO_MANIFEST_DIR"), "/.ssh/id_ed25519");
 //         let russh_key_pair = russh_keys::load_secret_key(path_to_the_secret_key, None).unwrap();
 
 //         ServerConfig::builder()
