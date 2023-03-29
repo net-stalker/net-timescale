@@ -11,13 +11,18 @@ fn main() {
     env_logger::init();
     info!("Run module");
 
-    let pool = ThreadPool::with_name("worker".into(), 20 );
+    let thread_pool = ThreadPool::with_name("worker".into(), 20 );
 
     //FIXME Currently OCP is violated. The modules should be scanned based on dependencies, iterate through it and start it dynamically
-    Capture::new(pool.clone()).run();
-    Hub::new(pool.clone()).run();
-    Translator::new(pool.clone()).run();
-    Timescale::new(pool.clone()).run();
+    Capture::new(thread_pool.clone()).run();
+    Hub::new(thread_pool.clone()).run();
+    Translator::new(thread_pool.clone()).run();
+    let manager = r2d2_postgres::PostgresConnectionManager::new(
+        "postgres://postgres:PsWDgxZb@localhost".parse().unwrap(),
+        postgres::NoTls
+    );
+    let connection_pool = r2d2::Pool::builder().max_size(10).build(manager).unwrap();
+    Timescale::new(thread_pool.clone(), connection_pool).run();
 
-    pool.join();
+    thread_pool.join();
 }
