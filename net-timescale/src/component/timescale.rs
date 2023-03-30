@@ -14,6 +14,7 @@ use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
 
 use crate::command::dispatcher::CommandDispatcher;
+use crate::command::executor::Executor;
 use crate::query::insert_packet::InsertPacket;
 use crate::query::query_packet::QueryPacket;
 
@@ -36,15 +37,17 @@ impl NetComponent for Timescale {
     fn run(self) {
         self.thread_pool.execute(move || {
             info!("Run component");
+            let executor = Executor::new(self.connection_pool.clone());
+            // clone is working - so next we can store executor in query objects or make is a singleton 
             
-            let insert_packet = InsertPacket {
-                pool: Arc::new(Mutex::new(self.connection_pool.clone())),
-            };
+            // let insert_packet = InsertPacket {
+            //     pool: Arc::new(Mutex::new(self.connection_pool.clone())),
+            // };
             let queries = Arc::new(RwLock::new(HashMap::new()));
-            queries
-                .write()
-                .unwrap()
-                .insert("insert_packet".to_string(), insert_packet);
+            // queries
+            //     .write()
+            //     .unwrap()
+            //     .insert("insert_packet".to_string(), insert_packet);
 
             let packet = QueryPacket {
                 pool: Arc::new(Mutex::new(self.connection_pool.clone())),
