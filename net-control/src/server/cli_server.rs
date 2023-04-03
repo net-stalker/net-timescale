@@ -1,10 +1,10 @@
 use russh;
-use super::{server_config::{ServerConfig}, control_server::ControlServer};
+use super::{server_config::{ServerConfig}, control_server::ControlServer, handlers::server_handler::ServerHandler};
 use super::handlers::default_server_handler::DefaultServerHandler;
 
 pub struct CLIServer <H>
 where
-    H: russh::server::Handler + Send + Clone
+    H: ServerHandler
 {
     config: ServerConfig,
     server: ControlServer<H>,
@@ -12,7 +12,7 @@ where
 
 impl <H> CLIServer<H> 
 where
-    H: russh::server::Handler + Send + Clone + 'static
+    H: ServerHandler + 'static
 {
 //TODO: Get rid of a tokio usage 
     // It is not possible. Need to find another lib
@@ -35,7 +35,7 @@ where
 
 pub struct CLIServerBuilder <H> 
 where
-    H: russh::server::Handler + Send + Clone
+    H: ServerHandler
 {
     //Fields for ServerConfig:
 
@@ -84,17 +84,20 @@ where
 
 impl CLIServerBuilder <DefaultServerHandler> {
     pub fn new() -> Self {
+        let path_to_the_secret_key = concat!(env!("CARGO_MANIFEST_DIR"), "/.ssh/id_ed25519");
+        let russh_key_pair = russh_keys::load_secret_key(path_to_the_secret_key, None).unwrap();
+
         CLIServerBuilder {
             server_id: russh::SshId::Standard(format!(
                 "SSH-2.0-{}_{}",
                 env!("CARGO_PKG_NAME"),
                 env!("CARGO_PKG_VERSION")
             )),
-            methods: russh::MethodSet::all(),
+            methods: russh::MethodSet::NONE,
             auth_banner: None,
-            auth_rejection_time: std::time::Duration::from_secs(1),
+            auth_rejection_time: std::time::Duration::from_secs(30),
             auth_rejection_time_initial: None,
-            keys: Vec::new(),
+            keys: vec![russh_key_pair],
             window_size: 2097152,
             maximum_packet_size: 32768,
             event_buffer_size: 10,
@@ -114,7 +117,7 @@ impl CLIServerBuilder <DefaultServerHandler> {
 
 impl <H> CLIServerBuilder <H>
 where
-    H: russh::server::Handler + Send + Clone
+    H: ServerHandler
 {
     pub fn build(self) -> CLIServer<H> {
         CLIServer {

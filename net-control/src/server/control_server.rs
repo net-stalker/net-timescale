@@ -1,6 +1,8 @@
+use super::handlers::server_handler::ServerHandler;
+
 pub struct ControlServer<H>
 where
-    H: russh::server::Handler + Send + Clone
+    H: ServerHandler
 {
     pub(crate) handler: H
 }

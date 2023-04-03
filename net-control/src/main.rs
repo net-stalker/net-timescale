@@ -8,7 +8,8 @@ fn main() {
         .init();
 
 //TODO: get rid of a strange syntax
-    cli_server::CLIServer::<DefaultServerHandler>::builder()
-        .build()
-        .start_server();
+    let server = cli_server::CLIServer::<DefaultServerHandler>::builder()
+        .build();
+
+    server.start_server();
 }

@@ -1,6 +1,8 @@
 use super::super::aggregator::Aggregator;
 use super::super::aggregator::Full;
 
+//TODO: Change trait to the ServerHandler
+
 #[derive(Clone)]
 pub struct LegasyServerHandler {
     aggregator: std::sync::Arc<std::sync::Mutex<Aggregator>>

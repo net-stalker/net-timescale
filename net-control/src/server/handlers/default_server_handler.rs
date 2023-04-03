@@ -1,3 +1,5 @@
+//TODO: Change trait to the ServerHandler
+
 #[derive(Clone)]
 pub struct DefaultServerHandler;
 
