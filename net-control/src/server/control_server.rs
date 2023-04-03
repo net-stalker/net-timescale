@@ -1,11 +1,13 @@
 pub struct ControlServer<H>
+where
+    H: russh::server::Handler + Send + Clone
 {
     pub(crate) handler: H
 }
 
 impl <H> ControlServer<H> 
 where
-    H: russh::server::Handler + Default
+    H: russh::server::Handler + Send + Clone
 {
     // pub fn builder() -> ControlServerBuilder<H> {
     //     ControlServerBuilder::new()

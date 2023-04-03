@@ -4,7 +4,7 @@ use super::handlers::default_server_handler::DefaultServerHandler;
 
 pub struct CLIServer <H>
 where
-    H: russh::server::Handler
+    H: russh::server::Handler + Send + Clone
 {
     config: ServerConfig,
     server: ControlServer<H>,
@@ -35,7 +35,7 @@ where
 
 pub struct CLIServerBuilder <H> 
 where
-    H: russh::server::Handler
+    H: russh::server::Handler + Send + Clone
 {
     //Fields for ServerConfig:
 
@@ -114,7 +114,7 @@ impl CLIServerBuilder <DefaultServerHandler> {
 
 impl <H> CLIServerBuilder <H>
 where
-    H: russh::server::Handler + Default
+    H: russh::server::Handler + Send + Clone
 {
     pub fn build(self) -> CLIServer<H> {
         CLIServer {
