@@ -2,8 +2,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
 
 use log::info;
-use postgres::{NoTls, Socket};
-use postgres::tls::{MakeTlsConnect, TlsConnect};
+use postgres::NoTls;
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 use r2d2::Pool;
@@ -17,6 +16,7 @@ use crate::command::dispatcher::CommandDispatcher;
 use crate::command::executor::Executor;
 use crate::query::insert_packet::InsertPacket;
 use crate::query::query_packet::QueryPacket;
+use crate::query::request::Request;
 
 pub struct Timescale {
     pub thread_pool: ThreadPool,
@@ -40,12 +40,12 @@ impl NetComponent for Timescale {
             let executor = Executor::new(self.connection_pool.clone());
             // clone is working - so next we can store executor in query objects or make is a singleton 
             
-            let insert_packet = InsertPacket { executor };
-            let queries = Arc::new(RwLock::new(HashMap::new()));
+            let insert_packet = InsertPacket { executor: executor.clone() };
+            let queries: Arc<RwLock<HashMap<String, Box<dyn Request>>>> = Arc::new(RwLock::new(HashMap::new()));
             queries
                 .write()
                 .unwrap()
-                .insert("insert_packet".to_string(), insert_packet);
+                .insert("insert_packet".to_string(), Box::new(insert_packet));
 
             let packet = QueryPacket {
                 pool: Arc::new(Mutex::new(self.connection_pool.clone())),
