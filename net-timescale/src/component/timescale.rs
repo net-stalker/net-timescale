@@ -1,12 +1,14 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
-use std::thread;
-use std::thread::JoinHandle;
 
 use log::info;
-use postgres::{Client, NoTls};
+use postgres::{NoTls, Socket};
+use postgres::tls::{MakeTlsConnect, TlsConnect};
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
+use r2d2::Pool;
+use r2d2_postgres::{PostgresConnectionManager};
+
 
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
@@ -16,36 +18,36 @@ use crate::query::insert_packet::InsertPacket;
 use crate::query::query_packet::QueryPacket;
 
 pub struct Timescale {
-    pub pool: ThreadPool,
+    pub thread_pool: ThreadPool,
+    // for now we specify `NoTls` just for simplicity
+    pub connection_pool: Pool<PostgresConnectionManager<NoTls>>
 }
 
 impl Timescale {
-    pub fn new(pool: ThreadPool) -> Self {
-        Self { pool }
+    pub fn new(thread_pool: ThreadPool, connection_pool: Pool<PostgresConnectionManager<NoTls>>) -> Self {
+        Self {
+            thread_pool,
+            connection_pool
+        }
     }
 }
 
 impl NetComponent for Timescale {
     fn run(self) {
-        self.pool.execute(move || {
+        self.thread_pool.execute(move || {
             info!("Run component");
-
-            let client = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
-
+            
             let insert_packet = InsertPacket {
-                client: Arc::new(Mutex::new(client)),
+                pool: Arc::new(Mutex::new(self.connection_pool.clone())),
             };
-
             let queries = Arc::new(RwLock::new(HashMap::new()));
             queries
                 .write()
                 .unwrap()
                 .insert("insert_packet".to_string(), insert_packet);
 
-            //TODO should use pool of connections
-            let client = Client::connect("postgres://postgres:PsWDgxZb@localhost", NoTls).unwrap();
             let packet = QueryPacket {
-                client: Arc::new(Mutex::new(client)),
+                pool: Arc::new(Mutex::new(self.connection_pool.clone())),
             };
 
             packet.subscribe();
