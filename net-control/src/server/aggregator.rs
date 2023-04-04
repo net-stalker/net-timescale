@@ -1,4 +1,6 @@
-#[derive(PartialEq, Debug)]
+use std::ops::Deref;
+
+#[derive(PartialEq, Debug, Clone)]
 pub (super) enum Ended {
     Ended,
     NotEnded
@@ -27,6 +29,11 @@ impl Aggregator {
         Aggregator {
             clients: std::collections::HashMap::new()
         }
+    }
+
+    pub (super) fn data(&self, client: u64) -> Result<&[u8], ()> {
+        let client_buffer = self.clients.get(&client).unwrap();
+        Ok(client_buffer.deref())
     }
 }
 

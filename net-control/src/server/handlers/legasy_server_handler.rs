@@ -1,6 +1,6 @@
-use std::{hash::{Hash, Hasher}, collections::hash_map::DefaultHasher};
+use std::{hash::{Hash, Hasher}, collections::hash_map::DefaultHasher, str::from_utf8};
 
-use crate::server::aggregator::AddClient;
+use crate::server::aggregator::{AddClient, ReadBufferForClient, Ended, IdentifyStatus};
 
 use super::super::aggregator::Aggregator;
 
@@ -12,6 +12,24 @@ pub struct LegasyServerHandler {
 }
 
 impl LegasyServerHandler {
+    fn aggregate_msg(&mut self, client: u64, buf: &[u8]) -> Result<(), &str> {
+        self.aggregator.lock().unwrap().read(client, buf);
+        Ok(())
+    }
+
+    fn identify_client_msg_status(&self, client: u64) -> Result<Ended, &str> {
+        let client_msg_status = self.aggregator.lock().unwrap().identify_status(client).unwrap().clone();
+        Ok(client_msg_status)
+    }
+
+    fn get_client_msg (&self, client: u64) -> String {
+        let aggregator = self.aggregator.lock().unwrap();
+        let client_data = aggregator.data(client);
+        match client_data {
+            Ok(data) => from_utf8(data).unwrap().to_owned(),
+            Err(_) => todo!(),
+        }
+    }
 }
 
 impl Default for LegasyServerHandler {
@@ -71,41 +89,27 @@ impl russh::server::Handler for LegasyServerHandler {
         Ok((self, session))
     }
 
-    async fn data(self, channel: russh::ChannelId, data: &[u8], mut session: russh::server::Session) -> Result<(Self, russh::server::Session), Self::Error> {
-        // let mut data_cooked = std::str::from_utf8(data).unwrap().to_string();
+    async fn data(mut self, channel: russh::ChannelId, data: &[u8], mut session: russh::server::Session) -> Result<(Self, russh::server::Session), Self::Error> {
+        //Cook data into a string
+        let mut cooked_data = std::str::from_utf8(data).unwrap().to_string();
         
-        // if !data_cooked.ends_with("\r") {
-        //     println!("Got data from the user! Here it is: \"{}\"", data_cooked);
+        //Generate ChannelId hash
+        let hasher = &mut DefaultHasher::new();
+        channel.hash(hasher);
+        let client_hash = hasher.finish();
+        
+        //Aggregate data
+        self.aggregate_msg(client_hash, data);
 
-        //     //Echo every non "\r" symbol to the user
-        //     session.data(channel, russh::CryptoVec::from(data_cooked));
-        // } else {
-        //     data_cooked.pop();
-        //     data_cooked.push_str("\\r");
-
-        //     println!("Got data from the user! Here it is: \"{}\"", data_cooked);
-        // }
-
-        // let push_result = 
-        //     match self.push_symbol_to_aggregator_for(channel, data) {
-        //         Some(Ok(s)) => s,
-        //         Some(Err(_)) => todo!(),
-        //         None => todo!()
-        //     };
-
-        // match push_result {
-        //     Full::Ended => {
-        //         session.data(channel, russh::CryptoVec::from("\r\nuser@cli:".to_string()));
-
-        //         let mut user_command = self.pull_buffer_for(channel).unwrap().unwrap();
-        //         user_command.pop();
-        //         println!("Got command from the user! Here it is: \"{}\"", user_command);
-                
-        //         self.push_buffer_reset_for(channel); 
-        //     }
-        //     Full::NotEnded => {
-        //     }
-        // }
+        let client_msg_status = self.identify_client_msg_status(client_hash).unwrap();
+        match client_msg_status {
+            Ended::Ended => cooked_data.push_str(format!("\n{}@cli:", "user").as_str()),
+            Ended::NotEnded => (),
+        }
+        
+//TODO: Move to the own function/struct
+        //Echo every symbol (user CLI)
+        session.data(channel, russh::CryptoVec::from(cooked_data));
 
 
         Ok((self, session))
