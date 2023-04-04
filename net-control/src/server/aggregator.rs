@@ -1,9 +1,4 @@
-// For now it is just a puller. We can pull smth, but not mention to where. 
-// Totally questionable.
-pub trait Puller <A, S> {
-    fn pull_new_agent (&mut self, agent: A, agents: &std::collections::HashMap<A, S>) -> Option<Result<(), &str>> { None }
-    fn pull_symbol_for_agent <R> (&mut self, agent: A, symbol: S, agents: &std::collections::HashMap<A, S>) -> Option<Result<R, &str>>  { None }
-}
+
 
 pub struct Aggregator {
     clients: std::collections::HashMap<russh::ChannelId, String>

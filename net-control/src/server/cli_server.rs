@@ -1,5 +1,5 @@
 use russh;
-use super::{server_config::{ServerConfig}, control_server::ControlServer, handlers::server_handler::ServerHandler};
+use super::{server_config::{ServerConfig}, control_server::ControlServer, handlers::{server_handler::ServerHandler, legasy_server_handler::LegasyServerHandler}};
 use super::handlers::default_server_handler::DefaultServerHandler;
 
 pub struct CLIServer <H>
@@ -28,7 +28,11 @@ where
     }
 
     pub fn builder() -> CLIServerBuilder<DefaultServerHandler> {
-        CLIServerBuilder::new()
+        CLIServerBuilder::<DefaultServerHandler>::new()
+    }
+
+    pub fn builder_legasy() -> CLIServerBuilder<LegasyServerHandler> {
+        CLIServerBuilder::<LegasyServerHandler>::new()
     }
 }
 
@@ -111,6 +115,39 @@ impl CLIServerBuilder <DefaultServerHandler> {
 
 //TODO: change it to new, "default" handler (echo handler)
             control_handler: Box::new(DefaultServerHandler),
+        }
+    }
+}
+
+impl CLIServerBuilder <LegasyServerHandler> {
+    pub fn new() -> Self {
+        let path_to_the_secret_key = concat!(env!("CARGO_MANIFEST_DIR"), "/.ssh/id_ed25519");
+        let russh_key_pair = russh_keys::load_secret_key(path_to_the_secret_key, None).unwrap();
+
+        CLIServerBuilder {
+            server_id: russh::SshId::Standard(format!(
+                "SSH-2.0-{}_{}",
+                env!("CARGO_PKG_NAME"),
+                env!("CARGO_PKG_VERSION")
+            )),
+            methods: russh::MethodSet::NONE,
+            auth_banner: None,
+            auth_rejection_time: std::time::Duration::from_secs(30),
+            auth_rejection_time_initial: None,
+            keys: vec![russh_key_pair],
+            window_size: 2097152,
+            maximum_packet_size: 32768,
+            event_buffer_size: 10,
+            limits: russh::Limits::default(),
+            preferred: Default::default(),
+            max_auth_attempts: 3,
+            connection_timeout: None,
+
+            server_host: "0.0.0.0",
+            server_port: "2222",
+
+//TODO: change it to new, "default" handler (echo handler)
+            control_handler: Box::new(LegasyServerHandler::default()),
         }
     }
 }
