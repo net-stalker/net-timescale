@@ -12,7 +12,7 @@ impl Executor{
     pub fn new(connection_pool: Pool<PostgresConnectionManager<NoTls>>) -> Self {
         Executor { connection_pool: Arc::new(Mutex::new(connection_pool)) }
     }
-    pub fn execute<Q, R>(&self, query: Q) -> Result<R, postgres::Error>
+    pub fn execute_query<Q, R>(&self, query: Q) -> Result<R, postgres::Error>
     where
         Q: FnOnce(PooledConnection<PostgresConnectionManager<NoTls>>) -> Result<R, postgres::Error>
     {

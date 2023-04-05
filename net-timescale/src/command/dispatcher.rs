@@ -44,13 +44,13 @@ impl Handler for CommandDispatcher {
             dst_addr: dst_addr.unwrap(),
             binary_json,
         };
-        
+
         let buffer = bincode::serialize(&frame_data).unwrap();
         // query result can be sent back
         // depends on query type
         // unused just for now
         let _result = self.queries.read().unwrap()
             .get("insert_packet").unwrap()
-            .execute(buffer);
+            .execute(buffer.as_slice());
     }
 }
