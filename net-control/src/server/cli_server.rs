@@ -1,7 +1,7 @@
 use russh;
 use super::{server_config::{ServerConfig}, control_server::ControlServer, handlers::server_handler::ServerHandler};
 use super::handlers::default_server_handler::DefaultServerHandler;
-
+ 
 pub struct CLIServer <H>
 where
     H: ServerHandler
@@ -27,12 +27,15 @@ where
         let _run_result = russh::server::run(arc_config, addrs, self.server).await;
     }
 
-    pub fn builder() -> CLIServerBuilder<DefaultServerHandler> {
-        CLIServerBuilder::new()
+    pub fn builder(handler: H) -> CLIServerBuilder<H> {
+        CLIServerBuilder::new(handler)
     }
 }
 
 
+//TODO: Check and get rid of some of the fields
+//TODO: Get rid of the handler in constructor
+//TODO: Think of disable ability set smth up twice
 pub struct CLIServerBuilder <H> 
 where
     H: ServerHandler
@@ -79,11 +82,14 @@ where
 
     // Handler (type), that will be sent to the clients and handle all the events.
     // It should be the russh::server::Handler.
-    control_handler: Box<H>
+    control_handler: H
 }
 
-impl CLIServerBuilder <DefaultServerHandler> {
-    pub fn new() -> Self {
+impl <H> CLIServerBuilder <H>
+where
+    H: ServerHandler + Sized
+{
+    pub fn new(handler: H) -> Self {
         let path_to_the_secret_key = concat!(env!("CARGO_MANIFEST_DIR"), "/.ssh/id_ed25519");
         let russh_key_pair = russh_keys::load_secret_key(path_to_the_secret_key, None).unwrap();
 
@@ -109,20 +115,14 @@ impl CLIServerBuilder <DefaultServerHandler> {
             server_host: "0.0.0.0",
             server_port: "2222",
 
-//TODO: change it to new, "default" handler (echo handler)
-            control_handler: Box::new(DefaultServerHandler),
+            control_handler: handler,
         }
     }
-}
 
-impl <H> CLIServerBuilder <H>
-where
-    H: ServerHandler
-{
     pub fn build(self) -> CLIServer<H> {
         CLIServer {
             server: ControlServer {
-                handler: *self.control_handler,
+                handler: self.control_handler,
             },
 
             config: ServerConfig {
@@ -209,8 +209,8 @@ where
     }
 
     // Fields for ControlServer:
-    pub fn with_handler(mut self, handler: H) -> Self {
-        self.control_handler = Box::new(handler);
-        self
-    }
+    // pub fn with_handler(mut self, handler: H) -> Self {
+    //     self.control_handler = handler;
+    //     self
+    // }
 }
