@@ -1,7 +1,7 @@
 use russh;
 use super::{server_config::{ServerConfig}, control_server::ControlServer, handlers::{server_handler::ServerHandler, legasy_server_handler::LegasyServerHandler}};
 use super::handlers::default_server_handler::DefaultServerHandler;
-
+ 
 pub struct CLIServer <H>
 where
     H: ServerHandler
@@ -27,16 +27,15 @@ where
         let _run_result = russh::server::run(arc_config, addrs, self.server).await;
     }
 
-    pub fn builder() -> CLIServerBuilder<DefaultServerHandler> {
-        CLIServerBuilder::<DefaultServerHandler>::new()
-    }
-
-    pub fn builder_legasy() -> CLIServerBuilder<LegasyServerHandler> {
-        CLIServerBuilder::<LegasyServerHandler>::new()
+    pub fn builder(handler: H) -> CLIServerBuilder<H> {
+        CLIServerBuilder::new(handler)
     }
 }
 
 
+//TODO: Check and get rid of some of the fields
+//TODO: Get rid of the handler in constructor
+//TODO: Think of disable ability set smth up twice
 pub struct CLIServerBuilder <H> 
 where
     H: ServerHandler
@@ -83,83 +82,47 @@ where
 
     // Handler (type), that will be sent to the clients and handle all the events.
     // It should be the russh::server::Handler.
-    control_handler: Box<H>
-}
-
-impl CLIServerBuilder <DefaultServerHandler> {
-    pub fn new() -> Self {
-        let path_to_the_secret_key = concat!(env!("CARGO_MANIFEST_DIR"), "/.ssh/id_ed25519");
-        let russh_key_pair = russh_keys::load_secret_key(path_to_the_secret_key, None).unwrap();
-
-        CLIServerBuilder {
-            server_id: russh::SshId::Standard(format!(
-                "SSH-2.0-{}_{}",
-                env!("CARGO_PKG_NAME"),
-                env!("CARGO_PKG_VERSION")
-            )),
-            methods: russh::MethodSet::NONE,
-            auth_banner: None,
-            auth_rejection_time: std::time::Duration::from_secs(30),
-            auth_rejection_time_initial: None,
-            keys: vec![russh_key_pair],
-            window_size: 2097152,
-            maximum_packet_size: 32768,
-            event_buffer_size: 10,
-            limits: russh::Limits::default(),
-            preferred: Default::default(),
-            max_auth_attempts: 3,
-            connection_timeout: None,
-
-            server_host: "0.0.0.0",
-            server_port: "2222",
-
-//TODO: change it to new, "default" handler (echo handler)
-            control_handler: Box::new(DefaultServerHandler),
-        }
-    }
-}
-
-impl CLIServerBuilder <LegasyServerHandler> {
-    pub fn new() -> Self {
-        let path_to_the_secret_key = concat!(env!("CARGO_MANIFEST_DIR"), "/.ssh/id_ed25519");
-        let russh_key_pair = russh_keys::load_secret_key(path_to_the_secret_key, None).unwrap();
-
-        CLIServerBuilder {
-            server_id: russh::SshId::Standard(format!(
-                "SSH-2.0-{}_{}",
-                env!("CARGO_PKG_NAME"),
-                env!("CARGO_PKG_VERSION")
-            )),
-            methods: russh::MethodSet::NONE,
-            auth_banner: None,
-            auth_rejection_time: std::time::Duration::from_secs(30),
-            auth_rejection_time_initial: None,
-            keys: vec![russh_key_pair],
-            window_size: 2097152,
-            maximum_packet_size: 32768,
-            event_buffer_size: 10,
-            limits: russh::Limits::default(),
-            preferred: Default::default(),
-            max_auth_attempts: 3,
-            connection_timeout: None,
-
-            server_host: "0.0.0.0",
-            server_port: "2222",
-
-//TODO: change it to new, "default" handler (echo handler)
-            control_handler: Box::new(LegasyServerHandler::default()),
-        }
-    }
+    control_handler: H
 }
 
 impl <H> CLIServerBuilder <H>
 where
-    H: ServerHandler
+    H: ServerHandler + Sized
 {
+    pub fn new(handler: H) -> Self {
+        let path_to_the_secret_key = concat!(env!("CARGO_MANIFEST_DIR"), "/.ssh/id_ed25519");
+        let russh_key_pair = russh_keys::load_secret_key(path_to_the_secret_key, None).unwrap();
+
+        CLIServerBuilder {
+            server_id: russh::SshId::Standard(format!(
+                "SSH-2.0-{}_{}",
+                env!("CARGO_PKG_NAME"),
+                env!("CARGO_PKG_VERSION")
+            )),
+            methods: russh::MethodSet::NONE,
+            auth_banner: None,
+            auth_rejection_time: std::time::Duration::from_secs(30),
+            auth_rejection_time_initial: None,
+            keys: vec![russh_key_pair],
+            window_size: 2097152,
+            maximum_packet_size: 32768,
+            event_buffer_size: 10,
+            limits: russh::Limits::default(),
+            preferred: Default::default(),
+            max_auth_attempts: 3,
+            connection_timeout: None,
+
+            server_host: "0.0.0.0",
+            server_port: "2222",
+
+            control_handler: handler,
+        }
+    }
+
     pub fn build(self) -> CLIServer<H> {
         CLIServer {
             server: ControlServer {
-                handler: *self.control_handler,
+                handler: self.control_handler,
             },
 
             config: ServerConfig {
@@ -246,8 +209,8 @@ where
     }
 
     // Fields for ControlServer:
-    pub fn with_handler(mut self, handler: H) -> Self {
-        self.control_handler = Box::new(handler);
-        self
-    }
+    // pub fn with_handler(mut self, handler: H) -> Self {
+    //     self.control_handler = handler;
+    //     self
+    // }
 }
