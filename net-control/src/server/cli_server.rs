@@ -1,5 +1,5 @@
 use russh;
-use super::{server_config::{ServerConfig}, control_server::ControlServer, handlers::server_handler::ServerHandler};
+use super::{server_config::{ServerConfig}, control_server::ControlServer, handlers::{server_handler::ServerHandler, legasy_server_handler::LegasyServerHandler}};
 use super::handlers::default_server_handler::DefaultServerHandler;
  
 pub struct CLIServer <H>

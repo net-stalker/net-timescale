@@ -8,7 +8,7 @@ fn main() {
         .init();
 
 //TODO: get rid of a strange syntax
-    let server = cli_server::CLIServer::builder(DefaultServerHandler)
+    let server = cli_server::CLIServer::builder(LegasyServerHandler::default())
         .build();
 
     server.start_server();
