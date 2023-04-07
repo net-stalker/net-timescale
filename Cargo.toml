@@ -6,6 +6,5 @@ members = [
     "net-agent",
     "net-hub",
     "net-translator",
-    "net-timescale",
-    "net-control"
+    "net-timescale"
 ]
