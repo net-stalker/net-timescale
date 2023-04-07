@@ -1,27 +1,29 @@
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-
 use net_core::jsons::json_parser::JsonParser;
 use net_core::jsons::json_pcap_parser::JsonPcapParser;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
+use crate::query;
 
-use bincode;
-use serde::{Serialize, Deserialize};
-use crate::query::request::Request;
-
-pub struct CommandDispatcher {
-    pub queries: Arc<RwLock<HashMap<String, Box<dyn Request>>>>,
+pub struct CommandDispatcher<H>
+where
+    H: query::as_query::AsQuery + ?Sized
+{
+    pub queries: Arc<RwLock<HashMap<String, Box<H>>>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct FrameData {
     pub frame_time: String,
     pub src_addr: String,
     pub dst_addr: String,
     pub binary_json: Vec<u8>,
 }
-
-impl Handler for CommandDispatcher {
+// receiver sends serizalized data. Then this data 
+impl<H> Handler for CommandDispatcher<H>
+where 
+    H: query::as_query::AsQuery + ?Sized
+{
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
 

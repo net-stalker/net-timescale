@@ -4,22 +4,21 @@ use r2d2::PooledConnection;
 use r2d2_postgres::PostgresConnectionManager;
 use postgres::NoTls;
 use serde_json::Value;
-use super::request::Request;
-use super::query_result::{QueryResult, ResultComponent};
+use super::as_query::AsQuery;
 use crate::command::executor::Executor;
 use crate::command::dispatcher::FrameData;
+use super::query_result::{QueryResult, QueryResultComponent};
 
-// TODO: move UpdatedRows into dispatcher.rs
-pub struct UpdatedRows{
-    pub rows: u64
-}
-impl ResultComponent for UpdatedRows {}
-pub struct InsertPacket {
+pub struct AddPackets {
     // executor is thread safe by itself
     pub executor: Executor
 }
+pub struct UpdatedRows {
+    pub rows: u64
+}
+impl QueryResultComponent for UpdatedRows {}
 
-impl Request for InsertPacket{
+impl AsQuery for AddPackets {
     fn execute(&self, data: &[u8]) -> Result<QueryResult, &'static str> {
         let frame_data: FrameData = bincode::deserialize(&data).unwrap();
         let result = self.insert(
@@ -30,19 +29,18 @@ impl Request for InsertPacket{
         match result{
             Ok(rows_count) => {
                 // TODO: move logging into dispatcher 
-                log::info!("{} rows were updated", rows_count);
-                return QueryResult::builder().with_result(Arc::new(UpdatedRows {rows: rows_count})).build();
+                QueryResult::builder().with_result(Arc::new(UpdatedRows {rows: rows_count})).build()
             }
             Err(error) => {
                 // TODO: move logging into dispatcher
                 log::error!("{}", error);
-                return QueryResult::builder().build();
+                QueryResult::builder().with_error("Couldn't add data into table").build()
             }
         }
     }
 }
 
-impl InsertPacket {
+impl AddPackets {
     pub fn insert(&self, frame_time: DateTime<Local>, src_addr: String, dst_addr: String, packet_json: Vec<u8>) -> Result<u64, postgres::Error> {
         let json_value = Self::convert_to_value(packet_json).unwrap();
         let query = move |mut con: PooledConnection<PostgresConnectionManager<NoTls>>| -> Result<u64, postgres::Error> {

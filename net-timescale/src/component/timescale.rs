@@ -15,10 +15,12 @@ use net_core::transport::polling::Poller;
 
 use crate::command::dispatcher::CommandDispatcher;
 use crate::command::executor::Executor;
-use crate::query::insert_packet::InsertPacket;
-use crate::query::query_packet::QueryPacket;
-use crate::query::select_interval::{SelectInterval, self};
-use crate::query::request::Request;
+use crate::query::{
+    add_packets::AddPackets,
+    query_packet::QueryPacket,
+    select_interval::SelectInterval,
+    as_query::AsQuery
+};
 
 pub struct Timescale {
     pub thread_pool: ThreadPool,
@@ -42,19 +44,19 @@ impl NetComponent for Timescale {
             let executor = Executor::new(self.connection_pool.clone());
             // clone is working - so next we can store executor in query objects or make is a singleton 
             
-            let insert_packet = InsertPacket { executor: executor.clone() };
+            let insert_packet = AddPackets { executor: executor.clone() };
             // Test query
             let select_query = SelectInterval {
                 pool: Arc::new(Mutex::new(self.connection_pool.clone()))
             };
-            // you can changes timestamps to your liking
+            // you can change timestamps to your liking
             // ============================================
             // TODO: move this code queries structure
             let left = "2023-03-27 13:37:08.675 +0300".parse::<DateTime<Local>>().unwrap();
             let right = "2023-03-29 15:38:10.238 +0300".parse::<DateTime<Local>>().unwrap();
             select_query.select_packets_from_interval(left, right);
             //============================================
-            let queries: Arc<RwLock<HashMap<String, Box<dyn Request>>>> = Arc::new(RwLock::new(HashMap::new()));
+            let queries: Arc<RwLock<HashMap<String, Box<dyn AsQuery>>>> = Arc::new(RwLock::new(HashMap::new()));
             queries
                 .write()
                 .unwrap()
