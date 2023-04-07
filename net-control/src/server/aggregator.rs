@@ -7,7 +7,7 @@ pub (super) enum Ended {
 }
 
 pub trait AddClient<C> {
-    fn add_client (&mut self, client: C);
+    fn add_client (&mut self, client: C) -> Result<(), &str>;
 }
 
 pub trait ReadBufferForClient<C, S> {
@@ -20,6 +20,7 @@ pub trait IdentifyStatus<C, S> {
 }
 
 //TODO: Add a way to return current (whole) buffer
+//TODO: Get rid of &str Errs (Create own Error type)
 pub struct Aggregator {
     clients: std::collections::HashMap<u64, Vec<u8>>
 }
@@ -32,20 +33,35 @@ impl Aggregator {
     }
 
     pub (super) fn data(&self, client: u64) -> Result<&[u8], ()> {
+
+        if !self.clients.contains_key(client) {
+            Err(format!("ERROR::CLI::AGGEEGATOR::Client [{}]::This client currently not exist. Can not get its data.", client))
+        }
+
         let client_buffer = self.clients.get(&client).unwrap();
         Ok(client_buffer.deref())
     }
 }
 
-//TODO: Avoid hash collisions (Add some lind of an error result)
 impl AddClient<u64> for Aggregator {
-    fn add_client (&mut self, client: u64) {
+    fn add_client (&mut self, client: C) -> Result<(), &str> {
+
+        if self.clients.contains_key(client) {
+            Err(format!("ERROR::CLI::AGGEEGATOR::Client [{}]::This client has already been connected. Can not add it to the aggregator.", client))
+        }
+
         self.clients.insert(client, Vec::new());
+        Ok(())
     }
 }
 
 impl IdentifyStatus<u64, Ended> for Aggregator {
     fn identify_status(&self, client: u64) -> Result<Ended, &str> {
+
+        if !self.clients.contains_key(client) {
+            Err(format!("ERROR::CLI::AGGEEGATOR::Client [{}]::This client currently not exist. Can not identify its status.", client))
+        }
+
         let client_buffer = self.clients.get(&client).unwrap();
         if client_buffer.as_slice().ends_with("\r".as_bytes()) {
             Ok(Ended::Ended)
@@ -55,15 +71,24 @@ impl IdentifyStatus<u64, Ended> for Aggregator {
     }
 }
 
-//TODO: Impl Read if the client not exists
 impl ReadBufferForClient<u64, Ended> for Aggregator {
     fn read(&mut self, client: u64, buf: &[u8]) -> Result<(), &str> {
+
+        if !self.clients.contains_key(client) {
+            Err(format!("ERROR::CLI::AGGEEGATOR::Client [{}]::This client currently not exist. Can not read data for it.", client))
+        }
+
         let client_buffer = self.clients.get_mut(&client).unwrap();
         client_buffer.append(&mut buf.to_vec());
         Ok(())
     }
 
     fn read_with_status(&mut self, client: u64, buf: &[u8]) -> Result<Ended, &str> {
+
+        if !self.clients.contains_key(client) {
+            Err(format!("ERROR::CLI::AGGEEGATOR::Client [{}]::This client currently not exist. Can not read data for it.", client))
+        }
+
         let client_buffer = self.clients.get_mut(&client).unwrap();
         client_buffer.append(&mut buf.to_vec());
         
