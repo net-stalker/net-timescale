@@ -1,26 +1,62 @@
 use std::ops::Deref;
 
 #[derive(PartialEq, Debug, Clone)]
-pub (super) enum Ended {
+pub enum Ended {
     Ended,
     NotEnded
 }
 
+#[derive(PartialEq, Debug, Clone)]
+pub enum AggregatorError {
+    AggregationError(AggregationError),
+    AddingClientError(AddingClientError),
+    StatusIdentifyingError(StatusIdentifyingError),
+    GetBufferError(GetBufferError),
+    ErasingArror(ErasingArror),
+}
+
+#[derive(PartialEq, Debug, Clone)]
+pub enum AggregationError {
+    ClientNotExist(u64),
+}
+
+#[derive(PartialEq, Debug, Clone)]
+pub enum AddingClientError {
+    ClientAlreadyConnected(u64),
+}
+
+#[derive(PartialEq, Debug, Clone)]
+pub enum StatusIdentifyingError {
+    ClientNotExist(u64),
+}
+
+#[derive(PartialEq, Debug, Clone)]
+pub enum GetBufferError {
+    ClientNotExist(u64),
+    ClientMsgIsNotEnded(u64),
+}
+
+#[derive(PartialEq, Debug, Clone)]
+pub enum ErasingArror {
+    ClientNotExist(u64),
+}
+
+pub type Result<T> = std::result::Result<T, AggregatorError>;
+
 pub trait AddClient<C> {
-    fn add_client (&mut self, client: C) -> Result<(), &str>;
+    fn add_client (&mut self, client: C) -> Result<()>;
 }
 
 pub trait ReadBufferForClient<C, S> {
-    fn read(&mut self, client: C, buf: &[u8]) -> Result<(), &str>;
-    fn read_with_status(&mut self, client: C, buf: &[u8]) -> Result<S, &str>;
+    fn read(&mut self, client: C, buf: &[u8]) -> Result<()>;
+    fn read_with_status(&mut self, client: C, buf: &[u8]) -> Result<S>;
 }
 
 pub trait IdentifyStatus<C, S> {
-    fn identify_status(&self, client: C) -> Result<S, &str>;
+    fn identify_status(&self, client: C) -> Result<S>;
 }
 
 //TODO: Add a way to return current (whole) buffer
-//TODO: Get rid of &str Errs (Create own Error type)
 pub struct Aggregator {
     clients: std::collections::HashMap<u64, Vec<u8>>
 }
@@ -32,22 +68,37 @@ impl Aggregator {
         }
     }
 
-    pub (super) fn data(&self, client: u64) -> Result<&[u8], ()> {
+    pub (super) fn data(&self, client: u64) -> Result<&[u8]> {
 
-        if !self.clients.contains_key(client) {
-            Err(format!("ERROR::CLI::AGGEEGATOR::Client [{}]::This client currently not exist. Can not get its data.", client))
+        if !self.clients.contains_key(&client) {
+            return Err(AggregatorError::GetBufferError(GetBufferError::ClientNotExist(client)))
+        }
+
+        if self.identify_status(client).unwrap() != Ended::Ended {
+            return Err(AggregatorError::GetBufferError(GetBufferError::ClientMsgIsNotEnded(client)))
         }
 
         let client_buffer = self.clients.get(&client).unwrap();
         Ok(client_buffer.deref())
     }
+
+    pub (super) fn erase_data(&mut self, client: u64) -> Result<()> {
+
+        if !self.clients.contains_key(&client) {
+            return Err(AggregatorError::ErasingArror(ErasingArror::ClientNotExist(client)))
+        }
+
+        let client_buffer = self.clients.get_mut(&client).unwrap();
+        client_buffer.clear();
+        Ok(())
+    }
 }
 
 impl AddClient<u64> for Aggregator {
-    fn add_client (&mut self, client: C) -> Result<(), &str> {
+    fn add_client (&mut self, client: u64) -> Result<()> {
 
-        if self.clients.contains_key(client) {
-            Err(format!("ERROR::CLI::AGGEEGATOR::Client [{}]::This client has already been connected. Can not add it to the aggregator.", client))
+        if self.clients.contains_key(&client) {
+            return Err(AggregatorError::AddingClientError(AddingClientError::ClientAlreadyConnected(client)))
         }
 
         self.clients.insert(client, Vec::new());
@@ -56,10 +107,10 @@ impl AddClient<u64> for Aggregator {
 }
 
 impl IdentifyStatus<u64, Ended> for Aggregator {
-    fn identify_status(&self, client: u64) -> Result<Ended, &str> {
+    fn identify_status(&self, client: u64) -> Result<Ended> {
 
-        if !self.clients.contains_key(client) {
-            Err(format!("ERROR::CLI::AGGEEGATOR::Client [{}]::This client currently not exist. Can not identify its status.", client))
+        if !self.clients.contains_key(&client) {
+            return Err(AggregatorError::StatusIdentifyingError(StatusIdentifyingError::ClientNotExist(client)))
         }
 
         let client_buffer = self.clients.get(&client).unwrap();
@@ -72,10 +123,10 @@ impl IdentifyStatus<u64, Ended> for Aggregator {
 }
 
 impl ReadBufferForClient<u64, Ended> for Aggregator {
-    fn read(&mut self, client: u64, buf: &[u8]) -> Result<(), &str> {
+    fn read(&mut self, client: u64, buf: &[u8]) -> Result<()> {
 
-        if !self.clients.contains_key(client) {
-            Err(format!("ERROR::CLI::AGGEEGATOR::Client [{}]::This client currently not exist. Can not read data for it.", client))
+        if !self.clients.contains_key(&client) {
+            return Err(AggregatorError::AggregationError(AggregationError::ClientNotExist(client)));
         }
 
         let client_buffer = self.clients.get_mut(&client).unwrap();
@@ -83,10 +134,10 @@ impl ReadBufferForClient<u64, Ended> for Aggregator {
         Ok(())
     }
 
-    fn read_with_status(&mut self, client: u64, buf: &[u8]) -> Result<Ended, &str> {
+    fn read_with_status(&mut self, client: u64, buf: &[u8]) -> Result<Ended> {
 
-        if !self.clients.contains_key(client) {
-            Err(format!("ERROR::CLI::AGGEEGATOR::Client [{}]::This client currently not exist. Can not read data for it.", client))
+        if !self.clients.contains_key(&client) {
+            return Err(AggregatorError::AggregationError(AggregationError::ClientNotExist(client)));
         }
 
         let client_buffer = self.clients.get_mut(&client).unwrap();
@@ -105,7 +156,7 @@ impl Default for Aggregator {
 
 #[cfg(test)]
 mod tests {
-    use crate::server::aggregator::{IdentifyStatus, Ended};
+    use crate::server::aggregator::{IdentifyStatus, Ended, AggregatorError, AddingClientError, AggregationError};
     use super::{Aggregator, AddClient, ReadBufferForClient};
 
     #[test]
@@ -118,15 +169,32 @@ mod tests {
     fn expect_correctly_add_new_clients() {
         let mut aggregator = Aggregator::new();
         let client_hash: u64 = 0u64;
-        aggregator.add_client(client_hash);
+        assert!(aggregator.add_client(client_hash).is_ok());
 
         assert_eq!(aggregator.clients.len(), 1);
         assert_eq!(aggregator.clients.get(&client_hash).unwrap().len(), 0);
 
 
         let client_hash: u64 = 1u64;
-        aggregator.add_client(client_hash);
+        assert!(aggregator.add_client(client_hash).is_ok());
         assert_eq!(aggregator.clients.len(), 2);
+        assert_eq!(aggregator.clients.get(&client_hash).unwrap().len(), 0);
+    }
+
+    #[test]
+    fn expect_error_on_add_existing_client() {
+        let mut aggregator = Aggregator::new();
+        let client_hash: u64 = 0u64;
+        assert!(aggregator.add_client(client_hash).is_ok());
+
+        assert_eq!(aggregator.clients.len(), 1);
+        assert_eq!(aggregator.clients.get(&client_hash).unwrap().len(), 0);
+
+        let client_adding_result = aggregator.add_client(client_hash);
+        assert!(client_adding_result.is_err());
+        assert_eq!(client_adding_result.unwrap_err(), AggregatorError::AddingClientError(AddingClientError::ClientAlreadyConnected(client_hash)));
+
+        assert_eq!(aggregator.clients.len(), 1);
         assert_eq!(aggregator.clients.get(&client_hash).unwrap().len(), 0);
     }
 
@@ -134,26 +202,52 @@ mod tests {
     fn expect_correctly_read_data() {
         let mut aggregator = Aggregator::new();
         let client_hash: u64 = 0u64;
-        aggregator.add_client(client_hash);
-        aggregator.read(client_hash, format!("Hello from the user: {}\r", client_hash).as_bytes());
+        assert!(aggregator.add_client(client_hash).is_ok());
+        assert!(aggregator.read(client_hash, format!("Hello from the user: {}\r", client_hash).as_bytes()).is_ok());
 
         assert_eq!(aggregator.clients.len(), 1);
         assert_ne!(aggregator.clients.get(&client_hash).unwrap().len(), 0);
     }
 
     #[test]
+    fn expect_correctly_erase_data() {
+        let mut aggregator = Aggregator::new();
+        let client_hash: u64 = 0u64;
+        assert!(aggregator.add_client(client_hash).is_ok());
+        assert!(aggregator.read(client_hash, format!("Hello from the user: {}\r", client_hash).as_bytes()).is_ok());
+
+        assert_eq!(aggregator.clients.len(), 1);
+        assert_ne!(aggregator.clients.get(&client_hash).unwrap().len(), 0);
+
+        assert!(aggregator.erase_data(client_hash).is_ok());
+        assert_eq!(aggregator.clients.len(), 1);
+        assert_eq!(aggregator.clients.get(&client_hash).unwrap().len(), 0);
+    }
+
+
+    #[test]
+    fn expect_err_on_read_to_non_existing_client() {
+        let mut aggregator = Aggregator::new();
+        let client_hash: u64 = 0u64;
+
+        let reading_result = aggregator.read(client_hash, format!("Hello from the user: {}\r", client_hash).as_bytes());
+        assert!(reading_result.is_err());
+        assert_eq!(reading_result.unwrap_err(), AggregatorError::AggregationError(AggregationError::ClientNotExist(client_hash)))
+    }
+
+    #[test]
     fn expect_correctly_identify_status() {
         let mut aggregator = Aggregator::new();
         let client_hash: u64 = 0u64;
-        aggregator.add_client(client_hash);
-        aggregator.read(client_hash, format!("Hello from the user: {}", client_hash).as_bytes());
+        assert!(aggregator.add_client(client_hash).is_ok());
+        assert!(aggregator.read(client_hash, format!("Hello from the user: {}", client_hash).as_bytes()).is_ok());
 
         assert_eq!(aggregator.identify_status(client_hash).unwrap(), Ended::NotEnded);
 
 
         let client_hash: u64 = 1u64;
-        aggregator.add_client(client_hash);
-        aggregator.read(client_hash, format!("Hello from the user: {}\r", client_hash).as_bytes());
+        assert!(aggregator.add_client(client_hash).is_ok());
+        assert!(aggregator.read(client_hash, format!("Hello from the user: {}\r", client_hash).as_bytes()).is_ok());
 
         assert_eq!(aggregator.identify_status(client_hash).unwrap(), Ended::Ended);
     }
@@ -162,14 +256,14 @@ mod tests {
     fn expect_correctly_identify_status_while_reading_data() {
         let mut aggregator = Aggregator::new();
         let client_hash: u64 = 0u64;
-        aggregator.add_client(client_hash);
+        assert!(aggregator.add_client(client_hash).is_ok());
         let status = aggregator.read_with_status(client_hash, format!("Hello from the user: {}", client_hash).as_bytes()).unwrap();
 
         assert_eq!(status, Ended::NotEnded);
 
 
         let client_hash: u64 = 1u64;
-        aggregator.add_client(client_hash);
+        assert!(aggregator.add_client(client_hash).is_ok());
         let status = aggregator.read_with_status(client_hash, format!("Hello from the user: {}\r", client_hash).as_bytes()).unwrap();
 
         assert_eq!(status, Ended::Ended);
