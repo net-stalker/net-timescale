@@ -3,11 +3,11 @@ use std::sync::{Arc, RwLock};
 use net_core::jsons::json_parser::JsonParser;
 use net_core::jsons::json_pcap_parser::JsonPcapParser;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
-use crate::query;
-
+use crate::db_access;
+// TODO: dispatcher has to be redesigned 
 pub struct CommandDispatcher<H>
 where
-    H: query::as_query::AsQuery + ?Sized
+    H: db_access::as_query::AsQuery + ?Sized
 {
     pub queries: Arc<RwLock<HashMap<String, Box<H>>>>,
 }
@@ -22,7 +22,7 @@ pub struct FrameData {
 // receiver sends serizalized data. Then this data 
 impl<H> Handler for CommandDispatcher<H>
 where 
-    H: query::as_query::AsQuery + ?Sized
+    H: db_access::as_query::AsQuery + ?Sized
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();

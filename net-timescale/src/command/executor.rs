@@ -1,7 +1,8 @@
 use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::PostgresConnectionManager;
-use postgres::NoTls;
+use postgres::{NoTls, types::ToSql};
 use std::sync::{Arc, Mutex};
+use crate::db_access::query;
 
 #[derive(Clone)]
 pub struct Executor{
@@ -12,21 +13,24 @@ impl Executor{
     pub fn new(connection_pool: Pool<PostgresConnectionManager<NoTls>>) -> Self {
         Executor { connection_pool: Arc::new(Mutex::new(connection_pool)) }
     }
-    // basically execute_query has to receive trait. It has the next structure
-    //
-    // "INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)",
-    // &[&frame_time, &src_addr, &dst_addr, &json_value]
-    // Such queries has to be tested
-    pub fn execute_query<Q, R>(&self, query: Q) -> Result<R, postgres::Error>
+    fn get_connection(&self) -> PooledConnection<PostgresConnectionManager<NoTls>> {
+        self.connection_pool.lock()
+        .unwrap()
+        .get()
+        .unwrap()
+    }
+    pub fn execute<'a, Q>(&self, query: Box<Q>) -> Result<u64, postgres::Error>
     where
-        Q: FnOnce(PooledConnection<PostgresConnectionManager<NoTls>>) -> Result<R, postgres::Error>
+        Q: query::PostgresQuery<'a>
     {
-        let con = self.connection_pool.lock()
-                .unwrap()
-                .get()
-                .unwrap();
-        // TODO: consider using https://crates.io/crates/futures to improve perfomance
-        // it has to be executed like - con.execute(recived structure)
-        query(con)
+        let (query_string, params) = query.get_query();
+        self.get_connection().execute(query_string, params)
+    }
+    pub fn query<'a, Q>(&self, query: Box<Q>) -> Result<Vec<postgres::Row>, postgres::Error>
+    where
+        Q: query::PostgresQuery<'a>
+    {
+        let (query_string, params) = query.get_query();
+        self.get_connection().query(query_string, params)
     }
 }
