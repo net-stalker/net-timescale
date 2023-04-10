@@ -16,7 +16,7 @@ use net_core::transport::polling::Poller;
 use crate::command::dispatcher::CommandDispatcher;
 use crate::command::executor::Executor;
 use crate::query::{
-    add_packets::AddPackets,
+    add_captured_packets::AddCapturedPackets,
     query_packet::QueryPacket,
     select_interval::SelectInterval,
     as_query::AsQuery
@@ -44,7 +44,7 @@ impl NetComponent for Timescale {
             let executor = Executor::new(self.connection_pool.clone());
             // clone is working - so next we can store executor in query objects or make is a singleton 
             
-            let insert_packet = AddPackets { executor: executor.clone() };
+            let insert_packet = AddCapturedPackets { executor: executor.clone() };
             // Test query
             let select_query = SelectInterval {
                 pool: Arc::new(Mutex::new(self.connection_pool.clone()))
