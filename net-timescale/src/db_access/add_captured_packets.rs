@@ -1,71 +1,71 @@
-use std::sync::Arc;
-use chrono::{DateTime, Local};
+use std::{sync::Arc};
 use postgres::{types::ToSql};
 use serde_json::Value;
 use super::{
     as_query::AsQuery,
-    query::{self, PostgresParams}
+    query::{self}
 };
 use crate::command::executor::Executor;
-use crate::command::dispatcher::FrameData;
+use crate::command::dispatcher::PacketData;
 use super::query_result::{QueryResult, QueryResultComponent};
 
 pub struct AddCapturedPackets {
-    // executor is thread safe by itself
     pub executor: Executor
-}
-// TODO: remove everything which is somehow related to QueryResult 
+} 
 pub struct UpdatedRows {
     pub rows: u64
 }
 impl QueryResultComponent for UpdatedRows {}
 impl AsQuery for AddCapturedPackets {
+    // for now we use QueryResult. TODO: make query services like a separeate components
     fn execute(&self, data: &[u8]) -> Result<QueryResult, &'static str> {
-        let frame_data: FrameData = bincode::deserialize(&data).unwrap();
-        let result = self.insert(
-            frame_data.frame_time.parse::<DateTime<Local>>().unwrap(),
-            frame_data.src_addr,
-            frame_data.dst_addr,
-            frame_data.binary_json);
+        let frame_data: PacketData = bincode::deserialize(&data).unwrap();
+        let result = self.insert(frame_data);
         match result{
-            Ok(rows_count) => {
-                // TODO: move logging into dispatcher 
+            Ok(rows_count) => { 
                 log::info!("{} rows were updated", rows_count);
                 QueryResult::builder().with_result(Arc::new(UpdatedRows {rows: rows_count})).build()
             }
             Err(error) => {
-                // TODO: move logging into dispatcher
                 log::error!("{}", error);
                 QueryResult::builder().with_error("Couldn't add data into table").build()
             }
         }
     }
+}  
+struct AddPacketsQuery {
+    pub raw_query: String,
+    pub args: PacketData,
+    // temp solution. TODO: investigate serde_json::Value ser/der using bincode
+    json: serde_json::Value
 }
-// TODO: move this to a separate file
-struct AddPacketsQuery<'a> {
-    pub raw_query: &'a str,
-    pub args: &'a[&'a(dyn postgres::types::ToSql + Sync)]
-}
-impl<'a> AddPacketsQuery<'a> {
-    pub fn new(args: &'a[&'a(dyn postgres::types::ToSql + Sync)]) -> Self {
+impl AddPacketsQuery {
+    pub fn new(args: PacketData) -> Self {
+        let json = serde_json::from_slice(args.binary_json.as_slice()).unwrap();
         AddPacketsQuery { 
-            raw_query: "INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)",
-            args
+            raw_query: "INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)".to_owned(),
+            args,
+            json
         } 
     }
 }
-impl<'a> query::PostgresQuery<'a> for AddPacketsQuery<'a> {
-    fn get_query(&self) -> (&'a str, &'a[&'a(dyn postgres::types::ToSql + Sync)]) {
-        (self.raw_query, self.args)
+impl query::PostgresQuery for AddPacketsQuery {
+    fn get_query(&self) -> (String, Vec<&(dyn ToSql + Sync)>) {
+        let new_args: Vec<&(dyn ToSql + Sync)> = vec![
+            &self.args.frame_time,
+            &self.args.src_addr,
+            &self.args.dst_addr,
+            &self.json
+        ];
+        (
+            self.raw_query.to_owned(),
+            new_args
+        )
     }
 }
 impl AddCapturedPackets {
-    pub fn insert(&self, frame_time: DateTime<Local>, src_addr: String, dst_addr: String, packet_json: Vec<u8>) -> Result<u64, postgres::Error> {
-        let json_value = Self::convert_to_value(packet_json).unwrap();
-        // To avoid a lot of unnessesray info about ToSql + Sync consider creating some kind of trait wrapper
-        // Something like `trait PostgresParams`
-        let binding: [&(dyn postgres::types::ToSql + Sync); 4] = [&frame_time, &src_addr, &dst_addr, &json_value];
-        let query = Box::new(AddPacketsQuery::new(&binding));
+    pub fn insert(&self, data: PacketData) -> Result<u64, postgres::Error> {
+        let query = Box::new(AddPacketsQuery::new(data));
         self.executor.execute(query)
     }
 
@@ -76,8 +76,51 @@ impl AddCapturedPackets {
 
 #[cfg(test)]
 mod tests{
+    use crate::db_access::query::PostgresQuery;
+
+    use super::*;
     #[test]
     fn test_add_packet_query(){
-        todo!()
+        let time_to_insert = "2020-01-01 00:00:00.000 +0000".parse::<chrono::DateTime<chrono::Utc>>().unwrap();
+        let src = "1".to_owned();
+        let dst = "2".to_owned();
+        let data = r#"{"test":"test"}"#;
+        let json_data: serde_json::Value = serde_json::from_str(data).unwrap();
+        let packet = PacketData {
+            frame_time: time_to_insert.clone(),
+            src_addr: src.clone(),
+            dst_addr: dst.clone(),
+            binary_json: serde_json::to_vec(&json_data).unwrap()
+        };
+        let query = Box::new(AddPacketsQuery::new(packet));
+        let query_string_str = query.raw_query;
+        assert_eq!(&query_string_str, "INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)");
+        assert_eq!(query.args.binary_json, data.as_bytes());
+        assert_eq!(query.args.src_addr, src);
+        assert_eq!(query.args.dst_addr, dst); 
+        assert_eq!(query.args.frame_time, time_to_insert);
+    }
+    #[test]
+    fn test_add_packet_query_raw_parameters(){
+        let time_to_insert = "2020-01-01 00:00:00.000 +0000".parse::<chrono::DateTime<chrono::Utc>>().unwrap();
+        let src = "1".to_owned();
+        let dst = "2".to_owned();
+        let data = r#"{"test":"test"}"#;
+        let json_data: serde_json::Value = serde_json::from_str(data).unwrap();
+        let packet_1 = PacketData {
+            frame_time: time_to_insert.clone(),
+            src_addr: src.clone(),
+            dst_addr: dst.clone(),
+            binary_json: serde_json::to_vec(&json_data).unwrap()
+        };
+        let query = Box::new(AddPacketsQuery::new(packet_1));
+        let (_query_string, args) = query.get_query();
+        let new_args: Vec<&(dyn ToSql + Sync)> = vec![
+            &time_to_insert,
+            &src,
+            &dst,
+            &json_data
+        ];
+        assert_eq!(format!("{:?}", args), format!("{:?}", new_args))
     }
 }

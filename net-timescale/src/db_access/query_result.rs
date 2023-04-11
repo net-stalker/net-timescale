@@ -1,5 +1,5 @@
 use std::sync::Arc;
-
+// TODO: this file is going to be deleted
 pub trait QueryResultComponent { }
 pub struct QueryResult {
     result: Arc<dyn QueryResultComponent>
@@ -12,10 +12,6 @@ impl QueryResult {
         QueryResultBuilder::new()
     }
 }
-// result has to be `Option` enum because otherwise there is no way
-// to construct a default Arc pointer with `dyn ResultComponent`
-// let exceite method from AsQuery trait to return QueryREsult. But instead pf using a usuall builder
-// us an assiciative trait instead
 pub struct QueryResultBuilder {
     result: Option<Result<Arc<dyn QueryResultComponent>, &'static str>>
 }
