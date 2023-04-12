@@ -1,7 +1,13 @@
-use std::{ops::Deref, fmt::Display};
-use crate::core::aggregator_errors;
+use std::ops::Deref;
 
-pub type Result<T> = std::result::Result<T, aggregator_errors::AggregatorError>;
+use crate::core::aggregator_errors::AggregatorError;
+use crate::core::aggregator_errors::AggregatorErrorKind;
+use crate::core::aggregator_errors::AggregatorErrorContext;
+use crate::core::aggregator_errors::AggregationContext;
+
+
+
+pub type Result<T> = std::result::Result<T, AggregatorError>;
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Ended {
@@ -37,11 +43,23 @@ impl Aggregator {
     pub (super) fn data(&self, client: u64) -> Result<&[u8]> {
 
         if !self.clients.contains_key(&client) {
-            return Err(aggregator_errors::AggregatorError::GetBufferError(aggregator_errors::GetBufferError::ClientNotExist(client)))
+            return Err(AggregatorError{
+                kind: AggregatorErrorKind::ClientNotExist,
+                context: AggregatorErrorContext{
+                    context: AggregationContext::GetBufferError,
+                    user: client
+                }
+            })
         }
 
         if self.identify_status(client).unwrap() != Ended::Ended {
-            return Err(aggregator_errors::AggregatorError::GetBufferError(aggregator_errors::GetBufferError::ClientMsgIsNotEnded(client)))
+            return Err(AggregatorError{
+                kind: AggregatorErrorKind::ClientMsgIsNotEnded,
+                context: AggregatorErrorContext{
+                    context: AggregationContext::GetBufferError,
+                    user: client
+                }
+            })
         }
 
         let client_buffer = self.clients.get(&client).unwrap();
@@ -51,7 +69,13 @@ impl Aggregator {
     pub (super) fn erase_data(&mut self, client: u64) -> Result<()> {
 
         if !self.clients.contains_key(&client) {
-            return Err(aggregator_errors::AggregatorError::ErasingArror(aggregator_errors::ErasingArror::ClientNotExist(client)))
+            return Err(AggregatorError{
+                kind: AggregatorErrorKind::ClientNotExist,
+                context: AggregatorErrorContext{
+                    context: AggregationContext::ErasingArror,
+                    user: client
+                }
+            })
         }
 
         let client_buffer = self.clients.get_mut(&client).unwrap();
@@ -64,7 +88,13 @@ impl AddClient<u64> for Aggregator {
     fn add_client (&mut self, client: u64) -> Result<()> {
 
         if self.clients.contains_key(&client) {
-            return Err(aggregator_errors::AggregatorError::AddingClientError(aggregator_errors::AddingClientError::ClientAlreadyConnected(client)))
+            return Err(AggregatorError{
+                kind: AggregatorErrorKind::ClientAlreadyExists,
+                context: AggregatorErrorContext{
+                    context: AggregationContext::AddingClientError,
+                    user: client
+                }
+            })
         }
 
         self.clients.insert(client, Vec::new());
@@ -76,7 +106,13 @@ impl IdentifyStatus<u64, Ended> for Aggregator {
     fn identify_status(&self, client: u64) -> Result<Ended> {
 
         if !self.clients.contains_key(&client) {
-            return Err(aggregator_errors::AggregatorError::StatusIdentifyingError(aggregator_errors::StatusIdentifyingError::ClientNotExist(client)))
+            return Err(AggregatorError{
+                kind: AggregatorErrorKind::ClientNotExist,
+                context: AggregatorErrorContext{
+                    context: AggregationContext::StatusIdentifyingError,
+                    user: client
+                }
+            })
         }
 
         let client_buffer = self.clients.get(&client).unwrap();
@@ -92,7 +128,13 @@ impl ReadBufferForClient<u64, Ended> for Aggregator {
     fn read(&mut self, client: u64, buf: &[u8]) -> Result<()> {
 
         if !self.clients.contains_key(&client) {
-            return Err(aggregator_errors::AggregatorError::AggregationError(aggregator_errors::AggregationError::ClientNotExist(client)));
+            return Err(AggregatorError{
+                kind: AggregatorErrorKind::ClientNotExist,
+                context: AggregatorErrorContext{
+                    context: AggregationContext::AggregationError,
+                    user: client
+                }
+            })
         }
 
         let client_buffer = self.clients.get_mut(&client).unwrap();
@@ -103,7 +145,13 @@ impl ReadBufferForClient<u64, Ended> for Aggregator {
     fn read_with_status(&mut self, client: u64, buf: &[u8]) -> Result<Ended> {
 
         if !self.clients.contains_key(&client) {
-            return Err(aggregator_errors::AggregatorError::AggregationError(aggregator_errors::AggregationError::ClientNotExist(client)));
+            return Err(AggregatorError{
+                kind: AggregatorErrorKind::ClientNotExist,
+                context: AggregatorErrorContext{
+                    context: AggregationContext::AggregationError,
+                    user: client
+                }
+            })
         }
 
         let client_buffer = self.clients.get_mut(&client).unwrap();
@@ -122,8 +170,18 @@ impl Default for Aggregator {
 
 #[cfg(test)]
 mod tests {
-    use crate::server::aggregator::{IdentifyStatus, Ended, aggregator_errors::AggregatorError, aggregator_errors::AddingClientError, aggregator_errors::AggregationError};
-    use super::{Aggregator, AddClient, ReadBufferForClient};
+    use crate::core::aggregator_errors::AggregatorError;
+    use crate::core::aggregator_errors::AggregatorErrorKind;
+    use crate::core::aggregator_errors::AggregatorErrorContext;
+    use crate::core::aggregator_errors::AggregationContext;
+
+    use crate::server::aggregator::Ended;
+    
+    use crate::server::aggregator::Aggregator;
+    
+    use crate::server::aggregator::AddClient;
+    use crate::server::aggregator::IdentifyStatus;
+    use crate::server::aggregator::ReadBufferForClient;
 
     #[test]
     fn expect_create_empty_aggregator() {
@@ -158,7 +216,15 @@ mod tests {
 
         let client_adding_result = aggregator.add_client(client_hash);
         assert!(client_adding_result.is_err());
-        assert_eq!(client_adding_result.unwrap_err(), AggregatorError::AddingClientError(AddingClientError::ClientAlreadyConnected(client_hash)));
+
+        assert_eq!(client_adding_result.unwrap_err(), 
+            AggregatorError{
+                kind: AggregatorErrorKind::ClientAlreadyExists,
+                context: AggregatorErrorContext{
+                    context: AggregationContext::AddingClientError,
+                    user: client_hash
+                }
+            });
 
         assert_eq!(aggregator.clients.len(), 1);
         assert_eq!(aggregator.clients.get(&client_hash).unwrap().len(), 0);
@@ -198,7 +264,14 @@ mod tests {
 
         let reading_result = aggregator.read(client_hash, format!("Hello from the user: {}\r", client_hash).as_bytes());
         assert!(reading_result.is_err());
-        assert_eq!(reading_result.unwrap_err(), AggregatorError::AggregationError(AggregationError::ClientNotExist(client_hash)))
+        assert_eq!(reading_result.unwrap_err(), 
+        AggregatorError{
+            kind: AggregatorErrorKind::ClientNotExist,
+            context: AggregatorErrorContext{
+                context: AggregationContext::AggregationError,
+                user: client_hash
+            }
+        })
     }
 
     #[test]
