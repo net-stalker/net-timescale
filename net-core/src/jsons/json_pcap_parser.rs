@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Utc};
 use serde_json::{json, Value};
 use unescape::unescape;
 
@@ -15,9 +15,9 @@ impl JsonPcapParser {
         JsonParser::find(json_binary, PATH_SOURCE_LAYER)
     }
 
-    pub fn find_frame_time(json_binary: &Vec<u8>) -> DateTime<Local> {
+    pub fn find_frame_time(json_binary: &Vec<u8>) -> DateTime<Utc> {
         let value = JsonParser::find(json_binary, PATH_FRAME_TIME);
-
+        // this stuff is returning DateTime<Local>, though in binary we have Utc timestamp format 
         JsonParser::get_timestamp_with_tz(value)
     }
 
@@ -141,7 +141,7 @@ mod tests {
 
         let result = JsonPcapParser::find_frame_time(&pcap_buffer);
 
-        assert_eq!(result.to_string(), "2013-09-18 04:49:07 +00:00");
+        assert_eq!(result.to_string(), "2013-09-18 04:49:07 UTC");
     }
 
     #[test]

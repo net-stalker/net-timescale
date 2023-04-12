@@ -1,6 +1,6 @@
 use std::str::from_utf8;
 
-use chrono::{DateTime, Local, TimeZone};
+use chrono::{DateTime, TimeZone, Utc};
 use jsonpath_rust::JsonPathFinder;
 use serde_json::Value;
 use unescape::unescape;
@@ -43,17 +43,17 @@ impl JsonParser {
         unescape(value.as_str().unwrap()).unwrap()
     }
 
-    pub fn get_timestamp_with_tz(json_path_value: Value) -> DateTime<Local> {
+    pub fn get_timestamp_with_tz(json_path_value: Value) -> DateTime<Utc> {
         let format_str = "%b %d, %Y %H:%M:%S.%f %Z";
         let datetime_str = Self::get_string(json_path_value);
 
-        Local.datetime_from_str(&*datetime_str, format_str).unwrap()
+        Utc.datetime_from_str(&*datetime_str, format_str).unwrap()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use chrono::{Local, TimeZone};
+    use chrono::{TimeZone, Utc};
 
     use crate::file::files::{Files};
     use crate::test_resources;
@@ -133,19 +133,19 @@ mod tests {
 
     #[test]
     fn expected_convert_frame_time_to_date_time() {
-        let time = Local.datetime_from_str("Sat, 11 Feb 2023 23:40:00.000000000 EEST", "%a, %d %b %Y %H:%M:%S.%f %Z").unwrap();
+        let time = Utc.datetime_from_str("Sat, 11 Feb 2023 23:40:00.000000000 EEST", "%a, %d %b %Y %H:%M:%S.%f %Z").unwrap();
         println!("{:?}", time);
 
-        let time = Local.datetime_from_str("Sep 18, 2013 07:49:07.000000000 EEST", "%b %d, %Y %H:%M:%S.%f %Z").unwrap();
+        let time = Utc.datetime_from_str("Sep 18, 2013 07:49:07.000000000 EEST", "%b %d, %Y %H:%M:%S.%f %Z").unwrap();
         println!("{:?}", time);
 
-        let time = Local.datetime_from_str("Dec  5, 2004 21:16:24.317453000 EET", "%b %d, %Y %H:%M:%S.%f %Z").unwrap();
+        let time = Utc.datetime_from_str("Dec  5, 2004 21:16:24.317453000 EET", "%b %d, %Y %H:%M:%S.%f %Z").unwrap();
         println!("{:?}", time);
 
         let pcap_buffer = Files::read_vector(test_resources!("captures/arp.json"));
         let result = JsonParser::find(&pcap_buffer, "$..frame['frame.time']");
         let time = JsonParser::get_timestamp_with_tz(result);
         println!("{:?}", time);
-        assert_eq!(time.to_string(), "2013-09-18 04:49:07 +00:00".to_string());
+        assert_eq!(time.to_string(), "2013-09-18 04:49:07 UTC".to_string());
     }
 }
