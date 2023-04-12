@@ -116,4 +116,24 @@ mod tests{
         ];
         assert_eq!(format!("{:?}", args), format!("{:?}", new_args))
     }
+    #[test]
+    fn test_bincode_for_packet_data(){
+        let time_to_insert = "2020-01-01 00:00:00.000 +0000".parse::<chrono::DateTime<chrono::Utc>>().unwrap();
+        let src = "1".to_owned();
+        let dst = "2".to_owned();
+        let data = r#"{"test":"test"}"#;
+        let json_data: serde_json::Value = serde_json::from_str(data).unwrap();
+        let packet = PacketData {
+            frame_time: time_to_insert.clone(),
+            src_addr: src.clone(),
+            dst_addr: dst.clone(),
+            json: json_data.clone()
+        };
+        let data = bincode::serialize(&packet).unwrap();
+        let packet_copy: PacketData = bincode::deserialize(&data).unwrap(); 
+        assert_eq!(packet.src_addr, packet_copy.src_addr);
+        assert_eq!(packet.dst_addr, packet_copy.dst_addr);
+        assert_eq!(packet.json, packet_copy.json);
+        assert_eq!(packet.frame_time, packet_copy.frame_time);
+    }
 }
