@@ -17,7 +17,6 @@ impl JsonPcapParser {
 
     pub fn find_frame_time(json_binary: &Vec<u8>) -> DateTime<Utc> {
         let value = JsonParser::find(json_binary, PATH_FRAME_TIME);
-        // this stuff is returning DateTime<Local>, though in binary we have Utc timestamp format 
         JsonParser::get_timestamp_with_tz(value)
     }
 
