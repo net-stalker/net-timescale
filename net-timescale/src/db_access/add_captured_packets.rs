@@ -1,13 +1,10 @@
-use std::{sync::Arc};
-use postgres::{types::ToSql};
+use std::sync::Arc;
+use postgres::types::ToSql;
 use serde_json::Value;
-use super::{
-    as_query::AsQuery,
-    query::{self}
-};
+use super::{as_query, query};
 use crate::command::executor::Executor;
 use crate::command::dispatcher::PacketData;
-use super::query_result::{QueryResult, QueryResultComponent};
+use super::query_result;
 
 pub struct AddCapturedPackets {
     pub executor: Executor
@@ -15,37 +12,33 @@ pub struct AddCapturedPackets {
 pub struct UpdatedRows {
     pub rows: u64
 }
-impl QueryResultComponent for UpdatedRows {}
-impl AsQuery for AddCapturedPackets {
+impl query_result::QueryResultComponent for UpdatedRows {}
+impl as_query::AsQuery for AddCapturedPackets {
     // for now we use QueryResult. TODO: make query services like a separeate components
-    fn execute(&self, data: &[u8]) -> Result<QueryResult, &'static str> {
+    fn execute(&self, data: &[u8]) -> Result<query_result::QueryResult, &'static str> {
         let frame_data: PacketData = bincode::deserialize(&data).unwrap();
         let result = self.insert(frame_data);
         match result{
             Ok(rows_count) => { 
                 log::info!("{} rows were updated", rows_count);
-                QueryResult::builder().with_result(Arc::new(UpdatedRows {rows: rows_count})).build()
+                query_result::QueryResult::builder().with_result(Arc::new(UpdatedRows {rows: rows_count})).build()
             }
             Err(error) => {
                 log::error!("{}", error);
-                QueryResult::builder().with_error("Couldn't add data into table").build()
+                query_result::QueryResult::builder().with_error("Couldn't add data into table").build()
             }
         }
     }
 }  
 struct AddPacketsQuery {
     pub raw_query: String,
-    pub args: PacketData,
-    // temp solution. TODO: investigate serde_json::Value ser/der using bincode
-    json: serde_json::Value
+    pub args: PacketData
 }
 impl AddPacketsQuery {
     pub fn new(args: PacketData) -> Self {
-        let json = serde_json::from_slice(args.binary_json.as_slice()).unwrap();
         AddPacketsQuery { 
             raw_query: "INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)".to_owned(),
-            args,
-            json
+            args
         } 
     }
 }
@@ -55,7 +48,7 @@ impl query::PostgresQuery for AddPacketsQuery {
             &self.args.frame_time,
             &self.args.src_addr,
             &self.args.dst_addr,
-            &self.json
+            &self.args.json
         ];
         (
             self.raw_query.to_owned(),
@@ -90,12 +83,12 @@ mod tests{
             frame_time: time_to_insert.clone(),
             src_addr: src.clone(),
             dst_addr: dst.clone(),
-            binary_json: serde_json::to_vec(&json_data).unwrap()
+            json: json_data.clone() 
         };
         let query = Box::new(AddPacketsQuery::new(packet));
         let query_string_str = query.raw_query;
         assert_eq!(&query_string_str, "INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)");
-        assert_eq!(query.args.binary_json, data.as_bytes());
+        assert_eq!(query.args.json, json_data);
         assert_eq!(query.args.src_addr, src);
         assert_eq!(query.args.dst_addr, dst); 
         assert_eq!(query.args.frame_time, time_to_insert);
@@ -111,7 +104,7 @@ mod tests{
             frame_time: time_to_insert.clone(),
             src_addr: src.clone(),
             dst_addr: dst.clone(),
-            binary_json: serde_json::to_vec(&json_data).unwrap()
+            json: json_data.clone()
         };
         let query = Box::new(AddPacketsQuery::new(packet_1));
         let (_query_string, args) = query.get_query();

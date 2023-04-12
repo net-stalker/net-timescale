@@ -4,6 +4,7 @@ use chrono::serde::ts_milliseconds;
 use net_core::jsons::json_parser::JsonParser;
 use net_core::jsons::json_pcap_parser::JsonPcapParser;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
+use serde_with::serde_as;
 use crate::db_access;
 // TODO: dispatcher has to be redesigned 
 pub struct CommandDispatcher<H>
@@ -12,14 +13,15 @@ where
 {
     pub queries: Arc<RwLock<HashMap<String, Box<H>>>>,
 }
-
+#[serde_as]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct PacketData {
-    #[serde(with = "ts_milliseconds")]
+    #[serde_as(as = "serde_with::TimestampMilliSeconds<i64>")]
     pub frame_time: chrono::DateTime<chrono::Utc>,
     pub src_addr: String,
     pub dst_addr: String,
-    pub binary_json: Vec<u8>,
+    #[serde_as(as = "serde_with::DisplayFromStr")]
+    pub json: serde_json::Value,
 }
 // receiver sends serizalized data. Then this data 
 impl<H> Handler for CommandDispatcher<H>
@@ -47,9 +49,9 @@ where
             src_addr: src_addr.unwrap(),
             dst_addr: dst_addr.unwrap(),
             // `bincode` doesn't know how to serialize serde_json::Value. 
-            // TODO: investigate serializing serde_json::Value to avoid avoid this inconvenience
-            // json: serde_json::from_slice(binary_json.as_slice()).unwrap(), - produces a runtime error
-            binary_json
+            // TODO: investigate serializing serde_json::Value to avoid avoid this inconvenience -  - produces a runtime error
+            json: serde_json::from_slice(binary_json.as_slice()).unwrap()
+            // binary_json
         };
 
         let data = bincode::serialize(&frame_data).unwrap();
