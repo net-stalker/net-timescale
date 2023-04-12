@@ -1,47 +1,13 @@
-use std::ops::Deref;
+use std::{ops::Deref, fmt::Display};
+use crate::core::aggregator_errors;
+
+pub type Result<T> = std::result::Result<T, aggregator_errors::AggregatorError>;
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Ended {
     Ended,
     NotEnded
 }
-
-#[derive(PartialEq, Debug, Clone)]
-pub enum AggregatorError {
-    AggregationError(AggregationError),
-    AddingClientError(AddingClientError),
-    StatusIdentifyingError(StatusIdentifyingError),
-    GetBufferError(GetBufferError),
-    ErasingArror(ErasingArror),
-}
-
-#[derive(PartialEq, Debug, Clone)]
-pub enum AggregationError {
-    ClientNotExist(u64),
-}
-
-#[derive(PartialEq, Debug, Clone)]
-pub enum AddingClientError {
-    ClientAlreadyConnected(u64),
-}
-
-#[derive(PartialEq, Debug, Clone)]
-pub enum StatusIdentifyingError {
-    ClientNotExist(u64),
-}
-
-#[derive(PartialEq, Debug, Clone)]
-pub enum GetBufferError {
-    ClientNotExist(u64),
-    ClientMsgIsNotEnded(u64),
-}
-
-#[derive(PartialEq, Debug, Clone)]
-pub enum ErasingArror {
-    ClientNotExist(u64),
-}
-
-pub type Result<T> = std::result::Result<T, AggregatorError>;
 
 pub trait AddClient<C> {
     fn add_client (&mut self, client: C) -> Result<()>;
@@ -71,11 +37,11 @@ impl Aggregator {
     pub (super) fn data(&self, client: u64) -> Result<&[u8]> {
 
         if !self.clients.contains_key(&client) {
-            return Err(AggregatorError::GetBufferError(GetBufferError::ClientNotExist(client)))
+            return Err(aggregator_errors::AggregatorError::GetBufferError(aggregator_errors::GetBufferError::ClientNotExist(client)))
         }
 
         if self.identify_status(client).unwrap() != Ended::Ended {
-            return Err(AggregatorError::GetBufferError(GetBufferError::ClientMsgIsNotEnded(client)))
+            return Err(aggregator_errors::AggregatorError::GetBufferError(aggregator_errors::GetBufferError::ClientMsgIsNotEnded(client)))
         }
 
         let client_buffer = self.clients.get(&client).unwrap();
@@ -85,7 +51,7 @@ impl Aggregator {
     pub (super) fn erase_data(&mut self, client: u64) -> Result<()> {
 
         if !self.clients.contains_key(&client) {
-            return Err(AggregatorError::ErasingArror(ErasingArror::ClientNotExist(client)))
+            return Err(aggregator_errors::AggregatorError::ErasingArror(aggregator_errors::ErasingArror::ClientNotExist(client)))
         }
 
         let client_buffer = self.clients.get_mut(&client).unwrap();
@@ -98,7 +64,7 @@ impl AddClient<u64> for Aggregator {
     fn add_client (&mut self, client: u64) -> Result<()> {
 
         if self.clients.contains_key(&client) {
-            return Err(AggregatorError::AddingClientError(AddingClientError::ClientAlreadyConnected(client)))
+            return Err(aggregator_errors::AggregatorError::AddingClientError(aggregator_errors::AddingClientError::ClientAlreadyConnected(client)))
         }
 
         self.clients.insert(client, Vec::new());
@@ -110,7 +76,7 @@ impl IdentifyStatus<u64, Ended> for Aggregator {
     fn identify_status(&self, client: u64) -> Result<Ended> {
 
         if !self.clients.contains_key(&client) {
-            return Err(AggregatorError::StatusIdentifyingError(StatusIdentifyingError::ClientNotExist(client)))
+            return Err(aggregator_errors::AggregatorError::StatusIdentifyingError(aggregator_errors::StatusIdentifyingError::ClientNotExist(client)))
         }
 
         let client_buffer = self.clients.get(&client).unwrap();
@@ -126,7 +92,7 @@ impl ReadBufferForClient<u64, Ended> for Aggregator {
     fn read(&mut self, client: u64, buf: &[u8]) -> Result<()> {
 
         if !self.clients.contains_key(&client) {
-            return Err(AggregatorError::AggregationError(AggregationError::ClientNotExist(client)));
+            return Err(aggregator_errors::AggregatorError::AggregationError(aggregator_errors::AggregationError::ClientNotExist(client)));
         }
 
         let client_buffer = self.clients.get_mut(&client).unwrap();
@@ -137,7 +103,7 @@ impl ReadBufferForClient<u64, Ended> for Aggregator {
     fn read_with_status(&mut self, client: u64, buf: &[u8]) -> Result<Ended> {
 
         if !self.clients.contains_key(&client) {
-            return Err(AggregatorError::AggregationError(AggregationError::ClientNotExist(client)));
+            return Err(aggregator_errors::AggregatorError::AggregationError(aggregator_errors::AggregationError::ClientNotExist(client)));
         }
 
         let client_buffer = self.clients.get_mut(&client).unwrap();
@@ -156,7 +122,7 @@ impl Default for Aggregator {
 
 #[cfg(test)]
 mod tests {
-    use crate::server::aggregator::{IdentifyStatus, Ended, AggregatorError, AddingClientError, AggregationError};
+    use crate::server::aggregator::{IdentifyStatus, Ended, aggregator_errors::AggregatorError, aggregator_errors::AddingClientError, aggregator_errors::AggregationError};
     use super::{Aggregator, AddClient, ReadBufferForClient};
 
     #[test]
