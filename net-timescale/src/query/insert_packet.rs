@@ -11,7 +11,6 @@ pub struct InsertPacket {
 impl InsertPacket {
     pub fn insert(&self, frame_time: DateTime<Utc>, src_addr: String, dst_addr: String, packet_json: Vec<u8>) {
         let json_value = Self::convert_to_value(packet_json).unwrap();
-        log::info!("Frame time in insert: {}", frame_time);
         let result = self.pool.lock().unwrap()
             .get()
             .unwrap()

@@ -49,9 +49,9 @@ impl NetComponent for Timescale {
             // you can changes timestamps to your liking
             // ============================================
             // TODO: move this code queries structure
-            // let left = "2023-03-27 13:37:08.675 +0300".parse::<DateTime<Local>>().unwrap();
-            // let right = "2023-03-29 15:38:10.238 +0300".parse::<DateTime<Local>>().unwrap();
-            // select_query.select_packets_from_interval(left, right);
+            let left = "2023-03-27 13:37:08.675 +0300".parse::<DateTime<Local>>().unwrap();
+            let right = "2023-03-29 15:38:10.238 +0300".parse::<DateTime<Local>>().unwrap();
+            select_query.select_packets_from_interval(left, right);
             //============================================
             let queries = Arc::new(RwLock::new(HashMap::new()));
             queries
