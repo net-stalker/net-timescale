@@ -1,10 +1,10 @@
 use std::sync::Arc;
+use net_core::transport::sockets::Handler;
 use postgres::types::ToSql;
 use serde_json::Value;
-use super::{as_query, query};
 use crate::command::executor::Executor;
 use crate::command::dispatcher::PacketData;
-use super::query_result;
+use crate::db_access::{query_result, as_query, query};
 
 pub struct AddCapturedPackets {
     pub executor: Executor
@@ -64,6 +64,12 @@ impl AddCapturedPackets {
 
     fn convert_to_value(packet_json: Vec<u8>) -> serde_json::Result<Value> {
         serde_json::from_slice(&*packet_json)
+    }
+}
+impl Handler for AddCapturedPackets {
+    fn handle(&self, receiver: &dyn net_core::transport::sockets::Receiver, sender: &dyn net_core::transport::sockets::Sender) {
+        receiver.recv();
+        log::info!("handle in AddCapturedPackets");
     }
 }
 

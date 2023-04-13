@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use chrono::serde::ts_milliseconds;
 use net_core::jsons::json_parser::JsonParser;
 use net_core::jsons::json_pcap_parser::JsonPcapParser;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
