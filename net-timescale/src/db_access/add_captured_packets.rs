@@ -1,33 +1,24 @@
-use std::sync::Arc;
 use postgres::types::ToSql;
 use serde_json::Value;
 use super::{as_query, query};
 use crate::command::executor::Executor;
 use crate::command::dispatcher::PacketData;
-use super::query_result;
 
 pub struct AddCapturedPackets {
     pub executor: Executor
-} 
-pub struct UpdatedRows {
-    pub rows: u64
 }
-impl query_result::QueryResultComponent for UpdatedRows {}
 impl as_query::AsQuery for AddCapturedPackets {
-    // for now we use QueryResult. TODO: make query services like a separeate components
-    fn execute(&self, data: &[u8]) -> Result<query_result::QueryResult, &'static str> {
+    fn execute(&self, data: &[u8]) {
         let frame_data: PacketData = bincode::deserialize(&data).unwrap();
         let result = self.insert(frame_data);
         match result{
             Ok(rows_count) => { 
                 log::info!("{} rows were updated", rows_count);
-                query_result::QueryResult::builder().with_result(Arc::new(UpdatedRows {rows: rows_count})).build()
             }
             Err(error) => {
                 log::error!("{}", error);
-                query_result::QueryResult::builder().with_error("Couldn't add data into table").build()
             }
-        }
+        };
     }
 }  
 struct AddPacketsQuery<'a> {

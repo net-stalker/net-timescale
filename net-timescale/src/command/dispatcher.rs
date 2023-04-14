@@ -56,7 +56,7 @@ where
 
         let data = bincode::serialize(&frame_data).unwrap();
         //=====================================================================================
-        let _result = self.queries.read().unwrap()
+        self.queries.read().unwrap()
             .get("insert_packet").unwrap()
             .execute(data.as_slice());
     }
