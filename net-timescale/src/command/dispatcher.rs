@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use chrono::serde::ts_milliseconds;
 use net_core::jsons::json_parser::JsonParser;
 use net_core::jsons::json_pcap_parser::JsonPcapParser;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
@@ -45,13 +44,10 @@ where
         let binary_json = JsonParser::get_vec(layered_json);
         
         let frame_data = PacketData {
-            frame_time: frame_time.into(), 
+            frame_time, 
             src_addr: src_addr.unwrap(),
             dst_addr: dst_addr.unwrap(),
-            // `bincode` doesn't know how to serialize serde_json::Value. 
-            // TODO: investigate serializing serde_json::Value to avoid avoid this inconvenience -  - produces a runtime error
             json: serde_json::from_slice(binary_json.as_slice()).unwrap()
-            // binary_json
         };
 
         let data = bincode::serialize(&frame_data).unwrap();
