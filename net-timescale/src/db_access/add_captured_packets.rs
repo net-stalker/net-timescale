@@ -43,7 +43,7 @@ impl AddPacketsQuery {
     }
 }
 impl query::PostgresQuery for AddPacketsQuery {
-    fn get_query(&self) -> (String, Vec<&(dyn ToSql + Sync)>) {
+    fn get_query_params(&self) -> (String, Vec<&(dyn ToSql + Sync)>) {
         let new_args: Vec<&(dyn ToSql + Sync)> = vec![
             &self.args.frame_time,
             &self.args.src_addr,
@@ -107,7 +107,7 @@ mod tests{
             json: json_data.clone()
         };
         let query = Box::new(AddPacketsQuery::new(packet_1));
-        let (_query_string, args) = query.get_query();
+        let (_query_string, args) = query.get_query_params();
         let new_args: Vec<&(dyn ToSql + Sync)> = vec![
             &time_to_insert,
             &src,

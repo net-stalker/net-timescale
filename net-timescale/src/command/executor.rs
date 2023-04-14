@@ -23,14 +23,14 @@ impl Executor{
     where
         Q: query::PostgresQuery
     {
-        let (query_string, params) = query.get_query();
+        let (query_string, params) = query.get_query_params();
         self.get_connection().execute(query_string.as_str(), params.as_slice())
     }
     pub fn query<'a, Q>(&self, query: Box<Q>) -> Result<Vec<postgres::Row>, postgres::Error>
     where
         Q: query::PostgresQuery
     {
-        let (query_string, params) = query.get_query();
+        let (query_string, params) = query.get_query_params();
         self.get_connection().query(query_string.as_str(), params.as_slice())
     }
 }
