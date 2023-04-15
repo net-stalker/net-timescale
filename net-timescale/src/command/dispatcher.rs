@@ -1,17 +1,19 @@
-use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
-use net_core::jsons::json_parser::JsonParser;
-use net_core::jsons::json_pcap_parser::JsonPcapParser;
-use net_core::transport::sockets::{Handler, Receiver, Sender};
+use std::{sync::{Arc, RwLock}, collections::HashMap};
+use nng::Socket;
+use net_core::{transport::sockets::{Handler, Receiver, Sender}, jsons::{json_pcap_parser::JsonPcapParser, json_parser::JsonParser}};
+use net_core::transport::connector_nng::Proto;
 use serde_with::serde_as;
-use crate::db_access;
-// TODO: dispatcher has to be redesigned 
-pub struct CommandDispatcher<H>
-where
-    H: db_access::as_query::AsQuery + ?Sized
-{
-    pub queries: Arc<RwLock<HashMap<String, Box<H>>>>,
+
+pub struct CommandDispatcher{
+    pub queries: Arc<RwLock<HashMap<String, String>>>,
+    pub connector: Arc<RwLock<Socket>>
 }
+pub struct CommandDispatcherBuilder {
+    queries: HashMap<String, String>,
+    end_point: String,
+    proto: Proto
+}
+// probably this data structure won't be used further because of using middleware format
 #[serde_as]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct PacketData {
@@ -22,12 +24,40 @@ pub struct PacketData {
     #[serde_as(as = "serde_with::DisplayFromStr")]
     pub json: serde_json::Value,
 }
-// receiver sends serizalized data. Then this data 
-impl<H> Handler for CommandDispatcher<H>
-where 
-    H: db_access::as_query::AsQuery + ?Sized
-{
+
+impl CommandDispatcherBuilder {
+    pub fn with_endpoint(mut self, endpoint: String) -> Self {
+        self.end_point = endpoint;
+        self
+    }
+    pub fn with_proto(mut self, proto: Proto) -> Self {
+        self.proto = proto;
+        self
+    }
+    pub fn with_query_service(mut self, query_service_id: &str, query_service_addresss: &str) -> Self {
+        self.queries.insert(query_service_id.to_owned(), query_service_addresss.to_owned());
+        self
+    }
+    pub fn build(self) -> CommandDispatcher {
+        let connector = Socket::new(Proto::into(self.proto)).unwrap();
+        CommandDispatcher { 
+            queries: Arc::new(RwLock::new(self.queries)),
+            connector: Arc::new(RwLock::new(connector))
+        }
+    } 
+}
+impl CommandDispatcher {
+    pub fn builder() -> CommandDispatcherBuilder {
+        CommandDispatcherBuilder { 
+            queries: HashMap::<String, String>::default(),
+            end_point: String::default(),
+            proto: Proto::Req
+        } 
+    }
+}
+impl Handler for CommandDispatcher {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
+        // Here I should get data and retransmit it. 
         let data = receiver.recv();
         //=======================================================================================
         // TODO: This block has to be moved to translator 
@@ -51,9 +81,13 @@ where
         };
 
         let data = bincode::serialize(&frame_data).unwrap();
-        //=====================================================================================
-        self.queries.read().unwrap()
-            .get("insert_packet").unwrap()
-            .execute(data.as_slice());
+        log::info!("Handle in S_Dispatcher is triggered");   
+        if let Some((_key, value)) = self.queries.try_read().unwrap().get_key_value("1") {
+            let con = self.connector.try_write().unwrap();
+            con.dial(value).unwrap();
+            con.send(&data).unwrap();
+        } else {
+            log::error!("Map is empty!");
+        }  
     }
 }
