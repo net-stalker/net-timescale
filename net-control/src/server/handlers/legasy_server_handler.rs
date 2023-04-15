@@ -1,6 +1,6 @@
 use std::{hash::{Hash, Hasher}, collections::hash_map::DefaultHasher, str::from_utf8};
 
-use crate::server::aggregator::{AddClient, ReadBufferForClient, Ended, IdentifyStatus};
+use crate::server::aggregator::{AddClient, ReadBufferForClient, Ended, IdentifyStatus, self};
 
 use super::super::aggregator::Aggregator;
 
@@ -12,22 +12,24 @@ pub struct LegasyServerHandler {
 }
 
 impl LegasyServerHandler {
-    fn aggregate_msg(&mut self, client: u64, buf: &[u8]) -> Result<(), &str> {
-        self.aggregator.lock().unwrap().read(client, buf);
-        Ok(())
+    fn aggregate_msg(&mut self, client: u64, buf: &[u8]) -> aggregator::Result<()> {
+        self.aggregator.lock().unwrap().read(client, buf)
     }
 
-    fn identify_client_msg_status(&self, client: u64) -> Result<Ended, &str> {
-        let client_msg_status = self.aggregator.lock().unwrap().identify_status(client).unwrap().clone();
-        Ok(client_msg_status)
+    fn identify_client_msg_status(&self, client: u64) -> aggregator::Result<Ended> {
+        self.aggregator.lock().unwrap().identify_status(client).clone()
     }
 
-    fn get_client_msg (&self, client: u64) -> String {
+    fn erase_client_data (&self, client: u64) -> aggregator::Result<()> {
+        self.aggregator.lock().unwrap().erase_data(client)
+    }
+
+    fn get_client_msg (&self, client: u64) -> aggregator::Result<String> {
         let aggregator = self.aggregator.lock().unwrap();
         let client_data = aggregator.data(client);
         match client_data {
-            Ok(data) => from_utf8(data).unwrap().to_owned(),
-            Err(_) => todo!(),
+            Ok(data) => Ok(from_utf8(data).unwrap().to_owned()),
+            Err(e) => Err(e)
         }
     }
 }
@@ -41,11 +43,11 @@ impl Default for LegasyServerHandler {
 }
 
 impl AddClient<russh::ChannelId> for LegasyServerHandler {
-    fn add_client (&mut self, client: russh::ChannelId) {
+    fn add_client (&mut self, client: russh::ChannelId) -> aggregator::Result<()> {
         let mut aggregator = self.aggregator.lock().unwrap();
         let hasher = &mut DefaultHasher::new();
         client.hash(hasher);
-        aggregator.add_client(hasher.finish());
+        aggregator.add_client(hasher.finish())
     }
 }
 
@@ -79,9 +81,12 @@ impl russh::server::Handler for LegasyServerHandler {
             Err(_) => todo!(),
         }
 
-        self.add_client(channel.id());
-
-        Ok((self, true, session))
+        if self.add_client(channel.id()).is_ok() {
+            return Ok((self, true, session))
+        } else {
+            todo!();
+            Ok((self, false, session))
+        }
     }
 
     async fn channel_close(self, channel: russh::ChannelId, mut session: russh::server::Session) -> Result<(Self, russh::server::Session), Self::Error> {
@@ -91,6 +96,7 @@ impl russh::server::Handler for LegasyServerHandler {
 
     async fn data(mut self, channel: russh::ChannelId, data: &[u8], mut session: russh::server::Session) -> Result<(Self, russh::server::Session), Self::Error> {
         //Cook data into a string
+        //This data is used for echo only
         let mut cooked_data = std::str::from_utf8(data).unwrap().to_string();
         
         //Generate ChannelId hash
@@ -99,11 +105,28 @@ impl russh::server::Handler for LegasyServerHandler {
         let client_hash = hasher.finish();
         
         //Aggregate data
-        self.aggregate_msg(client_hash, data);
+        let client_msg_read_result = self.aggregate_msg(client_hash, data);
+        match client_msg_read_result {
+            Ok(_) => (),
+            Err(_) => todo!()
+        }
 
         let client_msg_status = self.identify_client_msg_status(client_hash).unwrap();
         match client_msg_status {
-            Ended::Ended => cooked_data.push_str(format!("\n{}@cli:", "user").as_str()),
+            Ended::Ended => {
+                cooked_data.push_str(format!("\n{}@cli:", "user").as_str());
+
+                let client_msg = self.get_client_msg(client_hash);
+                match client_msg {
+                    Ok(msg) => println!("Client [{}] msg is: {}", client_hash, msg),
+                    Err(_) => todo!()
+                } 
+
+                match self.erase_client_data(client_hash) {
+                    Ok(_) => (),
+                    Err(_) => todo!()
+                }
+            }
             Ended::NotEnded => (),
         }
         

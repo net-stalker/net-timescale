@@ -19,18 +19,18 @@ impl Executor{
         .get()
         .unwrap()
     }
-    pub fn execute<'a, Q>(&self, query: Box<Q>) -> Result<u64, postgres::Error>
+    pub fn execute<'a, Q>(&self, query: &'a Q) -> Result<u64, postgres::Error>
     where
-        Q: query::PostgresQuery
+        Q: query::PostgresQuery<'a>
     {
-        let (query_string, params) = query.get_query();
-        self.get_connection().execute(query_string.as_str(), params.as_slice())
+        let (query_string, params) = query.get_query_params();
+        self.get_connection().execute(query_string, params)
     }
-    pub fn query<'a, Q>(&self, query: Box<Q>) -> Result<Vec<postgres::Row>, postgres::Error>
+    pub fn query<'a, Q>(&self, query: &'a Q) -> Result<Vec<postgres::Row>, postgres::Error>
     where
-        Q: query::PostgresQuery
+        Q: query::PostgresQuery<'a>
     {
-        let (query_string, params) = query.get_query();
-        self.get_connection().query(query_string.as_str(), params.as_slice())
+        let (query_string, params) = query.get_query_params();
+        self.get_connection().query(query_string, params)
     }
 }
