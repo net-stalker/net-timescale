@@ -121,7 +121,7 @@ pub struct ConnectorNngBuilder<HANDLER: Handler> {
     endpoint: Option<String>,
     proto: Option<Proto>,
     handler: Option<Box<HANDLER>>,
-
+    topics:  Option<Vec<u8>>
 }
 
 impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
@@ -130,6 +130,7 @@ impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
             endpoint: None,
             proto: None,
             handler: None,
+            topics: None
         }
     }
 
@@ -148,13 +149,24 @@ impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
         self
     }
 
+    pub fn with_topic(mut self, topics: Vec<u8>) -> Self {
+        self.topics = Some(topics);
+        self 
+    }
+
     pub fn build(self) -> ConnectorNNG<HANDLER> {
         let proto = Proto::into(self.proto.unwrap());
-
         ConnectorNNG {
             endpoint: self.endpoint.unwrap(),
             handler: self.handler,
-            socket: Socket::new(proto).unwrap(),
+            socket: match self.topics {
+               Some(topic) => {
+                    let socket = Socket::new(proto).unwrap();
+                    socket.set_opt::<nng::options::protocol::pubsub::Subscribe>(topic).unwrap();
+                    socket
+               },
+               None => Socket::new(proto).unwrap()
+            },
         }
     }
 }

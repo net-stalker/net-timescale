@@ -44,7 +44,12 @@ impl AddCapturedPackets {
 impl Handler for AddCapturedPackets {
     fn handle(&self, receiver: &dyn net_core::transport::sockets::Receiver, _sender: &dyn net_core::transport::sockets::Sender) {
         let data = receiver.recv();
-        let frame_data: PacketData = bincode::deserialize(&data).unwrap();
+        log::info!("Data in add_traffic: {:?}", data);
+        // ==============================
+        // must be changed 
+        let topic = "add_packet".as_bytes().to_owned();
+        let frame_data: PacketData = bincode::deserialize(&data[topic.len()..]).unwrap();
+        //==============================
         match self.insert(frame_data) {
             Ok(rows_count) => { 
                 log::info!("{} rows were updated", rows_count);

@@ -23,31 +23,15 @@ impl Timescale {
         }
     }
 }
-const ADD_PACKETS: &'static str = "inproc://nng/add_packets";
+const PUBLISHER: &'static str = "inproc://nng/dispatcher";
 
 impl NetComponent for Timescale {
     fn run(self) {
         log::info!("Run component");
-        self.thread_pool.execute( move|| {
-            let executor = Executor::new(self.connection_pool.clone());
-            let add_packets_handler = AddCapturedPackets { executor: executor.clone() };
-            let packets_service = ConnectorNNG::builder()
-                .with_endpoint(ADD_PACKETS.to_owned())
-                .with_proto(Proto::Rep)
-                .with_handler(add_packets_handler)
-                .build()
-                .bind()
-                .into_inner();
-            Poller::new()
-                .add(packets_service)
-                .poll();
-        });
-
         self.thread_pool.execute(move || {
             let dispatcher = CommandDispatcher::builder()
-                .with_endpoint("inproc://nng/dispatcher".to_owned())
-                .with_proto(Proto::Req)
-                .with_query_service("1", ADD_PACKETS)
+                .with_endpoint(PUBLISHER.to_owned())
+                .with_proto(Proto::Pub)
                 .build();
 
             let db_service = ConnectorNNG::builder()
@@ -60,6 +44,22 @@ impl NetComponent for Timescale {
 
             Poller::new()
                 .add(db_service)
+                .poll();
+        });
+
+        self.thread_pool.execute( move|| {
+            let executor = Executor::new(self.connection_pool.clone());
+            let add_packets_handler = AddCapturedPackets { executor: executor.clone() };
+            let packets_service = ConnectorNNG::builder()
+                .with_endpoint(PUBLISHER.to_owned())
+                .with_proto(Proto::Sub)
+                .with_handler(add_packets_handler)
+                .with_topic("add_packet".as_bytes().into())
+                .build()
+                .connect()
+                .into_inner();
+            Poller::new()
+                .add(packets_service)
                 .poll();
         });
     }
