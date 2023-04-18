@@ -4,7 +4,7 @@ use net_core::{transport::sockets::{Handler, Receiver, Sender}, jsons::{json_pca
 use net_core::transport::connector_nng::Proto;
 use serde_with::serde_as;
 
-pub struct CommandDispatcher{
+pub struct CommandDispatcher{ 
     pub queries: Arc<RwLock<HashMap<String, String>>>,
     pub connector: Arc<RwLock<Socket>>
 }
@@ -40,6 +40,8 @@ impl CommandDispatcherBuilder {
     }
     pub fn build(self) -> CommandDispatcher {
         let connector = Socket::new(Proto::into(self.proto)).unwrap();
+        // temp listen
+        connector.listen(self.end_point.as_str()).unwrap();
         CommandDispatcher { 
             queries: Arc::new(RwLock::new(self.queries)),
             connector: Arc::new(RwLock::new(connector))
@@ -57,15 +59,13 @@ impl CommandDispatcher {
 }
 impl Handler for CommandDispatcher {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
-        // Here I should get data and retransmit it. 
         let data = receiver.recv();
         //=======================================================================================
         // TODO: This block has to be moved to translator 
         //TODO should be moved to the task CU-861mdndny
         let filtered_value_json = JsonPcapParser::filter_source_layer(&data);
         let first_json_value = JsonParser::first(&filtered_value_json).unwrap();
-        let layered_json = JsonPcapParser::split_into_layers(first_json_value);
-        // TODO: think about avoiding converting frame_time into DateTime<Local> at once because it can't be serialized  
+        let layered_json = JsonPcapParser::split_into_layers(first_json_value);  
         let frame_time = JsonPcapParser::find_frame_time(&data);
         let src_addr = JsonPcapParser::extract_src_addr_l3(&layered_json)
             .or(Some("".to_string()));
@@ -79,15 +79,12 @@ impl Handler for CommandDispatcher {
             dst_addr: dst_addr.unwrap(),
             json: serde_json::from_slice(binary_json.as_slice()).unwrap()
         };
-
-        let data = bincode::serialize(&frame_data).unwrap();
-        log::info!("Handle in S_Dispatcher is triggered");   
-        if let Some((_key, value)) = self.queries.try_read().unwrap().get_key_value("1") {
-            let con = self.connector.try_write().unwrap();
-            con.dial(value).unwrap();
-            con.send(&data).unwrap();
-        } else {
-            log::error!("Map is empty!");
-        }  
+        let temp_topic = "add_packet".as_bytes().to_owned();
+        log::debug!("Topic: {:?}", temp_topic);
+        let mut data = bincode::serialize(&frame_data).unwrap();
+        // manually adding topic into at the beginning of the data. Ideally it has to already be in the data 
+        data.splice(0..0, temp_topic); 
+        log::debug!("Data with topic: {:?}", data);
+        self.connector.try_write().unwrap().send(data.as_slice());
     }
 }
