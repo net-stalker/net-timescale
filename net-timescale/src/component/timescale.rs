@@ -32,7 +32,8 @@ impl NetComponent for Timescale {
             let dispatcher = CommandDispatcher::builder()
                 .with_endpoint(PUBLISHER.to_owned())
                 .with_proto(Proto::Pub)
-                .build();
+                .build()
+                .bind();
 
             let db_service = ConnectorNNG::builder()
                 .with_endpoint("tcp://0.0.0.0:5556".to_string())

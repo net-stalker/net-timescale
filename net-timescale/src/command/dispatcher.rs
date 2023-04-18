@@ -6,7 +6,8 @@ use serde_with::serde_as;
 
 pub struct CommandDispatcher{ 
     pub queries: Arc<RwLock<HashMap<String, String>>>,
-    pub connector: Arc<RwLock<Socket>>
+    pub connector: Arc<RwLock<Socket>>,
+    end_point: String
 }
 pub struct CommandDispatcherBuilder {
     queries: HashMap<String, String>,
@@ -39,12 +40,10 @@ impl CommandDispatcherBuilder {
         self
     }
     pub fn build(self) -> CommandDispatcher {
-        let connector = Socket::new(Proto::into(self.proto)).unwrap();
-        // temp listen
-        connector.listen(self.end_point.as_str()).unwrap();
         CommandDispatcher { 
             queries: Arc::new(RwLock::new(self.queries)),
-            connector: Arc::new(RwLock::new(connector))
+            connector: Arc::new(RwLock::new(Socket::new(Proto::into(self.proto)).unwrap())),
+            end_point: self.end_point
         }
     } 
 }
@@ -55,6 +54,10 @@ impl CommandDispatcher {
             end_point: String::default(),
             proto: Proto::Req
         } 
+    }
+    pub fn bind(self) -> Self {
+        self.connector.try_read().unwrap().listen(self.end_point.as_str()).unwrap();
+        self
     }
 }
 impl Handler for CommandDispatcher {
@@ -80,11 +83,9 @@ impl Handler for CommandDispatcher {
             json: serde_json::from_slice(binary_json.as_slice()).unwrap()
         };
         let temp_topic = "add_packet".as_bytes().to_owned();
-        log::debug!("Topic: {:?}", temp_topic);
         let mut data = bincode::serialize(&frame_data).unwrap();
         // manually adding topic into at the beginning of the data. Ideally it has to already be in the data 
         data.splice(0..0, temp_topic); 
-        log::debug!("Data with topic: {:?}", data);
         self.connector.try_write().unwrap().send(data.as_slice());
     }
 }
