@@ -1,10 +1,10 @@
+use chrono::{Utc, DateTime, TimeZone};
 use net_core::transport::sockets::Handler;
 use postgres::types::ToSql;
 use serde_json::Value;
 use crate::db_access::query;
-
 use crate::command::executor::Executor;
-use crate::command::dispatcher::PacketData;
+use super::packet_data::PacketData;
 
 pub struct AddCapturedPackets {
     pub executor: Executor
@@ -14,14 +14,14 @@ struct AddPacketsQuery<'a> {
     pub args: [&'a (dyn ToSql + Sync); 4]
 }
 impl<'a> AddPacketsQuery<'a> {
-    pub fn new(args: &'a PacketData) -> Self {
+    pub fn new(time: &'a DateTime<Utc>, src_addr: &'a String, dst_addr: &'a String, json_data: &'a serde_json::Value) -> Self {
         AddPacketsQuery { 
             raw_query: "INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)",
             args: [
-                &args.frame_time,
-                &args.src_addr,
-                &args.dst_addr,
-                &args.json
+                time,
+                src_addr,
+                dst_addr,
+                json_data
             ]
         } 
     }
@@ -33,11 +33,13 @@ impl<'a> query::PostgresQuery<'a> for AddPacketsQuery<'a> {
 }
 impl AddCapturedPackets {
     pub fn insert(&self, data: PacketData) -> Result<u64, postgres::Error> {
-        let query = AddPacketsQuery::new(&data);
+        let time = Utc.timestamp_millis_opt(data.frame_time).unwrap();
+        let json = AddCapturedPackets::convert_to_value(data.binary_json).unwrap();
+        let query = AddPacketsQuery::new(&time, &data.src_addr, &data.dst_addr, &json);
         self.executor.execute(&query)
     }
 
-    fn _convert_to_value(packet_json: Vec<u8>) -> serde_json::Result<Value> {
+    fn convert_to_value(packet_json: Vec<u8>) -> serde_json::Result<Value> {
         serde_json::from_slice(&*packet_json)
     }
 }
@@ -67,64 +69,47 @@ mod tests{
 
     use super::*;
     #[test]
+    fn test_add_packet_query_raw_params(){
+        let time_to_insert = "2020-01-01 00:00:00.000 UTC".parse::<chrono::DateTime<chrono::Utc>>().unwrap();
+        let src = "1".to_owned();
+        let dst = "2".to_owned();
+        let data = r#"{"test":"test"}"#;
+        let json_data: serde_json::Value = serde_json::from_str(data).unwrap();
+        let query_struct = AddPacketsQuery::new(&time_to_insert, &src, &dst, &json_data);
+        
+        let (query, params) = query_struct.get_query_params();
+        assert_eq!(query, "INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)");
+        
+        let test_params: [&(dyn ToSql + Sync); 4] = [&time_to_insert, &src, &dst, &json_data];
+        assert_eq!(format!("{:?}", params), format!("{:?}", &test_params));
+    }
+    #[test]
     fn test_add_packet_query(){
-        let time_to_insert = "2020-01-01 00:00:00.000 +0000".parse::<chrono::DateTime<chrono::Utc>>().unwrap();
+        let time_to_insert = "2020-01-01 00:00:00.000 UTC".parse::<chrono::DateTime<chrono::Utc>>().unwrap();
         let src = "1".to_owned();
         let dst = "2".to_owned();
         let data = r#"{"test":"test"}"#;
         let json_data: serde_json::Value = serde_json::from_str(data).unwrap();
         let packet = PacketData {
-            frame_time: time_to_insert.clone(),
+            frame_time: time_to_insert.timestamp_millis(),
             src_addr: src.clone(),
             dst_addr: dst.clone(),
-            json: json_data.clone() 
+            binary_json: data.as_bytes().to_owned()
         };
-        let query = Box::new(AddPacketsQuery::new(&packet));
-        assert_eq!(query.raw_query, "INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)");
-    }
-    #[test]
-    fn test_add_packet_raw_parameters(){
-        let time_to_insert = "2020-01-01 00:00:00.000 +0000".parse::<chrono::DateTime<chrono::Utc>>().unwrap();
-        let src = "1".to_owned();
-        let dst = "2".to_owned();
-        let data = r#"{"test":"test"}"#;
-        let json_data: serde_json::Value = serde_json::from_str(data).unwrap();
-        let packet_1 = PacketData {
-            frame_time: time_to_insert.clone(),
-            src_addr: src.clone(),
-            dst_addr: dst.clone(),
-            json: json_data.clone()
-        };
-        let query = Box::new(AddPacketsQuery::new(&packet_1));
-        let (_query_string, args) = query.get_query_params();
-        let new_args: Vec<&(dyn ToSql + Sync)> = vec![
-            &time_to_insert,
-            &src,
-            &dst,
-            &json_data
-        ];
-        println!("args {:?}", args);
-        println!("args {:?}", new_args);
-        assert_eq!(format!("{:?}", args), format!("{:?}", new_args))
-    }
-    #[test]
-    fn test_bincode_for_packet_data(){
-        let time_to_insert = "2020-01-01 00:00:00.000 +0000".parse::<chrono::DateTime<chrono::Utc>>().unwrap();
-        let src = "1".to_owned();
-        let dst = "2".to_owned();
-        let data = r#"{"test":"test"}"#;
-        let json_data: serde_json::Value = serde_json::from_str(data).unwrap();
-        let packet = PacketData {
-            frame_time: time_to_insert.clone(),
-            src_addr: src.clone(),
-            dst_addr: dst.clone(),
-            json: json_data.clone()
-        };
-        let data = bincode::serialize(&packet).unwrap();
-        let packet_copy: PacketData = bincode::deserialize(&data).unwrap(); 
-        assert_eq!(packet.src_addr, packet_copy.src_addr);
-        assert_eq!(packet.dst_addr, packet_copy.dst_addr);
-        assert_eq!(packet.json, packet_copy.json);
-        assert_eq!(packet.frame_time, packet_copy.frame_time);
+        let time = Utc.timestamp_millis_opt(packet.frame_time).unwrap();
+        let json = AddCapturedPackets::convert_to_value(packet.binary_json).unwrap();
+        let query_struct = AddPacketsQuery::new(&time, &packet.src_addr, &packet.dst_addr, &json);
+
+        let (query, params) = query_struct.get_query_params();
+        assert_eq!(query, "INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)");
+        
+        assert_eq!(time, time_to_insert);
+        assert_eq!(src, packet.src_addr);
+        assert_eq!(dst, packet.dst_addr);
+        assert_eq!(json_data, json);
+
+        let test_params: [&(dyn ToSql + Sync); 4] = [&time_to_insert, &src, &dst, &json_data];
+        assert_eq!(format!("{:?}", params), format!("{:?}", &test_params));
+        
     }
 }

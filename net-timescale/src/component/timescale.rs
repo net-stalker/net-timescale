@@ -8,6 +8,7 @@ use net_core::transport::polling::Poller;
 use crate::command::dispatcher::CommandDispatcher;
 use crate::command::executor::Executor;
 use crate::db_access::add_traffic::add_captured_packets::AddCapturedPackets;
+use crate::db_access::select_by_time::select_by_time::SelectInterval;
 
 pub struct Timescale {
     pub thread_pool: ThreadPool,
@@ -51,7 +52,7 @@ impl NetComponent for Timescale {
         self.thread_pool.execute( move|| {
             let executor = Executor::new(self.connection_pool.clone());
             let add_packets_handler = AddCapturedPackets { executor: executor.clone() };
-            let packets_service = ConnectorNNG::builder()
+            let service_add_packets = ConnectorNNG::builder()
                 .with_endpoint(PUBLISHER.to_owned())
                 .with_proto(Proto::Sub)
                 .with_handler(add_packets_handler)
@@ -59,8 +60,18 @@ impl NetComponent for Timescale {
                 .build()
                 .connect()
                 .into_inner();
+            let select_by_time_interval = SelectInterval { executor: executor.clone() };
+            let service_select_by_time_interval = ConnectorNNG::builder()
+                .with_endpoint(PUBLISHER.to_owned())
+                .with_proto(Proto::Sub) 
+                .with_handler(select_by_time_interval)
+                .with_topic("select_time".as_bytes().into())
+                .build()
+                .connect()
+                .into_inner();
             Poller::new()
-                .add(packets_service)
+                .add(service_add_packets)
+                .add(service_select_by_time_interval)
                 .poll();
         });
     }
