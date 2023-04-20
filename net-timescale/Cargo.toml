@@ -15,6 +15,8 @@ threadpool = "1.8.1"
 r2d2 = "0.8.10"
 r2d2_postgres = "0.18.1"
 elephantry = "3.2.0"
+capnp = "0.16.1"
+capnpc = "0.16.3"
 
 [dev-dependencies]
 mockall = "0.11.2"
