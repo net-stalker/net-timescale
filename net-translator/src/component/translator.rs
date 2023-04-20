@@ -1,4 +1,3 @@
-use log::info;
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 
@@ -20,7 +19,7 @@ impl Translator {
 
 impl NetComponent for Translator {
     fn run(self) {
-        info!("Start component");
+        log::info!("Run component");
 
         let push = ConnectorNNG::builder()
             .with_endpoint("tcp://0.0.0.0:5558".to_string())
