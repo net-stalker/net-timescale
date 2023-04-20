@@ -139,7 +139,7 @@ pub mod data_to_send {
       !self.builder.is_pointer_field_null(0)
     }
     #[inline]
-    pub fn init_packed_data(mut self, ) -> crate::data_to_send_capnp::data_to_send::packed_data::Builder<'a> {
+    pub fn init_packed_data(mut self, ) -> crate::capnp::data_to_send_capnp::data_to_send::packed_data::Builder<'a> {
       self.builder.set_data_field::<u16>(4, 0);
       self.builder.set_data_field::<i64>(0, 0i64);
       self.builder.reborrow().get_pointer_field(1).clear();
@@ -148,7 +148,7 @@ pub mod data_to_send {
       self.builder.into()
     }
     #[inline]
-    pub fn init_time_interval(self, ) -> crate::data_to_send_capnp::data_to_send::time_interval::Builder<'a> {
+    pub fn init_time_interval(self, ) -> crate::capnp::data_to_send_capnp::data_to_send::time_interval::Builder<'a> {
       self.builder.set_data_field::<u16>(4, 1);
       self.builder.set_data_field::<i64>(0, 0i64);
       self.builder.set_data_field::<i64>(2, 0i64);
@@ -187,8 +187,8 @@ pub mod data_to_send {
     PackedData(A0),
     TimeInterval(A1),
   }
-  pub type WhichReader<'a,> = Which<crate::data_to_send_capnp::data_to_send::packed_data::Reader<'a>,crate::data_to_send_capnp::data_to_send::time_interval::Reader<'a>>;
-  pub type WhichBuilder<'a,> = Which<crate::data_to_send_capnp::data_to_send::packed_data::Builder<'a>,crate::data_to_send_capnp::data_to_send::time_interval::Builder<'a>>;
+  pub type WhichReader<'a,> = Which<crate::capnp::data_to_send_capnp::data_to_send::packed_data::Reader<'a>,crate::capnp::data_to_send_capnp::data_to_send::time_interval::Reader<'a>>;
+  pub type WhichBuilder<'a,> = Which<crate::capnp::data_to_send_capnp::data_to_send::packed_data::Builder<'a>,crate::capnp::data_to_send_capnp::data_to_send::time_interval::Builder<'a>>;
 
   pub mod packed_data {
     #[derive(Copy, Clone)]
