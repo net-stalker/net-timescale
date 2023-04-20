@@ -13,6 +13,21 @@ pub struct DecoderCommand<S> {
 
 impl<S: Sender> Handler for DecoderCommand<S> {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
+
+        /*
+        --------------------------
+        CAPNPROTO PLAYGROUND START
+        --------------------------
+        */
+
+        /*
+        ------------------------
+        CAPNPROTO PLAYGROUND END
+        ------------------------
+        */
+
+
+
         let data = receiver.recv();
         debug!("received from agent {:?}", data);
 
