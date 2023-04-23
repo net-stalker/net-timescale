@@ -67,7 +67,7 @@ mod tests {
                 endpoint: "tcp://localhost:5555".to_string(),
             },
             capture: vec![Capture {
-                device_name: "eth0".to_string(),
+                device_name: "en0".to_string(),
                 number_packages: -1,
                 buffer_size: 100,
             }],
