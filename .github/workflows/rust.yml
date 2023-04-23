@@ -60,10 +60,7 @@ jobs:
       #      - name: Clean
       #        run: cargo clean
 
-      - name: Build
-        run: cargo build
-
-      - name: Test
+      - name: Build and Test
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
         run: cargo test
