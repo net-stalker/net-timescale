@@ -9,19 +9,33 @@ Capture packets and redirect them to the cloud for the feature analyze.
 I guess if you read this document you already cloned a repository with the project.  
 To build the project for development, run the following command:
 
-``
-cargo clean && cargo build
-``
+1. Build and install NNG library  
+    ```shell
+    git clone https://github.com/nanomsg/nng.git  
+    cd nng  
+    mkdir build && cd build  
+    cmake ..  
+    make  
+    make install  
+    ```
+2. Install libpq library
+    ```shell
+    brew install libpq
+    echo 'export PATH="/usr/local/opt/libpq/bin:$PATH"' >> ~/.zshrc
+    source ~/.zshrc
+    ```
+3. Build project
+    ```shell
+    cargo clean && cargo build
+    ```
 
 Next, you need to start TimescaleDB and update the SQL queries using Liquibase. Run the following
 commands:
 
-``
+```shell
 docker-compose build timescaledb && docker-compose up timescaledb
-``  
-``
 docker-compose build timescaledb-migrations && docker-compose up timescaledb-migrations
-``
+```
 
 After that, open your preferred IDE, find the net-all-in-one binary, and run it. You should be able
 to find some data in the captured_traffic table in TimescaleDB.
@@ -35,11 +49,16 @@ Prerequisites: **docker** and **docker-compose** should be installed to local ma
 Configuration: zero configuration.
 
 Usage: To start platform you need to execute command in a terminal
-run ``docker-compose build && docker-compose up``.
+run: 
+```shell
+docker-compose build && docker-compose up
+```
 
 To access to the service you can use netcat util. Example, how to check if Timescaledb is up:
 
-``nc -vz localhost 5432``
+```shell
+nc -vz localhost 5432
+```
 
 Troubleshooting:
 

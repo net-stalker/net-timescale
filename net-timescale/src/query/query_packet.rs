@@ -1,14 +1,12 @@
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-use chrono::{DateTime, Local};
 use log::{debug, error, info};
-use postgres::Client;
 use postgres::fallible_iterator::FallibleIterator;
 use serde_json::Value;
 
 pub struct QueryPacket {
-    pub client: Arc<Mutex<Client>>,
+    pub pool: Arc<Mutex<r2d2::Pool<r2d2_postgres::PostgresConnectionManager<postgres::NoTls>>>>,
 }
 
 //FIXME Created for test. Should be refactored in the future
@@ -28,10 +26,10 @@ impl QueryPacket {
         //         error!("{}", error)
         //     }
         // }
-        let arc = self.client.clone();
+        let arc = self.pool.clone();
         thread::spawn(move || {
             // Listen for events on channel 'myevent'.
-            let mut conn = arc.lock().unwrap();
+            let mut conn = arc.lock().unwrap().get().unwrap();
             conn.execute("LISTEN core_db_event", &[]).expect("Could not send LISTEN");
             let mut notifications = conn.notifications();
             let mut it = notifications.blocking_iter();
@@ -49,7 +47,7 @@ impl QueryPacket {
             }
         });
     }
-
+    
     fn convert_to_value(packet_json: Vec<u8>) -> serde_json::Result<Value> {
         serde_json::from_slice(&*packet_json)
     }

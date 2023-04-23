@@ -13,6 +13,9 @@ threadpool = { workspace = true }
 chrono = "0.4.23"
 postgres = { version = "0.19.4", features = ["with-chrono-0_4", "with-serde_json-1"] }
 serde_json = "1.0.91"
+r2d2 = "0.8.10"
+r2d2_postgres = "0.18.1"
+elephantry = "3.2.0"
 
 [dev-dependencies]
 mockall = "0.11.2"

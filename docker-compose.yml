@@ -32,6 +32,15 @@ services:
     networks:
       - skynet
 
+  net-timescale:
+    hostname: net-timescale
+    build:
+      context: .
+      args:
+        PROJ_NAME: net-timescale
+    networks:
+      - skynet
+
   # https://docs.timescale.com/install/latest/installation-docker/
   # To run container execute command: docker-compose up timescaledb
   # To check that timescaleDB is up execute command: nc -vz localhost 5432
