@@ -14,7 +14,7 @@ struct DataToSend {
             srcAddr @2 :Text;
             #Source ip address which is taken from a pcap file
             dstAddr @3 :Text;
-            #Sedtination ip address which is taken from a pcap file
+            #Destination ip address which is taken from a pcap file
 
             json @4 :Data;
             #The rest of the data from pcap converted to json
@@ -24,7 +24,7 @@ struct DataToSend {
 
             startInterval @5 :Int64;
             #The start of the time interval within which data must be selected
-            endInterval @6 :Int64;
+            #endInterval @6 :Int64;
             #The end of the time interval within which data must be selected
         }
     }
