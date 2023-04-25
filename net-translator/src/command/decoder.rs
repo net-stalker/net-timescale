@@ -7,8 +7,6 @@ use net_core::jsons::json_parser::JsonParser;
 use net_core::jsons::json_pcap_parser::JsonPcapParser;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
-use crate::capnp::data_to_send_capnp;
-
 pub struct DecoderCommand<S> {
     pub push: Arc<S>,
 }
@@ -40,16 +38,16 @@ impl<S: Sender> Handler for DecoderCommand<S> {
         // debug!("{:?} {:?} {:?} {:?}", frame_time, src_addr, dst_addr, binary_json);
 
         let mut buffer: Vec<u8> = Vec::new();
-        
-        let packed_data = crate::capnp::data_to_send::form_data(
+
+        crate::capnp::data_to_send::form_data(
             &mut buffer,
             frame_time.timestamp_millis(), 
             src_addr.unwrap(), 
             dst_addr.unwrap(), 
-            binary_json);
+            binary_json).expect("CAPNP::Error while writing data into the buffer.");
 
         
-        //self.push.send(packed_data);
+        self.push.send(buffer);
 
         /*
         ------------------------
@@ -60,6 +58,6 @@ impl<S: Sender> Handler for DecoderCommand<S> {
 
         // self.push.send(binary_json)
 
-        self.push.send(buffer)
+        //self.push.send(json_bytes)
     }
 }
