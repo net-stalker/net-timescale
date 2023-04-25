@@ -15,14 +15,12 @@ impl<S: Sender> Handler for DecoderCommand<S> {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
         debug!("received from agent {:?}", data);
-         
 
         /*
         --------------------------
         CAPNPROTO PLAYGROUND START
         --------------------------
         */
-
 
         let json_bytes = PcapTranslator::translate(data);
 
@@ -54,10 +52,5 @@ impl<S: Sender> Handler for DecoderCommand<S> {
         CAPNPROTO PLAYGROUND END
         ------------------------
         */
-
-
-        // self.push.send(binary_json)
-
-        //self.push.send(json_bytes)
     }
 }

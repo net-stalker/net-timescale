@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+net-translator = { path = "../net-translator" }
 net-core = { path = "../net-core" }
 
 chrono = "0.4.23"

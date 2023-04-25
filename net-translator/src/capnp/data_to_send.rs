@@ -15,7 +15,5 @@ pub fn form_data( buffer: &mut Vec<u8>, frame_time: i64, src: String, dst : Stri
     
     packed_data.set_json(&json);
 
-    //message.get_segments_for_output();
-
     ::capnp::serialize_packed::write_message(buffer, &message)
 }
