@@ -6,7 +6,7 @@ use r2d2_postgres::PostgresConnectionManager;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
 use crate::command::dispatcher::CommandDispatcher;
-use crate::command::executor::Executor;
+use crate::command::{executor::Executor};
 use crate::db_access::add_traffic::add_captured_packets::AddCapturedPackets;
 use crate::db_access::select_by_time::select_by_time::SelectInterval;
 
@@ -24,7 +24,9 @@ impl Timescale {
         }
     }
 }
-const PUBLISHER: &'static str = "inproc://nng/dispatcher";
+
+pub const PUBLISHER: &'static str = "inproc://nng/dispatcher_rec";
+pub const RESULT_SENDER: &'static str = "inproc://nng/result_sender";
 
 impl NetComponent for Timescale {
     fn run(self) {
@@ -52,8 +54,16 @@ impl NetComponent for Timescale {
 
         self.thread_pool.execute( move|| {
             let executor = Executor::new(self.connection_pool.clone());
+
+            let sender_back_1 = nng::Socket::new(nng::Protocol::Push0).unwrap();
+            sender_back_1
+                .dial_async(RESULT_SENDER)
+                .expect(format!("failed connecting to {}", RESULT_SENDER).as_str());
             
-            let add_packets_handler = AddCapturedPackets { executor: executor.clone() };
+            let add_packets_handler = AddCapturedPackets { 
+                executor: executor.clone(),
+                sender_back: sender_back_1 
+            };
             let service_add_packets = ConnectorNNG::pub_sub_builder()
                 .with_endpoint(PUBLISHER.to_owned())
                 .with_handler(add_packets_handler)

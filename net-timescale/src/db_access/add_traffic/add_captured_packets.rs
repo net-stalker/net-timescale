@@ -1,5 +1,6 @@
 use chrono::{Utc, DateTime, TimeZone};
 use net_core::transport::sockets::Handler;
+use nng::Socket;
 use postgres::types::ToSql;
 use serde_json::Value;
 use crate::db_access::query;
@@ -7,7 +8,8 @@ use crate::command::executor::Executor;
 use super::packet_data::PacketData;
 
 pub struct AddCapturedPackets {
-    pub executor: Executor
+    pub executor: Executor,
+    pub sender_back: Socket
 }  
 struct AddPacketsQuery<'a> {
     pub raw_query: &'a str,
@@ -60,6 +62,7 @@ impl Handler for AddCapturedPackets {
                 log::error!("{}", error);
             }
         };
+        self.sender_back.send("Traffic is here".as_bytes()).unwrap();
     }
 }
 

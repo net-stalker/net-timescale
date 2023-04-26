@@ -4,9 +4,10 @@ use net_core::{transport::sockets::{Handler, Receiver, Sender}, jsons::{json_pca
 use net_core::transport::connector_nng::Proto;
 
 use crate::db_access::add_traffic::packet_data::PacketData;
+use crate::component::timescale::RESULT_SENDER;
 
 pub struct CommandDispatcher{ 
-    pub connector: Arc<RwLock<Socket>>,
+    publisher: Arc<RwLock<Socket>>,
     end_point: String
 }
 pub struct CommandDispatcherBuilder {
@@ -27,7 +28,7 @@ impl CommandDispatcherBuilder {
     }
     pub fn build(self) -> CommandDispatcher {
         CommandDispatcher { 
-            connector: Arc::new(RwLock::new(Socket::new(Proto::into(self.proto)).unwrap())),
+            publisher: Arc::new(RwLock::new(Socket::new(Proto::into(self.proto)).unwrap())),
             end_point: self.end_point
         }
     } 
@@ -40,36 +41,53 @@ impl CommandDispatcher {
         } 
     }
     pub fn bind(self) -> Self {
-        self.connector.try_read().unwrap().listen(self.end_point.as_str()).unwrap();
+        self.publisher.try_read().unwrap().listen(self.end_point.as_str()).unwrap();
+        // it would be great actually to run polling on that socket
+        // What if this will be a separate ConnectorNNG module
+        // like SenderBack. It will handle messages from services. And we will leave dispatcher alone
+        let pair = Socket::new(nng::Protocol::Pull0).unwrap();
+        pair.listen(RESULT_SENDER).unwrap();
+        std::thread::spawn(move|| {
+            loop {
+                let data = pair.recv()
+                    .unwrap()
+                    .as_slice()
+                    .to_vec(); //note: every time data is coped from stack to the heap!
+                let msg = String::from_utf8(data).unwrap();
+                log::info!("Received from query/service: {}", msg);
+            }
+        });
         self
     }
 }
 impl Handler for CommandDispatcher {
-    fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
+    fn handle(&self, receiver: &dyn Receiver, sender: &dyn Sender) {
         let data = receiver.recv();
+
+        sender.send("Data from db".as_bytes().to_owned());
         //=======================================================================================
         // TODO: This block has to be moved to translator 
-        // TODO should be moved to the task CU-861mdndny
-        let filtered_value_json = JsonPcapParser::filter_source_layer(&data);
-        let first_json_value = JsonParser::first(&filtered_value_json).unwrap();
-        let layered_json = JsonPcapParser::split_into_layers(first_json_value);  
-        let frame_time = JsonPcapParser::find_frame_time(&data);
-        let src_addr = JsonPcapParser::extract_src_addr_l3(&layered_json)
-            .or(Some("".to_string()));
-        let dst_addr = JsonPcapParser::extract_dst_addr_l3(&layered_json)
-            .or(Some("".to_string()));
-        let binary_json = JsonParser::get_vec(layered_json);
+        //TODO should be moved to the task CU-861mdndny
+        // let filtered_value_json = JsonPcapParser::filter_source_layer(&data);
+        // let first_json_value = JsonParser::first(&filtered_value_json).unwrap();
+        // let layered_json = JsonPcapParser::split_into_layers(first_json_value);  
+        // let frame_time = JsonPcapParser::find_frame_time(&data);
+        // let src_addr = JsonPcapParser::extract_src_addr_l3(&layered_json)
+        //     .or(Some("".to_string()));
+        // let dst_addr = JsonPcapParser::extract_dst_addr_l3(&layered_json)
+        //     .or(Some("".to_string()));
+        // let binary_json = JsonParser::get_vec(layered_json);
         
-        let frame_data = PacketData {
-            frame_time: frame_time.timestamp_millis(), 
-            src_addr: src_addr.unwrap(),
-            dst_addr: dst_addr.unwrap(),
-            binary_json
-        };
-        let temp_topic = "add_packet".as_bytes().to_owned();
-        let mut data = bincode::serialize(&frame_data).unwrap();
-        // manually adding topic into at the beginning of the data. Ideally it has to already be in the data 
-        data.splice(0..0, temp_topic); 
-        self.connector.try_write().unwrap().send(data.as_slice()).unwrap();
+        // let frame_data = PacketData {
+        //     frame_time: frame_time.timestamp_millis(), 
+        //     src_addr: src_addr.unwrap(),
+        //     dst_addr: dst_addr.unwrap(),
+        //     binary_json
+        // };
+        // let temp_topic = "add_packet".as_bytes().to_owned();
+        // let mut data = bincode::serialize(&frame_data).unwrap();
+        // // manually adding topic into at the beginning of the data. Ideally it has to already be in the data 
+        // data.splice(0..0, temp_topic); 
+        // self.publisher.try_write().unwrap().send(data.as_slice()).unwrap();
     }
 }
