@@ -6,7 +6,7 @@ use serde_json::Value;
 use crate::db_access::query;
 use crate::command::executor::Executor;
 use super::packet_data::PacketData;
-
+// TODO: think about Builder
 pub struct AddCapturedPackets {
     pub executor: Executor,
     pub sender_back: Socket
@@ -62,7 +62,7 @@ impl Handler for AddCapturedPackets {
                 log::error!("{}", error);
             }
         };
-        self.sender_back.send("Traffic is here".as_bytes()).unwrap();
+        self.sender_back.send("Packets have been added".as_bytes()).unwrap();
     }
 }
 

@@ -5,8 +5,7 @@ use r2d2::Pool;
 use r2d2_postgres::PostgresConnectionManager;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
-use crate::command::dispatcher::CommandDispatcher;
-use crate::command::{executor::Executor};
+use crate::command::{dispatcher::CommandDispatcher, executor::Executor, result_sender::ResultSender};
 use crate::db_access::add_traffic::add_captured_packets::AddCapturedPackets;
 use crate::db_access::select_by_time::select_by_time::SelectInterval;
 
@@ -32,7 +31,6 @@ impl NetComponent for Timescale {
     fn run(self) {
         log::info!("Run component");
         self.thread_pool.execute(move || {
-            // TODO: think about using PubSubConnectorNngBuilder in CommandDispatcher::builder()
             let dispatcher = CommandDispatcher::builder()
                 .with_endpoint(PUBLISHER.to_owned())
                 .with_proto(Proto::Pub)
@@ -46,20 +44,32 @@ impl NetComponent for Timescale {
                 .build()
                 .bind()
                 .into_inner();
+            let handler_result_sender = ResultSender {
+                connector: db_service.clone()
+            };
+            let result_sender = ConnectorNNG::builder()
+                .with_endpoint(RESULT_SENDER.to_owned())
+                .with_proto(Proto::Pull)
+                .with_handler(handler_result_sender)
+                .build()
+                .bind()
+                .into_inner();
 
             Poller::new()
                 .add(db_service)
+                .add(result_sender)
                 .poll();
         });
 
         self.thread_pool.execute( move|| {
             let executor = Executor::new(self.connection_pool.clone());
-
+            //================================
+            // remove manually constructing sockets from here
             let sender_back_1 = nng::Socket::new(nng::Protocol::Push0).unwrap();
             sender_back_1
                 .dial_async(RESULT_SENDER)
                 .expect(format!("failed connecting to {}", RESULT_SENDER).as_str());
-            
+            //==============================
             let add_packets_handler = AddCapturedPackets { 
                 executor: executor.clone(),
                 sender_back: sender_back_1 
