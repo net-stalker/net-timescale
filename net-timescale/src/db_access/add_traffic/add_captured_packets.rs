@@ -3,14 +3,25 @@ use net_core::transport::sockets::Handler;
 use nng::Socket;
 use postgres::types::ToSql;
 use serde_json::Value;
-use crate::db_access::query;
+use crate::db_access::{query, query_factory};
 use crate::command::executor::Executor;
 use super::packet_data::PacketData;
-// TODO: think about Builder
+
 pub struct AddCapturedPackets {
     pub executor: Executor,
     pub sender_back: Socket
-}  
+} 
+impl query_factory::QueryFactory for AddCapturedPackets {
+    type Q = AddCapturedPackets;
+    fn create_query_handler(executor: Executor, sender_endpoint: &str) -> Self::Q {
+        let sender_back = Socket::new(nng::Protocol::Push0).unwrap();
+        sender_back.dial(sender_endpoint).unwrap();
+        AddCapturedPackets {
+            executor,
+            sender_back
+        }
+    }
+} 
 struct AddPacketsQuery<'a> {
     pub raw_query: &'a str,
     pub args: [&'a (dyn ToSql + Sync); 4]
@@ -28,6 +39,7 @@ impl<'a> AddPacketsQuery<'a> {
         } 
     }
 }
+
 impl<'a> query::PostgresQuery<'a> for AddPacketsQuery<'a> {
     fn get_query_params(&self) -> (&'a str, &[&'a(dyn postgres::types::ToSql + Sync)]) {
         (self.raw_query, &self.args)

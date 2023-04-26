@@ -1,13 +1,25 @@
 use chrono::{DateTime, Utc, TimeZone};
 use net_core::transport::sockets::{Receiver, Sender, Handler};
+use nng::Socket;
 use postgres::{types::ToSql, Row};
-use crate::{command::executor::Executor, db_access::query};
+use crate::{command::executor::Executor, db_access::{query, query_factory}};
 use super::time_interval::TimeInterval;
 
 pub struct SelectInterval {
-    pub executor: Executor
+    pub executor: Executor,
+    pub sender_back: Socket
 }
-
+impl query_factory::QueryFactory for SelectInterval {
+    type Q = SelectInterval;
+    fn create_query_handler(executor: Executor, sender_endpoint: &str) -> Self::Q {
+        let sender_back = Socket::new(nng::Protocol::Push0).unwrap();
+        sender_back.dial(sender_endpoint).unwrap();
+        SelectInterval {
+            executor,
+            sender_back
+        }
+    }
+}
 struct SelectIntervalQuery<'a> {
     pub raw_query: &'a str,
     pub args: [&'a (dyn ToSql + Sync); 2]
