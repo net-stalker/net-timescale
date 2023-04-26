@@ -15,7 +15,7 @@ impl query_factory::QueryFactory for AddCapturedPackets {
     type Q = AddCapturedPackets;
     fn create_query_handler(executor: Executor, sender_endpoint: &str) -> Self::Q {
         let sender_back = Socket::new(nng::Protocol::Push0).unwrap();
-        sender_back.dial(sender_endpoint).unwrap();
+        sender_back.dial_async(sender_endpoint).unwrap();
         AddCapturedPackets {
             executor,
             sender_back

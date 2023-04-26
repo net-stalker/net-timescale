@@ -1,3 +1,4 @@
+use std::time::Duration;
 use postgres::NoTls;
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
@@ -63,6 +64,7 @@ impl NetComponent for Timescale {
         });
 
         self.thread_pool.execute( move|| {
+            std::thread::sleep(Duration::from_secs(1));
             let executor = Executor::new(self.connection_pool.clone());
             let add_packets_handler = AddCapturedPackets::create_query_handler(executor.clone(), RESULT_PULLER);
             let service_add_packets = ConnectorNNG::pub_sub_builder()
