@@ -14,6 +14,8 @@ pub struct CommandDispatcherBuilder {
     proto: Proto
 }
 
+// type CommandDispatcherBuilder = PubSubConnectorNngBuilder 
+
 impl CommandDispatcherBuilder {
     pub fn with_endpoint(mut self, endpoint: String) -> Self {
         self.end_point = endpoint;
@@ -34,7 +36,7 @@ impl CommandDispatcher {
     pub fn builder() -> CommandDispatcherBuilder {
         CommandDispatcherBuilder { 
             end_point: String::default(),
-            proto: Proto::Req
+            proto: Proto::Pub
         } 
     }
     pub fn bind(self) -> Self {
@@ -47,7 +49,7 @@ impl Handler for CommandDispatcher {
         let data = receiver.recv();
         //=======================================================================================
         // TODO: This block has to be moved to translator 
-        //TODO should be moved to the task CU-861mdndny
+        // TODO should be moved to the task CU-861mdndny
         let filtered_value_json = JsonPcapParser::filter_source_layer(&data);
         let first_json_value = JsonParser::first(&filtered_value_json).unwrap();
         let layered_json = JsonPcapParser::split_into_layers(first_json_value);  

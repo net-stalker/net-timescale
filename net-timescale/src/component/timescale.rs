@@ -30,6 +30,7 @@ impl NetComponent for Timescale {
     fn run(self) {
         log::info!("Run component");
         self.thread_pool.execute(move || {
+            // TODO: think about using PubSubConnectorNngBuilder in CommandDispatcher::builder()
             let dispatcher = CommandDispatcher::builder()
                 .with_endpoint(PUBLISHER.to_owned())
                 .with_proto(Proto::Pub)
@@ -51,24 +52,25 @@ impl NetComponent for Timescale {
 
         self.thread_pool.execute( move|| {
             let executor = Executor::new(self.connection_pool.clone());
+            
             let add_packets_handler = AddCapturedPackets { executor: executor.clone() };
-            let service_add_packets = ConnectorNNG::builder()
+            let service_add_packets = ConnectorNNG::pub_sub_builder()
                 .with_endpoint(PUBLISHER.to_owned())
-                .with_proto(Proto::Sub)
                 .with_handler(add_packets_handler)
                 .with_topic("add_packet".as_bytes().into())
-                .build()
+                .build_subscriber()
                 .connect()
                 .into_inner();
-            let select_by_time_interval = SelectInterval { executor: executor.clone() };
-            let service_select_by_time_interval = ConnectorNNG::builder()
+            
+            let select_by_time_interval_handler = SelectInterval { executor: executor.clone() };
+            let service_select_by_time_interval = ConnectorNNG::pub_sub_builder()
                 .with_endpoint(PUBLISHER.to_owned())
-                .with_proto(Proto::Sub) 
-                .with_handler(select_by_time_interval)
+                .with_handler(select_by_time_interval_handler)
                 .with_topic("select_time".as_bytes().into())
-                .build()
+                .build_subscriber()
                 .connect()
                 .into_inner();
+
             Poller::new()
                 .add(service_add_packets)
                 .add(service_select_by_time_interval)
