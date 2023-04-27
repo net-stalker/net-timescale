@@ -12,9 +12,6 @@ RUN export PG_CONFIG=/usr/bin/pg_config
 # install nng https://launchpad.net/ubuntu/+source/nng
 RUN git clone https://github.com/nanomsg/nng.git && cd nng && mkdir build && cd build && cmake .. && make && make install
 
-# This will install capnp, the Cap’n Proto command-line tool. It will also install libcapnp, libcapnpc, and libkj in /usr/local/lib and headers in /usr/local/include/capnp and /usr/local/include/kj.
-RUN curl -O https://capnproto.org/capnproto-c++-0.10.4.tar.gz && tar zxf capnproto-c++-0.10.4.tar.gz && cd capnproto-c++-0.10.4 && ./configure && make -j6 check && make install
-
 
 FROM base as build
 
