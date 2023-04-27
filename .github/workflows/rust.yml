@@ -46,7 +46,7 @@ jobs:
       - name: Update platform
         run: |
           sudo apt-get update
-          sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake
+          sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto
 
       - name: Build and Install NNG
         run: |
@@ -59,11 +59,6 @@ jobs:
           sudo make install
       #      - name: Clean
       #        run: cargo clean
-
-      - name: Install capnp, the Cap’n Proto command-line tool
-        run: |
-          sudo apt-get install capnproto
-
 
       - name: Build
         run: cargo build
