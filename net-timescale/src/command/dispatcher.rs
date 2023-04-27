@@ -14,6 +14,8 @@ pub struct CommandDispatcherBuilder {
     proto: Proto
 }
 
+// type CommandDispatcherBuilder = PubSubConnectorNngBuilder 
+
 impl CommandDispatcherBuilder {
     pub fn with_endpoint(mut self, endpoint: String) -> Self {
         self.end_point = endpoint;
@@ -34,7 +36,7 @@ impl CommandDispatcher {
     pub fn builder() -> CommandDispatcherBuilder {
         CommandDispatcherBuilder { 
             end_point: String::default(),
-            proto: Proto::Req
+            proto: Proto::Pub
         } 
     }
     pub fn bind(self) -> Self {
