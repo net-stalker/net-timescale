@@ -1,11 +1,14 @@
 use std::sync::Arc;
 
 use log::debug;
+
 use net_core::capture::translator::pcap_translator::PcapTranslator;
 use net_core::capture::translator::translator::Translator;
 use net_core::jsons::json_parser::JsonParser;
 use net_core::jsons::json_pcap_parser::JsonPcapParser;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
+
+use net_timescale_api;
 
 pub struct DecoderCommand<S> {
     pub push: Arc<S>,
@@ -31,7 +34,7 @@ impl<S: Sender> Handler for DecoderCommand<S> {
 
         let mut buffer: Vec<u8> = Vec::new();
 
-        crate::capnp::data_to_send::form_data(
+        net_timescale_api::capnp::data_to_send::form_data(
             &mut buffer,
             frame_time.timestamp_millis(), 
             src_addr.unwrap(), 
