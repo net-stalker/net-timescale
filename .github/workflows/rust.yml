@@ -60,6 +60,16 @@ jobs:
       #      - name: Clean
       #        run: cargo clean
 
+      - name: Install capnp, the Cap’n Proto command-line tool
+        run: |
+        curl -O https://capnproto.org/capnproto-c++-0.10.4.tar.gz
+        tar zxf capnproto-c++-0.10.4.tar.gz
+        cd capnproto-c++-0.10.4
+        ./configure
+        make -j6 check
+        make install
+
+
       - name: Build
         run: cargo build
 
