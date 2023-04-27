@@ -1,10 +1,9 @@
-use crate::capnp::data_to_send_capnp::data_to_send;
+use crate::capnp::query_data_capnp::query_data;
 
 pub fn form_data( buffer: &mut Vec<u8>, frame_time: i64, src: String, dst : String, json: Vec<u8>) -> ::capnp::Result<()> {
-
     let mut message = ::capnp::message::Builder::new_default();
 
-    let mut packed_data = message.init_root::<data_to_send::Builder>();
+    let mut packed_data = message.init_root::<query_data::Builder>();
 
     
     packed_data.set_requirement("add_packet".as_bytes());

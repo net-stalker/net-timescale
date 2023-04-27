@@ -1,2 +1,2 @@
-pub mod data_to_send;
-pub mod data_to_send_capnp;
+pub mod query_data;
+pub mod query_data_capnp;

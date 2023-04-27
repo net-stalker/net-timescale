@@ -1,6 +1,6 @@
 @0x8407268e65d4ceb4;
 
-struct DataToSend {
+struct QueryData {
     requirement @0 :Data;
     #In other words it is an API provided by all the microservice 
 

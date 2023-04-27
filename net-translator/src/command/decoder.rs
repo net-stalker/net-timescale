@@ -34,7 +34,7 @@ impl<S: Sender> Handler for DecoderCommand<S> {
 
         let mut buffer: Vec<u8> = Vec::new();
 
-        net_timescale_api::capnp::data_to_send::form_data(
+        net_timescale_api::capnp::query_data::form_data(
             &mut buffer,
             frame_time.timestamp_millis(), 
             src_addr.unwrap(), 
