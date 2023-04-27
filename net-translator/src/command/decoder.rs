@@ -16,12 +16,6 @@ impl<S: Sender> Handler for DecoderCommand<S> {
         let data = receiver.recv();
         debug!("received from agent {:?}", data);
 
-        /*
-        --------------------------
-        CAPNPROTO PLAYGROUND START
-        --------------------------
-        */
-
         let json_bytes = PcapTranslator::translate(data);
 
         let filtered_value_json = JsonPcapParser::filter_source_layer(&json_bytes);
@@ -46,11 +40,5 @@ impl<S: Sender> Handler for DecoderCommand<S> {
 
         
         self.push.send(buffer);
-
-        /*
-        ------------------------
-        CAPNPROTO PLAYGROUND END
-        ------------------------
-        */
     }
 }
