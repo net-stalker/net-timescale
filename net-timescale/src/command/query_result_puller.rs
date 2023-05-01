@@ -5,7 +5,7 @@ use net_core::transport::sockets::{Sender, Receiver, Handler};
 pub struct QueryResultPuller<T>
 where T: Sender + Sized
 {
-    pub network_channel: Arc<T>
+    network_channel: Arc<T>
 }
 impl<T> QueryResultPuller<T>
 where T: Sender + Sized 

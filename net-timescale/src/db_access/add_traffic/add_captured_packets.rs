@@ -10,8 +10,8 @@ use super::packet_data::PacketData;
 pub struct AddCapturedPackets<T>
 where T: Sender + ?Sized
 {
-    pub executor: Executor,
-    pub result_receiver: Arc<T>
+    executor: Executor,
+    result_receiver: Arc<T>
 }
 impl<T> query_factory::QueryFactory for AddCapturedPackets<T>
 where T: Sender + ?Sized

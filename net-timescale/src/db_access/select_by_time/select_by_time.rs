@@ -9,8 +9,8 @@ use super::time_interval::TimeInterval;
 pub struct SelectInterval<T>
 where T: Sender + ?Sized
 {
-    pub executor: Executor,
-    pub result_receiver: Arc<T>
+    executor: Executor,
+    result_receiver: Arc<T>
 }
 impl<T> query_factory::QueryFactory for SelectInterval<T>
 where T: Sender + ?Sized
