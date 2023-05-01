@@ -47,19 +47,7 @@ impl CommandDispatcher {
 impl Handler for CommandDispatcher {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        
-        /*
-        --------------------------
-        CAPNPROTO PLAYGROUND START
-        --------------------------
-        */
 
         self.connector.try_write().unwrap().send(&data).unwrap();
-
-        /*
-        ------------------------
-        CAPNPROTO PLAYGROUND END
-        ------------------------
-        */
     }
 }
