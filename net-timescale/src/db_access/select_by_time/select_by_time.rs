@@ -1,22 +1,26 @@
+use std::sync::Arc;
+
 use chrono::{DateTime, Utc, TimeZone};
 use net_core::transport::sockets::{Receiver, Sender, Handler};
-use nng::Socket;
 use postgres::{types::ToSql, Row};
 use crate::{command::executor::Executor, db_access::{query, query_factory}};
 use super::time_interval::TimeInterval;
 
-pub struct SelectInterval {
+pub struct SelectInterval<T>
+where T: Sender + ?Sized
+{
     pub executor: Executor,
-    pub sender_back: Socket
+    pub result_receiver: Arc<T>
 }
-impl query_factory::QueryFactory for SelectInterval {
-    type Q = SelectInterval;
-    fn create_query_handler(executor: Executor, sender_endpoint: &str) -> Self::Q {
-        let sender_back = Socket::new(nng::Protocol::Push0).unwrap();
-        sender_back.dial(sender_endpoint).unwrap();
+impl<T> query_factory::QueryFactory for SelectInterval<T>
+where T: Sender + ?Sized
+{
+    type Q = SelectInterval<T>;
+    type R = Arc<T>;
+    fn create_query_handler(executor: Executor, result_receiver: Self::R) -> Self::Q {
         SelectInterval {
             executor,
-            sender_back
+            result_receiver
         }
     }
 }
@@ -48,7 +52,9 @@ impl<'a> query::PostgresQuery<'a> for SelectIntervalQuery<'a> {
         (self.raw_query, &self.args)
     }
 }
-impl SelectInterval{
+impl<T> SelectInterval<T>
+where T: Sender + ?Sized
+{
     pub fn select_time_interval(&self, data: TimeInterval) -> Result<Vec<Row>, postgres::Error> {
         let start = Utc.timestamp_millis_opt(data.start_interval).unwrap();
         let end = Utc.timestamp_millis_opt(data.end_interval).unwrap();
@@ -57,7 +63,9 @@ impl SelectInterval{
     }
 }
 
-impl Handler for SelectInterval {
+impl<T> Handler for SelectInterval<T>
+where T: Sender + ?Sized
+{
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
         log::info!("Received data in SelectInterval::handle: {:?}", data);

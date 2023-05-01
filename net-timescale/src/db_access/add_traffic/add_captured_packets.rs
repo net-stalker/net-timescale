@@ -1,24 +1,27 @@
+use std::sync::Arc;
 use chrono::{Utc, DateTime, TimeZone};
-use net_core::transport::sockets::Handler;
-use nng::Socket;
+use net_core::transport::sockets::{Handler, Receiver, Sender};
 use postgres::types::ToSql;
 use serde_json::Value;
 use crate::db_access::{query, query_factory};
 use crate::command::executor::Executor;
 use super::packet_data::PacketData;
 
-pub struct AddCapturedPackets {
+pub struct AddCapturedPackets<T>
+where T: Sender + ?Sized
+{
     pub executor: Executor,
-    pub sender_back: Socket
-} 
-impl query_factory::QueryFactory for AddCapturedPackets {
-    type Q = AddCapturedPackets;
-    fn create_query_handler(executor: Executor, sender_endpoint: &str) -> Self::Q {
-        let sender_back = Socket::new(nng::Protocol::Push0).unwrap();
-        sender_back.dial_async(sender_endpoint).unwrap();
+    pub result_receiver: Arc<T>
+}
+impl<T> query_factory::QueryFactory for AddCapturedPackets<T>
+where T: Sender + ?Sized
+{
+    type Q = AddCapturedPackets<T>;
+    type R = Arc<T>;
+    fn create_query_handler(executor: Executor, result_receiver: Self::R) -> Self::Q {
         AddCapturedPackets {
             executor,
-            sender_back
+            result_receiver
         }
     }
 } 
@@ -45,10 +48,12 @@ impl<'a> query::PostgresQuery<'a> for AddPacketsQuery<'a> {
         (self.raw_query, &self.args)
     }
 }
-impl AddCapturedPackets {
+impl<T> AddCapturedPackets<T>
+where T: Sender + ?Sized
+{
     pub fn insert(&self, data: PacketData) -> Result<u64, postgres::Error> {
         let time = Utc.timestamp_millis_opt(data.frame_time).unwrap();
-        let json = AddCapturedPackets::convert_to_value(data.binary_json).unwrap();
+        let json = AddCapturedPackets::<T>::convert_to_value(data.binary_json).unwrap();
         let query = AddPacketsQuery::new(&time, &data.src_addr, &data.dst_addr, &json);
         self.executor.execute(&query)
     }
@@ -57,10 +62,11 @@ impl AddCapturedPackets {
         serde_json::from_slice(&*packet_json)
     }
 }
-impl Handler for AddCapturedPackets {
-    fn handle(&self, receiver: &dyn net_core::transport::sockets::Receiver, _sender: &dyn net_core::transport::sockets::Sender) {
+impl<T> Handler for AddCapturedPackets<T>
+where T: Sender + ?Sized
+{
+    fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        log::info!("Data in add_traffic: {:?}", data);
         // ==============================
         // must be changed 
         let topic = "add_packet".as_bytes().to_owned();
@@ -74,7 +80,7 @@ impl Handler for AddCapturedPackets {
                 log::error!("{}", error);
             }
         };
-        self.sender_back.send("Packets have been added".as_bytes()).unwrap();
+        self.result_receiver.send("Packets have been added".as_bytes().to_owned());
     }
 }
 
@@ -112,7 +118,7 @@ mod tests{
             binary_json: data.as_bytes().to_owned()
         };
         let time = Utc.timestamp_millis_opt(packet.frame_time).unwrap();
-        let json = AddCapturedPackets::convert_to_value(packet.binary_json).unwrap();
+        let json = AddCapturedPackets::<dyn Sender>::convert_to_value(packet.binary_json).unwrap();
         let query_struct = AddPacketsQuery::new(&time, &packet.src_addr, &packet.dst_addr, &json);
 
         let (query, params) = query_struct.get_query_params();

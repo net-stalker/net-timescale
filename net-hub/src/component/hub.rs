@@ -12,7 +12,7 @@ use net_core::layer::NetComponent;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
 
-use crate::command::{agent::AgentCommand, timescale::Timescale};
+use crate::command::{agent::AgentCommand, dummy_timescale::DummyTimescaleHandler};
 use crate::command::pull::PullCommand;
 use crate::command::translator::TranslatorCommand;
 
@@ -97,7 +97,7 @@ impl NetComponent for Hub {
         let db_service = ConnectorNNG::builder()
             .with_endpoint("tcp://0.0.0.0:5556".to_string())
             .with_proto(Proto::Req)
-            .with_handler(Timescale {})
+            .with_handler(DummyTimescaleHandler)
             .build()
             .connect()
             .into_inner();

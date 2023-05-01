@@ -1,3 +1,4 @@
 pub mod dispatcher;
 pub mod executor;
-pub mod result_sender;
+pub mod query_result_puller;
+pub mod dummy_handler;
