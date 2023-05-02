@@ -19,7 +19,6 @@ impl Handler for DecoderCommand {
         let data = receiver.recv();
         debug!("received from translator::dispatcher {:?}", data);
 
-        // let json_bytes = PcapTranslator::translate(data);
         // let filtered_value_json = JsonPcapParser::filter_source_layer(&json_bytes);
         // let first_json_value = JsonParser::first(&filtered_value_json).unwrap();
         // let layered_json = JsonPcapParser::split_into_layers(first_json_value);
@@ -34,11 +33,14 @@ impl Handler for DecoderCommand {
         // self.push.send(binary_json)
         // self.push.send(json_bytes)
 
+
         let temp_topic = "decode".as_bytes().to_owned();
-        let mut data = data[temp_topic.len()..].to_owned();
+        let data = data[temp_topic.len()..].to_owned();
+
+        let mut json_bytes = PcapTranslator::translate(data);
 
         let temp_topic = "db".as_bytes().to_owned();
-        data.splice(0..0, temp_topic);
+        json_bytes.splice(0..0, temp_topic);
 
         // move to transmitter
         // TODO: think about ConnectorBuilderFactory
@@ -48,7 +50,7 @@ impl Handler for DecoderCommand {
             .with_proto(Proto::Push)
             .build()
             .connect()
-            .send(data);
+            .send(json_bytes);
     }
 }
 
