@@ -3,18 +3,19 @@ use std::sync::Arc;
 use log::debug;
 use net_core::capture::translator::pcap_translator::PcapTranslator;
 use net_core::capture::translator::translator::Translator;
-use net_core::jsons::json_parser::JsonParser;
-use net_core::jsons::json_pcap_parser::JsonPcapParser;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
-use net_core::transport::connector_nng::{ConnectorNNG, PubSubConnectorNngBuilder, Proto};
+use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 
-// pub struct DecoderCommand<S> {
-//     pub push: Arc<S>,
-// }
-pub struct DecoderCommand; 
+pub struct DecoderCommand<S>
+where S: Sender + ?Sized
+{
+    pub transmitter: Arc<S>,
+} 
 
 
-impl Handler for DecoderCommand {
+impl<S> Handler for DecoderCommand<S>
+where S: Sender + ?Sized
+{
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
         debug!("received from translator::dispatcher {:?}", data);
@@ -33,7 +34,8 @@ impl Handler for DecoderCommand {
         // self.push.send(binary_json)
         // self.push.send(json_bytes)
 
-
+        //========================
+        // remove this part in future
         let temp_topic = "decode".as_bytes().to_owned();
         let data = data[temp_topic.len()..].to_owned();
 
@@ -41,16 +43,9 @@ impl Handler for DecoderCommand {
 
         let temp_topic = "db".as_bytes().to_owned();
         json_bytes.splice(0..0, temp_topic);
+        //========================
 
-        // move to transmitter
-        // TODO: think about ConnectorBuilderFactory
-        ConnectorNNG::builder()
-            .with_endpoint("tcp://0.0.0.0:5555".to_string())
-            .with_handler(crate::command::dummy::DummyCommand)
-            .with_proto(Proto::Push)
-            .build()
-            .connect()
-            .send(json_bytes);
+        self.transmitter.send(json_bytes);
     }
 }
 

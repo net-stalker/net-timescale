@@ -10,6 +10,7 @@ where S: Sender + ?Sized
 impl<S> TimescaleCommand<S>
 where S: Sender + ?Sized
 {
+    // TODO: get rid of manual adding and removing topics
     fn remove_topic(mut data: Vec<u8>) -> Vec<u8> {
         if data.len() < 2 {
             return data;

@@ -1,13 +1,14 @@
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 
-use net_core::transport::connector_nng::{ConnectorNNG, Proto};
+use net_core::transport::connector_nng::ConnectorNNG;
 use net_core::transport::polling::Poller;
 
 use crate::command::decoder::DecoderCommand;
 use crate::command::dummy::DummyCommand;
-use crate::command::dispatcher::{TranslatorDispatcher, self};
+use crate::command::dispatcher::TranslatorDispatcher;
 use crate::command::timescale_command::TimescaleCommand;
+use crate::command::transmitter::Transmitter;
 
 pub struct Translator {
     pub pool: ThreadPool,
@@ -20,12 +21,25 @@ impl Translator {
 }
 
 const PRODUCER: &'static str = "inproc://nng/dispatcher_producer";
+const TRANSMITTER: &'static str = "inproc://nng/transmitter";
 
 impl NetComponent for Translator {
     fn run(self) {
         log::info!("Run component");
-        // inproc part=
+        // inproc part
         // ========================
+        let transmitter_sub = ConnectorNNG::pub_sub_builder()
+            .with_endpoint(TRANSMITTER.to_owned())
+            .with_handler(Transmitter)
+            .build_subscriber()
+            .bind()
+            .into_inner();
+        let transmitter_pub = ConnectorNNG::pub_sub_builder()
+            .with_endpoint(TRANSMITTER.to_owned())
+            .with_handler(DummyCommand)
+            .build_publisher()
+            .connect()
+            .into_inner();
         let producer = ConnectorNNG::pub_sub_builder()
             .with_endpoint(PRODUCER.to_owned())
             .with_handler(DummyCommand)
@@ -34,7 +48,7 @@ impl NetComponent for Translator {
             .into_inner();
         let decoder = ConnectorNNG::pub_sub_builder()
             .with_endpoint(PRODUCER.to_string())
-            .with_handler(DecoderCommand)
+            .with_handler(DecoderCommand { transmitter: transmitter_pub })
             .with_topic("decode".as_bytes().to_owned())
             .build_subscriber()
             .connect()
@@ -68,6 +82,7 @@ impl NetComponent for Translator {
                 .add(server)
                 .add(decoder)
                 .add(timescale_command)
+                .add(transmitter_sub)
                 .poll();
         });
     }

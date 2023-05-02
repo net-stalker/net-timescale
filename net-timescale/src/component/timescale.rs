@@ -36,7 +36,7 @@ impl NetComponent for Timescale {
                 .with_proto(Proto::Pub)
                 .build()
                 .bind();
-
+            // TODO: add another communication channel for sending data back suing pub proto
             let db_service = ConnectorNNG::pub_sub_builder()
                 .with_endpoint("tcp://0.0.0.0:5556".to_string())
                 .with_handler(dispatcher)
