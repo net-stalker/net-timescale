@@ -37,12 +37,11 @@ impl NetComponent for Timescale {
                 .build()
                 .bind();
 
-            let db_service = ConnectorNNG::builder()
+            let db_service = ConnectorNNG::pub_sub_builder()
                 .with_endpoint("tcp://0.0.0.0:5556".to_string())
-                .with_proto(Proto::Rep)
                 .with_handler(dispatcher)
-                .build()
-                .bind()
+                .build_subscriber()
+                .connect()
                 .into_inner();
 
             Poller::new()

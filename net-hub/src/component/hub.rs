@@ -12,7 +12,7 @@ use net_core::layer::NetComponent;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
 
-use crate::command::agent::AgentCommand;
+use crate::command::{agent::AgentCommand, translator};
 use crate::command::dummy::DummyCommand;
 use crate::command::pull::PullCommand;
 use crate::command::translator::TranslatorCommand;
@@ -76,20 +76,18 @@ impl NetComponent for Hub {
                 }
             }
         });
-
-        let translator = ConnectorNNG::builder()
+        let translator = ConnectorNNG::pub_sub_builder()
             .with_endpoint("tcp://0.0.0.0:5557".to_string())
-            .with_proto(Proto::Req)
             .with_handler(TranslatorCommand)
-            .build()
+            .build_publisher()
             .connect()
             .into_inner();
-        let translator_clone = translator.clone();
 
-        let server_command = AgentCommand { translator: translator_clone };
+        let server_command = AgentCommand { translator };
+        // don't forget to change agent proto
         let server = ConnectorNNG::builder()
             .with_endpoint("tcp://0.0.0.0:5555".to_string())
-            .with_proto(Proto::Rep)
+            .with_proto(Proto::Pull)
             .with_handler(server_command)
             .build()
             .bind()
@@ -115,7 +113,6 @@ impl NetComponent for Hub {
         self.pool.execute(move || {
             Poller::new()
                 .add(server)
-                .add(translator)
                 .add(pull)
                 .add(db_service_clone)
                 .poll();

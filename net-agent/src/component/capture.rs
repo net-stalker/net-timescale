@@ -27,7 +27,7 @@ impl Capture {
 
         let client = ConnectorNNG::builder()
             .with_endpoint("tcp://0.0.0.0:5555".to_string())
-            .with_proto(Proto::Req)
+            .with_proto(Proto::Push)
             .with_handler(DummyCommand)
             .build()
             .connect()
