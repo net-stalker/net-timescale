@@ -57,3 +57,55 @@ pub fn encode_query_data_to_buffer( buffer: &mut Vec<u8>, frame_time: i64, src: 
 
     ::capnp::serialize_packed::write_message(buffer, &message)
 }
+
+pub fn decode (serialized_data: &[u8]) -> (String, Vec<u8>) {
+    let message_reader = ::capnp::serialize_packed::read_message(
+        serialized_data, //Think about using std::io::Cursor here
+        ::capnp::message::ReaderOptions::new()).unwrap();
+
+    let decoded_struct = message_reader.get_root::<envelope::Reader>().unwrap();
+
+    return (
+        String::from(decoded_struct.get_type().unwrap()),
+
+        Vec::from(decoded_struct.get_data().unwrap())
+    );
+}
+
+pub fn decode_vec (serialized_data: Vec<u8>) -> (String, Vec<u8>) {
+    let message_reader = ::capnp::serialize_packed::read_message(
+        serialized_data.as_slice(), //Think about using std::io::Cursor here
+        ::capnp::message::ReaderOptions::new()).unwrap();
+
+    let decoded_struct = message_reader.get_root::<envelope::Reader>().unwrap();
+
+    return (
+        String::from(decoded_struct.get_type().unwrap()),
+
+        Vec::from(decoded_struct.get_data().unwrap())
+    );
+}
+
+pub fn decode_query_data (serialized_data: &[u8]) -> (i64, String, String, Vec<u8>) {
+    let message_reader = ::capnp::serialize_packed::read_message(
+        serialized_data, //Think about using std::io::Cursor here
+        ::capnp::message::ReaderOptions::new()).unwrap();
+
+    let decoded_struct = message_reader.get_root::<envelope::Reader>().unwrap();
+
+    let query_data = decoded_struct.get_data().unwrap();
+
+    crate::capnp::query_data::decode(query_data)
+}
+
+pub fn decode_query_data_vec (serialized_data: Vec<u8>) -> (i64, String, String, Vec<u8>) {
+    let message_reader = ::capnp::serialize_packed::read_message(
+        serialized_data.as_slice(), //Think about using std::io::Cursor here
+        ::capnp::message::ReaderOptions::new()).unwrap();
+
+    let decoded_struct = message_reader.get_root::<envelope::Reader>().unwrap();
+
+    let query_data = decoded_struct.get_data().unwrap();
+
+    crate::capnp::query_data::decode(query_data)
+}
