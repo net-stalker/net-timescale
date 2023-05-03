@@ -9,6 +9,17 @@ pub struct NetworkPacket {
     network_packet_data: Vec<u8>,
 }
 
+impl NetworkPacket {
+    pub fn new ( frame_time: i64, src_addr: String, dst_addr: String, network_packet_data: Vec<u8>) -> Self {
+        NetworkPacket { 
+            frame_time, 
+            src_addr, 
+            dst_addr, 
+            network_packet_data
+        }
+    }
+}
+
 impl crate::Encoder for NetworkPacket {
     fn encode(&self) -> Vec<u8> {    
         let mut buffer: Vec<u8> = Vec::new();

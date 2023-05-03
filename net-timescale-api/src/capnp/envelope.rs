@@ -5,6 +5,15 @@ pub struct Envelope {
     data: Vec<u8>,
 }
 
+impl Envelope{
+    pub fn new( envelope_type: String, data: Vec<u8>) -> Self {
+        Envelope { 
+            envelope_type, 
+            data
+        }
+    }
+}
+
 impl crate::Encoder for Envelope {
     fn encode(&self) -> Vec<u8> {    
         let mut buffer: Vec<u8> = Vec::new();
