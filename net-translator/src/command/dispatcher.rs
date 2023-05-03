@@ -1,7 +1,6 @@
 use std::sync::Arc;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
-// TODO: think about creating a common Dispatcher struct and move it to net-core
 pub struct TranslatorDispatcher<T>
 where T: Sender + ?Sized
 {

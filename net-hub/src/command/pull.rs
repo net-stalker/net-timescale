@@ -6,12 +6,11 @@ use simple_websockets::{Message, Responder};
 
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
-pub struct PullCommand<S> {
-    pub clients: Arc<RwLock<HashMap<u64, Responder>>>,
-    pub db_service: Arc<S>,
+pub struct PullCommand {
+    pub clients: Arc<RwLock<HashMap<u64, Responder>>>
 }
 
-impl<S: Sender> Handler for PullCommand<S> {
+impl Handler for PullCommand {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
         let string_with_escapes = String::from_utf8(data).unwrap();
@@ -20,14 +19,12 @@ impl<S: Sender> Handler for PullCommand<S> {
         // debug!("string with escapes: {}", string_with_escapes);
         // debug!("string without escapes: {}", unescaped_string);
         // debug!("json: {}", json_string);
-        debug!("received from translator {:?}", string_with_escapes);
+        debug!("received from nobody {:?}", string_with_escapes);
 
         self.clients.read().unwrap().iter().for_each(|endpoint| {
             debug!("Connections: {:?}", endpoint);
             let responder = endpoint.1;
             responder.send(Message::Text(format!("{:?}", string_with_escapes)));
         });
-
-        self.db_service.send(Vec::from(string_with_escapes));
     }
 }

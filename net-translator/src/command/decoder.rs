@@ -4,7 +4,6 @@ use log::debug;
 use net_core::capture::translator::pcap_translator::PcapTranslator;
 use net_core::capture::translator::translator::Translator;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
-use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 
 pub struct DecoderCommand<S>
 where S: Sender + ?Sized
@@ -35,7 +34,7 @@ where S: Sender + ?Sized
         // self.push.send(json_bytes)
 
         //========================
-        // remove this part in future
+        // TODO: remove this part in future
         let temp_topic = "decode".as_bytes().to_owned();
         let data = data[temp_topic.len()..].to_owned();
 

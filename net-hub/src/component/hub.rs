@@ -84,28 +84,18 @@ impl NetComponent for Hub {
             .into_inner();
 
         let server_command = AgentCommand { translator };
-        // don't forget to change agent proto
         let server = ConnectorNNG::builder()
             .with_endpoint("tcp://0.0.0.0:5555".to_string())
-            .with_proto(Proto::Pull)
             .with_handler(server_command)
+            .with_proto(Proto::Pull)
             .build()
             .bind()
             .into_inner();
 
-        let db_service = ConnectorNNG::builder()
-            .with_endpoint("tcp://0.0.0.0:5556".to_string())
-            .with_proto(Proto::Req)
-            .with_handler(DummyCommand)
-            .build()
-            .connect()
-            .into_inner();
-        let db_service_clone = db_service.clone();
-
         let pull = ConnectorNNG::builder()
             .with_endpoint("tcp://0.0.0.0:5558".to_string())
             .with_proto(Proto::Rep)
-            .with_handler(PullCommand { clients, db_service })
+            .with_handler(PullCommand { clients })
             .build()
             .bind()
             .into_inner();
@@ -114,7 +104,6 @@ impl NetComponent for Hub {
             Poller::new()
                 .add(server)
                 .add(pull)
-                .add(db_service_clone)
                 .poll();
         });
     }

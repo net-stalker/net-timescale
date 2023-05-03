@@ -28,8 +28,6 @@ impl<S: Sender> Handler for AgentCommand<S> {
         // debug!("Global header will be skipped");
         // return;
         // }
-        debug!("data before comparing: {:?}", data);
-
         // improvized dispatcher
         if AgentCommand::<S>::compare_first_n_bytes(&data, "db".as_bytes(), "db".as_bytes().len()) {
             debug!("received from decoder {:?}", data);
