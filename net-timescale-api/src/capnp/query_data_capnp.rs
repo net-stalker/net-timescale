@@ -1,1 +1,0 @@
-include!(concat!(env!("OUT_DIR"), "/query_data_capnp.rs"));

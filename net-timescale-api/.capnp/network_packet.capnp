@@ -1,6 +1,6 @@
 @0x8407268e65d4ceb4;
 
-struct QueryData {
+struct NetworkPacket {
     frameTime @0:Int64;
     #The time when the data was captured
 
