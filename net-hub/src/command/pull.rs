@@ -19,7 +19,7 @@ impl Handler for PullCommand {
         // debug!("string with escapes: {}", string_with_escapes);
         // debug!("string without escapes: {}", unescaped_string);
         // debug!("json: {}", json_string);
-        debug!("received from nobody {:?}", string_with_escapes);
+        debug!("received from server {:?}", string_with_escapes);
 
         self.clients.read().unwrap().iter().for_each(|endpoint| {
             debug!("Connections: {:?}", endpoint);

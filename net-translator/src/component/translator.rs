@@ -1,3 +1,4 @@
+use net_core::topic::{DECODER_TOPIC, DB_TOPIC};
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 
@@ -20,7 +21,7 @@ impl Translator {
     }
 }
 
-const PRODUCER: &'static str = "inproc://nng/dispatcher_producer";
+const CONSUMER: &'static str = "inproc://nng/dispatcher_consumer";
 const TRANSMITTER: &'static str = "inproc://nng/transmitter";
 
 impl NetComponent for Translator {
@@ -40,18 +41,18 @@ impl NetComponent for Translator {
             .build_publisher()
             .connect()
             .into_inner();
-             // producer - local publisher which sends data from dispatcher to local services
-        let producer = ConnectorNNG::pub_sub_builder()
-             .with_endpoint(PRODUCER.to_owned())
+             // consumer - local publisher which sends data from dispatcher to local services
+        let consumer = ConnectorNNG::pub_sub_builder()
+             .with_endpoint(CONSUMER.to_owned())
              .with_handler(DummyCommand)
              .build_publisher()
              .bind()
              .into_inner();
         // decoder - local service which decodes data
         let decoder = ConnectorNNG::pub_sub_builder()
-            .with_endpoint(PRODUCER.to_string())
+            .with_endpoint(CONSUMER.to_string())
             .with_handler(DecoderCommand { transmitter: transmitter_pub })
-            .with_topic("decode".as_bytes().to_owned())
+            .with_topic(DECODER_TOPIC.as_bytes().to_owned())
             .build_subscriber()
             .connect()
             .into_inner();
@@ -64,14 +65,14 @@ impl NetComponent for Translator {
             .into_inner();
         // timescale_command - a local service which sends data to a connected `net-timescale` module 
         let timescale_command = ConnectorNNG::pub_sub_builder()
-            .with_endpoint(PRODUCER.to_string())
-            .with_handler(TimescaleCommand {producer: db_service})
-            .with_topic("db".as_bytes().to_owned())
+            .with_endpoint(CONSUMER.to_string())
+            .with_handler(TimescaleCommand {consumer: db_service})
+            .with_topic(DB_TOPIC.as_bytes().to_owned())
             .build_subscriber()
             .connect()
             .into_inner();
         // dispatcher is a dispatcher which holds a producer :)
-        let dispatcher = TranslatorDispatcher { producer };
+        let dispatcher = TranslatorDispatcher { consumer };
         // server - a server which basically can receive connections from all the modules except `net-timescale`. At least for now
         let server = ConnectorNNG::pub_sub_builder()
             .with_endpoint("tcp://0.0.0.0:5557".to_string())

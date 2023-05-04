@@ -1,19 +1,17 @@
 use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
-    thread::{self},
 };
 
 use log::{debug, info};
 use simple_websockets::Event;
 use threadpool::ThreadPool;
-use net_core::layer::NetComponent;
+use net_core::{layer::NetComponent, transport::sockets::Sender};
 
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
 
-use crate::command::agent::AgentCommand;
-use crate::command::dummy::DummyCommand;
+use crate::command::{server::ServerCommand, dummy::DummyCommand};
 use crate::command::pull::PullCommand;
 use crate::command::translator::TranslatorCommand;
 
@@ -26,7 +24,7 @@ impl Hub {
         Hub { pool }
     }
 }
-
+const PULL: &'static str = "inproc://nng/pull";
 impl NetComponent for Hub {
     fn run(self) {
         info!("Run component");
@@ -76,34 +74,42 @@ impl NetComponent for Hub {
                 }
             }
         });
-        let translator = ConnectorNNG::pub_sub_builder()
-            .with_endpoint("tcp://0.0.0.0:5557".to_string())
-            .with_handler(TranslatorCommand)
-            .build_publisher()
-            .connect()
-            .into_inner();
-
-        let server_command = AgentCommand { translator };
-        let server = ConnectorNNG::builder()
-            .with_endpoint("tcp://0.0.0.0:5555".to_string())
-            .with_handler(server_command)
-            .with_proto(Proto::Pull)
-            .build()
-            .bind()
-            .into_inner();
-
-        let pull = ConnectorNNG::builder()
-            .with_endpoint("tcp://0.0.0.0:5558".to_string())
-            .with_proto(Proto::Rep)
-            .with_handler(PullCommand { clients })
-            .build()
-            .bind()
-            .into_inner();
-
         self.pool.execute(move || {
+            let pull_sub = ConnectorNNG::pub_sub_builder()
+                .with_endpoint(PULL.to_string())
+                .with_handler(PullCommand { clients })
+                .build_subscriber()
+                .bind()
+                .into_inner();
+            let pull_pub = ConnectorNNG::pub_sub_builder()
+                .with_endpoint(PULL.to_string())
+                .with_handler(DummyCommand)
+                .build_publisher()
+                .connect()
+                .into_inner();
+
+            let translator = ConnectorNNG::pub_sub_builder()
+                .with_endpoint("tcp://0.0.0.0:5557".to_string())
+                .with_handler(TranslatorCommand)
+                .build_publisher()
+                .connect()
+                .into_inner();
+
+            let server_command = ServerCommand::<dyn Sender> { 
+                translator,
+                clients: pull_pub
+            };
+            let server = ConnectorNNG::builder()
+                .with_endpoint("tcp://0.0.0.0:5555".to_string())
+                .with_handler(server_command)
+                .with_proto(Proto::Pull)
+                .build()
+                .bind()
+                .into_inner();
+
             Poller::new()
                 .add(server)
-                .add(pull)
+                .add(pull_sub)
                 .poll();
         });
     }
