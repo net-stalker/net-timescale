@@ -2,22 +2,23 @@ use std::sync::Arc;
 
 use net_core::transport::sockets::{Sender, Receiver, Handler};
 
-pub struct QueryResultPuller<T>
+pub struct Transmitter<T>
 where T: Sender + Sized
 {
     network_channel: Arc<T>
 }
-impl<T> QueryResultPuller<T>
+impl<T> Transmitter<T>
 where T: Sender + Sized 
 {
     pub fn new(network_channel: Arc<T>) -> Self {
-        QueryResultPuller { network_channel } 
+        Transmitter { network_channel } 
     } 
 }
-impl<T> Handler for QueryResultPuller<T>
+impl<T> Handler for Transmitter<T>
 where T: Sender + Sized
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
+        // probably we should set up a new network_channel directly in handle using service discovery
         self.network_channel.send(receiver.recv());
     }
 }

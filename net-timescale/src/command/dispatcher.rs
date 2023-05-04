@@ -6,13 +6,13 @@ use crate::db_access::add_traffic::packet_data::PacketData;
 pub struct CommandDispatcher<T>
 where T: Sender + ?Sized
 { 
-    producer: Arc<T>,
+    consumer: Arc<T>,
 }
 impl<T> CommandDispatcher<T>
 where T: Sender + ?Sized
 {
-    pub fn new(producer: Arc<T>) -> Self {
-        CommandDispatcher { producer }
+    pub fn new(consumer: Arc<T>) -> Self {
+        CommandDispatcher { consumer }
     }
 }
 impl<T> Handler for CommandDispatcher<T>
@@ -44,6 +44,6 @@ where T: Sender + ?Sized
         let mut data = bincode::serialize(&frame_data).unwrap();
         // manually adding topic into at the beginning of the data. Ideally it has to already be in the data 
         data.splice(0..0, temp_topic); 
-        self.producer.send(data);
+        self.consumer.send(data);
     }
 }
