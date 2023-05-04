@@ -13,6 +13,7 @@ readme = "README.md"
 
 [dependencies]
 net-core = { path = "../net-core" }
+net-timescale-api = { path = "../net-timescale-api" }
 
 serde_json = "1.0.91"
 simple-websockets = "0.1.4"
