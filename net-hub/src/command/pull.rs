@@ -23,12 +23,7 @@ impl<S: Sender> Handler for PullCommand<S> {
         let envelope = Envelope::decode(data.clone());
         let network_packet_data = NetworkPacket::decode(envelope.get_data().to_owned());
 
-        let formated_string = format!(
-            "Frame time: [{}],\n\rDst addr: [{}],\n\rSrc addr: [{}],\n\rData: [{:?}]", 
-            network_packet_data.get_frame_time(),
-            network_packet_data.get_dst_addr(),
-            network_packet_data.get_src_addr(),
-            network_packet_data.get_network_packet_data());
+        let formated_string = format!("{:?}", network_packet_data);
 
         // let unescaped_string = unescape(string_with_escapes.as_str()).unwrap();
         // let json_string = json!(&unescaped_string);

@@ -3,6 +3,7 @@ mod network_packet_capnp {
 }
 use network_packet_capnp::network_packet;
 
+#[derive(Debug)]
 pub struct NetworkPacket {
     frame_time: i64,
 

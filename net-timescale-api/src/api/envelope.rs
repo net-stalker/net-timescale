@@ -3,6 +3,7 @@ mod envelope_capnp {
 }
 use envelope_capnp::envelope;
 
+#[derive(Debug)]
 pub struct Envelope {
     envelope_type: String,
     data: Vec<u8>,
