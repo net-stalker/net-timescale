@@ -3,12 +3,13 @@ use std::sync::{Arc, RwLock};
 
 use log::debug;
 use net_timescale_api::Decoder;
-use net_timescale_api::capnp::network_packet::NetworkPacket;
+use net_timescale_api::api::network_packet::NetworkPacket;
+use net_timescale_api::api::envelope::Envelope;
+
 use simple_websockets::{Message, Responder};
 
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
-use net_timescale_api::capnp::envelope::*;
 
 pub struct PullCommand<S> {
     pub clients: Arc<RwLock<HashMap<u64, Responder>>>,

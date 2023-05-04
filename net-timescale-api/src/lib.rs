@@ -1,5 +1,4 @@
-pub mod capnp;
-
+pub mod api;
 
 pub trait Encoder {
     fn encode(&self) -> Vec<u8>;

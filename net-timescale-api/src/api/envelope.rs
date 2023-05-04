@@ -1,4 +1,4 @@
-pub mod envelope_capnp {
+mod envelope_capnp {
     include!(concat!(env!("OUT_DIR"), "/envelope_capnp.rs"));
 }
 use envelope_capnp::envelope;

@@ -9,8 +9,8 @@ use net_core::jsons::json_pcap_parser::JsonPcapParser;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
 use net_timescale_api::{self, Encoder};
-use net_timescale_api::capnp::envelope::Envelope;
-use net_timescale_api::capnp::network_packet::NetworkPacket;
+use net_timescale_api::api::envelope::Envelope;
+use net_timescale_api::api::network_packet::NetworkPacket;
 
 pub struct DecoderCommand<S> {
     pub push: Arc<S>,
