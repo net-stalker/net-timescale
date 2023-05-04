@@ -24,7 +24,7 @@ impl<S: Sender> Handler for PullCommand<S> {
         let network_packet_data = NetworkPacket::decode(envelope.get_data().to_owned());
 
         let formated_string = format!(
-            "Frame time: {},\nDst addr: {},\nSrc addr: {},\nData: {:?}", 
+            "Frame time: [{}],\n\rDst addr: [{}],\n\rSrc addr: [{}],\n\rData: [{:?}]", 
             network_packet_data.get_frame_time(),
             network_packet_data.get_dst_addr(),
             network_packet_data.get_src_addr(),

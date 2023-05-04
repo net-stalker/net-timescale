@@ -2,6 +2,5 @@
 
 struct Envelope {
     type @0 :Text;
-    
     data @1 :Data;
 }
