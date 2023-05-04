@@ -1,4 +1,7 @@
-use crate::capnp::envelope_capnp::envelope;
+pub mod envelope_capnp {
+    include!(concat!(env!("OUT_DIR"), "/envelope_capnp.rs"));
+}
+use envelope_capnp::envelope;
 
 pub struct Envelope {
     envelope_type: String,

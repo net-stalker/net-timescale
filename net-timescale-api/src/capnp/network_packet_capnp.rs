@@ -1,1 +1,0 @@
-include!(concat!(env!("OUT_DIR"), "/network_packet_capnp.rs"));
