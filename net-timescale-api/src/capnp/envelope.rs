@@ -12,6 +12,14 @@ impl Envelope{
             data
         }
     }
+
+    pub fn get_type (&self) -> &str {
+        &self.envelope_type
+    }
+
+    pub fn get_data (&self) -> &[u8] {
+        &self.data
+    }
 }
 
 impl crate::Encoder for Envelope {
@@ -19,11 +27,9 @@ impl crate::Encoder for Envelope {
         let mut buffer: Vec<u8> = Vec::new();
 
         let mut message = ::capnp::message::Builder::new_default();
-    
         let mut struct_to_encode = message.init_root::<envelope::Builder>();
         
         struct_to_encode.set_type(&self.envelope_type);
-    
         struct_to_encode.set_data(&self.data);
     
         match ::capnp::serialize_packed::write_message(&mut buffer, &message) {
@@ -34,9 +40,10 @@ impl crate::Encoder for Envelope {
 }
 
 impl crate::Decoder for Envelope {
-    fn decode(data: Vec<u8>) -> Self {    let message_reader = ::capnp::serialize_packed::read_message(
-        data.as_slice(), //Think about using std::io::Cursor here
-        ::capnp::message::ReaderOptions::new()).unwrap();
+    fn decode(data: Vec<u8>) -> Self {    
+        let message_reader = ::capnp::serialize_packed::read_message(
+            data.as_slice(), //Think about using std::io::Cursor here
+            ::capnp::message::ReaderOptions::new()).unwrap();
 
         let decoded_struct = message_reader.get_root::<envelope::Reader>().unwrap();
 

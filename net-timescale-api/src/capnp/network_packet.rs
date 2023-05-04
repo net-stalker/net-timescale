@@ -18,6 +18,22 @@ impl NetworkPacket {
             network_packet_data
         }
     }
+
+    pub fn get_frame_time (&self) -> i64 {
+        self.frame_time
+    }
+
+    pub fn get_src_addr (&self) -> &str {
+        &self.src_addr
+    }
+
+    pub fn get_dst_addr (&self) -> &str {
+        &self.dst_addr
+    }
+
+    pub fn get_network_packet_data (&self) -> &[u8] {
+        &self.network_packet_data
+    }
 }
 
 impl crate::Encoder for NetworkPacket {
@@ -25,14 +41,11 @@ impl crate::Encoder for NetworkPacket {
         let mut buffer: Vec<u8> = Vec::new();
 
         let mut message = ::capnp::message::Builder::new_default();
-    
         let mut struct_to_encode = message.init_root::<network_packet::Builder>();
         
         struct_to_encode.set_frame_time(self.frame_time);
-    
         struct_to_encode.set_src_addr(&self.src_addr);
-        struct_to_encode.set_dst_addr(&self.dst_addr);
-        
+        struct_to_encode.set_dst_addr(&self.dst_addr);        
         struct_to_encode.set_data(&self.network_packet_data);
     
         match ::capnp::serialize_packed::write_message(&mut buffer, &message) {

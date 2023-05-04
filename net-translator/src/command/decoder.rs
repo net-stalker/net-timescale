@@ -8,7 +8,9 @@ use net_core::jsons::json_parser::JsonParser;
 use net_core::jsons::json_pcap_parser::JsonPcapParser;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
-use net_timescale_api;
+use net_timescale_api::{self, Encoder};
+use net_timescale_api::capnp::envelope::Envelope;
+use net_timescale_api::capnp::network_packet::NetworkPacket;
 
 pub struct DecoderCommand<S> {
     pub push: Arc<S>,
@@ -32,16 +34,20 @@ impl<S: Sender> Handler for DecoderCommand<S> {
 
         // debug!("{:?} {:?} {:?} {:?}", frame_time, src_addr, dst_addr, binary_json);
 
-        let mut buffer: Vec<u8> = Vec::new();
-
-        net_timescale_api::capnp::envelope::encode_query_data_to_buffer(
-            &mut buffer,
+        
+        let net_packet = NetworkPacket::new(
             frame_time.timestamp_millis(), 
             src_addr.unwrap(), 
             dst_addr.unwrap(), 
-            binary_json).expect("CAPNP::Error while writing data into the buffer.");
-
+            binary_json);
+            
+        let envelope = Envelope::new(
+            String::from("add_packet"),
+            net_packet.encode()
+        );
         
-        self.push.send(buffer);
+        let message: Vec<u8> = envelope.encode();
+
+        self.push.send(message);
     }
 }
