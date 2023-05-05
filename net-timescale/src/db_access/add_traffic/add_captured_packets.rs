@@ -83,7 +83,7 @@ where T: Sender + ?Sized
                 log::error!("{}", error);
             }
         };
-        self.result_receiver.send("Packets have been added".as_bytes().to_owned());
+        self.result_receiver.send("packets have been added".as_bytes().to_owned());
     }
 }
 

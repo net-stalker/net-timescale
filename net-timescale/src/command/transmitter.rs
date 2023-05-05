@@ -18,7 +18,6 @@ impl<T> Handler for Transmitter<T>
 where T: Sender + Sized
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
-        // probably we should set up a new network_channel directly in handle using service discovery
         self.network_channel.send(receiver.recv());
     }
 }

@@ -68,8 +68,8 @@ where T: Sender + ?Sized
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        log::info!("Received data in SelectInterval::handle: {:?}", data);
-        todo!("Wait for middleware format implementation");
+        log::info!("received data in SelectInterval::handle: {:?}", data);
+        todo!("wait for middleware format implementation");
     }
 }
 
