@@ -2,7 +2,7 @@ use net_core::topic::{DECODER_TOPIC, DB_TOPIC};
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 
-use net_core::transport::connector_nng::ConnectorNNG;
+use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
 
 use crate::command::decoder::DecoderCommand;
@@ -27,10 +27,17 @@ const TRANSMITTER: &'static str = "inproc://nng/transmitter";
 impl NetComponent for Translator {
     fn run(self) {
         log::info!("Run component");
+        // consumer - a connection to send data back to hub
+        let consumer = ConnectorNNG::pub_sub_builder()
+            .with_endpoint("tcp://0.0.0.0:5555".to_string())
+            .with_handler(DummyCommand)
+            .build_publisher()
+            .connect()
+            .into_inner();
         //  transmitter_sub - connector which sends data received from sub via network
         let transmitter_sub = ConnectorNNG::pub_sub_builder()
             .with_endpoint(TRANSMITTER.to_owned())
-            .with_handler(Transmitter)
+            .with_handler(Transmitter {consumer})
             .build_subscriber()
             .bind()
             .into_inner();
