@@ -3,13 +3,20 @@ use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 use r2d2::Pool;
 use r2d2_postgres::PostgresConnectionManager;
-use net_core::transport::connector_nng::{ConnectorNNG, Proto};
-use net_core::transport::polling::Poller;
-use crate::command::dummy_handler::DummyHandler;
-use crate::command::{dispatcher::CommandDispatcher, executor::Executor, transmitter::Transmitter};
-use crate::db_access::add_traffic::add_captured_packets::AddCapturedPackets;
-use crate::db_access::query_factory::QueryFactory;
-use crate::db_access::select_by_time::select_by_time::SelectInterval;
+use net_core::transport::{
+    connector_nng::{ConnectorNNG, Proto},
+    polling::Poller,
+    dummy_command::DummyCommand
+};
+use crate::command::{
+    dispatcher::CommandDispatcher,
+    executor::Executor, transmitter::Transmitter
+};
+use crate::db_access::{
+    add_traffic::add_captured_packets::AddCapturedPackets,
+    query_factory::QueryFactory,
+    select_by_time::select_by_time::SelectInterval
+};
 
 pub struct Timescale {
     pub thread_pool: ThreadPool,
@@ -35,7 +42,7 @@ impl NetComponent for Timescale {
         self.thread_pool.execute(move || {
             let consumer = ConnectorNNG::pub_sub_builder()
                 .with_endpoint(DISPATCHER_CONSUMER.to_owned())
-                .with_handler(DummyHandler)
+                .with_handler(DummyCommand)
                 .build_publisher()
                 .bind()
                 .into_inner();
@@ -60,7 +67,7 @@ impl NetComponent for Timescale {
             let executor = Executor::new(self.connection_pool.clone());
             let result_puller = ConnectorNNG::pub_sub_builder()
                 .with_endpoint(TRANSMITTER.to_owned())
-                .with_handler(DummyHandler)
+                .with_handler(DummyCommand)
                 .build_publisher()
                 .connect()
                 .into_inner();
