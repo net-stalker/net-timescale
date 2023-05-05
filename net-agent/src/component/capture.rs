@@ -25,11 +25,10 @@ impl Capture {
             .open()
             .unwrap();
         
-        let client = ConnectorNNG::builder()
+        let client = ConnectorNNG::pub_sub_builder()
             .with_endpoint("tcp://0.0.0.0:5555".to_string())
             .with_handler(DummyCommand)
-            .with_proto(Proto::Push)
-            .build()
+            .build_publisher()
             .connect()
             .into_inner();
 

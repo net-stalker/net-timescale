@@ -99,11 +99,10 @@ impl NetComponent for Hub {
                 translator,
                 clients: pull_pub
             };
-            let server = ConnectorNNG::builder()
+            let server = ConnectorNNG::pub_sub_builder()
                 .with_endpoint("tcp://0.0.0.0:5555".to_string())
                 .with_handler(server_command)
-                .with_proto(Proto::Pull)
-                .build()
+                .build_subscriber()
                 .bind()
                 .into_inner();
 
