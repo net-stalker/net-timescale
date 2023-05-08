@@ -48,7 +48,7 @@ impl QueryPacket {
         });
     }
     
-    fn convert_to_value(packet_json: Vec<u8>) -> serde_json::Result<Value> {
+    fn _convert_to_value(packet_json: Vec<u8>) -> serde_json::Result<Value> {
         serde_json::from_slice(&*packet_json)
     }
 }

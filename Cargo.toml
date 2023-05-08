@@ -8,6 +8,7 @@ members = [
     "net-hub",
     "net-translator",
     "net-timescale",
+    "net-timescale-api",
     "net-control"
 ]
 
