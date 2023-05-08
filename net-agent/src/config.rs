@@ -64,7 +64,7 @@ mod tests {
 
         let expected_config = Config {
             connector: Connector {
-                endpoint: "tcp://localhost:5555".to_string(),
+                endpoint: "tcp://api.hub.netstalker.io:5555".to_string(),
             },
             capture: vec![Capture {
                 device_name: "en0".to_string(),
@@ -72,7 +72,7 @@ mod tests {
                 buffer_size: 100,
             }],
             log: Log {
-                level: LogLevel::Debug,
+                level: LogLevel::Info,
             },
         };
 
