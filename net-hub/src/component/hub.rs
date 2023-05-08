@@ -1,14 +1,13 @@
 use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
-    thread::{self},
 };
 
 use log::{debug, info};
 use simple_websockets::Event;
 use threadpool::ThreadPool;
-use net_core::layer::NetComponent;
 
+use net_core::layer::NetComponent;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
 
@@ -29,17 +28,7 @@ impl Hub {
 
 impl NetComponent for Hub {
     fn run(self) {
-        info!("Run component");
-
-        //Global for the project
-        // let config = Arc::new(ConfigManager { application_name: "net-hub", file_loader: Box::new(ConfigFile) as Box<dyn FileReader> }.load());
-
-        // //Global for the project
-        // let config = hub_context.clone().config.clone();
-        // if !config.dealer.enable {
-        //     debug!("Dealer is disabled!");
-        //     return;
-        // }
+        info!("run component");
 
         let clients = Arc::new(RwLock::new(HashMap::new()));
         let clients_inner = clients.clone();

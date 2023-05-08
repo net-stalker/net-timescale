@@ -13,6 +13,10 @@ readme = "README.md"
 #license-file = "LICENSE.txt"
 
 [dependencies]
+net-config = { path = "../net-config" }
+
+log = { workspace = true }
+
 pcap = "1.0.0"
 
 serde = { version = "1.0.140", features = ["derive"] }
@@ -22,8 +26,6 @@ jsonpath-rust = "0.2.1"
 
 bincode = "1.3.3"
 derivative = "2.2.0"
-directories = "4.0.1"
-hocon = "0.9.0"
 subprocess = "0.2.9"
 zmq = "0.10.0"
 nng = "1.0.1"
@@ -31,7 +33,6 @@ polling = "2.5.2"
 unescape = "0.1.0"
 chrono = "0.4.23"
 walkdir = "2.3.2"
-log = "0.4.17"
 
 [dev-dependencies]
 mockall = "0.11.2"

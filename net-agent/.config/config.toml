@@ -1,0 +1,10 @@
+[connector]
+endpoint = "tcp://api.hub.netstalker.io:5555"
+
+[[capture]]
+device_name = "en0"
+number_packages = -1
+buffer_size = 100
+
+[log]
+level = "Info"
