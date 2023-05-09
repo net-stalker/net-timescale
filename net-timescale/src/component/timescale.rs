@@ -12,8 +12,8 @@ use crate::command::{
     dispatcher::CommandDispatcher,
     executor::Executor, transmitter::Transmitter
 };
-use crate::db_access::{
-    add_traffic::add_captured_packets::AddCapturedPackets,
+use crate::persistence::{
+    network_packet::network_packet_handler::NetworkPacketHandler,
     query_factory::QueryFactory,
     select_by_time::select_by_time::SelectInterval
 };
@@ -72,7 +72,7 @@ impl NetComponent for Timescale {
                 .connect()
                 .into_inner();
 
-            let add_packets_handler = AddCapturedPackets::create_query_handler(executor.clone(),
+            let add_packets_handler = NetworkPacketHandler::create_query_handler(executor.clone(),
                     result_puller.clone());
             let service_add_packets = ConnectorNNG::pub_sub_builder()
                 .with_endpoint(DISPATCHER_CONSUMER.to_owned())

@@ -2,7 +2,7 @@ use r2d2::{Pool, PooledConnection};
 use r2d2_postgres::PostgresConnectionManager;
 use postgres::NoTls;
 use std::sync::{Arc, Mutex};
-use crate::db_access::query;
+use crate::persistence::query;
 
 #[derive(Clone)]
 pub struct Executor{

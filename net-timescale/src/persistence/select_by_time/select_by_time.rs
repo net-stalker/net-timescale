@@ -3,7 +3,7 @@ use std::sync::Arc;
 use chrono::{DateTime, Utc, TimeZone};
 use net_core::transport::sockets::{Receiver, Sender, Handler};
 use postgres::{types::ToSql, Row};
-use crate::{command::executor::Executor, db_access::{query, query_factory}};
+use crate::{command::executor::Executor, persistence::{query, query_factory}};
 use super::time_interval::TimeInterval;
 
 pub struct SelectInterval<T>
@@ -75,7 +75,7 @@ where T: Sender + ?Sized
 
 #[cfg(test)]
 mod tests {
-    use crate::db_access::query::PostgresQuery;
+    use crate::persistence::query::PostgresQuery;
 
     use super::*;
     #[test]
