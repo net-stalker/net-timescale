@@ -17,7 +17,7 @@ name = "netagent"
 identifier = "io.netagent"
 icon = ["32x32.png", "128x128.png", "128x128@2x.png"]
 resources = ["assets", "images/**/*.png", "debian"]
-copyright = "Copyright (c) Netstalker 2022. All rights reserved."
+copyright = "Copyright (c) NetStalker 2023. All rights reserved."
 category = "Developer Tool"
 short_description = "Capture packets and redirect them to the cloud for the feature analyze."
 long_description = """
@@ -31,10 +31,16 @@ deb_depends = ["libpcap-dev", "libzmq3-dev"]
 
 [dependencies]
 net-core = { path = "../net-core" }
+net-config = { path = "../net-config" }
+
+log = { workspace = true }
+env_logger = { workspace = true }
+threadpool = { workspace = true }
 
 pcap = "1.0.0"
 derivative = "2.2.0"
-directories = "4.0.1"
-log = "0.4.17"
-env_logger = "0.10.0"
-threadpool = "1.8.1"
+
+directories = { workspace = true }
+config = { workspace = true }
+serde = { workspace = true }
+toml = { workspace = true }

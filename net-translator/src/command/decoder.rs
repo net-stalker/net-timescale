@@ -1,9 +1,14 @@
 use std::sync::Arc;
 
 use log::debug;
+
 use net_core::capture::translator::pcap_translator::PcapTranslator;
 use net_core::capture::translator::translator::Translator;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
+
+use net_timescale_api::{self, Encoder};
+use net_timescale_api::api::envelope::Envelope;
+use net_timescale_api::api::network_packet::NetworkPacket;
 use net_core::topic::{remove_topic, set_topic, DECODER_TOPIC, DB_TOPIC};
 
 pub struct DecoderCommand<S>
@@ -19,29 +24,33 @@ where S: Sender + ?Sized
         let mut data = receiver.recv();
         debug!("received from translator::dispatcher {:?}", data);
 
-        // let filtered_value_json = JsonPcapParser::filter_source_layer(&json_bytes);
-        // let first_json_value = JsonParser::first(&filtered_value_json).unwrap();
-        // let layered_json = JsonPcapParser::split_into_layers(first_json_value);
+        let json_bytes = PcapTranslator::translate(data);
 
-        // let frame_time = JsonPcapParser::find_frame_time(&json_bytes);
-        // let src_addr = JsonPcapParser::extract_src_addr_l3(&layered_json);
-        // let dst_addr = JsonPcapParser::extract_src_addr_l3(&layered_json);
-        // let binary_json = JsonParser::get_vec(layered_json);
+        let filtered_value_json = JsonPcapParser::filter_source_layer(&json_bytes);
+        let first_json_value = JsonParser::first(&filtered_value_json).unwrap();
+        let layered_json = JsonPcapParser::split_into_layers(first_json_value);
+
+        let frame_time = JsonPcapParser::find_frame_time(&json_bytes);
+        let src_addr = JsonPcapParser::extract_src_addr_l3(&layered_json);
+        let dst_addr = JsonPcapParser::extract_src_addr_l3(&layered_json);
+        let binary_json = JsonParser::get_vec(layered_json);
 
         // debug!("{:?} {:?} {:?} {:?}", frame_time, src_addr, dst_addr, binary_json);
 
-        // self.push.send(binary_json)
-        // self.push.send(json_bytes)
+        
+        let net_packet = NetworkPacket::new(
+            frame_time.timestamp_millis(), 
+            src_addr.unwrap(), 
+            dst_addr.unwrap(), 
+            binary_json);
+            
+        let envelope = Envelope::new(
+            String::from("add_packet"),
+            net_packet.encode()
+        );
+        
+        let message: Vec<u8> = envelope.encode();
 
-        //========================
-        // TODO: remove this part in future
-        data = remove_topic(data, DECODER_TOPIC.as_bytes());
-
-        let mut json_bytes = PcapTranslator::translate(data);
-
-        json_bytes = set_topic(json_bytes, DB_TOPIC.as_bytes());
-        //========================
-
-        self.transmitter.send(json_bytes);
+        self.push.send(message);
     }
 }

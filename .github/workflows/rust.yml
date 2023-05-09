@@ -46,7 +46,7 @@ jobs:
       - name: Update platform
         run: |
           sudo apt-get update
-          sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake
+          sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto
 
       - name: Build and Install NNG
         run: |
@@ -60,10 +60,7 @@ jobs:
       #      - name: Clean
       #        run: cargo clean
 
-      - name: Build
-        run: cargo build
-
-      - name: Test
+      - name: Build and Test
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
         run: cargo test

@@ -1,3 +1,4 @@
+use net_core::transport::dummy_command::DummyCommand;
 use net_core::topic::{DECODER_TOPIC, DB_TOPIC};
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
@@ -6,7 +7,6 @@ use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 use net_core::transport::polling::Poller;
 
 use crate::command::decoder::DecoderCommand;
-use crate::command::dummy::DummyCommand;
 use crate::command::dispatcher::TranslatorDispatcher;
 use crate::command::timescale_command::TimescaleCommand;
 use crate::command::transmitter::Transmitter;

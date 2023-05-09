@@ -1,13 +1,29 @@
+use std::sync::Arc;
+
 use chrono::{DateTime, Utc, TimeZone};
 use net_core::transport::sockets::{Receiver, Sender, Handler};
 use postgres::{types::ToSql, Row};
-use crate::{command::executor::Executor, db_access::query};
+use crate::{command::executor::Executor, db_access::{query, query_factory}};
 use super::time_interval::TimeInterval;
 
-pub struct SelectInterval {
-    pub executor: Executor
+pub struct SelectInterval<T>
+where T: Sender + ?Sized
+{
+    executor: Executor,
+    result_receiver: Arc<T>
 }
-
+impl<T> query_factory::QueryFactory for SelectInterval<T>
+where T: Sender + ?Sized
+{
+    type Q = SelectInterval<T>;
+    type R = Arc<T>;
+    fn create_query_handler(executor: Executor, result_receiver: Self::R) -> Self::Q {
+        SelectInterval {
+            executor,
+            result_receiver
+        }
+    }
+}
 struct SelectIntervalQuery<'a> {
     pub raw_query: &'a str,
     pub args: [&'a (dyn ToSql + Sync); 2]
@@ -36,7 +52,9 @@ impl<'a> query::PostgresQuery<'a> for SelectIntervalQuery<'a> {
         (self.raw_query, &self.args)
     }
 }
-impl SelectInterval{
+impl<T> SelectInterval<T>
+where T: Sender + ?Sized
+{
     pub fn select_time_interval(&self, data: TimeInterval) -> Result<Vec<Row>, postgres::Error> {
         let start = Utc.timestamp_millis_opt(data.start_interval).unwrap();
         let end = Utc.timestamp_millis_opt(data.end_interval).unwrap();
@@ -45,11 +63,13 @@ impl SelectInterval{
     }
 }
 
-impl Handler for SelectInterval {
+impl<T> Handler for SelectInterval<T>
+where T: Sender + ?Sized
+{
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        log::info!("Received data in SelectInterval::handle: {:?}", data);
-        todo!("Wait for middleware format implementation");
+        log::info!("received data in SelectInterval::handle: {:?}", data);
+        todo!("wait for middleware format implementation");
     }
 }
 

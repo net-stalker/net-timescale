@@ -1,0 +1,5 @@
+[connector]
+endpoint = "tcp://api.hub.netstalker.io:5555"
+
+[log]
+level = "Info"

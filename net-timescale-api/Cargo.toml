@@ -1,0 +1,11 @@
+[package]
+name = "net-timescale-api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+capnp = "0.16.1"
+capnpc = "0.16.4"
+
+[build-dependencies.capnpc]
+capnpc = "0.16.4"
