@@ -8,7 +8,7 @@ use net_core::serialization::Decoder;
 
 
 #[derive(Debug)]
-pub struct NetworkPacket {
+pub struct NetworkPacketDTO {
     frame_time: i64,
 
     src_addr: String,
@@ -17,9 +17,9 @@ pub struct NetworkPacket {
     network_packet_data: Vec<u8>,
 }
 
-impl NetworkPacket {
+impl NetworkPacketDTO {
     pub fn new ( frame_time: i64, src_addr: String, dst_addr: String, network_packet_data: Vec<u8>) -> Self {
-        NetworkPacket { 
+        NetworkPacketDTO { 
             frame_time, 
             src_addr, 
             dst_addr, 
@@ -44,7 +44,7 @@ impl NetworkPacket {
     }
 }
 
-impl Encoder for NetworkPacket {
+impl Encoder for NetworkPacketDTO {
     fn encode(&self) -> Vec<u8> {    
         let mut buffer: Vec<u8> = Vec::new();
 
@@ -63,7 +63,7 @@ impl Encoder for NetworkPacket {
     }
 }
 
-impl Decoder for NetworkPacket {
+impl Decoder for NetworkPacketDTO {
     fn decode(data: Vec<u8>) -> Self {
         let message_reader = ::capnp::serialize_packed::read_message(
             data.as_slice(), //Think about using std::io::Cursor here
@@ -71,7 +71,7 @@ impl Decoder for NetworkPacket {
     
         let decoded_struct = message_reader.get_root::<network_packet::Reader>().unwrap();
 
-        NetworkPacket { 
+        NetworkPacketDTO { 
             frame_time: decoded_struct.get_frame_time(), 
             src_addr: String::from(decoded_struct.get_src_addr().unwrap()), 
             dst_addr: String::from(decoded_struct.get_dst_addr().unwrap()), 

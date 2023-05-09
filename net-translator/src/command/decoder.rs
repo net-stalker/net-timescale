@@ -13,7 +13,7 @@ use net_core::transport::sockets::{Handler, Receiver, Sender};
 use net_core::serialization::envelope::Envelope;
 use net_core::serialization::Encoder;
 
-use net_timescale_api::api::network_packet::NetworkPacket;
+use net_timescale_api::api::network_packet::NetworkPacketDTO;
 
 pub struct DecoderCommand<S> {
     pub push: Arc<S>,
@@ -38,7 +38,7 @@ impl<S: Sender> Handler for DecoderCommand<S> {
         // debug!("{:?} {:?} {:?} {:?}", frame_time, src_addr, dst_addr, binary_json);
 
         
-        let net_packet = NetworkPacket::new(
+        let net_packet = NetworkPacketDTO::new(
             frame_time.timestamp_millis(), 
             src_addr.unwrap(), 
             dst_addr.unwrap(), 

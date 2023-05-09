@@ -7,7 +7,7 @@ use net_core::transport::sockets::{Handler, Receiver, Sender};
 use net_core::serialization::envelope::Envelope;
 use net_core::serialization::Decoder;
 
-use net_timescale_api::api::network_packet::NetworkPacket;
+use net_timescale_api::api::network_packet::NetworkPacketDTO;
 
 use simple_websockets::{Message, Responder};
 
@@ -21,7 +21,7 @@ impl<S: Sender> Handler for PullCommand<S> {
         let data = receiver.recv();
 
         let envelope = Envelope::decode(data.clone());
-        let network_packet_data = NetworkPacket::decode(envelope.get_data().to_owned());
+        let network_packet_data = NetworkPacketDTO::decode(envelope.get_data().to_owned());
 
         let formated_string = format!("{:?}", network_packet_data);
 
