@@ -19,7 +19,7 @@ where T: Sender + ?Sized
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        let envelope = envelope::Envelope::decode(data.clone());
+        let envelope = envelope::Envelope::decode(data);
         let mut data = envelope.get_data().to_owned();
         // TODO: think about adding HashMap in dispatcher with connectors to avoid such overheads
         data.splice(0..0, envelope.get_type().as_bytes().to_owned());
