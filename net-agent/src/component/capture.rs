@@ -5,7 +5,7 @@ use threadpool::ThreadPool;
 
 use net_core::capture;
 use net_core::layer::NetComponent;
-use net_core::transport::connector_nng::{ConnectorNNG, Proto};
+use net_core::transport::connector_nng::ConnectorNNG;
 
 use crate::codec::Codec;
 
@@ -17,7 +17,7 @@ pub struct Capture {
 
 impl Capture {
     pub fn new(pool: ThreadPool) -> Self {
-        let capture = pcap::Capture::from_device("en0")
+        let capture = pcap::Capture::from_device("wlp3s0")
             .unwrap()
             // .promisc(true)
             // .snaplen(65535)

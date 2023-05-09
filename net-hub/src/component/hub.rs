@@ -6,12 +6,12 @@ use std::{
 use log::{debug, info};
 use simple_websockets::Event;
 use threadpool::ThreadPool;
-use net_core::{layer::NetComponent, transport::{sockets::Sender, dummy_command::DummyCommand}};
+use net_core::{layer::NetComponent, transport::{sockets::Sender, dummy_command::DummyCommand, connector_nng::Proto}};
 
 use net_core::transport::connector_nng::ConnectorNNG;
 use net_core::transport::polling::Poller;
 
-use crate::command::server::ServerCommand;
+use crate::command::{server::ServerCommand, dummy_timescale::DummyTimescaleHandler};
 use crate::command::pull::PullCommand;
 use crate::command::translator::TranslatorCommand;
 
@@ -89,6 +89,14 @@ impl NetComponent for Hub {
                 translator,
                 clients: pull_pub
             };
+            let db_service_producer = ConnectorNNG::builder()
+                .with_endpoint("tcp://0.0.0.0:5558".to_string())
+                .with_handler(DummyTimescaleHandler)
+                .with_proto(Proto::Pull)
+                .build()
+                .bind()
+                .into_inner();
+            
             let server = ConnectorNNG::pub_sub_builder()
                 .with_endpoint("tcp://0.0.0.0:5555".to_string())
                 .with_handler(server_command)
@@ -99,6 +107,7 @@ impl NetComponent for Hub {
             Poller::new()
                 .add(server)
                 .add(pull_sub)
+                .add(db_service_producer)
                 .poll();
         });
     }

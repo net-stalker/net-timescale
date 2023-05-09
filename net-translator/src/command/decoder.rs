@@ -11,7 +11,7 @@ use net_core::transport::sockets::{Handler, Receiver, Sender};
 use net_timescale_api::{self, Encoder};
 use net_timescale_api::api::envelope::Envelope;
 use net_timescale_api::api::network_packet::NetworkPacket;
-use net_core::topic::{remove_topic, set_topic, DECODER_TOPIC, DB_TOPIC};
+use net_core::topic::{remove_topic, DB_TOPIC, DECODER_TOPIC};
 
 pub struct DecoderCommand<S>
 where S: Sender + ?Sized
@@ -24,6 +24,8 @@ where S: Sender + ?Sized
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
+        let data = remove_topic(data, DECODER_TOPIC.as_bytes());
+
         debug!("received from translator::dispatcher {:?}", data);
 
         let json_bytes = PcapTranslator::translate(data);
@@ -45,7 +47,7 @@ where S: Sender + ?Sized
             binary_json);
             
         let envelope = Envelope::new(
-            String::from("add_packet"),
+            String::from("network_packet"),
             net_packet.encode()
         );
         

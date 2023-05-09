@@ -72,7 +72,7 @@ where T: Sender + ?Sized
         let data = receiver.recv();
         // ==============================
         // must be changed 
-        let topic = "add_packet".as_bytes().to_owned();
+        let topic = "network_packet".as_bytes().to_owned();
         let packet = NetworkPacket::decode(data[topic.len()..].to_owned());
         //==============================
         match self.insert(packet) {

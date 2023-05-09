@@ -9,22 +9,20 @@ pub struct ServerCommand<S: ?Sized> {
 
 impl<S: Sender + ?Sized> Handler for ServerCommand<S> {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
-        let data = receiver.recv();
+        let mut data = receiver.recv();
 
         // let magic_num = &data[..4];
         // if 3569595041_u32.to_be_bytes() == magic_num {
         // debug!("Global header will be skipped");
         // return;
         // }
-
-        // just for logging
-        if check_topic(&data, DB_TOPIC.as_bytes()) {
-            debug!("received from decoder {:?}", data);
-            let mut clients_data = data.clone();
-            clients_data = remove_topic(clients_data, DB_TOPIC.as_bytes());
-            self.clients.send(clients_data);
-        } else {
+        if check_topic(&data, DECODER_TOPIC.as_bytes()) {
             debug!("received from agent {:?}", data);
+        } else {
+            debug!("received from decoder {:?}", data);
+            let clients_data = data.clone();
+            self.clients.send(clients_data);
+            data = set_topic(data, DB_TOPIC.as_bytes());
         }
         self.translator.send(data);
     }

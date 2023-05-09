@@ -64,10 +64,11 @@ impl NetComponent for Translator {
             .connect()
             .into_inner();
         // db_service - a server which allows `net-timescale` modules to connect to itself
-        let db_service = ConnectorNNG::pub_sub_builder()
+        let db_service = ConnectorNNG::builder()
             .with_endpoint("tcp://0.0.0.0:5556".to_string())
             .with_handler(DummyCommand)
-            .build_publisher()
+            .with_proto(Proto::Push)
+            .build()
             .bind()
             .into_inner();
         // timescale_command - a local service which sends data to a connected `net-timescale` module 
