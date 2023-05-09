@@ -24,17 +24,14 @@ impl Files {
         buffer
     }
 
-    pub fn find_files(path_buf: &PathBuf, extension: &str) -> Vec<String> {
+    pub fn find_files(path_buf: &PathBuf, extension: &str) -> Vec<PathBuf> {
         WalkDir::new(path_buf)
             .into_iter()
+            .take_while(|entry| entry.is_ok())
             .map(|entry| { entry.unwrap() })
             .filter(|entry| { entry.file_type().is_file() && entry.path().extension().map_or(false, |ext| ext == extension) })
-            .map(|entry| { entry.path().to_path_buf().to_string_lossy().to_string() })
+            .map(|entry| { entry.path().to_path_buf() })
             .collect()
-    }
-
-    pub fn find_rs_files(path_buf: &PathBuf) -> Vec<String> {
-        Self::find_files(path_buf, "rs")
     }
 
     pub fn which(app_name: &str) -> ExitStatus {
