@@ -4,7 +4,6 @@ use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 use r2d2_postgres::{PostgresConnectionManager};
 use net_timescale::component::timescale::Timescale;
-
 fn main() {
     env_logger::init();
     info!("Run module");

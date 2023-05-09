@@ -1,4 +1,5 @@
 use log::info;
+use net_core::transport::dummy_command::DummyCommand;
 use pcap::Active;
 use threadpool::ThreadPool;
 
@@ -7,7 +8,6 @@ use net_core::layer::NetComponent;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 
 use crate::codec::Codec;
-use crate::command::dummy::DummyCommand;
 
 pub struct Capture {
     capture: pcap::Capture<Active>,

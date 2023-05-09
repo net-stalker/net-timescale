@@ -1,4 +1,4 @@
-use net_core::transport::sockets::{Handler, Receiver, Sender};
+use super::sockets::{Handler, Receiver, Sender};
 
 pub struct DummyCommand;
 
