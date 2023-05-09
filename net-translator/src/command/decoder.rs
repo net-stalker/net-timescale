@@ -4,6 +4,8 @@ use log::debug;
 
 use net_core::capture::translator::pcap_translator::PcapTranslator;
 use net_core::capture::translator::translator::Translator;
+use net_core::jsons::json_parser::JsonParser;
+use net_core::jsons::json_pcap_parser::JsonPcapParser;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
 use net_timescale_api::{self, Encoder};
@@ -21,7 +23,7 @@ impl<S> Handler for DecoderCommand<S>
 where S: Sender + ?Sized
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
-        let mut data = receiver.recv();
+        let data = receiver.recv();
         debug!("received from translator::dispatcher {:?}", data);
 
         let json_bytes = PcapTranslator::translate(data);
@@ -34,8 +36,6 @@ where S: Sender + ?Sized
         let src_addr = JsonPcapParser::extract_src_addr_l3(&layered_json);
         let dst_addr = JsonPcapParser::extract_src_addr_l3(&layered_json);
         let binary_json = JsonParser::get_vec(layered_json);
-
-        // debug!("{:?} {:?} {:?} {:?}", frame_time, src_addr, dst_addr, binary_json);
 
         
         let net_packet = NetworkPacket::new(
@@ -51,6 +51,6 @@ where S: Sender + ?Sized
         
         let message: Vec<u8> = envelope.encode();
 
-        self.push.send(message);
+        self.transmitter.send(message);
     }
 }
