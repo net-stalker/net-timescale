@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use net_core::{transport::sockets::{Handler, Receiver, Sender}};
-use net_timescale_api::{Decoder, api::envelope};
+use net_core::serialization::envelope;
+use net_core::serialization::Decoder;
 
 pub struct CommandDispatcher<T>
 where T: Sender + ?Sized

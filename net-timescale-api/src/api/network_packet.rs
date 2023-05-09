@@ -3,6 +3,10 @@ mod network_packet_capnp {
 }
 use network_packet_capnp::network_packet;
 
+use net_core::serialization::Encoder;
+use net_core::serialization::Decoder;
+
+
 #[derive(Debug)]
 pub struct NetworkPacket {
     frame_time: i64,
@@ -40,7 +44,7 @@ impl NetworkPacket {
     }
 }
 
-impl crate::Encoder for NetworkPacket {
+impl Encoder for NetworkPacket {
     fn encode(&self) -> Vec<u8> {    
         let mut buffer: Vec<u8> = Vec::new();
 
@@ -59,7 +63,7 @@ impl crate::Encoder for NetworkPacket {
     }
 }
 
-impl crate::Decoder for NetworkPacket {
+impl Decoder for NetworkPacket {
     fn decode(data: Vec<u8>) -> Self {
         let message_reader = ::capnp::serialize_packed::read_message(
             data.as_slice(), //Think about using std::io::Cursor here

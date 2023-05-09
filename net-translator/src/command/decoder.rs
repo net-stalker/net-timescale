@@ -4,12 +4,15 @@ use log::debug;
 
 use net_core::capture::translator::pcap_translator::PcapTranslator;
 use net_core::capture::translator::translator::Translator;
+
 use net_core::jsons::json_parser::JsonParser;
 use net_core::jsons::json_pcap_parser::JsonPcapParser;
+
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
-use net_timescale_api::{self, Encoder};
-use net_timescale_api::api::envelope::Envelope;
+use net_core::serialization::envelope::Envelope;
+use net_core::serialization::Encoder;
+
 use net_timescale_api::api::network_packet::NetworkPacket;
 
 pub struct DecoderCommand<S> {
