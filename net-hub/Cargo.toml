@@ -15,6 +15,7 @@ readme = "README.md"
 net-core = { path = "../net-core" }
 net-config = { path = "../net-config" }
 net-timescale-api = { path = "../net-timescale-api" }
+net-proto-api = { path = "../net-proto-api" }
 
 log = { workspace = true }
 env_logger = { workspace = true }
