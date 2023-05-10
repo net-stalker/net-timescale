@@ -1,5 +1,3 @@
-pub fn build_capnp() {
-}
 fn main() {
     let files_to_compile = std::fs::read_dir(".capnp/").unwrap();
 
@@ -12,5 +10,5 @@ fn main() {
             .default_parent_module(vec!["capnp".into(), file_name])
             .run()
             .expect("Error while compiling schema");
-    }
+    }    
 }
