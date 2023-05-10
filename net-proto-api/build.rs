@@ -1,5 +1,3 @@
-pub fn build_capnp() {
-}
 fn main() {
     let files_to_compile = std::fs::read_dir(".capnp/").unwrap();
 

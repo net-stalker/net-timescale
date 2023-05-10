@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use chrono::{Utc, DateTime, TimeZone};
 use net_core::transport::sockets::{Handler, Receiver, Sender};
-use net_core::serialization::Decoder;
+use net_proto_api::decoder_api::Decoder;
 use postgres::types::ToSql;
 use serde_json::Value;
 use crate::db_access::{query, query_factory};

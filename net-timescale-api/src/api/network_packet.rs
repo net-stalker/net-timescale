@@ -3,8 +3,8 @@ mod network_packet_capnp {
 }
 use network_packet_capnp::network_packet;
 
-use net_core::serialization::Encoder;
-use net_core::serialization::Decoder;
+use net_proto_api::encoder_api::Encoder;
+use net_proto_api::decoder_api::Decoder;
 
 
 #[derive(Debug)]

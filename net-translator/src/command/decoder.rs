@@ -10,8 +10,8 @@ use net_core::jsons::json_pcap_parser::JsonPcapParser;
 
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
-use net_core::serialization::envelope::Envelope;
-use net_core::serialization::Encoder;
+use net_proto_api::envelope::envelope::Envelope;
+use net_proto_api::encoder_api::Encoder;
 
 use net_timescale_api::api::network_packet::NetworkPacketDTO;
 

@@ -26,7 +26,7 @@ impl Envelope{
     }
 }
 
-impl super::Encoder for Envelope {
+impl crate::encoder_api::Encoder for Envelope {
     fn encode(&self) -> Vec<u8> {    
         let mut buffer: Vec<u8> = Vec::new();
 
@@ -43,7 +43,7 @@ impl super::Encoder for Envelope {
     }
 }
 
-impl super::Decoder for Envelope {
+impl crate::decoder_api::Decoder for Envelope {
     fn decode(data: Vec<u8>) -> Self {    
         let message_reader = ::capnp::serialize_packed::read_message(
             data.as_slice(), //Think about using std::io::Cursor here

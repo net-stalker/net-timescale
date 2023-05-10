@@ -5,7 +5,7 @@ edition = "2021"
 
 
 [dependencies]
-net-core = { path = "../net-core" }
+net-proto-api = { path = "../net-proto-api" }
 
 capnp = "0.16.1"
 capnpc = "0.16.4"

@@ -4,8 +4,9 @@ use std::sync::{Arc, RwLock};
 use log::debug;
 
 use net_core::transport::sockets::{Handler, Receiver, Sender};
-use net_core::serialization::envelope::Envelope;
-use net_core::serialization::Decoder;
+
+use net_proto_api::envelope::envelope::Envelope;
+use net_proto_api::decoder_api::Decoder;
 
 use net_timescale_api::api::network_packet::NetworkPacketDTO;
 
