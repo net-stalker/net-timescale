@@ -16,7 +16,7 @@ macro_rules! build_capnp {
         let files_to_compile = std::fs::read_dir(".capnp/").unwrap();
     
         for file_to_compile in files_to_compile {
-            build_schema!(file_to_compile.as_ref().unwrap().path().as_path().to_str().unwrap());
+                build_schema!(file_to_compile.as_ref().unwrap().path().as_path().to_str().unwrap());
         }
     }
 }
