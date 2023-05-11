@@ -4,13 +4,16 @@ use log::debug;
 
 use net_core::capture::translator::pcap_translator::PcapTranslator;
 use net_core::capture::translator::translator::Translator;
+
 use net_core::jsons::json_parser::JsonParser;
 use net_core::jsons::json_pcap_parser::JsonPcapParser;
+
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
-use net_timescale_api::{self, Encoder};
-use net_timescale_api::api::envelope::Envelope;
-use net_timescale_api::api::network_packet::NetworkPacket;
+use net_proto_api::envelope::envelope::Envelope;
+use net_proto_api::encoder_api::Encoder;
+
+use net_timescale_api::api::network_packet::NetworkPacketDTO;
 use net_core::topic::{remove_topic, DECODER_TOPIC};
 
 pub struct DecoderCommand<S>
@@ -40,7 +43,7 @@ where S: Sender + ?Sized
         let binary_json = JsonParser::get_vec(layered_json);
 
         
-        let net_packet = NetworkPacket::new(
+        let net_packet = NetworkPacketDTO::new(
             frame_time.timestamp_millis(), 
             src_addr.unwrap(), 
             dst_addr.unwrap(), 

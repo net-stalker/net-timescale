@@ -3,9 +3,15 @@ name = "net-timescale-api"
 version = "0.1.0"
 edition = "2021"
 
+
 [dependencies]
+net-proto-api = { path = "../net-proto-api" }
+
 capnp = "0.16.1"
 capnpc = "0.16.4"
+
+[build-dependencies]
+net-core = { path = "../net-core" }
 
 [build-dependencies.capnpc]
 capnpc = "0.16.4"

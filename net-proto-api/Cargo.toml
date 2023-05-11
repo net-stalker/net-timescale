@@ -1,0 +1,13 @@
+[package]
+name = "net-proto-api"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+capnp = "0.17.0"
+capnpc = "0.17.0"
+
+[build-dependencies.capnpc]
+capnpc = "0.17.0"

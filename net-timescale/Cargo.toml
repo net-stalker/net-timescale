@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 net-core = { path = "../net-core" }
+net-proto-api = { path = "../net-proto-api" }
 net-timescale-api = { path = "../net-timescale-api" }
 
 log = { workspace = true }

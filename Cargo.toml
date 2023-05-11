@@ -1,7 +1,7 @@
 [workspace]
 
 members = [
-    "net-all-in-one",
+    "net-starter",
     "net-config",
     "net-core",
     "net-agent",
@@ -9,7 +9,8 @@ members = [
     "net-translator",
     "net-timescale",
     "net-timescale-api",
-    "net-control"
+    "net-control",
+    "net-proto-api"
 ]
 
 [workspace.dependencies]

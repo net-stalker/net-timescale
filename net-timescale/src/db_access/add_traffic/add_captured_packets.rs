@@ -1,12 +1,12 @@
 use std::sync::Arc;
 use chrono::{Utc, DateTime, TimeZone};
 use net_core::transport::sockets::{Handler, Receiver, Sender};
-use net_timescale_api::Decoder;
+use net_proto_api::decoder_api::Decoder;
 use postgres::types::ToSql;
 use serde_json::Value;
 use crate::db_access::{query, query_factory};
 use crate::command::executor::Executor;
-use net_timescale_api::api::{network_packet::NetworkPacket};
+use net_timescale_api::api::{network_packet::NetworkPacketDTO};
 
 pub struct AddCapturedPackets<T>
 where T: Sender + ?Sized
@@ -52,7 +52,7 @@ impl<'a> query::PostgresQuery<'a> for AddPacketsQuery<'a> {
 impl<T> AddCapturedPackets<T>
 where T: Sender + ?Sized
 {
-    pub fn insert(&self, data: NetworkPacket) -> Result<u64, postgres::Error> {
+    pub fn insert(&self, data: NetworkPacketDTO) -> Result<u64, postgres::Error> {
         let time = Utc.timestamp_millis_opt(data.get_frame_time()).unwrap();
         let json = AddCapturedPackets::<T>::convert_to_value(data.get_network_packet_data().to_owned()).unwrap();
         let src_addr = data.get_src_addr().to_owned();
@@ -72,8 +72,8 @@ where T: Sender + ?Sized
         let data = receiver.recv();
         // ==============================
         // must be changed 
-        let topic = "network_packet".as_bytes().to_owned();
-        let packet = NetworkPacket::decode(data[topic.len()..].to_owned());
+        let topic = "add_packet".as_bytes().to_owned();
+        let packet = NetworkPacketDTO::decode(data[topic.len()..].to_owned());
         //==============================
         match self.insert(packet) {
             Ok(rows_count) => { 
@@ -114,7 +114,7 @@ mod tests{
         let dst = "2".to_owned();
         let data = r#"{"test":"test"}"#;
         let json_data: serde_json::Value = serde_json::from_str(data).unwrap();
-        let packet = NetworkPacket::new(
+        let packet = NetworkPacketDTO::new(
             time_to_insert.timestamp_millis(),
             src.clone(),
             dst.clone(),

@@ -10,5 +10,5 @@ fn main() {
             .default_parent_module(vec!["capnp".into(), file_name])
             .run()
             .expect("Error while compiling schema");
-    }    
+    }
 }
