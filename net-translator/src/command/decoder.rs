@@ -11,7 +11,7 @@ use net_core::transport::sockets::{Handler, Receiver, Sender};
 use net_timescale_api::{self, Encoder};
 use net_timescale_api::api::envelope::Envelope;
 use net_timescale_api::api::network_packet::NetworkPacket;
-use net_core::topic::{remove_topic, DB_TOPIC, DECODER_TOPIC};
+use net_core::topic::{remove_topic, DECODER_TOPIC};
 
 pub struct DecoderCommand<S>
 where S: Sender + ?Sized
