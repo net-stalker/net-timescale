@@ -29,7 +29,7 @@ where S: Sender + ?Sized
         let data = receiver.recv();
         let data = remove_topic(data, DECODER_TOPIC.as_bytes());
 
-        debug!("received from translator::dispatcher {:?}", data);
+        debug!("received from translator::dispatcher");
 
         let json_bytes = PcapTranslator::translate(data);
 
@@ -38,15 +38,26 @@ where S: Sender + ?Sized
         let layered_json = JsonPcapParser::split_into_layers(first_json_value);
 
         let frame_time = JsonPcapParser::find_frame_time(&json_bytes);
-        let src_addr = JsonPcapParser::extract_src_addr_l3(&layered_json);
-        let dst_addr = JsonPcapParser::extract_src_addr_l3(&layered_json);
+        let src_addr = match JsonPcapParser::extract_src_addr_l3(&layered_json) {
+            Some(src) => src,
+            None => {
+                log::error!("src is missing");
+                return
+            }
+        };
+        let dst_addr = match JsonPcapParser::extract_src_addr_l3(&layered_json) {
+            Some(dst) => dst,
+            None => {
+                log::error!("dst is missing");
+                return
+            }
+        };
         let binary_json = JsonParser::get_vec(layered_json);
-
         
         let net_packet = NetworkPacketDTO::new(
             frame_time.timestamp_millis(), 
-            src_addr.unwrap(), 
-            dst_addr.unwrap(), 
+            src_addr, 
+            dst_addr, 
             binary_json);
             
         let envelope = Envelope::new(

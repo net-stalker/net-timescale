@@ -22,9 +22,9 @@ impl<S: Sender + ?Sized> Handler for ServerCommand<S> {
         let mut message = Envelope::decode(data);
 
         if message.get_type() == DECODER_TOPIC {
-            debug!("received from agent {:?}", message.get_data());
+            debug!("received from agent {}", message.get_type());
         } else {
-            debug!("received from decoder {:?}", message.get_type());
+            debug!("received from decoder {}", message.get_type());
             self.clients.send(message.get_data().to_owned());
             message = Envelope::new(DB_TOPIC.to_owned(), message.encode());
         }

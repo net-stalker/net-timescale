@@ -13,10 +13,10 @@ where T: Sender + ?Sized
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        log::info!("received data from hub: {:?}", data);
         let message = Envelope::decode(data);
+        log::info!("received data from hub {}", message.get_type());
         let mut buffer = message.get_data().to_owned();
         buffer = set_topic(buffer, message.get_type().as_bytes());
-        self.consumer.send(message.get_data().to_owned());
+        self.consumer.send(buffer);
     }
 }

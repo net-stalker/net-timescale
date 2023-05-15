@@ -25,9 +25,7 @@ where T: Sender + ?Sized
         let envelope = Envelope::decode(data);
         let mut data = envelope.get_data().to_owned();
         data = set_topic(data, envelope.get_type().as_bytes());
-        log::info!("topic in envelope {}", envelope.get_type());
-        // TODO: think about adding HashMap in dispatcher with connectors to avoid such overheads
-        // data.splice(0..0, envelope.get_type().as_bytes().to_owned());
+        log::info!("received from hub {}", envelope.get_type());
         self.consumer.send(data);
     }
 }

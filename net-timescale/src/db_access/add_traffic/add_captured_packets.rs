@@ -73,7 +73,7 @@ where T: Sender + ?Sized
         let data = receiver.recv();
         // ==============================
         // must be changed 
-        let topic = "add_packet".as_bytes();
+        let topic = "network_packet".as_bytes();
         let data = remove_topic(data, topic);
         let packet = NetworkPacketDTO::decode(data.to_owned());
         //==============================

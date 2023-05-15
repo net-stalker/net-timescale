@@ -5,7 +5,6 @@ use log::debug;
 
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
-use net_proto_api::envelope::envelope::Envelope;
 use net_proto_api::decoder_api::Decoder;
 
 use net_timescale_api::api::network_packet::NetworkPacketDTO;
@@ -19,7 +18,6 @@ pub struct PullCommand {
 impl Handler for PullCommand {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        // let envelope = Envelope::decode(data.clone());
         let network_packet_data = NetworkPacketDTO::decode(data);
 
         let formated_string = format!("{:?}", network_packet_data);
