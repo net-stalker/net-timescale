@@ -9,7 +9,8 @@ use net_core::topic::{set_topic, DECODER_TOPIC};
 use net_core::transport::connector_nng::ConnectorNNG;
 use net_core::transport::dummy_command::DummyCommand;
 use net_core::transport::sockets::Sender;
-
+use net_proto_api::encoder_api::Encoder;
+use net_proto_api::envelope::envelope::Envelope;
 pub struct Codec {
     client: Arc<ConnectorNNG<DummyCommand>>,
 }
@@ -29,7 +30,12 @@ impl Handler for Codec {
         //TODO very slow, should be redesigned in the task CU-861maxexc
         let mut buf = global_header.to_bytes();
         buf.append(&mut packet.to_bytes());
-        buf = set_topic(buf, DECODER_TOPIC.as_bytes());
-        self.client.send(buf)
+
+        let envelope = Envelope::new(
+            String::from(DECODER_TOPIC),
+            buf
+        );
+        let message: Vec<u8> = envelope.encode(); 
+        self.client.send(message)
     }
 }

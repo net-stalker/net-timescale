@@ -19,8 +19,8 @@ pub struct PullCommand {
 impl Handler for PullCommand {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        let envelope = Envelope::decode(data.clone());
-        let network_packet_data = NetworkPacketDTO::decode(envelope.get_data().to_owned());
+        // let envelope = Envelope::decode(data.clone());
+        let network_packet_data = NetworkPacketDTO::decode(data);
 
         let formated_string = format!("{:?}", network_packet_data);
 

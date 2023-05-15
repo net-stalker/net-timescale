@@ -2,6 +2,9 @@ use std::sync::Arc;
 use log::debug;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 use net_core::topic::{check_topic, DB_TOPIC, DECODER_TOPIC, set_topic, remove_topic};
+use net_proto_api::decoder_api::Decoder;
+use net_proto_api::encoder_api::Encoder;
+use net_proto_api::envelope::envelope::Envelope;
 pub struct ServerCommand<S: ?Sized> {
     pub translator: Arc<S>,
     pub clients: Arc<S>
@@ -16,14 +19,17 @@ impl<S: Sender + ?Sized> Handler for ServerCommand<S> {
         // debug!("Global header will be skipped");
         // return;
         // }
-        if check_topic(&data, DECODER_TOPIC.as_bytes()) {
-            debug!("received from agent {:?}", data);
+        let mut message = Envelope::decode(data);
+
+        if message.get_type() == DECODER_TOPIC {
+            debug!("received from agent {:?}", message.get_data());
         } else {
-            debug!("received from decoder {:?}", data);
-            let clients_data = data.clone();
-            self.clients.send(clients_data);
-            data = set_topic(data, DB_TOPIC.as_bytes());
+            debug!("received from decoder {:?}", message.get_type());
+            self.clients.send(message.get_data().to_owned());
+            message = Envelope::new(DB_TOPIC.to_owned(), message.encode());
         }
+        data = message.encode();
+        
         self.translator.send(data);
     }
 }
