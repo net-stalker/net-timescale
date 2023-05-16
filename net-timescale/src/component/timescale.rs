@@ -10,7 +10,7 @@ use net_core::transport::{
 };
 use crate::command::{
     dispatcher::CommandDispatcher,
-    postgres_executor::PostgresExecutor, transmitter::Transmitter
+    executor::Executor, transmitter::Transmitter
 };
 use crate::db_access::{
     add_traffic::add_captured_packets::AddCapturedPackets,
@@ -69,7 +69,7 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
                 .bind()
                 .into_inner();
 
-            let executor = Arc::new(PostgresExecutor::new(self.connection_pool.clone()));
+            let executor = Executor::new(self.connection_pool.clone());
             let result_puller = ConnectorNNG::pub_sub_builder()
                 .with_endpoint(TRANSMITTER.to_owned())
                 .with_handler(DummyCommand)
