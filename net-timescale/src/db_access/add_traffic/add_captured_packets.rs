@@ -98,8 +98,6 @@ where
 
 #[cfg(test)]
 mod tests{
-    use postgres::NoTls;
-    use r2d2_postgres::PostgresConnectionManager;
 
     use crate::db_access::query::PostgresQuery;
 

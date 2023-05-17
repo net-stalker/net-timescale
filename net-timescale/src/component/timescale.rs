@@ -8,10 +8,10 @@ use net_core::transport::{
     polling::Poller,
     dummy_command::DummyCommand
 };
-use crate::command::{
+use crate::{command::{
     dispatcher::CommandDispatcher,
     executor::Executor, transmitter::Transmitter
-};
+}, db_access::select_by_time::select_by_time::SelectInterval};
 use crate::db_access::{
     add_traffic::add_captured_packets::AddCapturedPackets,
     query_factory::QueryFactory,
@@ -87,18 +87,18 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
                 .connect()
                 .into_inner();
             
-            // let select_by_time_interval_handler = SelectInterval::create_query_handler(executor.clone(), result_puller.clone());
-            // let service_select_by_time_interval = ConnectorNNG::pub_sub_builder()
-            //     .with_endpoint(DISPATCHER_CONSUMER.to_owned())
-            //     .with_handler(select_by_time_interval_handler)
-            //     .with_topic("select_time".as_bytes().into())
-            //     .build_subscriber()
-            //     .connect()
-            //     .into_inner();
+            let select_by_time_interval_handler = SelectInterval::create_query_handler(executor.clone(), result_puller.clone());
+            let service_select_by_time_interval = ConnectorNNG::pub_sub_builder()
+                .with_endpoint(DISPATCHER_CONSUMER.to_owned())
+                .with_handler(select_by_time_interval_handler)
+                .with_topic("select_time".as_bytes().into())
+                .build_subscriber()
+                .connect()
+                .into_inner();
 
             Poller::new()
                 .add(service_add_packets)
-                // .add(service_select_by_time_interval)
+                .add(service_select_by_time_interval)
                 .add(transmitter)
                 .add(db_service)
                 .poll();
