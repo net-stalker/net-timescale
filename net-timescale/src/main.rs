@@ -16,7 +16,7 @@ use std::fs::{self, File};
 fn main() {
     env_logger::init();
     info!("Run module");
-    let pem = fs::read("src/.ssl/cert.pem").unwrap();
+    let pem = fs::read("src/.ssl/client.includeprivatekey.pem").unwrap();
     let cert = Certificate::from_pem(pem.as_slice()).unwrap();
     let connector = TlsConnector::builder()
         .add_root_certificate(cert)
