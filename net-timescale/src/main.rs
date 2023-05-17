@@ -29,7 +29,7 @@ fn main() {
         make_tls_connector
     );
     let connection_pool = r2d2::Pool::builder().max_size(10).build(manager).unwrap();
-    // Timescale::new(thread_pool.clone(), connection_pool).run();
+    Timescale::new(thread_pool.clone(), connection_pool).run();
 
     thread_pool.join();
 }
