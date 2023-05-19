@@ -9,17 +9,22 @@ use net_timescale::component::timescale::Timescale;
 
 use postgres::config::Config;
 
-use native_tls::{Certificate, TlsConnector};
+use native_tls::{Certificate, TlsConnector, Identity};
 use postgres_native_tls::MakeTlsConnector;
 use std::fs::{self, File};
 
 fn main() {
     env_logger::init();
     info!("Run module");
-    let pem = fs::read("src/.ssl/client.includeprivatekey.pem").unwrap();
-    let cert = Certificate::from_pem(pem.as_slice()).unwrap();
+    let pem = fs::read("src/.ssl/client.pem").unwrap();
+    let key = fs::read("src/.ssl/client_key.pem").unwrap();
+    // let pem = fs::read(".ssl/client.crt").unwrap();
+    // let key = fs::read(".ssl/client.key").unwrap();
+    // let cert = Certificate::from_pem(pem.as_slice()).unwrap();
+    let client = Identity::from_pkcs8(&pem, &key).unwrap();
     let connector = TlsConnector::builder()
-        .add_root_certificate(cert)
+        // .add_root_certificate(cert)
+        .identity(client)
         .build()
         .unwrap();
     let make_tls_connector = MakeTlsConnector::new(connector); 
