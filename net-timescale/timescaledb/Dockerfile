@@ -6,7 +6,10 @@ COPY ./certs/out/postgresdb.crt /var/lib/postgresql
 COPY ./certs/out/myCA.crt /var/lib/postgresql
 COPY ./certs/out/myCA.crl /var/lib/postgresql
 
+COPY set-ssl-conf.sh /usr/local/bin/
 COPY create_user.sql /docker-entrypoint-initdb.d/
+
+
 
 USER root
 
