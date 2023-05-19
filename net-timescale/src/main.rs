@@ -16,14 +16,14 @@ use std::fs::{self, File};
 fn main() {
     env_logger::init();
     info!("Run module");
-    let pem = fs::read("src/.ssl/client.pem").unwrap();
-    let key = fs::read("src/.ssl/client_key.pem").unwrap();
-    // let pem = fs::read(".ssl/client.crt").unwrap();
-    // let key = fs::read(".ssl/client.key").unwrap();
-    // let cert = Certificate::from_pem(pem.as_slice()).unwrap();
+    let pem = fs::read("src/.ssl/client.crt").unwrap();
+    let key = fs::read("src/.ssl/client.key").unwrap();
+
+    let root = fs::read("timescaledb/certs/root.crt").unwrap();
+    let cert = Certificate::from_pem(root.as_slice()).unwrap();
     let client = Identity::from_pkcs8(&pem, &key).unwrap();
     let connector = TlsConnector::builder()
-        // .add_root_certificate(cert)
+        .add_root_certificate(cert)
         .identity(client)
         .build()
         .unwrap();
