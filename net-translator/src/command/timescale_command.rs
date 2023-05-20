@@ -12,8 +12,8 @@ where S: Sender + ?Sized
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let mut data = receiver.recv();
-        data = remove_topic(data, DB_TOPIC.as_bytes());
+        let message = remove_topic(data, DB_TOPIC.as_bytes());
         log::info!("received from dispatcher");
-        self.consumer.send(data);
+        self.consumer.send(message);
     }
 }

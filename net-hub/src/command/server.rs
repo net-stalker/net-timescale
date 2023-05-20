@@ -28,7 +28,7 @@ impl<S: Sender + ?Sized> Handler for ServerCommand<S> {
             self.clients.send(message.get_data().to_owned());
             message = Envelope::new(DB_TOPIC.to_owned(), message.encode());
         }
-        data = message.encode();
+        let data = message.encode();
         
         self.translator.send(data);
     }

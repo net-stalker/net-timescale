@@ -29,13 +29,13 @@ impl Handler for Codec {
 
         //TODO very slow, should be redesigned in the task CU-861maxexc
         let mut buf = global_header.to_bytes();
-        buf.append(&mut packet.to_bytes());
+        buf.append(&mut packet.to_bytes()); 
 
-        let envelope = Envelope::new(
+        self.client.send(
+            Envelope::new(
             String::from(DECODER_TOPIC),
             buf
-        );
-        let message: Vec<u8> = envelope.encode(); 
-        self.client.send(message)
+            ).encode()
+        )
     }
 }
