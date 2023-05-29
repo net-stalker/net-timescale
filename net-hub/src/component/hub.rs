@@ -11,7 +11,7 @@ use net_core::{layer::NetComponent, transport::{sockets::Sender, dummy_command::
 use net_core::transport::connector_nng::ConnectorNNG;
 use net_core::transport::polling::Poller;
 
-use crate::command::{server::ServerCommand, dummy_timescale::DummyTimescaleHandler};
+use crate::command::{agent::AgentCommand, dummy_timescale::DummyTimescaleHandler};
 use crate::command::pull::PullCommand;
 use crate::command::translator::TranslatorCommand;
 
@@ -24,7 +24,6 @@ impl Hub {
         Hub { pool }
     }
 }
-const PULL: &'static str = "inproc://nng/pull";
 impl NetComponent for Hub {
     fn run(self) {
         info!("run component");
@@ -65,31 +64,17 @@ impl NetComponent for Hub {
             }
         });
         self.pool.execute(move || {
-            let pull_sub = ConnectorNNG::pub_sub_builder()
-                .with_endpoint(PULL.to_string())
-                .with_handler(PullCommand { clients })
-                .build_subscriber()
-                .bind()
-                .into_inner();
-            let pull_pub = ConnectorNNG::pub_sub_builder()
-                .with_endpoint(PULL.to_string())
-                .with_handler(DummyCommand)
-                .build_publisher()
-                .connect()
-                .into_inner();
-
+            // TODO: add ws after configuring zeromq connector
             let translator = ConnectorNNG::pub_sub_builder()
                 .with_endpoint("tcp://0.0.0.0:5557".to_string())
                 .with_handler(TranslatorCommand)
                 .build_publisher()
-                .connect()
+                .bind()
                 .into_inner();
 
-            let server_command = ServerCommand::<dyn Sender> { 
-                translator,
-                clients: pull_pub
-            };
-            let db_service_producer = ConnectorNNG::builder()
+            let agent_command = AgentCommand { translator };
+
+            let db_service = ConnectorNNG::builder()
                 .with_endpoint("tcp://0.0.0.0:5558".to_string())
                 .with_handler(DummyTimescaleHandler)
                 .with_proto(Proto::Pull)
@@ -97,17 +82,16 @@ impl NetComponent for Hub {
                 .bind()
                 .into_inner();
             
-            let server = ConnectorNNG::pub_sub_builder()
+            let agent = ConnectorNNG::pub_sub_builder()
                 .with_endpoint("tcp://0.0.0.0:5555".to_string())
-                .with_handler(server_command)
+                .with_handler(agent_command)
                 .build_subscriber()
                 .bind()
                 .into_inner();
 
             Poller::new()
-                .add(server)
-                .add(pull_sub)
-                .add(db_service_producer)
+                .add(agent)
+                .add(db_service)
                 .poll();
         });
     }

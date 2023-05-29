@@ -10,16 +10,16 @@ use net_core::jsons::json_pcap_parser::JsonPcapParser;
 
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
+use net_proto_api::decoder_api::Decoder;
 use net_proto_api::envelope::envelope::Envelope;
 use net_proto_api::encoder_api::Encoder;
 
 use net_timescale_api::api::network_packet::NetworkPacketDTO;
-use net_core::topic::{remove_topic, DECODER_TOPIC};
 
 pub struct DecoderCommand<S>
 where S: Sender + ?Sized
 {
-    pub transmitter: Arc<S>,
+    pub consumer: Arc<S>,
 }
 
 impl<S> Handler for DecoderCommand<S>
@@ -27,9 +27,13 @@ where S: Sender + ?Sized
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        let data = remove_topic(data, DECODER_TOPIC.as_bytes());
 
-        debug!("received from translator::dispatcher");
+        let message = Envelope::decode(data);
+
+        let _msg_type = message.get_type().to_owned(); 
+        let data = message.get_data().to_owned();
+        
+        debug!("received msg type from: {}", message.get_type());
 
         let json_bytes = PcapTranslator::translate(data);
 
@@ -61,12 +65,13 @@ where S: Sender + ?Sized
             binary_json);
             
         let envelope = Envelope::new(
-            String::from("network_packet"),
+            "network_packet".to_owned(),
             net_packet.encode()
         );
         
         let message: Vec<u8> = envelope.encode();
-
-        self.transmitter.send(message);
+        // for now we don't set any topics because we have the only local service for this data to recieve
+        // ideally we need to set here the same topic which has been received from net-hub
+        self.consumer.send(message);
     }
 }
