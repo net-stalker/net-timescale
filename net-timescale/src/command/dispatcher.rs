@@ -1,5 +1,8 @@
 use std::sync::Arc;
-use net_core::{transport::sockets::{Handler, Receiver, Sender}, topic::set_topic};
+use net_core::transport::{
+    sockets::{Handler, Receiver, Sender},
+    topic::set_topic
+};
 
 
 use net_proto_api::envelope::envelope::Envelope;

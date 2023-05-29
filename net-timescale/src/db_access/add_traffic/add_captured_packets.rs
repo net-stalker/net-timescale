@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use chrono::{Utc, DateTime, TimeZone};
-use net_core::topic::remove_topic;
+use net_core::transport::topic::remove_topic;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 use net_proto_api::decoder_api::Decoder;
 use postgres::types::ToSql;

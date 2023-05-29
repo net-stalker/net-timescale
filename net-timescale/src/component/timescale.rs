@@ -33,22 +33,22 @@ impl Timescale {
     }
 }
 // TODO: move this to the configuration in future
-pub const DISPATCHER_CONSUMER: &'static str = "inproc://nng/timescale_dispatcher_consumer";
-pub const TRANSMITTER: &'static str = "inproc://nng/timescale_transmitter";
+pub const TIMESCALE_CONSUMER: &'static str = "inproc://timescale_dispatcher_consumer";
+pub const TIMESCALE_PRODUCER: &'static str = "inproc://timescale_transmitter";
 
 impl NetComponent for Timescale {
     fn run(self) {
         log::info!("Run component");
         self.thread_pool.execute(move || {
             let consumer = ConnectorNNG::pub_sub_builder()
-                .with_endpoint(DISPATCHER_CONSUMER.to_owned())
+                .with_endpoint(TIMESCALE_CONSUMER.to_owned())
                 .with_handler(DummyCommand)
                 .build_publisher()
                 .bind()
                 .into_inner();
 
             let dispatcher = CommandDispatcher::new(consumer);
-            let consumer_db_service = ConnectorNNG::builder()
+            let producer_db_service = ConnectorNNG::builder()
                 .with_endpoint("tcp://0.0.0.0:5556".to_string())
                 .with_handler(dispatcher)
                 .with_proto(Proto::Pull)
@@ -56,29 +56,29 @@ impl NetComponent for Timescale {
                 .connect()
                 .into_inner();
 
-            let producer_db_service = ConnectorNNG::builder()
+            let consumer_db_service = ConnectorNNG::builder()
                 .with_endpoint("tcp://0.0.0.0:5558".to_string())
                 .with_handler(DummyCommand)
                 .with_proto(Proto::Push)
                 .build()
                 .connect()
                 .into_inner(); 
-            let trasmitter_command = Transmitter::new(producer_db_service);
+            let trasmitter_command = Transmitter::new(consumer_db_service);
             let transmitter = ConnectorNNG::pub_sub_builder()
-                .with_endpoint(TRANSMITTER.to_owned())
+                .with_endpoint(TIMESCALE_PRODUCER.to_owned())
                 .with_handler(trasmitter_command)
                 .build_subscriber()
                 .bind()
                 .into_inner();
             Poller::new()
                 .add(transmitter)
-                .add(consumer_db_service)
+                .add(producer_db_service)
                 .poll();
         });
         self.thread_pool.execute(move || {
             let executor = Executor::new(self.connection_pool.clone());
             let result_puller = ConnectorNNG::pub_sub_builder()
-                .with_endpoint(TRANSMITTER.to_owned())
+                .with_endpoint(TIMESCALE_PRODUCER.to_owned())
                 .with_handler(DummyCommand)
                 .build_publisher()
                 .connect()
@@ -87,7 +87,7 @@ impl NetComponent for Timescale {
             let add_packets_handler = AddCapturedPackets::create_query_handler(executor.clone(),
                     result_puller.clone());
             let service_add_packets = ConnectorNNG::pub_sub_builder()
-                .with_endpoint(DISPATCHER_CONSUMER.to_owned())
+                .with_endpoint(TIMESCALE_CONSUMER.to_owned())
                 .with_handler(add_packets_handler)
                 .with_topic("network_packet".as_bytes().into())
                 .build_subscriber()
@@ -96,7 +96,7 @@ impl NetComponent for Timescale {
             
             let select_by_time_interval_handler = SelectInterval::create_query_handler(executor.clone(), result_puller.clone());
             let service_select_by_time_interval = ConnectorNNG::pub_sub_builder()
-                .with_endpoint(DISPATCHER_CONSUMER.to_owned())
+                .with_endpoint(TIMESCALE_CONSUMER.to_owned())
                 .with_handler(select_by_time_interval_handler)
                 .with_topic("select_time".as_bytes().into())
                 .build_subscriber()

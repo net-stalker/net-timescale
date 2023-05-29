@@ -3,7 +3,6 @@ pub mod transport;
 pub mod file;
 pub mod jsons;
 pub mod layer;
-pub mod topic;
 
 #[macro_export]
 macro_rules! test_resources {

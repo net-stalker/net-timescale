@@ -1,7 +1,3 @@
-pub const DB_TOPIC: &'static str = "db";
-pub const DECODER_TOPIC: &'static str = "decode";
-
-
 pub fn remove_topic(data: Vec<u8>, topic: &[u8]) -> Vec<u8> {
     if data.len() < topic.len() || data[..topic.len()] != *topic {
         return data;
