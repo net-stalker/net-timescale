@@ -1,29 +1,22 @@
 use log::info;
-use postgres::NoTls;
-use std::io;
-use std::io::prelude::*;
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 use r2d2_postgres::{PostgresConnectionManager};
 use net_timescale::component::timescale::Timescale;
 
-use postgres::config::Config;
 
-use native_tls::{Certificate, TlsConnector, Identity};
+use native_tls::{TlsConnector, Identity};
 use postgres_native_tls::MakeTlsConnector;
-use std::fs::{self, File};
+use std::fs;
 
 fn main() {
     env_logger::init();
-    info!("Run module");
+    info!("Run module");    
     let pem = fs::read("src/.ssl/client.crt").unwrap();
     let key = fs::read("src/.ssl/client.key").unwrap();
-
-    let root = fs::read("timescaledb/certs/root.crt").unwrap();
-    let cert = Certificate::from_pem(root.as_slice()).unwrap();
     let client = Identity::from_pkcs8(&pem, &key).unwrap();
     let connector = TlsConnector::builder()
-        .add_root_certificate(cert)
+        .danger_accept_invalid_certs(true)
         .identity(client)
         .build()
         .unwrap();
