@@ -49,7 +49,7 @@ where S: Sender + ?Sized
                 return
             }
         };
-        let dst_addr = match JsonPcapParser::extract_src_addr_l3(&layered_json) {
+        let dst_addr = match JsonPcapParser::extract_dst_addr_l3(&layered_json) {
             Some(dst) => dst,
             None => {
                 log::error!("dst is missing");
