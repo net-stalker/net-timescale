@@ -32,6 +32,7 @@ deb_depends = ["libpcap-dev", "libzmq3-dev"]
 [dependencies]
 net-core = { path = "../net-core" }
 net-config = { path = "../net-config" }
+net-proto-api = { path = "../net-proto-api" }
 
 log = { workspace = true }
 env_logger = { workspace = true }

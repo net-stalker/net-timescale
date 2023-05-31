@@ -1,5 +1,8 @@
 use std::sync::Arc;
-use net_core::{transport::sockets::{Handler, Receiver, Sender}};
+use net_core::transport::{
+    sockets::{Handler, Receiver, Sender},
+    topic::set_topic
+};
 
 
 use net_proto_api::envelope::envelope::Envelope;
@@ -23,9 +26,7 @@ where T: Sender + ?Sized
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
         let envelope = Envelope::decode(data);
-        let mut data = envelope.get_data().to_owned();
-        // TODO: think about adding HashMap in dispatcher with connectors to avoid such overheads
-        data.splice(0..0, envelope.get_type().as_bytes().to_owned());
-        self.consumer.send(data);
+        log::info!("received from hub {}", envelope.get_type());
+        self.consumer.send(set_topic(envelope.get_data().to_owned(), envelope.get_type().as_bytes()));
     }
 }

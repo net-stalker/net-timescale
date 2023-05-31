@@ -5,40 +5,29 @@ use log::debug;
 
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
-use net_proto_api::envelope::envelope::Envelope;
 use net_proto_api::decoder_api::Decoder;
 
 use net_timescale_api::api::network_packet::NetworkPacketDTO;
 
 use simple_websockets::{Message, Responder};
 
-pub struct PullCommand<S> {
-    pub clients: Arc<RwLock<HashMap<u64, Responder>>>,
-    pub db_service: Arc<S>,
+pub struct PullCommand {
+    pub clients: Arc<RwLock<HashMap<u64, Responder>>>
 }
 
-impl<S: Sender> Handler for PullCommand<S> {
+impl Handler for PullCommand {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-
-        let envelope = Envelope::decode(data.clone());
-        let network_packet_data = NetworkPacketDTO::decode(envelope.get_data().to_owned());
+        let network_packet_data = NetworkPacketDTO::decode(data);
 
         let formated_string = format!("{:?}", network_packet_data);
 
-        // let unescaped_string = unescape(string_with_escapes.as_str()).unwrap();
-        // let json_string = json!(&unescaped_string);
-        // debug!("string with escapes: {}", string_with_escapes);
-        // debug!("string without escapes: {}", unescaped_string);
-        // debug!("json: {}", json_string);
-        debug!("received from translator {:?}", formated_string);
+        debug!("received from server {:?}", formated_string);
 
         self.clients.read().unwrap().iter().for_each(|endpoint| {
             debug!("Connections: {:?}", endpoint);
             let responder = endpoint.1;
             responder.send(Message::Text(format!("{:?}", formated_string)));
         });
-
-        self.db_service.send(data);
     }
 }
