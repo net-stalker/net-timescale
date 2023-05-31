@@ -5,7 +5,7 @@ use threadpool::ThreadPool;
 
 use net_core::capture;
 use net_core::layer::NetComponent;
-use net_core::transport::connector_nng::{ConnectorNNG, Proto};
+use net_core::transport::connector_nng::ConnectorNNG;
 
 use crate::codec::Codec;
 
@@ -24,12 +24,11 @@ impl Capture {
             .buffer_size(1000)
             .open()
             .unwrap();
-
-        let client = ConnectorNNG::builder()
+        
+        let client = ConnectorNNG::pub_sub_builder()
             .with_endpoint("tcp://0.0.0.0:5555".to_string())
-            .with_proto(Proto::Req)
             .with_handler(DummyCommand)
-            .build()
+            .build_publisher()
             .connect()
             .into_inner();
 

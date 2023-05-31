@@ -6,9 +6,9 @@ use std::{
 use log::{debug, info};
 use simple_websockets::Event;
 use threadpool::ThreadPool;
+use net_core::{layer::NetComponent, transport::{sockets::Sender, dummy_command::DummyCommand, connector_nng::Proto}};
 
-use net_core::layer::NetComponent;
-use net_core::transport::connector_nng::{ConnectorNNG, Proto};
+use net_core::transport::connector_nng::ConnectorNNG;
 use net_core::transport::polling::Poller;
 
 use crate::command::{agent::AgentCommand, dummy_timescale::DummyTimescaleHandler};
@@ -24,7 +24,6 @@ impl Hub {
         Hub { pool }
     }
 }
-
 impl NetComponent for Hub {
     fn run(self) {
         info!("run component");
@@ -64,48 +63,35 @@ impl NetComponent for Hub {
                 }
             }
         });
-
-        let translator = ConnectorNNG::builder()
-            .with_endpoint("tcp://0.0.0.0:5557".to_string())
-            .with_proto(Proto::Req)
-            .with_handler(TranslatorCommand)
-            .build()
-            .connect()
-            .into_inner();
-        let translator_clone = translator.clone();
-
-        let server_command = AgentCommand { translator: translator_clone };
-        let server = ConnectorNNG::builder()
-            .with_endpoint("tcp://0.0.0.0:5555".to_string())
-            .with_proto(Proto::Rep)
-            .with_handler(server_command)
-            .build()
-            .bind()
-            .into_inner();
-
-        let db_service = ConnectorNNG::builder()
-            .with_endpoint("tcp://0.0.0.0:5556".to_string())
-            .with_proto(Proto::Req)
-            .with_handler(DummyTimescaleHandler)
-            .build()
-            .connect()
-            .into_inner();
-        let db_service_clone = db_service.clone();
-
-        let pull = ConnectorNNG::builder()
-            .with_endpoint("tcp://0.0.0.0:5558".to_string())
-            .with_proto(Proto::Rep)
-            .with_handler(PullCommand { clients, db_service })
-            .build()
-            .bind()
-            .into_inner();
-
         self.pool.execute(move || {
+            // TODO: add ws after configuring zeromq connector
+            let translator = ConnectorNNG::pub_sub_builder()
+                .with_endpoint("tcp://0.0.0.0:5557".to_string())
+                .with_handler(TranslatorCommand)
+                .build_publisher()
+                .bind()
+                .into_inner();
+
+            let agent_command = AgentCommand { translator };
+
+            let db_service = ConnectorNNG::builder()
+                .with_endpoint("tcp://0.0.0.0:5558".to_string())
+                .with_handler(DummyTimescaleHandler)
+                .with_proto(Proto::Pull)
+                .build()
+                .bind()
+                .into_inner();
+            
+            let agent = ConnectorNNG::pub_sub_builder()
+                .with_endpoint("tcp://0.0.0.0:5555".to_string())
+                .with_handler(agent_command)
+                .build_subscriber()
+                .bind()
+                .into_inner();
+
             Poller::new()
-                .add(server)
-                .add(translator)
-                .add(pull)
-                .add(db_service_clone)
+                .add(agent)
+                .add(db_service)
                 .poll();
         });
     }

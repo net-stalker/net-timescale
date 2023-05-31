@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use chrono::{Utc, DateTime, TimeZone};
+use net_core::transport::topic::remove_topic;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 use net_proto_api::decoder_api::Decoder;
 use postgres::types::ToSql;
@@ -81,8 +82,9 @@ where
         let data = receiver.recv();
         // ==============================
         // must be changed 
-        let topic = "add_packet".as_bytes().to_owned();
-        let packet = NetworkPacketDTO::decode(data[topic.len()..].to_owned());
+        let topic = "network_packet".as_bytes();
+        let data = remove_topic(data, topic);
+        let packet = NetworkPacketDTO::decode(data.to_owned());
         //==============================
         match self.insert(packet) {
             Ok(rows_count) => { 
