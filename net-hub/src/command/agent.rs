@@ -11,12 +11,13 @@ impl<S: Sender + ?Sized> Handler for AgentCommand<S> {
         
         let data = receiver.recv();
         debug!("received data from net-agent");
-        self.translator.send(data);
 
         // let magic_num = &data[..4];
         // if 3569595041_u32.to_be_bytes() == magic_num {
         // debug!("Global header will be skipped");
         // return;
         // }
+
+        self.translator.send(data.as_slice());
     }
 }

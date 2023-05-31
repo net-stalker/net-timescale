@@ -72,6 +72,6 @@ where S: Sender + ?Sized
         let message: Vec<u8> = envelope.encode();
         // for now we don't set any topics because we have the only local service for this data to recieve
         // ideally we need to set here the same topic which has been received from net-hub
-        self.consumer.send(message);
+        self.consumer.send(message.as_slice());
     }
 }

@@ -6,9 +6,12 @@ use std::{
 use log::{debug, info};
 use simple_websockets::Event;
 use threadpool::ThreadPool;
-use net_core::{layer::NetComponent, transport::{sockets::Sender, dummy_command::DummyCommand, connector_nng::Proto}};
+use net_core::{layer::NetComponent, transport::{sockets::Sender, dummy_command::DummyCommand}};
 
-use net_core::transport::connector_nng::ConnectorNNG;
+use net_core::transport::{
+    connector_nng_pub_sub::ConnectorNNGPubSub,
+    connector_nng::{ConnectorNNG, Proto}
+};
 use net_core::transport::polling::Poller;
 
 use crate::command::{agent::AgentCommand, dummy_timescale::DummyTimescaleHandler};
@@ -65,7 +68,7 @@ impl NetComponent for Hub {
         });
         self.pool.execute(move || {
             // TODO: add ws after configuring zeromq connector
-            let translator = ConnectorNNG::pub_sub_builder()
+            let translator = ConnectorNNGPubSub::builder()
                 .with_endpoint("tcp://0.0.0.0:5557".to_string())
                 .with_handler(TranslatorCommand)
                 .build_publisher()
@@ -82,10 +85,11 @@ impl NetComponent for Hub {
                 .bind()
                 .into_inner();
             
-            let agent = ConnectorNNG::pub_sub_builder()
+            let agent = ConnectorNNG::builder()
                 .with_endpoint("tcp://0.0.0.0:5555".to_string())
                 .with_handler(agent_command)
-                .build_subscriber()
+                .with_proto(Proto::Pull)
+                .build()
                 .bind()
                 .into_inner();
 
