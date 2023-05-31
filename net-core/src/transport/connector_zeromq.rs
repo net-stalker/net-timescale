@@ -11,6 +11,7 @@ use super::sockets::{
 pub struct ConnectorZMQ<HANDLER: Handler> {
     endpoint: String,
     handler: Arc<HANDLER>,
+    _context: zmq::Context,
     socket: zmq::Socket
 }
 
@@ -92,7 +93,8 @@ impl<HANDLER: Handler> ConnectorZmqBuilder<HANDLER> {
         ConnectorZMQ { 
             endpoint: self.endpoint.unwrap(),
             handler: self.handler.unwrap(),
-            socket: self.socket.unwrap()
+            socket: self.socket.unwrap(),
+            _context: self.context
         }
     } 
     pub fn build_dealer(mut self) -> ConnectorZMQ<HANDLER> {
