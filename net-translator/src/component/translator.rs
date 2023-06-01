@@ -1,13 +1,15 @@
+use net_core::transport::connector_nng_pub_sub::ConnectorNNGPubSub;
 use net_core::transport::dummy_command::DummyCommand;
-use net_proto_api::decoder_api::Decoder;
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 
-use net_core::transport::connector_nng::{ConnectorNNG, Proto};
+use net_core::transport::{
+    connector_nng::{ConnectorNNG, Proto}
+};
 use net_core::transport::polling::Poller;
 
 use crate::command::decoder::DecoderCommand;
-use crate::command::dispatcher::{TranslatorDispatcher, self};
+use crate::command::dispatcher::TranslatorDispatcher;
 use crate::command::timescale_command::TimescaleCommand;
 
 pub struct Translator {
@@ -36,14 +38,14 @@ impl NetComponent for Translator {
                 .bind()
                 .into_inner();
 
-            let db_command = ConnectorNNG::pub_sub_builder()
+            let db_command = ConnectorNNGPubSub::builder()
                 .with_endpoint(DECODER.to_owned())
                 .with_handler(TimescaleCommand {consumer: timescale})
                 .build_subscriber()
                 .connect()
                 .into_inner();
 
-            let decoder_consumer = ConnectorNNG::pub_sub_builder()
+            let decoder_consumer = ConnectorNNGPubSub::builder()
                 .with_endpoint(DECODER.to_owned())
                 .with_handler(DummyCommand)
                 .build_publisher()
@@ -75,7 +77,7 @@ impl NetComponent for Translator {
                 .into_inner();     
             
             let dispatcher_command = TranslatorDispatcher { consumer };
-            let dispatcher = ConnectorNNG::pub_sub_builder()
+            let dispatcher = ConnectorNNGPubSub::builder()
                 .with_endpoint("tcp://0.0.0.0:5557".to_string())
                 .with_handler(dispatcher_command)
                 .build_subscriber()

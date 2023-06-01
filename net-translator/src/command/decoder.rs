@@ -49,7 +49,7 @@ where S: Sender + ?Sized
                 return
             }
         };
-        let dst_addr = match JsonPcapParser::extract_src_addr_l3(&layered_json) {
+        let dst_addr = match JsonPcapParser::extract_dst_addr_l3(&layered_json) {
             Some(dst) => dst,
             None => {
                 log::error!("dst is missing");
@@ -72,6 +72,6 @@ where S: Sender + ?Sized
         let message: Vec<u8> = envelope.encode();
         // for now we don't set any topics because we have the only local service for this data to recieve
         // ideally we need to set here the same topic which has been received from net-hub
-        self.consumer.send(message);
+        self.consumer.send(message.as_slice());
     }
 }

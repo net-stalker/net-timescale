@@ -80,12 +80,7 @@ where
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        // ==============================
-        // must be changed 
-        let topic = "network_packet".as_bytes();
-        let data = remove_topic(data, topic);
         let packet = NetworkPacketDTO::decode(data.to_owned());
-        //==============================
         match self.insert(packet) {
             Ok(rows_count) => { 
                 log::info!("{} rows were updated", rows_count);
@@ -94,7 +89,7 @@ where
                 log::error!("{}", error);
             }
         };
-        self.result_receiver.send("packets have been added".as_bytes().to_owned());
+        self.result_receiver.send("packets have been added".as_bytes());
     }
 }
 

@@ -1,18 +1,20 @@
 use std::os::unix::io::RawFd;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock, Mutex};
 
-use nng::{Protocol, Socket};
+use nng::{Socket, Message, Protocol};
 use nng::options::{Options, RecvFd};
 
 use crate::transport::sockets;
 use crate::transport::sockets::{Handler, Receiver, Sender};
+
+use super::sockets::Pub;
 
 //TODO Connector Builder should be redesigned as Fluent API with constraints.
 
 pub struct ConnectorNNG<HANDLER> {
     endpoint: String,
     handler: Option<Box<HANDLER>>,
-    socket: Socket,
+    socket: Socket
 }
 
 impl<HANDLER> Receiver for ConnectorNNG<HANDLER> {
@@ -23,13 +25,23 @@ impl<HANDLER> Receiver for ConnectorNNG<HANDLER> {
             .to_vec() //note: every time data is coped from stack to the heap!
     }
 }
+impl<H: Handler> Pub for ConnectorNNG<H> {
+    fn set_topic(&self, _topic: &[u8]){
+        log::error!("can't set a topic for a non pub connector");
+    }
+}
 
 impl<H: Handler> Sender for ConnectorNNG<H> {
-    fn send(&self, data: Vec<u8>) {
+    fn send(&self, data: &[u8]) {
         self.socket
-            .send(&data)
+            .send(data)
             .expect("client failed sending data");
     }
+
+    fn get_pub(&self) -> Option<&dyn Pub> {
+        None
+    }
+    
 }
 
 impl<HANDLER: Handler> sockets::Socket for ConnectorNNG<HANDLER>
@@ -73,22 +85,12 @@ impl<HANDLER: Handler> ConnectorNNG<HANDLER> {
     pub fn builder() -> ConnectorNngBuilder<HANDLER> {
         ConnectorNngBuilder::new()
     }
-
-    pub fn pub_sub_builder() -> PubSubConnectorNngBuilder<HANDLER> {
-        PubSubConnectorNngBuilder::new()
-    }
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Proto
 {
     Bus,
-
-    // Pair,
-
-    // Pair,
-
-    Pub,
 
     Pull,
 
@@ -100,8 +102,6 @@ pub enum Proto
 
     Respondent,
 
-    Sub,
-
     Surveyor,
 }
 
@@ -109,13 +109,11 @@ impl Proto {
     pub fn into(proto: Proto) -> Protocol {
         match proto {
             Proto::Bus => { Protocol::Bus0 }
-            Proto::Pub => { Protocol::Pub0 }
             Proto::Pull => { Protocol::Pull0 }
             Proto::Push => { Protocol::Push0 }
             Proto::Rep => { Protocol::Rep0 }
             Proto::Req => { Protocol::Req0 }
             Proto::Respondent => { Protocol::Respondent0 }
-            Proto::Sub => { Protocol::Sub0 }
             Proto::Surveyor => { Protocol::Surveyor0 }
         }
     }
@@ -156,63 +154,7 @@ impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
         ConnectorNNG {
             endpoint: self.endpoint.unwrap(),
             handler: self.handler,
-            socket: Socket::new(proto).unwrap()
+            socket: Socket::new(proto).unwrap(),
         }
     }
-}
-pub struct PubSubConnectorNngBuilder<HANDLER: Handler> {
-    endpoint: Option<String>,
-    handler: Option<Box<HANDLER>>,
-    topics:  Vec<u8>,
-    proto: Proto
-}
-
-impl<HANDLER: Handler> PubSubConnectorNngBuilder<HANDLER> {
-    pub fn new() -> PubSubConnectorNngBuilder<HANDLER> {
-        PubSubConnectorNngBuilder {
-            endpoint: None,
-            handler: None,
-            topics: Vec::<u8>::default(),
-            proto: Proto::Pub
-        }
-    }
-
-    pub fn with_handler(mut self, handler: HANDLER) -> Self {
-        self.handler = Some(Box::new(handler));
-        self
-    }
-
-    pub fn with_endpoint(mut self, endpoint: String) -> Self {
-        self.endpoint = Some(endpoint);
-        self
-    }
-
-    pub fn with_topic(mut self, topics: Vec<u8>) -> Self {
-        self.topics = topics;
-        self 
-    }
-    fn build(self) -> ConnectorNNG<HANDLER> {
-        let proto = Proto::into(self.proto);
-        let socket = Socket::new(proto).unwrap();
-        match self.proto {
-            Proto::Sub => {
-                socket.set_opt::<nng::options::protocol::pubsub::Subscribe>(self.topics).unwrap();
-            },
-            _ => ()
-        }
-        ConnectorNNG {
-            endpoint: self.endpoint.unwrap(),
-            handler: self.handler,
-            socket
-        }
-    }
-    pub fn build_publisher(mut self) -> ConnectorNNG<HANDLER> {
-        self.proto = Proto::Pub;
-        self.build()
-    } 
-    pub fn build_subscriber(mut self) -> ConnectorNNG<HANDLER> {
-        self.proto = Proto::Sub;
-        self.build()
-    }
-
 }

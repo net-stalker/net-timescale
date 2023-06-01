@@ -51,56 +51,58 @@ impl Poller {
 
 mod tests {
     use std::thread;
-    use crate::transport::connector_nng::{ConnectorNNG, Proto};
+    use crate::transport::{
+        connector_nng::{ConnectorNNG, Proto},
+    };
     use crate::transport::polling::Poller;
     use crate::transport::sockets::{Handler, Receiver, Sender};
 
-    #[test]
-    #[ignore] //FIXME Temporary ignored. Need to investigate how to grasfully shutdown the thread
-    fn expected_create_poller_using_builder() {
-        struct ClientCommand;
-        impl Handler for ClientCommand {
-            fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
-                let msg = receiver.recv();
-                assert_eq!(&msg[..], b"msg1");
-            }
-        }
+    // #[test]
+    // #[ignore] //FIXME Temporary ignored. Need to investigate how to grasfully shutdown the thread
+    // fn expected_create_poller_using_builder() {
+    //     struct ClientCommand;
+    //     impl Handler for ClientCommand {
+    //         fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
+    //             let msg = receiver.recv();
+    //             assert_eq!(&msg[..], b"msg1");
+    //         }
+    //     }
 
-        let client = ConnectorNNG::builder()
-            .with_endpoint("ws://127.0.0.1:5555".to_string())
-            .with_proto(Proto::Req)
-            .with_handler(ClientCommand)
-            .build()
-            .connect()
-            .into_inner();
+    //     let client = ConnectorNNG::builder()
+    //         .with_endpoint("ws://127.0.0.1:5555".to_string())
+    //         .with_proto(Proto::Req)
+    //         .with_handler(ClientCommand)
+    //         .build()
+    //         .connect()
+    //         .into_inner();
 
-        let arc = client.clone();
-        thread::spawn(move || {
-            arc.send(Vec::from("msg1"));
-        });
+    //     let arc = client.clone();
+    //     thread::spawn(move || {
+    //         arc.send(b"msg1");
+    //     });
 
-        struct ServerCommand;
-        impl Handler for ServerCommand {
-            fn handle(&self, receiver: &dyn Receiver, sender: &dyn Sender) {
-                let data = receiver.recv();
-                println!("We got a message: {:?}", data);
-                sender.send(data);
-            }
-        }
+    //     struct ServerCommand;
+    //     impl Handler for ServerCommand {
+    //         fn handle(&self, receiver: &dyn Receiver, sender: &dyn Sender) {
+    //             let data = receiver.recv();
+    //             println!("We got a message: {:?}", data);
+    //             sender.send(data.as_slice());
+    //         }
+    //     }
 
-        let server = ConnectorNNG::builder()
-            .with_endpoint("ws://127.0.0.1:5555".to_string())
-            .with_proto(Proto::Rep)
-            .with_handler(ServerCommand)
-            .build()
-            .bind()
-            .into_inner();
+    //     let server = ConnectorNNG::builder()
+    //         .with_endpoint("ws://127.0.0.1:5555".to_string())
+    //         .with_proto(Proto::Rep)
+    //         .with_handler(ServerCommand)
+    //         .build()
+    //         .bind()
+    //         .into_inner();
 
-        thread::spawn(move || {
-            Poller::new()
-                .add(server)
-                .add(client)
-                .poll();
-        }).join().unwrap();
-    }
+    //     thread::spawn(move || {
+    //         Poller::new()
+    //             .add(server)
+    //             .add(client)
+    //             .poll();
+    //     }).join().unwrap();
+    // }
 }

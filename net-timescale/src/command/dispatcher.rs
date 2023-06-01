@@ -26,7 +26,9 @@ where T: Sender + ?Sized
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
         let envelope = Envelope::decode(data);
-        log::info!("received from hub {}", envelope.get_type());
-        self.consumer.send(set_topic(envelope.get_data().to_owned(), envelope.get_type().as_bytes()));
+        if let Some(publisher) = self.consumer.get_pub() {
+            publisher.set_topic(envelope.get_type().as_bytes());
+        }
+        self.consumer.send(envelope.get_data());
     }
 }
