@@ -1,19 +1,28 @@
-use r2d2::{Pool, PooledConnection};
-use r2d2_postgres::PostgresConnectionManager;
-use postgres::NoTls;
+use r2d2::{Pool, PooledConnection, ManageConnection};
 use std::sync::{Arc, Mutex};
+
 use crate::db_access::query;
 
-#[derive(Clone)]
-pub struct Executor{
-    pub connection_pool: Arc<Mutex<Pool<PostgresConnectionManager<NoTls>>>>
+pub struct Executor<M>
+where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
+{
+    pub connection_pool: Arc<Mutex<Pool<M>>>
+}
+impl<M> Clone for Executor<M>
+where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
+{
+    fn clone(&self) -> Self {
+        Self { connection_pool: self.connection_pool.clone() }
+    }
 }
 
-impl Executor{
-    pub fn new(connection_pool: Pool<PostgresConnectionManager<NoTls>>) -> Self {
-        Executor { connection_pool: Arc::new(Mutex::new(connection_pool)) }
+impl<M> Executor<M>
+where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
+{
+    pub fn new(connection_pool: Pool<M>) -> Self {
+        Executor { connection_pool: Arc::new(Mutex::new(connection_pool)) } //, phantom: &PhantomData }
     }
-    fn get_connection(&self) -> PooledConnection<PostgresConnectionManager<NoTls>> {
+    fn get_connection(&self) -> PooledConnection<M> {
         self.connection_pool.lock()
         .unwrap()
         .get()

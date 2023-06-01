@@ -4,23 +4,32 @@ use net_core::transport::topic::remove_topic;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 use net_proto_api::decoder_api::Decoder;
 use postgres::types::ToSql;
+use r2d2::ManageConnection;
 use serde_json::Value;
-use crate::db_access::{query, query_factory};
 use crate::command::executor::Executor;
+use crate::db_access::{query, query_factory};
 use net_timescale_api::api::{network_packet::NetworkPacketDTO};
 
-pub struct AddCapturedPackets<T>
-where T: Sender + ?Sized
+fn convert_to_value(packet_json: Vec<u8>) -> serde_json::Result<Value> {
+    serde_json::from_slice(&*packet_json)
+}
+pub struct AddCapturedPackets<T, M>
+where
+    T: Sender + ?Sized,
+    M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
 {
-    executor: Executor,
+    executor: Executor<M>,
     result_receiver: Arc<T>
 }
-impl<T> query_factory::QueryFactory for AddCapturedPackets<T>
-where T: Sender + ?Sized
+impl<T, M> query_factory::QueryFactory for AddCapturedPackets<T, M>
+where
+    T: Sender + ?Sized,
+    M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
 {
-    type Q = AddCapturedPackets<T>;
+    type Q = AddCapturedPackets<T, M>;
     type R = Arc<T>;
-    fn create_query_handler(executor: Executor, result_receiver: Self::R) -> Self::Q {
+    type E = Executor<M>;
+    fn create_query_handler(executor: Self::E, result_receiver: Self::R) -> Self::Q {
         AddCapturedPackets {
             executor,
             result_receiver
@@ -50,24 +59,24 @@ impl<'a> query::PostgresQuery<'a> for AddPacketsQuery<'a> {
         (self.raw_query, &self.args)
     }
 }
-impl<T> AddCapturedPackets<T>
-where T: Sender + ?Sized
+impl<T, M> AddCapturedPackets<T, M>
+where
+    T: Sender + ?Sized,
+    M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
 {
-    pub fn insert(&self, data: NetworkPacketDTO) -> Result<u64, postgres::Error> {
+    pub fn insert(&self, data: NetworkPacketDTO) -> Result<u64, postgres::Error>{
         let time = Utc.timestamp_millis_opt(data.get_frame_time()).unwrap();
-        let json = AddCapturedPackets::<T>::convert_to_value(data.get_network_packet_data().to_owned()).unwrap();
+        let json = convert_to_value(data.get_network_packet_data().to_owned()).unwrap();
         let src_addr = data.get_src_addr().to_owned();
         let dst_addr = data.get_dst_addr().to_owned();
         let query = AddPacketsQuery::new(&time, &src_addr, &dst_addr, &json);
         self.executor.execute(&query)
     }
-
-    fn convert_to_value(packet_json: Vec<u8>) -> serde_json::Result<Value> {
-        serde_json::from_slice(&*packet_json)
-    }
 }
-impl<T> Handler for AddCapturedPackets<T>
-where T: Sender + ?Sized
+impl<T, M> Handler for AddCapturedPackets<T, M>
+where
+    T: Sender + ?Sized,
+    M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
@@ -86,6 +95,7 @@ where T: Sender + ?Sized
 
 #[cfg(test)]
 mod tests{
+
     use crate::db_access::query::PostgresQuery;
 
     use super::*;
@@ -118,7 +128,7 @@ mod tests{
             data.as_bytes().to_owned()
         );
         let time = Utc.timestamp_millis_opt(packet.get_frame_time()).unwrap();
-        let json = AddCapturedPackets::<dyn Sender>::convert_to_value(packet.get_network_packet_data().to_owned()).unwrap();
+        let json = convert_to_value(packet.get_network_packet_data().to_owned()).unwrap();
         let src_addr = packet.get_src_addr().to_owned();
         let dst_addr = packet.get_dst_addr().to_owned();
         let query_struct = AddPacketsQuery::new(&time, &src_addr, &dst_addr, &json);

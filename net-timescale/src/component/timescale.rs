@@ -1,32 +1,35 @@
-use postgres::NoTls;
+use std::sync::Arc;
+
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
-use r2d2::Pool;
-use r2d2_postgres::PostgresConnectionManager;
+use r2d2::{Pool, ManageConnection};
 use net_core::transport::{
     connector_nng::{ConnectorNNG, Proto},
     connector_nng_pub_sub::ConnectorNNGPubSub,
     polling::Poller,
     dummy_command::DummyCommand,
 };
-use crate::command::{
+use crate::{command::{
     dispatcher::CommandDispatcher,
     executor::Executor, transmitter::Transmitter
-};
+}, db_access::select_by_time::select_by_time::SelectInterval};
 use crate::db_access::{
     add_traffic::add_captured_packets::AddCapturedPackets,
     query_factory::QueryFactory,
-    select_by_time::select_by_time::SelectInterval
+    // select_by_time::select_by_time::SelectInterval
 };
 
-pub struct Timescale {
+pub struct Timescale<M>
+where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
+{
     pub thread_pool: ThreadPool,
-    // for now we specify `NoTls` just for simplicity
-    pub connection_pool: Pool<PostgresConnectionManager<NoTls>>
+    pub connection_pool: Pool<M>
 }
 
-impl Timescale {
-    pub fn new(thread_pool: ThreadPool, connection_pool: Pool<PostgresConnectionManager<NoTls>>) -> Self {
+impl<M> Timescale<M>
+where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
+{
+    pub fn new(thread_pool: ThreadPool, connection_pool: Pool<M>) -> Self {
         Self {
             thread_pool,
             connection_pool
@@ -37,7 +40,9 @@ impl Timescale {
 pub const TIMESCALE_CONSUMER: &'static str = "inproc://timescale/consumer";
 pub const TIMESCALE_PRODUCER: &'static str = "inproc://timescale/producer";
 
-impl NetComponent for Timescale {
+impl<M> NetComponent for Timescale<M>
+where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
+{
     fn run(self) {
         log::info!("Run component");
         self.thread_pool.execute(move || {
