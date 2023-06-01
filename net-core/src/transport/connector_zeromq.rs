@@ -72,6 +72,7 @@ impl<HANDLER: Handler> ConnectorZmq<HANDLER> {
     pub fn into_inner(self) -> Arc<Self> {
         Arc::from(self)
     }
+    // TODO: remove builder method from ConnectorZmq and create standalone builders for different patterns
     pub fn builder() -> ConnectorZmqDealerBuilder<HANDLER> {
         ConnectorZmqDealerBuilder::new()
     }
