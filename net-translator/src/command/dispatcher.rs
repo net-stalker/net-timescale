@@ -13,6 +13,6 @@ where T: Sender + ?Sized
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
         log::debug!("received data from hub");
-        self.consumer.send(data);
+        self.consumer.send(data.as_slice());
     }
 }

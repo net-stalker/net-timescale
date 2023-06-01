@@ -5,8 +5,9 @@ use r2d2::Pool;
 use r2d2_postgres::PostgresConnectionManager;
 use net_core::transport::{
     connector_nng::{ConnectorNNG, Proto},
+    connector_nng_pub_sub::ConnectorNNGPubSub,
     polling::Poller,
-    dummy_command::DummyCommand
+    dummy_command::DummyCommand,
 };
 use crate::command::{
     dispatcher::CommandDispatcher,
@@ -40,7 +41,7 @@ impl NetComponent for Timescale {
     fn run(self) {
         log::info!("Run component");
         self.thread_pool.execute(move || {
-            let consumer = ConnectorNNG::pub_sub_builder()
+            let consumer = ConnectorNNGPubSub::builder()
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
                 .with_handler(DummyCommand)
                 .build_publisher()
@@ -64,7 +65,7 @@ impl NetComponent for Timescale {
                 .connect()
                 .into_inner(); 
             let trasmitter_command = Transmitter::new(consumer_db_service);
-            let transmitter = ConnectorNNG::pub_sub_builder()
+            let transmitter = ConnectorNNGPubSub::builder()
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
                 .with_handler(trasmitter_command)
                 .build_subscriber()
@@ -77,7 +78,7 @@ impl NetComponent for Timescale {
         });
         self.thread_pool.execute(move || {
             let executor = Executor::new(self.connection_pool.clone());
-            let result_puller = ConnectorNNG::pub_sub_builder()
+            let result_puller = ConnectorNNGPubSub::builder()
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
                 .with_handler(DummyCommand)
                 .build_publisher()
@@ -86,7 +87,7 @@ impl NetComponent for Timescale {
 
             let add_packets_handler = AddCapturedPackets::create_query_handler(executor.clone(),
                     result_puller.clone());
-            let service_add_packets = ConnectorNNG::pub_sub_builder()
+            let service_add_packets = ConnectorNNGPubSub::builder()
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
                 .with_handler(add_packets_handler)
                 .with_topic("network_packet".as_bytes().into())
@@ -95,7 +96,7 @@ impl NetComponent for Timescale {
                 .into_inner();
             
             let select_by_time_interval_handler = SelectInterval::create_query_handler(executor.clone(), result_puller.clone());
-            let service_select_by_time_interval = ConnectorNNG::pub_sub_builder()
+            let service_select_by_time_interval = ConnectorNNGPubSub::builder()
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
                 .with_handler(select_by_time_interval_handler)
                 .with_topic("select_time".as_bytes().into())

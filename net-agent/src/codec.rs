@@ -36,6 +36,6 @@ impl Handler for Codec {
             "".to_owned(),
             buf
             ).encode()
-        )
+        .as_slice());
     }
 }

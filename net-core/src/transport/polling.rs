@@ -80,11 +80,13 @@ impl Poller {
 mod tests {
     use std::{thread, sync::Mutex, time::Duration};
     use crate::transport::{
+        {
         connector_nng::{ConnectorNNG, Proto},
         connector_zeromq::{
             ConnectorZmqBuilder,
             ConnectorZMQ
         }
+    },
     };
     use crate::transport::polling::Poller;
     use crate::transport::sockets::{Handler, Receiver, Sender};
@@ -124,7 +126,7 @@ mod tests {
 
         let arc = client.clone();
         thread::spawn(move || {
-            arc.send(Vec::from("msg1"));
+            arc.send(b"msg1");
         });
 
         struct ServerCommand;
@@ -132,7 +134,7 @@ mod tests {
             fn handle(&self, receiver: &dyn Receiver, sender: &dyn Sender) {
                 let data = receiver.recv();
                 println!("We got a message: {:?}", data);
-                sender.send(data);
+                sender.send(data.as_slice());
             }
         }
 
@@ -161,7 +163,7 @@ mod tests {
             .into_inner();
         thread::sleep(Duration::from_secs(1));
         for _ in 0..5 {
-            server.send("from server".as_bytes().to_owned());
+            server.send("from server".as_bytes());
         }
         thread::sleep(Duration::from_secs(2));
     }
@@ -174,7 +176,7 @@ mod tests {
             .into_inner();
         thread::sleep(Duration::from_secs(1));
         for _ in 0..5 {
-            client.send("from client".as_bytes().to_owned());
+            client.send("from client".as_bytes());
         }
         thread::sleep(Duration::from_secs(2));
     }

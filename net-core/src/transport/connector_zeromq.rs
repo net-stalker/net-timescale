@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use super::sockets;
+use super::sockets::{self, Pub};
 
 use super::sockets::{
     Receiver,
@@ -21,10 +21,22 @@ impl<HANDLER: Handler> Receiver for ConnectorZMQ<HANDLER> {
             .expect("connector failed receiving data")
     }
 }
+
+impl<HANDLER: Handler> Pub for ConnectorZMQ<HANDLER> {
+    fn set_topic(&self, _topic: &[u8]){
+        log::error!("can't set a topic for a non pub connector");
+    }
+}
+
+
 impl<HANDLER: Handler> Sender for ConnectorZMQ<HANDLER> {
-    fn send(&self, data: Vec<u8>) {
+    fn send(&self, data: &[u8]) {
         self.socket.send(data, 0)
             .expect("client failed sending data");
+    }
+
+    fn get_pub(&self) -> Option<&dyn sockets::Pub> {
+        None
     }
 }
 
