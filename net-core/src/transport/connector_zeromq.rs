@@ -8,28 +8,28 @@ use super::sockets::{
     Handler,
 };
 
-pub struct ConnectorZMQ<HANDLER: Handler> {
+pub struct ConnectorZmq<HANDLER: Handler> {
     endpoint: String,
     handler: Arc<HANDLER>,
     _context: zmq::Context,
     socket: zmq::Socket
 }
 
-impl<HANDLER: Handler> Receiver for ConnectorZMQ<HANDLER> {
+impl<HANDLER: Handler> Receiver for ConnectorZmq<HANDLER> {
     fn recv(&self) -> Vec<u8> {
         self.socket.recv_bytes(0)
             .expect("connector failed receiving data")
     }
 }
 
-impl<HANDLER: Handler> Pub for ConnectorZMQ<HANDLER> {
+impl<HANDLER: Handler> Pub for ConnectorZmq<HANDLER> {
     fn set_topic(&self, _topic: &[u8]){
         log::error!("can't set a topic for a non pub connector");
     }
 }
 
 
-impl<HANDLER: Handler> Sender for ConnectorZMQ<HANDLER> {
+impl<HANDLER: Handler> Sender for ConnectorZmq<HANDLER> {
     fn send(&self, data: &[u8]) {
         self.socket.send(data, 0)
             .expect("client failed sending data");
@@ -40,7 +40,7 @@ impl<HANDLER: Handler> Sender for ConnectorZMQ<HANDLER> {
     }
 }
 
-impl<HANDLER: Handler> sockets::Socket for ConnectorZMQ<HANDLER> {
+impl<HANDLER: Handler> sockets::Socket for ConnectorZmq<HANDLER> {
     fn as_raw_fd(&self) -> std::os::fd::RawFd {
         self.socket.get_fd().unwrap()
     }
@@ -58,7 +58,7 @@ impl<HANDLER: Handler> sockets::Socket for ConnectorZMQ<HANDLER> {
     }
 }
 
-impl<HANDLER: Handler> ConnectorZMQ<HANDLER> {
+impl<HANDLER: Handler> ConnectorZmq<HANDLER> {
     pub fn bind(self) -> Self {
         self.socket.bind(&self.endpoint)
             .expect("couldn't bind a connector");
@@ -72,21 +72,21 @@ impl<HANDLER: Handler> ConnectorZMQ<HANDLER> {
     pub fn into_inner(self) -> Arc<Self> {
         Arc::from(self)
     }
-    pub fn builder() -> ConnectorZmqBuilder<HANDLER> {
-        ConnectorZmqBuilder::new()
+    pub fn builder() -> ConnectorZmqDealerBuilder<HANDLER> {
+        ConnectorZmqDealerBuilder::new()
     }
 }
 
-pub struct ConnectorZmqBuilder<HANDLER: Handler> {
+pub struct ConnectorZmqDealerBuilder<HANDLER: Handler> {
     context: zmq::Context,
     endpoint: Option<String>,
     handler: Option<Arc<HANDLER>>,
     socket: Option<zmq::Socket> 
 }
 
-impl<HANDLER: Handler> ConnectorZmqBuilder<HANDLER> {
+impl<HANDLER: Handler> ConnectorZmqDealerBuilder<HANDLER> {
     pub fn new() -> Self {
-        ConnectorZmqBuilder {
+        ConnectorZmqDealerBuilder {
             context: zmq::Context::new(),
             endpoint: None,
             handler: None,
@@ -101,21 +101,15 @@ impl<HANDLER: Handler> ConnectorZmqBuilder<HANDLER> {
         self.endpoint = Some(endpoint);
         self
     }
-    fn build(self) -> ConnectorZMQ<HANDLER> {
-        ConnectorZMQ { 
+     
+    pub fn build(mut self) -> ConnectorZmq<HANDLER> {
+        self.socket = Some(self.context.socket(zmq::DEALER).unwrap());
+        ConnectorZmq { 
             endpoint: self.endpoint.unwrap(),
             handler: self.handler.unwrap(),
             socket: self.socket.unwrap(),
             _context: self.context
         }
-    } 
-    pub fn build_dealer(mut self) -> ConnectorZMQ<HANDLER> {
-        self.socket = Some(self.context.socket(zmq::DEALER).unwrap());
-        self.build()
-    }
-    pub fn build_router(mut self) -> ConnectorZMQ<HANDLER> {
-        self.socket = Some(self.context.socket(zmq::ROUTER).unwrap());
-        self.build()
     }
 }
 

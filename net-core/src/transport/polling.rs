@@ -23,7 +23,8 @@ impl Poller {
         self
     }
 
-    pub fn poll(&mut self) {
+    pub fn poll(&mut self, events_count: i32) {
+        let mut counter = 0;
         let poller = polling::Poller::new().unwrap();
         let mut events = Vec::new();
 
@@ -40,38 +41,13 @@ impl Poller {
             poller.wait(&mut events, None).unwrap();
 
             for ev in &events {
+                counter += 1;
                 let socket = self.sockets.get(&(ev.key as i32)).unwrap();
                 socket.handle(socket.get_receiver(), socket.get_sender());
 
                 poller.modify(socket.as_raw_fd(), Event::readable(ev.key)).unwrap();
-            }
-        }
-    }
-    fn poll_with_limit(&mut self, mut events_count: i32) {
-        let poller = polling::Poller::new().unwrap();
-        let mut events = Vec::new();
-
-        self.sockets.values().for_each(|socket| {
-            let usize_fd = socket.fd_as_usize().unwrap();
-            let event = Event::readable(usize_fd);
-            let fd = socket.as_raw_fd();
-
-            poller.add(fd, event).unwrap();
-        });
-
-        loop {
-            events.clear();
-            poller.wait(&mut events, None).unwrap();
-
-            for ev in &events {
-                events_count -= 1;
-                let socket = self.sockets.get(&(ev.key as i32)).unwrap();
-                socket.handle(socket.get_receiver(), socket.get_sender());
                 
-                poller.modify(socket.as_raw_fd(), Event::readable(ev.key)).unwrap();
-                if events_count == 0 {
-                    return;
-                }
+                if counter == events_count { return; }
             }
         }
     }
@@ -83,8 +59,7 @@ mod tests {
         {
         connector_nng::{ConnectorNNG, Proto},
         connector_zeromq::{
-            ConnectorZmqBuilder,
-            ConnectorZMQ
+            ConnectorZmq
         }
     },
     };
@@ -150,15 +125,15 @@ mod tests {
             Poller::new()
                 .add(server)
                 .add(client)
-                .poll_with_limit(2);
+                .poll(2);
         }).join().unwrap();
     }
 
     fn run_zmq_server() {
-        let server = ConnectorZMQ::builder()
+        let server = ConnectorZmq::builder()
             .with_endpoint("tcp://127.0.0.1:7000".to_string())
             .with_handler(ServerCommand)
-            .build_dealer()
+            .build()
             .bind()
             .into_inner();
         thread::sleep(Duration::from_secs(1));
@@ -168,10 +143,10 @@ mod tests {
         thread::sleep(Duration::from_secs(2));
     }
     fn run_zmq_client() {
-        let client = ConnectorZMQ::builder()
+        let client = ConnectorZmq::builder()
             .with_endpoint("tcp://127.0.0.1:7001".to_string())
             .with_handler(ClientCommand)
-            .build_dealer()
+            .build()
             .connect()
             .into_inner();
         thread::sleep(Duration::from_secs(1));
@@ -184,31 +159,31 @@ mod tests {
     #[test]
     fn zeromq_dealer_client_polling_test() {
         let server = std::thread::spawn(run_zmq_server);
-        let client = ConnectorZMQ::builder()
+        let client = ConnectorZmq::builder()
             .with_endpoint("tcp://127.0.0.1:7000".to_string())
             .with_handler(ClientCommand)
-            .build_dealer()
+            .build()
             .connect()
             .into_inner();
 
         Poller::new()
             .add(client)
-            .poll_with_limit(1);
+            .poll(1);
         
         server.join().unwrap();
     }
     #[test]
     fn zeromq_dealer_server_polling_test() {
-        let server = ConnectorZMQ::builder()
+        let server = ConnectorZmq::builder()
             .with_endpoint("tcp://127.0.0.1:7001".to_string())
             .with_handler(ServerCommand)
-            .build_dealer()
+            .build()
             .bind()
             .into_inner();
         let client = std::thread::spawn(run_zmq_client); 
         Poller::new()
             .add(server)
-            .poll_with_limit(1);
+            .poll(1);
 
         client.join().unwrap();
     }

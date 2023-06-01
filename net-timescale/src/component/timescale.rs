@@ -79,7 +79,7 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
             Poller::new()
                 .add(transmitter)
                 .add(producer_db_service)
-                .poll();
+                .poll(-1);
         });
         self.thread_pool.execute(move || {
             let executor = Executor::new(self.connection_pool.clone());
@@ -111,7 +111,7 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
             Poller::new()
                 .add(service_add_packets)
                 .add(service_select_by_time_interval)
-                .poll();
+                .poll(-1);
         });
     }
 }
