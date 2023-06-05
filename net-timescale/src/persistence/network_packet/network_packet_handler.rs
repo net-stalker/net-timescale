@@ -5,7 +5,6 @@ use net_proto_api::decoder_api::Decoder;
 use r2d2::ManageConnection;
 use serde_json::Value;
 use crate::command::executor::Executor;
-use crate::persistence::query_factory;
 use net_timescale_api::api::{network_packet::NetworkPacketDTO};
 use super::network_packet_query::NetworkPacketQuery;
 
@@ -20,26 +19,17 @@ pub struct NetworkPacketHandler<T, M>
     executor: Executor<M>,
     result_receiver: Arc<T>
 }
-impl<T, M> query_factory::QueryFactory for NetworkPacketHandler<T, M>
-    where
-        T: Sender + ?Sized,
-        M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
-{
-    type R = Arc<T>;
-    type Q = NetworkPacketHandler<T, M>;
-    type E = Executor<M>;
-    fn create_query_handler(executor: Self::E, result_receiver: Self::R) -> Self::Q {
-        NetworkPacketHandler {
-            executor,
-            result_receiver
-        }
-    }
-}
 impl<T, M> NetworkPacketHandler<T, M>
     where
         T: Sender + ?Sized,
         M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
 {
+    pub fn new(executor: Executor<M>, result_receiver: Arc<T>) -> Self {
+        NetworkPacketHandler {
+            executor,
+            result_receiver
+        }
+    }
     pub fn insert(&self, data: NetworkPacketDTO) -> Result<u64, postgres::Error>{
         let time = Utc.timestamp_millis_opt(data.get_frame_time()).unwrap();
         let json = convert_to_value(data.get_network_packet_data().to_owned()).unwrap();

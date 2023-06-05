@@ -15,7 +15,6 @@ use crate::command::{
 };
 use crate::persistence::{
     network_packet::network_packet_handler::NetworkPacketHandler,
-    query_factory::QueryFactory,
     select_by_time::select_by_time::SelectInterval
 };
 
@@ -90,7 +89,7 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
                 .connect()
                 .into_inner();
 
-            let add_packets_handler = NetworkPacketHandler::create_query_handler(executor.clone(),
+            let add_packets_handler = NetworkPacketHandler::new(executor.clone(),
                     result_puller.clone());
             let service_add_packets = ConnectorNNGPubSub::builder()
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
@@ -100,7 +99,7 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
                 .connect()
                 .into_inner();
             
-            let select_by_time_interval_handler = SelectInterval::create_query_handler(executor.clone(), result_puller.clone());
+            let select_by_time_interval_handler = SelectInterval::new(executor.clone(), result_puller.clone());
             let service_select_by_time_interval = ConnectorNNGPubSub::builder()
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
                 .with_handler(select_by_time_interval_handler)
