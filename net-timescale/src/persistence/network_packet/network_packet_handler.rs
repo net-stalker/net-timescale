@@ -62,7 +62,7 @@ impl<T, M> Handler for NetworkPacketHandler<T, M>
 #[cfg(test)]
 mod tests{
     use postgres::types::ToSql;
-    use crate::persistence::query::PostgresQuery;
+    use crate::persistence::postgres_query::PostgresQuery;
     use super::*;
     #[test]
     fn test_add_packet_query(){
