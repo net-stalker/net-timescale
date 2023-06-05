@@ -12,7 +12,7 @@ use net_core::transport::{
     connector_nng_pub_sub::ConnectorNNGPubSub,
     connector_nng::{ConnectorNNG, Proto}
 };
-use net_core::transport::polling::Poller;
+use net_core::transport::polling::nng::NngPoller;
 
 use crate::command::{agent::AgentCommand, dummy_timescale::DummyTimescaleHandler};
 use crate::command::pull::PullCommand;
@@ -93,7 +93,7 @@ impl NetComponent for Hub {
                 .bind()
                 .into_inner();
 
-            Poller::new()
+            NngPoller::new()
                 .add(agent)
                 .add(db_service)
                 .poll();

@@ -8,18 +8,17 @@ use polling::Event;
 
 use crate::transport::sockets::Socket;
 
-pub struct Poller {
+pub struct NngPoller {
     sockets: HashMap<i32, Arc<dyn Socket>>,
 }
 
-impl Poller {
-    pub fn new() -> Poller {
-        Poller { sockets: HashMap::new() }
+impl NngPoller {
+    pub fn new() -> NngPoller {
+        NngPoller { sockets: HashMap::new() }
     }
 
     pub fn add<S: Socket + 'static>(&mut self, socket: Arc<S>) -> &mut Self {
         self.sockets.insert(socket.as_raw_fd(), socket);
-
         self
     }
 
@@ -78,17 +77,15 @@ impl Poller {
 }
 
 mod tests {
-    use std::{thread, sync::Mutex, time::Duration};
+    use super::*;
+    use std::{thread, time::Duration};
     use crate::transport::{
-        {
         connector_nng::{ConnectorNNG, Proto},
         connector_zeromq::{
             ConnectorZmqBuilder,
             ConnectorZMQ
         }
-    },
     };
-    use crate::transport::polling::Poller;
     use crate::transport::sockets::{Handler, Receiver, Sender};
 
     struct ClientCommand;
@@ -147,69 +144,10 @@ mod tests {
             .into_inner();
 
         thread::spawn(move || {
-            Poller::new()
+            NngPoller::new()
                 .add(server)
                 .add(client)
                 .poll_with_limit(2);
         }).join().unwrap();
-    }
-
-    fn run_zmq_server() {
-        let server = ConnectorZMQ::builder()
-            .with_endpoint("tcp://127.0.0.1:7000".to_string())
-            .with_handler(ServerCommand)
-            .build_dealer()
-            .bind()
-            .into_inner();
-        thread::sleep(Duration::from_secs(1));
-        for _ in 0..5 {
-            server.send("from server".as_bytes());
-        }
-        thread::sleep(Duration::from_secs(2));
-    }
-    fn run_zmq_client() {
-        let client = ConnectorZMQ::builder()
-            .with_endpoint("tcp://127.0.0.1:7001".to_string())
-            .with_handler(ClientCommand)
-            .build_dealer()
-            .connect()
-            .into_inner();
-        thread::sleep(Duration::from_secs(1));
-        for _ in 0..5 {
-            client.send("from client".as_bytes());
-        }
-        thread::sleep(Duration::from_secs(2));
-    }
-
-    #[test]
-    fn zeromq_dealer_client_polling_test() {
-        let server = std::thread::spawn(run_zmq_server);
-        let client = ConnectorZMQ::builder()
-            .with_endpoint("tcp://127.0.0.1:7000".to_string())
-            .with_handler(ClientCommand)
-            .build_dealer()
-            .connect()
-            .into_inner();
-
-        Poller::new()
-            .add(client)
-            .poll_with_limit(1);
-        
-        server.join().unwrap();
-    }
-    #[test]
-    fn zeromq_dealer_server_polling_test() {
-        let server = ConnectorZMQ::builder()
-            .with_endpoint("tcp://127.0.0.1:7001".to_string())
-            .with_handler(ServerCommand)
-            .build_dealer()
-            .bind()
-            .into_inner();
-        let client = std::thread::spawn(run_zmq_client); 
-        Poller::new()
-            .add(server)
-            .poll_with_limit(1);
-
-        client.join().unwrap();
     }
 }

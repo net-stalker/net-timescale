@@ -6,8 +6,8 @@ use r2d2::{Pool, ManageConnection};
 use net_core::transport::{
     connector_nng::{ConnectorNNG, Proto},
     connector_nng_pub_sub::ConnectorNNGPubSub,
-    polling::Poller,
     dummy_command::DummyCommand,
+    polling::nng::NngPoller
 };
 use crate::{command::{
     dispatcher::CommandDispatcher,
@@ -69,14 +69,14 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
                 .build()
                 .connect()
                 .into_inner(); 
-            let trasmitter_command = Transmitter::new(consumer_db_service);
+            let transmitter_command = Transmitter::new(consumer_db_service);
             let transmitter = ConnectorNNGPubSub::builder()
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
-                .with_handler(trasmitter_command)
+                .with_handler(transmitter_command)
                 .build_subscriber()
                 .bind()
                 .into_inner();
-            Poller::new()
+            NngPoller::new()
                 .add(transmitter)
                 .add(producer_db_service)
                 .poll();
@@ -108,7 +108,7 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
                 .build_subscriber()
                 .connect()
                 .into_inner();
-            Poller::new()
+            NngPoller::new()
                 .add(service_add_packets)
                 .add(service_select_by_time_interval)
                 .poll();

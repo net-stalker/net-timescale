@@ -6,7 +6,7 @@ use net_core::layer::NetComponent;
 use net_core::transport::{
     connector_nng::{ConnectorNNG, Proto}
 };
-use net_core::transport::polling::Poller;
+use net_core::transport::polling::nng::NngPoller;
 
 use crate::command::decoder::DecoderCommand;
 use crate::command::dispatcher::TranslatorDispatcher;
@@ -60,7 +60,7 @@ impl NetComponent for Translator {
                 .connect()
                 .into_inner();
 
-            Poller::new()
+            NngPoller::new()
                 .add(db_command)
                 .add(decoder)
                 .poll();
@@ -84,7 +84,7 @@ impl NetComponent for Translator {
                 .connect()
                 .into_inner();
 
-            Poller::new()
+            NngPoller::new()
                 .add(dispatcher)
                 .poll();
         });
