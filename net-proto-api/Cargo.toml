@@ -1,17 +1,13 @@
 [package]
-name = "net-timescale-api"
+name = "net-proto-api"
 version = "0.1.0"
 edition = "2021"
 
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-net-proto-api = { path = "../net-proto-api" }
-
 capnp = "0.16.1"
 capnpc = "0.16.1"
-
-[build-dependencies]
-net-core = { path = "../net-core" }
 
 [build-dependencies.capnpc]
 capnpc = "0.17.0"

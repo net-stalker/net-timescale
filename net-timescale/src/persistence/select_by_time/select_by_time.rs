@@ -4,20 +4,26 @@ use chrono::{DateTime, Utc, TimeZone};
 use net_core::transport::sockets::{Receiver, Sender, Handler};
 use postgres::{types::ToSql, Row};
 use crate::{command::executor::Executor, persistence::{query, query_factory}};
+use r2d2::ManageConnection;
 use super::time_interval::TimeInterval;
 
-pub struct SelectInterval<T>
-where T: Sender + ?Sized
+pub struct SelectInterval<T, M>
+where
+    T: Sender + ?Sized,
+    M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
 {
-    executor: Executor,
+    executor: Executor<M>,
     result_receiver: Arc<T>
 }
-impl<T> query_factory::QueryFactory for SelectInterval<T>
-where T: Sender + ?Sized
+impl<T, M> query_factory::QueryFactory for SelectInterval<T, M>
+where
+    T: Sender + ?Sized,
+    M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
 {
-    type Q = SelectInterval<T>;
+    type Q = SelectInterval<T, M>;
     type R = Arc<T>;
-    fn create_query_handler(executor: Executor, result_receiver: Self::R) -> Self::Q {
+    type E = Executor<M>;
+    fn create_query_handler(executor: Self::E, result_receiver: Self::R) -> Self::Q {
         SelectInterval {
             executor,
             result_receiver
@@ -52,8 +58,10 @@ impl<'a> query::PostgresQuery<'a> for SelectIntervalQuery<'a> {
         (self.raw_query, &self.args)
     }
 }
-impl<T> SelectInterval<T>
-where T: Sender + ?Sized
+impl<T, M> SelectInterval<T, M>
+where
+    T: Sender + ?Sized,
+    M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
 {
     pub fn select_time_interval(&self, data: TimeInterval) -> Result<Vec<Row>, postgres::Error> {
         let start = Utc.timestamp_millis_opt(data.start_interval).unwrap();
@@ -63,8 +71,10 @@ where T: Sender + ?Sized
     }
 }
 
-impl<T> Handler for SelectInterval<T>
-where T: Sender + ?Sized
+impl<T, M> Handler for SelectInterval<T, M>
+where
+    T: Sender + ?Sized,
+    M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
