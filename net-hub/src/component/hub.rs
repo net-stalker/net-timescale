@@ -96,7 +96,7 @@ impl NetComponent for Hub {
             Poller::new()
                 .add(agent)
                 .add(db_service)
-                .poll();
+                .poll(-1);
         });
     }
 }
