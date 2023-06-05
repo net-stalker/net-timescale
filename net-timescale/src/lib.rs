@@ -1,3 +1,3 @@
-pub mod db_access;
+pub mod persistence;
 pub mod command;
 pub mod component;
