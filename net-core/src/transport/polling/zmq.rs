@@ -7,7 +7,8 @@ pub struct ZmqPoller<HANDLER>
 where HANDLER: Handler
 {
     // TODO: in case we would have multiple zmq connectors there is a point to implement connector trait
-    // or think about implementing generic poller using, for example, Pool trait which is implemented by connectors
+    // or think about implementing generic poller using. For example, implement Poll trait which
+    // will be implemented by connectors
     connectors: Vec<Arc<ConnectorZMQ<HANDLER>>>,
 }
 
