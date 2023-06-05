@@ -5,7 +5,7 @@ use net_core::transport::sockets::{Receiver, Sender, Handler};
 use postgres::{types::ToSql, Row};
 use crate::{command::executor::Executor, persistence::postgres_query};
 use r2d2::ManageConnection;
-use super::query::{TimeInterval, TimeIntervalQuery};
+use super::postgres_query::{TimeInterval, TimeIntervalQuery};
 
 pub struct TimeIntervalHandler<T, M>
 where

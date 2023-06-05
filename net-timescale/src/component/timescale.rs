@@ -14,7 +14,7 @@ use crate::command::{
     executor::Executor, transmitter::Transmitter
 };
 use crate::persistence::{
-    network_packet::network_packet_handler::NetworkPacketHandler,
+    network_packet::handler::NetworkPacketHandler,
     time_interval::handler::TimeIntervalHandler
 };
 

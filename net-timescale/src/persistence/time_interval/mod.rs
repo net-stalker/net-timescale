@@ -1,2 +1,2 @@
 pub mod handler;
-pub mod query;
+pub mod postgres_query;
