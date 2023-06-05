@@ -1,7 +1,6 @@
 use r2d2::{Pool, PooledConnection, ManageConnection};
 use std::sync::{Arc, Mutex};
-
-use crate::db_access::query;
+use crate::persistence::query;
 
 pub struct Executor<M>
 where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
