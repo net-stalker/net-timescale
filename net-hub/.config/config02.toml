@@ -1,5 +1,0 @@
-[connector]
-endpoint = "tcp://localhost:5555"
-
-[log]
-level = "Debug"

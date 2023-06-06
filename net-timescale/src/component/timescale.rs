@@ -9,14 +9,13 @@ use net_core::transport::{
     dummy_command::DummyCommand,
     polling::nng::NngPoller
 };
-use crate::{command::{
+use crate::command::{
     dispatcher::CommandDispatcher,
     executor::Executor, transmitter::Transmitter
-}, db_access::select_by_time::select_by_time::SelectInterval};
-use crate::db_access::{
-    add_traffic::add_captured_packets::AddCapturedPackets,
-    query_factory::QueryFactory,
-    // select_by_time::select_by_time::SelectInterval
+};
+use crate::persistence::{
+    network_packet::network_packet_handler::NetworkPacketHandler,
+    select_by_time::select_by_time::SelectInterval
 };
 
 pub struct Timescale<M>
@@ -79,7 +78,7 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
             NngPoller::new()
                 .add(transmitter)
                 .add(producer_db_service)
-                .poll();
+                .poll(-1);
         });
         self.thread_pool.execute(move || {
             let executor = Executor::new(self.connection_pool.clone());
@@ -90,7 +89,7 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
                 .connect()
                 .into_inner();
 
-            let add_packets_handler = AddCapturedPackets::create_query_handler(executor.clone(),
+            let add_packets_handler = NetworkPacketHandler::new(executor.clone(),
                     result_puller.clone());
             let service_add_packets = ConnectorNNGPubSub::builder()
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
@@ -100,7 +99,7 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
                 .connect()
                 .into_inner();
             
-            let select_by_time_interval_handler = SelectInterval::create_query_handler(executor.clone(), result_puller.clone());
+            let select_by_time_interval_handler = SelectInterval::new(executor.clone(), result_puller.clone());
             let service_select_by_time_interval = ConnectorNNGPubSub::builder()
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
                 .with_handler(select_by_time_interval_handler)
@@ -111,7 +110,7 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
             NngPoller::new()
                 .add(service_add_packets)
                 .add(service_select_by_time_interval)
-                .poll();
+                .poll(-1);
         });
     }
 }

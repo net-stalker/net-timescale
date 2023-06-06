@@ -3,8 +3,8 @@ use std::sync::Arc;
 use chrono::{DateTime, Utc, TimeZone};
 use net_core::transport::sockets::{Receiver, Sender, Handler};
 use postgres::{types::ToSql, Row};
+use crate::{command::executor::Executor, persistence::query};
 use r2d2::ManageConnection;
-use crate::{command::executor::Executor, db_access::{query, query_factory}};
 use super::time_interval::TimeInterval;
 
 pub struct SelectInterval<T, M>
@@ -14,21 +14,6 @@ where
 {
     executor: Executor<M>,
     result_receiver: Arc<T>
-}
-impl<T, M> query_factory::QueryFactory for SelectInterval<T, M>
-where
-    T: Sender + ?Sized,
-    M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
-{
-    type Q = SelectInterval<T, M>;
-    type R = Arc<T>;
-    type E = Executor<M>;
-    fn create_query_handler(executor: Self::E, result_receiver: Self::R) -> Self::Q {
-        SelectInterval {
-            executor,
-            result_receiver
-        }
-    }
 }
 struct SelectIntervalQuery<'a> {
     pub raw_query: &'a str,
@@ -63,6 +48,12 @@ where
     T: Sender + ?Sized,
     M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
 {
+    pub fn new(executor: Executor<M>, result_receiver: Arc<T>) -> Self {
+        SelectInterval {
+            executor,
+            result_receiver
+        }
+    }
     pub fn select_time_interval(&self, data: TimeInterval) -> Result<Vec<Row>, postgres::Error> {
         let start = Utc.timestamp_millis_opt(data.start_interval).unwrap();
         let end = Utc.timestamp_millis_opt(data.end_interval).unwrap();
@@ -85,7 +76,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::db_access::query::PostgresQuery;
+    use crate::persistence::query::PostgresQuery;
 
     use super::*;
     #[test]

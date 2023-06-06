@@ -63,7 +63,7 @@ impl NetComponent for Translator {
             NngPoller::new()
                 .add(db_command)
                 .add(decoder)
-                .poll();
+                .poll(-1);
         });
 
         self.pool.execute(move || {
@@ -86,7 +86,7 @@ impl NetComponent for Translator {
 
             NngPoller::new()
                 .add(dispatcher)
-                .poll();
+                .poll(-1);
         });
     }
 }

@@ -22,7 +22,8 @@ impl NngPoller {
         self
     }
 
-    pub fn poll(&mut self) {
+    pub fn poll(&mut self, events_count: i32) {
+        let mut counter = 0;
         let poller = polling::Poller::new().unwrap();
         let mut events = Vec::new();
 
@@ -39,38 +40,13 @@ impl NngPoller {
             poller.wait(&mut events, None).unwrap();
 
             for ev in &events {
+                counter += 1;
                 let socket = self.sockets.get(&(ev.key as i32)).unwrap();
                 socket.handle(socket.get_receiver(), socket.get_sender());
 
                 poller.modify(socket.as_raw_fd(), Event::readable(ev.key)).unwrap();
-            }
-        }
-    }
-    fn poll_with_limit(&mut self, mut events_count: i32) {
-        let poller = polling::Poller::new().unwrap();
-        let mut events = Vec::new();
 
-        self.sockets.values().for_each(|socket| {
-            let usize_fd = socket.fd_as_usize().unwrap();
-            let event = Event::readable(usize_fd);
-            let fd = socket.as_raw_fd();
-
-            poller.add(fd, event).unwrap();
-        });
-
-        loop {
-            events.clear();
-            poller.wait(&mut events, None).unwrap();
-
-            for ev in &events {
-                events_count -= 1;
-                let socket = self.sockets.get(&(ev.key as i32)).unwrap();
-                socket.handle(socket.get_receiver(), socket.get_sender());
-                
-                poller.modify(socket.as_raw_fd(), Event::readable(ev.key)).unwrap();
-                if events_count == 0 {
-                    return;
-                }
+                if counter == events_count { return; }
             }
         }
     }
@@ -82,8 +58,7 @@ mod tests {
     use crate::transport::{
         connector_nng::{ConnectorNNG, Proto},
         connector_zeromq::{
-            ConnectorZmqBuilder,
-            ConnectorZMQ
+            ConnectorZmq
         }
     };
     use crate::transport::sockets::{Handler, Receiver, Sender};
@@ -147,7 +122,7 @@ mod tests {
             NngPoller::new()
                 .add(server)
                 .add(client)
-                .poll_with_limit(2);
+                .poll(2);
         }).join().unwrap();
     }
 }
