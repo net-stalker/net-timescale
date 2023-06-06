@@ -1,4 +1,4 @@
-mod time_interval_capnp {
+pub mod time_interval_capnp {
     include!(concat!(env!("OUT_DIR"), "/time_interval_capnp.rs"));
 }
 use time_interval_capnp::time_interval;
