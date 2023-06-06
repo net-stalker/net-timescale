@@ -56,10 +56,10 @@ mod tests {
 
         let expected_config = Config {
             connector: Connector {
-                endpoint: "tcp://localhost:5555".to_string(),
+                endpoint: "tcp://api.hub.netstalker.io:5555".to_string(),
             },
             log: Log {
-                level: LogLevel::Debug,
+                level: LogLevel::Info,
             },
         };
 
