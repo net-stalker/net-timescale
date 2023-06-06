@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use zmq::PollEvents;
-use crate::transport::connector_zeromq::ConnectorZMQ;
+use crate::transport::connector_zeromq::ConnectorZmq;
 use crate::transport::sockets::{Socket, Handler};
 
 pub struct ZmqPoller<HANDLER>
@@ -9,7 +9,7 @@ where HANDLER: Handler
     // TODO: in case we would have multiple zmq connectors there is a point to implement connector trait
     // or think about implementing generic poller using. For example, implement Poll trait which
     // will be implemented by connectors
-    connectors: Vec<Arc<ConnectorZMQ<HANDLER>>>,
+    connectors: Vec<Arc<ConnectorZmq<HANDLER>>>,
 }
 
 impl<HANDLER> ZmqPoller<HANDLER>
@@ -18,7 +18,7 @@ where HANDLER: Handler
     pub fn new() -> Self {
         ZmqPoller { connectors: Vec::new() }
     }
-    pub fn add(&mut self, socket: Arc<ConnectorZMQ<HANDLER>>) -> &mut Self {
+    pub fn add(&mut self, socket: Arc<ConnectorZmq<HANDLER>>) -> &mut Self {
         self.connectors.push(socket);
         self
     }
@@ -46,7 +46,7 @@ mod tests {
 
     use crate::transport::{
         connector_zeromq::{
-            ConnectorZMQ
+            ConnectorZmq
         }
     };
     use crate::transport::polling::zmq::ZmqPoller;
@@ -69,10 +69,10 @@ mod tests {
         }
     }
     fn run_server_zmq() {
-        let server = ConnectorZMQ::builder()
+        let server = ConnectorZmq::builder()
             .with_endpoint("tcp://127.0.0.1:7000".to_string())
             .with_handler(ServerCommand)
-            .build_dealer()
+            .build()
             .bind()
             .into_inner();
         for _ in 0..5 {
@@ -80,10 +80,10 @@ mod tests {
         }
     }
     fn run_client_zmq() {
-        let client = ConnectorZMQ::builder()
+        let client = ConnectorZmq::builder()
             .with_endpoint("tcp://127.0.0.1:7001".to_string())
             .with_handler(ClientCommand)
-            .build_dealer()
+            .build()
             .connect()
             .into_inner();
         for _ in 0..5 {
@@ -93,10 +93,10 @@ mod tests {
     #[test]
     fn zmq_poller_server_test() {
         let clients_count = 3;
-        let server = ConnectorZMQ::builder()
+        let server = ConnectorZmq::builder()
             .with_endpoint("tcp://127.0.0.1:7001".to_string())
             .with_handler(ServerCommand)
-            .build_dealer()
+            .build()
             .bind()
             .into_inner();
         let mut clients = Vec::new();
@@ -114,10 +114,10 @@ mod tests {
     #[test]
     fn zmq_poller_client_test() {
         let server = std::thread::spawn(run_server_zmq);
-        let client = ConnectorZMQ::builder()
+        let client = ConnectorZmq::builder()
             .with_endpoint("tcp://127.0.0.1:7000".to_string())
             .with_handler(ClientCommand)
-            .build_dealer()
+            .build()
             .connect()
             .into_inner();
 
