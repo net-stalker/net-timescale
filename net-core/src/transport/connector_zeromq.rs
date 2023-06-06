@@ -76,6 +76,9 @@ impl<HANDLER: Handler> ConnectorZmq<HANDLER> {
     pub fn builder() -> ConnectorZmqDealerBuilder<HANDLER> {
         ConnectorZmqDealerBuilder::new()
     }
+    pub fn get_socket(&self) -> &zmq::Socket {
+        &self.socket
+    }
 }
 
 pub struct ConnectorZmqDealerBuilder<HANDLER: Handler> {
