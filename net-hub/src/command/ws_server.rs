@@ -16,6 +16,7 @@ where S: Sender
 {
     clients: Arc<RwLock<HashMap<u64, Responder>>>,
     event_hub: Option<EventHub>,
+    // TODO: for now consumer is unused. Is meant to be used for sending data to net-timescale
     consumer: Arc<S>
 }
 impl<S> WsServerCommand<S>
@@ -76,9 +77,11 @@ where S: Sender
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        let network_packet_data = NetworkPacketDTO::decode(data);
-        let formated_string = format!("{:?}", network_packet_data);
-        log::debug!("received from server {:?}", formated_string);
+        let formated_string = match String::from_utf8(data) {
+            Ok(msg) => msg,
+            Err(_) => "error while parsing the msg".to_string()
+        };
+        log::debug!("received from timescale {}", formated_string);
         self.send(formated_string);
     }
 }

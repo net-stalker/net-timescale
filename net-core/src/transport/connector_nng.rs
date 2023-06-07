@@ -138,7 +138,7 @@ impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
         self.handler = Some(Arc::new(handler));
         self
     }
-    pub fn with_arc_handler(mut self, handler: Arc<HANDLER>) -> Self {
+    pub fn with_shared_handler(mut self, handler: Arc<HANDLER>) -> Self {
         self.handler = Some(handler);
         self
     }
