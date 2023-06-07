@@ -1,4 +1,4 @@
-mod network_packet_capnp {
+pub mod network_packet_capnp {
     include!(concat!(env!("OUT_DIR"), "/network_packet_capnp.rs"));
 }
 use network_packet_capnp::network_packet;

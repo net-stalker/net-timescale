@@ -1,5 +1,9 @@
-@0xa788a457a365d6d8;
+@0xfb6bcb9ccef7c37b;
+
+using import "graph_node.capnp".GraphNode;
+using import "graph_edge.capnp".GraphEdge;
 
 struct NetworkGraph {
-    links @0 :List(Data);
+    nodes @0 :List(GraphNode);
+    edges @1 :List(GraphEdge);
 }
