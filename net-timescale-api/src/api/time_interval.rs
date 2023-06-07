@@ -57,8 +57,9 @@ impl Encoder for TimeIntervalDTO {
 
 impl Decoder for TimeIntervalDTO {
     fn decode(data: Vec<u8>) -> Self {
+//TODO: Think about using std::io::Cursor here
         let message_reader = ::capnp::serialize_packed::read_message(
-            data.as_slice(), //Think about using std::io::Cursor here
+            data.as_slice(),
             ::capnp::message::ReaderOptions::new()).unwrap();
     
         let decoded_struct = message_reader.get_root::<time_interval::Reader>().unwrap();
