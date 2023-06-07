@@ -13,7 +13,7 @@ use super::sockets::Pub;
 
 pub struct ConnectorNNG<HANDLER> {
     endpoint: String,
-    handler: Option<Box<HANDLER>>,
+    handler: Option<Arc<HANDLER>>,
     socket: Socket
 }
 
@@ -122,7 +122,7 @@ impl Proto {
 pub struct ConnectorNngBuilder<HANDLER: Handler> {
     endpoint: Option<String>,
     proto: Option<Proto>,
-    handler: Option<Box<HANDLER>>,
+    handler: Option<Arc<HANDLER>>,
 }
 
 impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
@@ -135,10 +135,13 @@ impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
     }
 
     pub fn with_handler(mut self, handler: HANDLER) -> Self {
-        self.handler = Some(Box::new(handler));
+        self.handler = Some(Arc::new(handler));
         self
     }
-
+    pub fn with_arc_handler(mut self, handler: Arc<HANDLER>) -> Self {
+        self.handler = Some(handler);
+        self
+    }
     pub fn with_endpoint(mut self, endpoint: String) -> Self {
         self.endpoint = Some(endpoint);
         self
