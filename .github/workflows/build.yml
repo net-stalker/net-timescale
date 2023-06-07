@@ -1,4 +1,4 @@
-name: Rust
+name: Build project
 
 on:
   push:
@@ -57,8 +57,6 @@ jobs:
           cmake ..
           make
           sudo make install
-      #      - name: Clean
-      #        run: cargo clean
 
       - name: Build and Test
         env:
