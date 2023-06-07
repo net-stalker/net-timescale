@@ -7,7 +7,7 @@ fn main() {
     ::capnpc::CompilerCommand::new()
             .src_prefix(".capnp")
             .file(format!("{}", file_name))
-            .default_parent_module(vec!["capnp".into(), file_name])
+            .default_parent_module(vec!["api".into(), file_name[7..(file_name[7..].find('.').unwrap() + 7)].to_owned()])
             .run()
             .expect("Error while compiling schema");
     }    

@@ -1,3 +1,10 @@
+pub mod graph_edge_capnp {
+    include!(concat!(env!("OUT_DIR"), "/graph_edge_capnp.rs"));
+}
+pub mod graph_node_capnp {
+    include!(concat!(env!("OUT_DIR"), "/graph_node_capnp.rs"));
+}
+
 pub mod network_graph_capnp {
     include!(concat!(env!("OUT_DIR"), "/network_graph_capnp.rs"));
 }
