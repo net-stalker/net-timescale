@@ -50,7 +50,7 @@ impl Encoder for GraphEdgeDTO {
 
 impl Decoder for GraphEdgeDTO {
     fn decode(data: Vec<u8>) -> Self {
-//Think about using std::io::Cursor here
+//TODO: Think about using std::io::Cursor here
         let message_reader = ::capnp::serialize_packed::read_message(
             data.as_slice(),
             ::capnp::message::ReaderOptions::new()).unwrap();
