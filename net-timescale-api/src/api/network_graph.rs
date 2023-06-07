@@ -47,8 +47,18 @@ impl Encoder for NetworkGraphDTO {
         let mut message = ::capnp::message::Builder::new_default();
         let mut struct_to_encode = message.init_root::<network_graph::Builder>();
         
-        struct_to_encode.set_edges(self.graph_edges);
-        struct_to_encode.set_nodes(self.graph_nodes);
+        let mut edges_builder = struct_to_encode.reborrow().init_edges(self.graph_edges.len() as u32);
+        for i in 0..self.graph_edges.len() {
+            let mut edge_builder = edges_builder.reborrow().get(i as u32);
+            edge_builder.set_src_addr(self.graph_edges[i].get_src_addr());
+            edge_builder.set_dst_addr(self.graph_edges[i].get_dst_addr());
+        }
+
+        let mut nodes_builder = struct_to_encode.reborrow().init_nodes(self.graph_nodes.len() as u32);
+        for i in 0..self.graph_nodes.len() {
+            let mut node_builder = nodes_builder.reborrow().get(i as u32);
+            node_builder.set_address(self.graph_nodes[i].get_address());
+        }
     
         match ::capnp::serialize_packed::write_message(&mut buffer, &message) {
             Ok(_) => buffer,
@@ -64,10 +74,31 @@ impl Decoder for NetworkGraphDTO {
             ::capnp::message::ReaderOptions::new()).unwrap();
     
         let decoded_struct = message_reader.get_root::<network_graph::Reader>().unwrap();
+        
+        let mut graph_nodes: Vec<GraphNodeDTO> = Vec::new();
+        let graph_nodes_reader = decoded_struct.reborrow().get_nodes().unwrap();
+        for graph_node_reader in graph_nodes_reader {
+            graph_nodes.push(
+                GraphNodeDTO::new(
+                    String::from(graph_node_reader.get_address().unwrap())
+                )
+            );
+        }
+        
+        let mut graph_edges = Vec::new();
+        let graph_edges_reader = decoded_struct.reborrow().get_edges().unwrap();
+        for graph_edge_reader in graph_edges_reader {
+            graph_edges.push(
+                GraphEdgeDTO::new(
+                    String::from(graph_edge_reader.get_src_addr().unwrap()),
+                    String::from(graph_edge_reader.get_dst_addr().unwrap())
+                )
+            )
+        }
 
-        NetworkGraphDTO { 
-            graph_nodes: decoded_struct.get_nodes(),
-            graph_edges: decoded_struct.get_edges(),
+        NetworkGraphDTO {
+            graph_nodes,
+            graph_edges,
         }
     }
 }
