@@ -9,31 +9,24 @@ use net_proto_api::decoder_api::Decoder;
 
 #[derive(Debug)]
 pub struct TimeIntervalDTO {
-    frame_time: i64,
-
-    interval_start: i64,
-    interval_end: i64,
+    start_date_time: i64,
+    end_date_time: i64,
 }
 
 impl TimeIntervalDTO {
-    pub fn new (frame_time: i64, interval_start: i64, interval_end: i64) -> Self {
-        TimeIntervalDTO { 
-            frame_time,
-            interval_start,
-            interval_end,
+    pub fn new (start_date_time: i64, end_date_time: i64) -> Self {
+        TimeIntervalDTO {
+            start_date_time,
+            end_date_time,
         }
     }
 
-    pub fn get_frame_time (&self) -> i64 {
-        self.frame_time
+    pub fn get_start_date_time (&self) -> i64 {
+        self.start_date_time
     }
 
-    pub fn get_interval_start (&self) -> i64 {
-        self.interval_start
-    }
-
-    pub fn get_interval_end (&self) -> i64 {
-        self.interval_end
+    pub fn get_end_date_time (&self) -> i64 {
+        self.end_date_time
     }
 }
 
@@ -44,9 +37,8 @@ impl Encoder for TimeIntervalDTO {
         let mut message = ::capnp::message::Builder::new_default();
         let mut struct_to_encode = message.init_root::<time_interval::Builder>();
         
-        struct_to_encode.set_frame_time(self.frame_time);
-        struct_to_encode.set_interval_start(self.interval_start);
-        struct_to_encode.set_interval_end(self.interval_end);
+        struct_to_encode.set_start_date_time(self.start_date_time);
+        struct_to_encode.set_end_date_time(self.end_date_time);
     
         match ::capnp::serialize_packed::write_message(&mut buffer, &message) {
             Ok(_) => buffer,
@@ -65,9 +57,8 @@ impl Decoder for TimeIntervalDTO {
         let decoded_struct = message_reader.get_root::<time_interval::Reader>().unwrap();
 
         TimeIntervalDTO { 
-            frame_time: decoded_struct.get_frame_time(),
-            interval_start: decoded_struct.get_interval_start(),
-            interval_end: decoded_struct.get_interval_end(), 
+            start_date_time: decoded_struct.get_start_date_time(),
+            end_date_time: decoded_struct.get_end_date_time(), 
             
         }
     }
