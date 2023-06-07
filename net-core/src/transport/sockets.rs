@@ -29,3 +29,6 @@ pub trait Socket {
 
     fn get_sender(&self) -> &dyn Sender;
 }
+pub trait ZmqSocket: Socket {
+    fn get_socket(&self) -> &zmq::Socket;
+}

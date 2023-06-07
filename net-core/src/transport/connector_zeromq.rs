@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use super::sockets::{self, Pub};
-
 use super::sockets::{
+    self,
     Receiver,
     Sender,
     Handler,
+    Pub
 };
 
 pub struct ConnectorZmq<HANDLER: Handler> {
@@ -35,7 +35,7 @@ impl<HANDLER: Handler> Sender for ConnectorZmq<HANDLER> {
             .expect("client failed sending data");
     }
 
-    fn get_pub(&self) -> Option<&dyn sockets::Pub> {
+    fn get_pub(&self) -> Option<&dyn Pub> {
         None
     }
 }
@@ -57,6 +57,11 @@ impl<HANDLER: Handler> sockets::Socket for ConnectorZmq<HANDLER> {
         self
     }
 }
+impl<HANDLER: Handler> sockets::ZmqSocket for ConnectorZmq<HANDLER> {
+    fn get_socket(&self) -> &zmq::Socket {
+        &self.socket
+    }
+}
 
 impl<HANDLER: Handler> ConnectorZmq<HANDLER> {
     pub fn bind(self) -> Self {
@@ -75,9 +80,6 @@ impl<HANDLER: Handler> ConnectorZmq<HANDLER> {
     // TODO: remove builder method from ConnectorZmq and create standalone builders for different patterns
     pub fn builder() -> ConnectorZmqDealerBuilder<HANDLER> {
         ConnectorZmqDealerBuilder::new()
-    }
-    pub fn get_socket(&self) -> &zmq::Socket {
-        &self.socket
     }
 }
 

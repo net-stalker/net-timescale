@@ -1,32 +1,29 @@
 use std::sync::Arc;
 use zmq::PollEvents;
-use crate::transport::connector_zeromq::ConnectorZmq;
-use crate::transport::sockets::{Socket, Handler};
+use crate::transport::sockets::ZmqSocket;
 
-pub struct ZmqPoller<HANDLER>
-where HANDLER: Handler
+pub struct ZmqPoller
 {
     // TODO: in case we would have multiple zmq connectors there is a point to implement connector trait
     // or think about implementing generic poller using. For example, implement Poll trait which
     // will be implemented by connectors
-    connectors: Vec<Arc<ConnectorZmq<HANDLER>>>,
+    sockets: Vec<Arc<dyn ZmqSocket>>,
 }
 
-impl<HANDLER> ZmqPoller<HANDLER>
-where HANDLER: Handler
+impl ZmqPoller
 {
     pub fn new() -> Self {
-        ZmqPoller { connectors: Vec::new() }
+        ZmqPoller { sockets: Vec::new() }
     }
-    pub fn add(&mut self, socket: Arc<ConnectorZmq<HANDLER>>) -> &mut Self {
-        self.connectors.push(socket);
+    pub fn add(&mut self, socket: Arc<dyn ZmqSocket>) -> &mut Self {
+        self.sockets.push(socket);
         self
     }
     pub fn poll(&mut self, poll_count: i32) {
         let mut items = Vec::new();
         let mut counter = 0;
-        for connector in &self.connectors {
-            let poll_item = connector.get_socket().as_poll_item(PollEvents::POLLIN);
+        for socket in &self.sockets {
+            let poll_item = socket.get_socket().as_poll_item(PollEvents::POLLIN);
             items.push(poll_item);
         }
         while counter != poll_count {
@@ -34,7 +31,7 @@ where HANDLER: Handler
             for (index, item) in items.iter().enumerate() {
                 if item.is_readable() {
                     counter += 1;
-                    let socket = &self.connectors[index];
+                    let socket = &self.sockets[index];
                     socket.handle(socket.get_receiver(), socket.get_sender());
                 }
             }
