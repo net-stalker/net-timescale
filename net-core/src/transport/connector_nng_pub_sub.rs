@@ -39,9 +39,6 @@ impl<H: Handler> Sender for ConnectorNNGPubSub<H> {
             .send(msg)
             .expect("client failed sending data")
     }
-    fn get_pub(&self) -> Option<&dyn Pub> {
-        Some(self)
-    }
 }
 
 impl<HANDLER: Handler> sockets::Socket for ConnectorNNGPubSub<HANDLER>

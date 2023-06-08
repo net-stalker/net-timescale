@@ -1,13 +1,11 @@
 use std::os::unix::io::RawFd;
-use std::sync::{Arc, RwLock, Mutex};
+use std::sync::Arc;
 
 use nng::{Socket, Message, Protocol};
 use nng::options::{Options, RecvFd};
 
 use crate::transport::sockets;
 use crate::transport::sockets::{Handler, Receiver, Sender};
-
-use super::sockets::Pub;
 
 //TODO Connector Builder should be redesigned as Fluent API with constraints.
 
@@ -25,11 +23,6 @@ impl<HANDLER> Receiver for ConnectorNNG<HANDLER> {
             .to_vec() //note: every time data is coped from stack to the heap!
     }
 }
-impl<H: Handler> Pub for ConnectorNNG<H> {
-    fn set_topic(&self, _topic: &[u8]){
-        log::error!("can't set a topic for a non pub connector");
-    }
-}
 
 impl<H: Handler> Sender for ConnectorNNG<H> {
     fn send(&self, data: &[u8]) {
@@ -37,11 +30,6 @@ impl<H: Handler> Sender for ConnectorNNG<H> {
             .send(data)
             .expect("client failed sending data");
     }
-
-    fn get_pub(&self) -> Option<&dyn Pub> {
-        None
-    }
-    
 }
 
 impl<HANDLER: Handler> sockets::Socket for ConnectorNNG<HANDLER>

@@ -22,21 +22,10 @@ impl<HANDLER: Handler> Receiver for ConnectorZmq<HANDLER> {
     }
 }
 
-impl<HANDLER: Handler> Pub for ConnectorZmq<HANDLER> {
-    fn set_topic(&self, _topic: &[u8]){
-        log::error!("can't set a topic for a non pub connector");
-    }
-}
-
-
 impl<HANDLER: Handler> Sender for ConnectorZmq<HANDLER> {
     fn send(&self, data: &[u8]) {
         self.socket.send(data, 0)
             .expect("client failed sending data");
-    }
-
-    fn get_pub(&self) -> Option<&dyn sockets::Pub> {
-        None
     }
 }
 
