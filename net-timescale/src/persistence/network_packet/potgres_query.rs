@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use postgres::types::ToSql;
-use crate::persistence::query;
+use crate::persistence::postgres_query;
 
 pub struct NetworkPacketQuery<'a> {
     pub raw_query: &'a str,
@@ -21,7 +21,7 @@ impl<'a> NetworkPacketQuery<'a> {
     }
 }
 
-impl<'a> query::PostgresQuery<'a> for NetworkPacketQuery<'a> {
+impl<'a> postgres_query::PostgresQuery<'a> for NetworkPacketQuery<'a> {
     fn get_query_params(&self) -> (&'a str, &[&'a(dyn postgres::types::ToSql + Sync)]) {
         (self.raw_query, &self.args)
     }
@@ -30,7 +30,7 @@ impl<'a> query::PostgresQuery<'a> for NetworkPacketQuery<'a> {
 
 #[cfg(test)]
 mod tests{
-    use crate::persistence::query::PostgresQuery;
+    use crate::persistence::postgres_query::PostgresQuery;
 
     use super::*;
     #[test]
