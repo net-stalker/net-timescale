@@ -1,18 +1,18 @@
 name: Build and Push docker image to Container Registry
 
 on:
-  push:
-    branches: [ "*" ]
-  pull_request:
-    branches: [ "*" ]
+  #  push:
+  #     branches: [ "*" ]
+  #   pull_request:
+  #     branches: [ "*" ]
   workflow_dispatch:
     inputs:
       image_name:
         default: "net-hub"
-        description: "Image name"
+        description: "image name"
       image:
         default: "net-hub"
-        description: "Image"
+        description: "image"
       owner:
         default: "net-stalker"
         description: "owner"
