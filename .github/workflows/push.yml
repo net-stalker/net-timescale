@@ -1,7 +1,7 @@
 name: Build and Push docker image to Container Registry
 
-# on:
-#   push:
+on:
+  push:
 #     branches: [ "*" ]
 #   pull_request:
 #     branches: [ "*" ]
