@@ -9,10 +9,10 @@ on:
     inputs:
       image_name:
         default: "net-hub"
-        description: "Image name"
+        description: "image name"
       image:
         default: "net-hub"
-        description: "Image"
+        description: "image"
       owner:
         default: "net-stalker"
         description: "owner"
