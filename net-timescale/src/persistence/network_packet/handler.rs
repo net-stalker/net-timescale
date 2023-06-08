@@ -6,7 +6,7 @@ use r2d2::ManageConnection;
 use serde_json::Value;
 use crate::command::executor::Executor;
 use net_timescale_api::api::{network_packet::NetworkPacketDTO};
-use super::network_packet_query::NetworkPacketQuery;
+use super::potgres_query::NetworkPacketQuery;
 
 fn convert_to_value(packet_json: Vec<u8>) -> serde_json::Result<Value> {
     serde_json::from_slice(&*packet_json)
@@ -62,7 +62,7 @@ impl<T, M> Handler for NetworkPacketHandler<T, M>
 #[cfg(test)]
 mod tests{
     use postgres::types::ToSql;
-    use crate::persistence::query::PostgresQuery;
+    use crate::persistence::postgres_query::PostgresQuery;
     use super::*;
     #[test]
     fn test_add_packet_query(){
