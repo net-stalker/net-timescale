@@ -44,7 +44,6 @@ impl NetComponent for Hub {
         });
 
         self.pool.execute(move || {
-            // TODO: add ws after configuring zeromq connector
             let ws_server = ConnectorNNG::builder()
                 .with_shared_handler(ws_server_command)
                 .with_endpoint(self.config.frontend_gateway.ws_addr)

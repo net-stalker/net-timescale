@@ -35,8 +35,7 @@ impl NetComponent for Translator {
         log::info!("Run component");
         self.pool.execute(move || {
             // build timescale command
-            let timescale = ConnectorNNG::builder()
-                .with_proto(Proto::Push)
+            let timescale = ConnectorZmq::builder()
                 .with_endpoint(self.config.translator_endpoint.addr)
                 .with_handler(DummyCommand)
                 .build()
