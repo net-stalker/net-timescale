@@ -54,7 +54,7 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
 
             let dispatcher = CommandDispatcher::new(consumer);
             let producer_db_service = ConnectorNNG::builder()
-                .with_endpoint("tcp://0.0.0.0:5556".to_string())
+                .with_endpoint("tcp://0.0.0.0:5557".to_string())
                 .with_handler(dispatcher)
                 .with_proto(Proto::Pull)
                 .build()

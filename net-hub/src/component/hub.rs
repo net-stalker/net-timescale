@@ -6,6 +6,7 @@ use net_core::transport::{
     connector_nng_pub_sub::ConnectorNNGPubSub,
     connector_nng::{ConnectorNNG, Proto},
 };
+use net_core::transport::connector_zeromq::ConnectorZmq;
 use net_core::transport::polling::nng::NngPoller;
 
 use crate::command::{agent::AgentCommand, dummy_timescale::DummyTimescaleHandler};
@@ -52,10 +53,10 @@ impl NetComponent for Hub {
                 .bind()
                 .into_inner();
 
-            let translator = ConnectorNNGPubSub::builder()
+            let translator = ConnectorZmq::builder()
                 .with_endpoint(self.config.translator_gateway.addr)
                 .with_handler(TranslatorCommand)
-                .build_publisher()
+                .build()
                 .bind()
                 .into_inner();
 

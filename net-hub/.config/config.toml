@@ -2,8 +2,8 @@
 addr = "tcp://0.0.0.0:5555"
 
 [translator_gateway]
-addr = "tcp://0.0.0.0:5557"
+addr = "tcp://0.0.0.0:5567"
 
 [frontend_gateway]
-ws_addr = "tcp://0.0.0.0:9091"
+ws_addr = "tcp://0.0.0.0:5558"
 
