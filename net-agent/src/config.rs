@@ -57,7 +57,6 @@ mod tests {
 
     #[test]
     fn expected_load_config() {
-        env_logger::init();
         let config = Config::builder()
             .with_config_dir(".config".to_string())
             .build();

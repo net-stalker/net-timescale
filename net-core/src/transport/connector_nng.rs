@@ -1,5 +1,6 @@
 use std::os::unix::io::RawFd;
 use std::sync::Arc;
+use log::{debug, info, trace};
 
 use nng::{Socket, Message, Protocol};
 use nng::options::{Options, RecvFd};
@@ -17,6 +18,7 @@ pub struct ConnectorNNG<HANDLER> {
 
 impl<HANDLER> Receiver for ConnectorNNG<HANDLER> {
     fn recv(&self) -> Vec<u8> {
+        trace!("receiving data");
         self.socket.recv()
             .unwrap()
             .as_slice()
@@ -26,6 +28,7 @@ impl<HANDLER> Receiver for ConnectorNNG<HANDLER> {
 
 impl<H: Handler> Sender for ConnectorNNG<H> {
     fn send(&self, data: &[u8]) {
+        trace!("sending data {:?}", data);
         self.socket
             .send(data)
             .expect("client failed sending data");
@@ -54,11 +57,13 @@ impl<HANDLER: Handler> sockets::Socket for ConnectorNNG<HANDLER>
 
 impl<HANDLER: Handler> ConnectorNNG<HANDLER> {
     pub fn bind(self) -> ConnectorNNG<HANDLER> {
+        info!("bind to {}", &self.endpoint);
         self.socket.listen(&self.endpoint).unwrap();
         self
     }
 
     pub fn connect(self) -> ConnectorNNG<HANDLER> {
+        info!("connect to {}", &self.endpoint);
         self.socket
             .dial_async(&self.endpoint)
             .expect(format!("failed connecting to {}", &self.endpoint).as_str());

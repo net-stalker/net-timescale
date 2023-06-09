@@ -6,6 +6,6 @@ pub struct TranslatorCommand;
 impl Handler for TranslatorCommand {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        debug!("received from agent {:?}", data);
+        debug!("received from translator {:?}", data);
     }
 }

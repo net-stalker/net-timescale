@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use log::{debug, trace};
 
 use super::sockets::{self, Pub};
 
@@ -12,11 +13,12 @@ pub struct ConnectorZmq<HANDLER: Handler> {
     endpoint: String,
     handler: Arc<HANDLER>,
     _context: zmq::Context,
-    socket: zmq::Socket
+    socket: zmq::Socket,
 }
 
 impl<HANDLER: Handler> Receiver for ConnectorZmq<HANDLER> {
     fn recv(&self) -> Vec<u8> {
+        trace!("receiving data");
         self.socket.recv_bytes(0)
             .expect("connector failed receiving data")
     }
@@ -24,6 +26,7 @@ impl<HANDLER: Handler> Receiver for ConnectorZmq<HANDLER> {
 
 impl<HANDLER: Handler> Sender for ConnectorZmq<HANDLER> {
     fn send(&self, data: &[u8]) {
+        trace!("sending data {:?}", data);
         self.socket.send(data, 0)
             .expect("client failed sending data");
     }
@@ -74,7 +77,7 @@ pub struct ConnectorZmqDealerBuilder<HANDLER: Handler> {
     context: zmq::Context,
     endpoint: Option<String>,
     handler: Option<Arc<HANDLER>>,
-    socket: Option<zmq::Socket> 
+    socket: Option<zmq::Socket>,
 }
 
 impl<HANDLER: Handler> ConnectorZmqDealerBuilder<HANDLER> {
@@ -83,7 +86,7 @@ impl<HANDLER: Handler> ConnectorZmqDealerBuilder<HANDLER> {
             context: zmq::Context::new(),
             endpoint: None,
             handler: None,
-            socket: None
+            socket: None,
         }
     }
     pub fn with_handler(mut self, handler: HANDLER) -> Self {
@@ -94,14 +97,14 @@ impl<HANDLER: Handler> ConnectorZmqDealerBuilder<HANDLER> {
         self.endpoint = Some(endpoint);
         self
     }
-     
+
     pub fn build(mut self) -> ConnectorZmq<HANDLER> {
         self.socket = Some(self.context.socket(zmq::DEALER).unwrap());
-        ConnectorZmq { 
+        ConnectorZmq {
             endpoint: self.endpoint.unwrap(),
             handler: self.handler.unwrap(),
             socket: self.socket.unwrap(),
-            _context: self.context
+            _context: self.context,
         }
     }
 }
