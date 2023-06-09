@@ -35,11 +35,12 @@ net-config = { path = "../net-config" }
 net-proto-api = { path = "../net-proto-api" }
 
 log = { workspace = true }
-env_logger = { workspace = true }
+log4rs = { workspace = true }
 threadpool = { workspace = true }
 
 pcap = "1.0.0"
 derivative = "2.2.0"
+serde_yaml = "0.9.21" # uses to parse log4rs config
 
 directories = { workspace = true }
 config = { workspace = true }

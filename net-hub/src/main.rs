@@ -6,7 +6,7 @@ use net_hub::component::hub::Hub;
 use net_hub::config::Config;
 
 fn main() {
-    env_logger::init();
+    init_log();
     info!("run module");
 
     match Config::builder().build() {
@@ -23,4 +23,10 @@ fn main() {
     Hub::new(pool.clone()).run();
 
     pool.join();
+}
+
+fn init_log() {
+    let config_str = include_str!("log4rs.yml");
+    let config = serde_yaml::from_str(config_str).unwrap();
+    log4rs::init_raw_config(config).unwrap();
 }

@@ -5,7 +5,7 @@ use net_core::layer::NetComponent;
 use net_translator::component::translator::Translator;
 
 fn main() {
-    env_logger::init();
+    init_log();
     info!("Run module");
 
     let pool = ThreadPool::with_name("worker".into(), 5);
@@ -13,4 +13,10 @@ fn main() {
     Translator::new(pool.clone()).run();
 
     pool.join();
+}
+
+fn init_log() {
+    let config_str = include_str!("log4rs.yml");
+    let config = serde_yaml::from_str(config_str).unwrap();
+    log4rs::init_raw_config(config).unwrap();
 }

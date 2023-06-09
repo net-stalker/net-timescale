@@ -1,3 +1,4 @@
+use log::info;
 use std::sync::Arc;
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
@@ -51,8 +52,8 @@ fn get_factory() -> Arc<dyn ConnectionFactory> {
 
 
 fn main() {
-    env_logger::init();
-    log::info!("Run module");
+    init_log();
+    info!("Run module");
     // TODO: add configuration
     let thread_pool = ThreadPool::with_name("worker".into(), 5);
     let factory = get_factory();
@@ -65,4 +66,10 @@ fn main() {
         }
     }
     thread_pool.join();
+}
+
+fn init_log() {
+    let config_str = include_str!("log4rs.yml");
+    let config = serde_yaml::from_str(config_str).unwrap();
+    log4rs::init_raw_config(config).unwrap();
 }
