@@ -1,9 +1,8 @@
 use std::sync::Arc;
 use log::{debug, trace};
 
-use super::sockets::{self, Pub};
-
 use super::sockets::{
+    self,
     Receiver,
     Sender,
     Handler,
@@ -49,6 +48,11 @@ impl<HANDLER: Handler> sockets::Socket for ConnectorZmq<HANDLER> {
         self
     }
 }
+impl<HANDLER: Handler> sockets::ZmqSocket for ConnectorZmq<HANDLER> {
+    fn get_socket(&self) -> &zmq::Socket {
+        &self.socket
+    }
+}
 
 impl<HANDLER: Handler> ConnectorZmq<HANDLER> {
     pub fn bind(self) -> Self {
@@ -67,9 +71,6 @@ impl<HANDLER: Handler> ConnectorZmq<HANDLER> {
     // TODO: remove builder method from ConnectorZmq and create standalone builders for different patterns
     pub fn builder() -> ConnectorZmqDealerBuilder<HANDLER> {
         ConnectorZmqDealerBuilder::new()
-    }
-    pub fn get_socket(&self) -> &zmq::Socket {
-        &self.socket
     }
 }
 
@@ -97,7 +98,7 @@ impl<HANDLER: Handler> ConnectorZmqDealerBuilder<HANDLER> {
         self.endpoint = Some(endpoint);
         self
     }
-
+     
     pub fn build(mut self) -> ConnectorZmq<HANDLER> {
         self.socket = Some(self.context.socket(zmq::DEALER).unwrap());
         ConnectorZmq {
