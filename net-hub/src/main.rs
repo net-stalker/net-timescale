@@ -9,18 +9,10 @@ fn main() {
     init_log();
     info!("run module");
 
-    match Config::builder().build() {
-        Ok(config) => {
-            info!("{}", config)
-        }
-        Err(e) => {
-            warn!("{}", e)
-        }
-    }
-
+    let config = Config::builder().build().expect("read config error");
     let pool = ThreadPool::with_name("worker".into(), 20);
 
-    Hub::new(pool.clone()).run();
+    Hub::new(pool.clone(), config).run();
 
     pool.join();
 }

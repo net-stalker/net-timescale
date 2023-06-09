@@ -15,15 +15,15 @@ pub struct TranslatorGateway {
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct FrontendGateway {
-    pub(crate) ws_addr: String,
+pub struct TimescaleGateway {
+    pub(crate) addr: String,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, NetConfig)]
 pub struct Config {
     pub(crate) agent_gateway: AgentGateway,
     pub(crate) translator_gateway: TranslatorGateway,
-    pub(crate) frontend_gateway: FrontendGateway,
+    pub(crate) timescale_gateway: TimescaleGateway,
 }
 
 #[cfg(test)]
@@ -40,14 +40,17 @@ mod tests {
         let expected_config = Config {
             agent_gateway: AgentGateway { addr: "tcp://0.0.0.0:5555".to_string() },
             translator_gateway: TranslatorGateway { addr: "tcp://0.0.0.0:5557".to_string() },
-            frontend_gateway: FrontendGateway { ws_addr: "tcp://0.0.0.0:9091".to_string() },
+            timescale_gateway: TimescaleGateway { addr: "tcp://0.0.0.0:5558".to_string() },
         };
 
-        assert_eq!(config.unwrap(), expected_config);
+        assert_eq!(config.unwrap(), expected_config)
+    }
 
+    #[test]
+    fn expected_load_config_from_env() {
         env::set_var("NET_AGENT_GATEWAY.ADDR", "tcp://localhost:5555");
         env::set_var("NET_TRANSLATOR_GATEWAY.ADDR", "tcp://localhost:5557");
-        env::set_var("NET_FRONTEND_GATEWAY.WS_ADDR", "tcp://localhost:9091");
+        env::set_var("NET_TIMESCALE_GATEWAY.ADDR", "tcp://localhost:5558");
 
         let config = Config::builder()
             .with_config_dir(".config".to_string())
@@ -58,7 +61,7 @@ mod tests {
                 addr: "tcp://localhost:5555".to_string(),
             },
             translator_gateway: TranslatorGateway { addr: "tcp://localhost:5557".to_string() },
-            frontend_gateway: FrontendGateway { ws_addr: "tcp://localhost:9091".to_string() },
+            timescale_gateway: TimescaleGateway { addr: "tcp://localhost:5558".to_string() },
         };
 
         assert_eq!(config.unwrap(), expected_config);

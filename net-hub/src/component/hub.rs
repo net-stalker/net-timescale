@@ -1,31 +1,29 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, RwLock},
-};
-
-use log::{debug, info};
+use log::{info};
 use threadpool::ThreadPool;
 use net_core::{layer::NetComponent, transport::{sockets::Sender, dummy_command::DummyCommand}};
 
 use net_core::transport::{
     connector_nng_pub_sub::ConnectorNNGPubSub,
-    connector_nng::{ConnectorNNG, Proto}
+    connector_nng::{ConnectorNNG, Proto},
 };
 use net_core::transport::polling::nng::NngPoller;
 
 use crate::command::{agent::AgentCommand, dummy_timescale::DummyTimescaleHandler};
 use crate::command::ws_server::WsServerCommand;
 use crate::command::translator::TranslatorCommand;
+use crate::config::Config;
 
 pub struct Hub {
-    pub pool: ThreadPool,
+    pool: ThreadPool,
+    config: Config,
 }
 
 impl Hub {
-    pub fn new(pool: ThreadPool) -> Self {
-        Hub { pool }
+    pub fn new(pool: ThreadPool, config: Config) -> Self {
+        Hub { pool, config }
     }
 }
+
 impl NetComponent for Hub {
     fn run(self) {
         info!("run component");
@@ -48,22 +46,23 @@ impl NetComponent for Hub {
             // TODO: add ws after configuring zeromq connector
             let ws_server = ConnectorNNG::builder()
                 .with_shared_handler(ws_server_command)
-                .with_endpoint("tcp://0.0.0.0:5558".to_string())
+                .with_endpoint(self.config.frontend_gateway.ws_addr)
                 .with_proto(Proto::Pull)
                 .build()
                 .bind()
                 .into_inner();
+
             let translator = ConnectorNNGPubSub::builder()
-                .with_endpoint("tcp://0.0.0.0:5557".to_string())
+                .with_endpoint(self.config.translator_gateway.addr)
                 .with_handler(TranslatorCommand)
                 .build_publisher()
                 .bind()
                 .into_inner();
 
             let agent_command = AgentCommand { translator };
-            
+
             let agent = ConnectorNNG::builder()
-                .with_endpoint("tcp://0.0.0.0:5555".to_string())
+                .with_endpoint(self.config.agent_gateway.addr)
                 .with_handler(agent_command)
                 .with_proto(Proto::Pull)
                 .build()

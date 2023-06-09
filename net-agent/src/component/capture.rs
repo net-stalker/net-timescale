@@ -7,15 +7,18 @@ use net_core::layer::NetComponent;
 use net_core::transport::connector_nng::{ConnectorNNG, Proto};
 
 use crate::codec::Codec;
+use crate::config::Config;
 
 pub struct Capture {
     pool: ThreadPool,
+    config: Config,
 }
 
 impl Capture {
-    pub fn new(pool: ThreadPool) -> Self {
+    pub fn new(pool: ThreadPool, config: Config) -> Self {
         Capture {
             pool,
+            config,
         }
     }
 }
@@ -23,25 +26,25 @@ impl Capture {
 impl NetComponent for Capture {
     fn run(self) {
         info!("Run component");
-        let capture = pcap::Capture::from_device("en0")
+        let capture = pcap::Capture::from_device(self.config.capture.device_name.as_str())
             .unwrap()
             // .promisc(true)
             // .snaplen(65535)
-            .buffer_size(1000)
+            .buffer_size(self.config.capture.buffer_size)
             .open()
             .unwrap();
         self.pool.execute(move || {
             let client = ConnectorNNG::builder()
-            .with_endpoint("tcp://0.0.0.0:5555".to_string())
-            .with_proto(Proto::Push)
-            .with_handler(DummyCommand)
-            .build()
-            .connect()
-            .into_inner();
+                .with_endpoint(self.config.agent_connector.addr)
+                .with_proto(Proto::Push)
+                .with_handler(DummyCommand)
+                .build()
+                .connect()
+                .into_inner();
 
             let codec = Codec::new(client);
             capture::polling::Poller::new(capture)
-                .with_packet_cnt(1)
+                .with_packet_cnt(self.config.capture.number_packages)
                 .with_codec(codec)
                 .poll();
         });

@@ -25,7 +25,7 @@ RUN cargo build -p ${PROJ_NAME}
 FROM build as starter
 
 #Copy configuration to config
-COPY ./${PROJ_NAME}/.config/config.toml /root/.config/${PROJ_NAME}/config.toml
+COPY ./${PROJ_NAME}/.config .config/${PROJ_NAME}
 
 ENV PROJ_NAME ${PROJ_NAME}
 

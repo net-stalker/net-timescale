@@ -1,3 +1,4 @@
+use std::env;
 use net_core::transport::connector_nng_pub_sub::ConnectorNNGPubSub;
 use net_core::transport::dummy_command::DummyCommand;
 use threadpool::ThreadPool;
@@ -11,14 +12,16 @@ use net_core::transport::polling::nng::NngPoller;
 use crate::command::decoder::DecoderCommand;
 use crate::command::dispatcher::TranslatorDispatcher;
 use crate::command::timescale_command::TimescaleCommand;
+use crate::config::Config;
 
 pub struct Translator {
-    pub pool: ThreadPool,
+    pool: ThreadPool,
+    config: Config,
 }
 
 impl Translator {
-    pub fn new(pool: ThreadPool) -> Self {
-        Self { pool }
+    pub fn new(pool: ThreadPool, config: Config) -> Self {
+        Self { pool, config }
     }
 }
 
@@ -32,7 +35,7 @@ impl NetComponent for Translator {
             // build timescale command
             let timescale = ConnectorNNG::builder()
                 .with_proto(Proto::Push)
-                .with_endpoint("tcp://0.0.0.0:5556".to_string())
+                .with_endpoint(self.config.translator_endpoint.addr)
                 .with_handler(DummyCommand)
                 .build()
                 .bind()
@@ -40,7 +43,7 @@ impl NetComponent for Translator {
 
             let db_command = ConnectorNNGPubSub::builder()
                 .with_endpoint(DECODER.to_owned())
-                .with_handler(TimescaleCommand {consumer: timescale})
+                .with_handler(TimescaleCommand { consumer: timescale })
                 .build_subscriber()
                 .connect()
                 .into_inner();
@@ -54,7 +57,7 @@ impl NetComponent for Translator {
 
             let decoder = ConnectorNNG::builder()
                 .with_endpoint(DISPATCHER.to_owned())
-                .with_handler(DecoderCommand {consumer: decoder_consumer})
+                .with_handler(DecoderCommand { consumer: decoder_consumer })
                 .with_proto(Proto::Pull)
                 .build()
                 .connect()
@@ -67,18 +70,17 @@ impl NetComponent for Translator {
         });
 
         self.pool.execute(move || {
-
             let consumer = ConnectorNNG::builder()
                 .with_endpoint(DISPATCHER.to_owned())
                 .with_handler(DummyCommand)
                 .with_proto(Proto::Push)
                 .build()
                 .bind()
-                .into_inner();     
-            
+                .into_inner();
+
             let dispatcher_command = TranslatorDispatcher { consumer };
             let dispatcher = ConnectorNNGPubSub::builder()
-                .with_endpoint("tcp://0.0.0.0:5557".to_string())
+                .with_endpoint(self.config.translator_connector.addr)
                 .with_handler(dispatcher_command)
                 .build_subscriber()
                 .connect()

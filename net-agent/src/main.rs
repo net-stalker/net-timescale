@@ -1,4 +1,4 @@
-use log::{info, warn};
+use log::{info};
 use threadpool::ThreadPool;
 
 use net_agent::component::capture::Capture;
@@ -9,18 +9,10 @@ fn main() {
     init_log();
     info!("run module");
 
-    match Config::builder().build() {
-        Ok(config) => {
-            info!("{}", config)
-        }
-        Err(e) => {
-            warn!("{}", e)
-        }
-    }
-
+    let config = Config::builder().build().expect("read config error");
     let pool = ThreadPool::with_name("worker".into(), 2);
 
-    Capture::new(pool.clone()).run();
+    Capture::new(pool.clone(), config).run();
 
     pool.join();
 }
