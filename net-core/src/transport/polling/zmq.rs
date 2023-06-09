@@ -2,16 +2,14 @@ use std::sync::Arc;
 use zmq::PollEvents;
 use crate::transport::sockets::ZmqSocket;
 
-pub struct ZmqPoller
-{
+pub struct ZmqPoller {
     // TODO: in case we would have multiple zmq connectors there is a point to implement connector trait
     // or think about implementing generic poller using. For example, implement Poll trait which
     // will be implemented by connectors
     sockets: Vec<Arc<dyn ZmqSocket>>,
 }
 
-impl ZmqPoller
-{
+impl ZmqPoller {
     pub fn new() -> Self {
         ZmqPoller { sockets: Vec::new() }
     }
@@ -20,6 +18,7 @@ impl ZmqPoller
         self
     }
     pub fn poll(&mut self, poll_count: i32) {
+        // FIXME: remove constructing items into add method. Probably vector of pair will be good
         let mut items = Vec::new();
         let mut counter = 0;
         for socket in &self.sockets {
