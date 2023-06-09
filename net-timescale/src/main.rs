@@ -1,34 +1,70 @@
 use log::info;
+use std::sync::Arc;
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
-use r2d2_postgres::{PostgresConnectionManager};
 use net_timescale::component::timescale::Timescale;
+use postgres::{
+    NoTls,
+    Socket,
+    tls::{
+        MakeTlsConnect,
+        TlsConnect
+    }
+};
+use net_timescale::tls_configuration::{
+    ConnectionFactory,
+    Pool,
+    tls_factory::TlsConnectionFactory,
+    no_tls_factory::NoTlsConnectionFactory,
+};
 
 
-use native_tls::{TlsConnector, Identity};
-use postgres_native_tls::MakeTlsConnector;
-use std::fs;
+fn get_factory() -> Arc<dyn ConnectionFactory> {
+    // TODO: read this info from config
+    let enable_tls = true;
+    let crt_path = "src/.ssl/client.crt".to_owned();
+    let key_path = "src/.ssl/client.key".to_owned();
+    let connection_string = "postgres://postgres:PsWDgxZb@localhost".to_string();
+    let max_connection_size = 10;
+    let accept_invalid_certs = true;
+
+    match enable_tls {
+        true => {
+            TlsConnectionFactory::builder()
+                .with_crt(crt_path)
+                .with_key(key_path)
+                .with_connection_string(connection_string)
+                .with_max_connection_size(max_connection_size)
+                .accept_invalid_certs(accept_invalid_certs)
+                .build()
+                .into_inner()
+        }
+        false => {
+            NoTlsConnectionFactory::builder()
+                .with_max_connection_size(max_connection_size)
+                .with_connection_string(connection_string)
+                .build()
+                .into_inner()
+        }
+    }
+}
+
+
 
 fn main() {
     init_log();
     info!("Run module");
-    let pem = fs::read("src/.ssl/client.crt").unwrap();
-    let key = fs::read("src/.ssl/client.key").unwrap();
-    let client = Identity::from_pkcs8(&pem, &key).unwrap();
-    let connector = TlsConnector::builder()
-        .danger_accept_invalid_certs(true)
-        .identity(client)
-        .build()
-        .unwrap();
-    let make_tls_connector = MakeTlsConnector::new(connector);
+    // TODO: add configuration
     let thread_pool = ThreadPool::with_name("worker".into(), 5);
-    let manager = PostgresConnectionManager::new(
-        "postgres://postgres:PsWDgxZb@localhost".parse().unwrap(),
-        make_tls_connector,
-    );
-    let connection_pool = r2d2::Pool::builder().max_size(10).build(manager).unwrap();
-    Timescale::new(thread_pool.clone(), connection_pool).run();
-
+    let factory = get_factory();
+    match factory.create_pool() {
+        Pool::NoTlsPool(pool) => {
+            Timescale::new(thread_pool.clone(), pool).run();
+        },
+        Pool::TlsPool(pool) => {
+            Timescale::new(thread_pool.clone(), pool).run();
+        }
+    }
     thread_pool.join();
 }
 
