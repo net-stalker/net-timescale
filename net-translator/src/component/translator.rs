@@ -7,7 +7,9 @@ use net_core::layer::NetComponent;
 use net_core::transport::{
     connector_nng::{ConnectorNNG, Proto}
 };
+use net_core::transport::connector_zeromq::ConnectorZmq;
 use net_core::transport::polling::nng::NngPoller;
+use net_core::transport::polling::zmq::ZmqPoller;
 
 use crate::command::decoder::DecoderCommand;
 use crate::command::dispatcher::TranslatorDispatcher;
@@ -33,8 +35,7 @@ impl NetComponent for Translator {
         log::info!("Run component");
         self.pool.execute(move || {
             // build timescale command
-            let timescale = ConnectorNNG::builder()
-                .with_proto(Proto::Push)
+            let timescale = ConnectorZmq::builder()
                 .with_endpoint(self.config.translator_endpoint.addr)
                 .with_handler(DummyCommand)
                 .build()
@@ -79,14 +80,14 @@ impl NetComponent for Translator {
                 .into_inner();
 
             let dispatcher_command = TranslatorDispatcher { consumer };
-            let dispatcher = ConnectorNNGPubSub::builder()
+            let dispatcher = ConnectorZmq::builder()
                 .with_endpoint(self.config.translator_connector.addr)
                 .with_handler(dispatcher_command)
-                .build_subscriber()
+                .build()
                 .connect()
                 .into_inner();
 
-            NngPoller::new()
+            ZmqPoller::new()
                 .add(dispatcher)
                 .poll(-1);
         });

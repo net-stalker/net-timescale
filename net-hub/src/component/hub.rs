@@ -6,6 +6,7 @@ use net_core::transport::{
     connector_nng_pub_sub::ConnectorNNGPubSub,
     connector_nng::{ConnectorNNG, Proto},
 };
+use net_core::transport::connector_zeromq::ConnectorZmq;
 use net_core::transport::polling::nng::NngPoller;
 
 use crate::command::{agent::AgentCommand, dummy_timescale::DummyTimescaleHandler};
@@ -35,7 +36,7 @@ impl NetComponent for Hub {
             .bind()
             .into_inner();
         let ws_server_command = WsServerCommand::new(dummy)
-            .bind(9091)
+            .bind(self.config.frontend_gateway.ws_addr.clone())
             .into_inner();
         let ws_server_command_clone = ws_server_command.clone();
         self.pool.execute(move || {
@@ -43,19 +44,18 @@ impl NetComponent for Hub {
         });
 
         self.pool.execute(move || {
-            // TODO: add ws after configuring zeromq connector
-            let ws_server = ConnectorNNG::builder()
+            let timescale_router = ConnectorNNG::builder()
                 .with_shared_handler(ws_server_command)
-                .with_endpoint(self.config.frontend_gateway.ws_addr)
+                .with_endpoint(self.config.timescale_router.addr)
                 .with_proto(Proto::Pull)
                 .build()
                 .bind()
                 .into_inner();
 
-            let translator = ConnectorNNGPubSub::builder()
+            let translator = ConnectorZmq::builder()
                 .with_endpoint(self.config.translator_gateway.addr)
                 .with_handler(TranslatorCommand)
-                .build_publisher()
+                .build()
                 .bind()
                 .into_inner();
 
@@ -71,7 +71,7 @@ impl NetComponent for Hub {
 
             NngPoller::new()
                 .add(agent)
-                .add(ws_server)
+                .add(timescale_router)
                 .poll(-1);
         });
     }

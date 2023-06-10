@@ -9,6 +9,8 @@ use net_core::transport::{
     dummy_command::DummyCommand,
     polling::nng::NngPoller
 };
+use net_core::transport::connector_zeromq::ConnectorZmq;
+use net_core::transport::polling::zmq::ZmqPoller;
 use crate::command::{
     dispatcher::CommandDispatcher,
     executor::Executor, transmitter::Transmitter
@@ -45,22 +47,6 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
     fn run(self) {
         log::info!("Run component");
         self.thread_pool.execute(move || {
-            let consumer = ConnectorNNGPubSub::builder()
-                .with_endpoint(TIMESCALE_CONSUMER.to_owned())
-                .with_handler(DummyCommand)
-                .build_publisher()
-                .bind()
-                .into_inner();
-
-            let dispatcher = CommandDispatcher::new(consumer);
-            let producer_db_service = ConnectorNNG::builder()
-                .with_endpoint("tcp://0.0.0.0:5556".to_string())
-                .with_handler(dispatcher)
-                .with_proto(Proto::Pull)
-                .build()
-                .connect()
-                .into_inner();
-
             let consumer_db_service = ConnectorNNG::builder()
                 .with_endpoint("tcp://0.0.0.0:5558".to_string())
                 .with_handler(DummyCommand)
@@ -77,6 +63,24 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
                 .into_inner();
             NngPoller::new()
                 .add(transmitter)
+                .poll(-1);
+        });
+        self.thread_pool.execute(move || {
+            let consumer = ConnectorNNGPubSub::builder()
+                .with_endpoint(TIMESCALE_CONSUMER.to_owned())
+                .with_handler(DummyCommand)
+                .build_publisher()
+                .bind()
+                .into_inner();
+
+            let dispatcher = CommandDispatcher::new(consumer);
+            let producer_db_service = ConnectorZmq::builder()
+                .with_endpoint("tcp://0.0.0.0:5557".to_string())
+                .with_handler(dispatcher)
+                .build()
+                .connect()
+                .into_inner();
+            ZmqPoller::new()
                 .add(producer_db_service)
                 .poll(-1);
         });
