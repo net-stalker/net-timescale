@@ -36,7 +36,7 @@ impl NetComponent for Hub {
             .bind()
             .into_inner();
         let ws_server_command = WsServerCommand::new(dummy)
-            .bind(9091)
+            .bind(self.config.frontend_gateway.ws_addr.clone())
             .into_inner();
         let ws_server_command_clone = ws_server_command.clone();
         self.pool.execute(move || {
@@ -44,9 +44,9 @@ impl NetComponent for Hub {
         });
 
         self.pool.execute(move || {
-            let ws_server = ConnectorNNG::builder()
+            let timescale_router = ConnectorNNG::builder()
                 .with_shared_handler(ws_server_command)
-                .with_endpoint(self.config.frontend_gateway.ws_addr)
+                .with_endpoint(self.config.timescale_router.addr)
                 .with_proto(Proto::Pull)
                 .build()
                 .bind()
@@ -71,7 +71,7 @@ impl NetComponent for Hub {
 
             NngPoller::new()
                 .add(agent)
-                .add(ws_server)
+                .add(timescale_router)
                 .poll(-1);
         });
     }

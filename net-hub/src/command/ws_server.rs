@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::net::TcpListener;
 use std::sync::{Arc, RwLock};
 
 use net_core::transport::sockets::{Handler, Receiver, Sender};
@@ -29,10 +30,14 @@ where S: Sender
             consumer
         }
     }
-    pub fn bind(mut self, port: u16) -> Self {
+    pub fn bind(mut self, end_point: String) -> Self {
+        // TODO: changed ws server creation
+        let listener = TcpListener::bind(end_point.as_str()).expect(
+            format!("failed to bind web socket on address {}", end_point.as_str()).as_str()
+        );
         self.event_hub = Some(
-            simple_websockets::launch(port)
-                .expect(format!("failed to bind web socket on port {}", port).as_str())
+            simple_websockets::launch_from_listener(listener)
+                .expect(format!("failed to listen on address {}", end_point.as_str()).as_str())
         );
         self
     }
