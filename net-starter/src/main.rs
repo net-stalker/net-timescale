@@ -1,3 +1,5 @@
+use diesel::PgConnection;
+use diesel::r2d2::{ConnectionManager, Pool};
 use log::info;
 use threadpool::ThreadPool;
 
@@ -6,6 +8,7 @@ use net_core::layer::NetComponent;
 use net_hub::component::hub::Hub;
 use net_timescale::component::timescale::Timescale;
 use net_translator::component::translator::Translator;
+
 
 fn main() {
     init_log();
@@ -23,12 +26,14 @@ fn main() {
     let config = net_translator::config::Config::builder().build().expect("read config error");
     Translator::new(thread_pool.clone(), config).run();
 
-    let manager = r2d2_postgres::PostgresConnectionManager::new(
-        "postgres://postgres:PsWDgxZb@localhost".parse().unwrap(),
-        postgres::NoTls,
-    );
-    let connection_pool = r2d2::Pool::builder().max_size(10).build(manager).unwrap();
-    Timescale::new(thread_pool.clone(), connection_pool).run();
+    let connection_string = "postgres://postgres:PsWDgxZb@localhost".to_string();
+    let manager = ConnectionManager::<PgConnection>::new(connection_string);
+    let pool = Pool::builder()
+        .max_size(10)
+        .test_on_check_out(true)
+        .build(manager)
+        .expect("could not build connection pool");
+    Timescale::new(thread_pool.clone(), pool).run();
 
     thread_pool.join();
 }

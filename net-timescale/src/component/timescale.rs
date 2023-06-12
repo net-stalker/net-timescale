@@ -14,7 +14,7 @@ use net_core::transport::connector_zeromq::ConnectorZmq;
 use net_core::transport::polling::zmq::ZmqPoller;
 use crate::command::{
     dispatcher::CommandDispatcher,
-    executor::Executor, transmitter::Transmitter
+    executor::PoolWrapper, transmitter::Transmitter
 };
 use crate::persistence::{
     network_packet::handler::NetworkPacketHandler,
@@ -80,7 +80,7 @@ impl NetComponent for Timescale {
                 .poll(-1);
         });
         self.thread_pool.execute(move || {
-            let executor = Executor::new(self.connection_pool.clone());
+            let executor = PoolWrapper::new(self.connection_pool.clone());
             let result_puller = ConnectorNNGPubSub::builder()
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
                 .with_handler(DummyCommand)

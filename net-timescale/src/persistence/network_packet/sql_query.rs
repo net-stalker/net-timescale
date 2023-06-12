@@ -1,13 +1,11 @@
-use diesel::pg::Pg;
+use std::ops::DerefMut;
 use chrono::{DateTime, Utc, TimeZone};
-use diesel::query_builder::{AstPass, QueryFragment, SqlQuery};
-use diesel::{IntoSql, QueryResult, sql_query};
+use diesel::{PgConnection, QueryResult, RunQueryDsl, sql_query};
+use diesel::r2d2::ConnectionManager;
 use diesel::sql_types::{Jsonb, Text, Timestamptz};
+use r2d2::PooledConnection;
 use net_timescale_api::api::network_packet::NetworkPacketDTO;
 
-// TODO: think about creating macros to make it possible to write desirable queries in there
-// like in mybatis
-// #[derive(diesel::QueryId)]
 pub struct NetworkPacket {
     frame_time: DateTime<Utc>,
     src_addr: String,
@@ -24,22 +22,17 @@ impl NetworkPacket {
             binary_data: serde_json::from_slice(&*dto.get_network_packet_data()).unwrap(),
         }
     }
-}
-
-
-impl crate::persistence::sql_query::SqlQuery for NetworkPacket {
-    fn get_sql_query(self) -> SqlQuery {
+    pub fn insert(self, mut con: PooledConnection<ConnectionManager<PgConnection>>) -> QueryResult<usize> {
         let query = sql_query("INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)");
         let query= query
             .bind::<Timestamptz, _>(self.frame_time)
             .bind::<Text, _>(self.src_addr)
             .bind::<Text, _>(self.dst_addr)
-            .bind::<Jsonb, _>(self.binary_data);
-        let query = query.bind::<SqlQuery, _>(&query);
-        query.into_sql::<SqlQuery>()
+            .bind::<Jsonb, _>(self.binary_data)
+            .execute(con.deref_mut());
+        query
     }
 }
-
 #[cfg(test)]
 mod tests {
     // TODO: add tests
