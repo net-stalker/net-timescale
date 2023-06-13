@@ -18,7 +18,6 @@ use crate::command::{
 };
 use crate::persistence::{
     network_packet::handler::NetworkPacketHandler,
-    // time_interval::handler::TimeIntervalHandler
 };
 
 pub struct Timescale {
@@ -97,18 +96,9 @@ impl NetComponent for Timescale {
                 .build_subscriber()
                 .connect()
                 .into_inner();
-            
-            // let select_by_time_interval_handler = TimeIntervalHandler::new(executor.clone(), result_puller.clone());
-            // let service_select_by_time_interval = ConnectorNNGPubSub::builder()
-            //     .with_endpoint(TIMESCALE_CONSUMER.to_owned())
-            //     .with_handler(select_by_time_interval_handler)
-            //     .with_topic("select_time".as_bytes().into())
-            //     .build_subscriber()
-            //     .connect()
-            //     .into_inner();
+
             NngPoller::new()
                 .add(service_add_packets)
-                // .add(service_select_by_time_interval)
                 .poll(-1);
         });
     }

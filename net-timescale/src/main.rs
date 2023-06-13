@@ -6,7 +6,6 @@ use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 use net_timescale::component::timescale::Timescale;
 use postgres::{
-    NoTls,
     Socket,
     tls::{
         MakeTlsConnect,
@@ -15,7 +14,6 @@ use postgres::{
 };
 use net_timescale::tls_configuration::{
     ConnectionFactory,
-    // Pool,
     tls_factory::TlsConnectionFactory,
     no_tls_factory::NoTlsConnectionFactory,
 };
@@ -57,15 +55,6 @@ fn main() {
     init_log();
     info!("Run module");
     let thread_pool = ThreadPool::with_name("worker".into(), 5);
-    // let factory = get_factory();
-    // match factory.create_pool() {
-    //     Pool::NoTlsPool(pool) => {
-    //         Timescale::new(thread_pool.clone(), pool).run();
-    //     },
-    //     Pool::TlsPool(pool) => {
-    //         Timescale::new(thread_pool.clone(), pool).run();
-    //     }
-    // }
     let connection_string = "postgres://postgres:PsWDgxZb@localhost".to_string();
     let manager = ConnectionManager::<PgConnection>::new(connection_string);
     let pool = Pool::builder()
