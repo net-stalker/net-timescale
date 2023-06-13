@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 net-core = { path = "../net-core" }
+net-config = { path = "../net-config" }
 net-proto-api = { path = "../net-proto-api" }
 net-timescale-api = { path = "../net-timescale-api" }
 
@@ -12,18 +13,18 @@ log = { workspace = true }
 log4rs = { workspace = true }
 threadpool = { workspace = true }
 
+directories = { workspace = true }
+config = { workspace = true }
+serde = { workspace = true }
+toml = { workspace = true }
+
+
 chrono = "0.4.23"
-postgres = { version = "0.19.4", features = ["with-chrono-0_4", "with-serde_json-1"] }
 serde_json = "1.0.91"
 serde_yaml = "0.9.21" # uses to parse log4rs config
-r2d2 = "0.8.10"
-r2d2_postgres = "0.18.1"
 capnp = "0.16.1"
 capnpc = "0.16.3"
 nng = "1.0.1"
-openssl = "0.10.52"
-postgres-native-tls = "0.5.0"
-native-tls = "0.2.11"
 diesel = { version = "2.1.0", features = ["postgres", "r2d2", "serde_json", "chrono"] }
 
 [dev-dependencies]

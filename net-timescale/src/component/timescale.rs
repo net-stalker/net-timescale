@@ -19,18 +19,30 @@ use crate::command::{
 use crate::persistence::{
     network_packet::handler::NetworkPacketHandler,
 };
+use crate::config::Config;
 
 pub struct Timescale {
-    pub thread_pool: ThreadPool,
-    pub connection_pool: Pool<ConnectionManager<PgConnection>>,
+    thread_pool: ThreadPool,
+    connection_pool: Pool<ConnectionManager<PgConnection>>,
+    config: Config,
 }
 
 impl Timescale {
-    pub fn new(thread_pool: ThreadPool, connection_pool: Pool<ConnectionManager<PgConnection>>) -> Self {
+    pub fn new(thread_pool: ThreadPool, config: Config) -> Self {
+        let connection_pool = Timescale::configure_connection_pool(&config);
         Self {
             thread_pool,
-            connection_pool
+            connection_pool,
+            config
         }
+    }
+    fn configure_connection_pool(config: &Config) -> Pool<ConnectionManager<PgConnection>> {
+        let manager = ConnectionManager::<PgConnection>::new(config.connection_string.url.clone());
+        Pool::builder()
+            .max_size(config.max_connection_size.size.parse().expect("not a number"))
+            .test_on_check_out(true)
+            .build(manager)
+            .expect("could not build connection pool")
     }
 }
 // TODO: move this to the configuration in future
@@ -42,7 +54,7 @@ impl NetComponent for Timescale {
         log::info!("Run component");
         self.thread_pool.execute(move || {
             let consumer_db_service = ConnectorNNG::builder()
-                .with_endpoint("tcp://0.0.0.0:5558".to_string())
+                .with_endpoint(self.config.timescale_router.addr)
                 .with_handler(DummyCommand)
                 .with_proto(Proto::Push)
                 .build()
@@ -69,7 +81,7 @@ impl NetComponent for Timescale {
 
             let dispatcher = CommandDispatcher::new(consumer);
             let producer_db_service = ConnectorZmq::builder()
-                .with_endpoint("tcp://0.0.0.0:5557".to_string())
+                .with_endpoint(self.config.translator_connector.addr)
                 .with_handler(dispatcher)
                 .build()
                 .connect()
