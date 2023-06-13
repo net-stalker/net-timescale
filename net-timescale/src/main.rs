@@ -1,10 +1,11 @@
 use log::info;
 use std::sync::Arc;
+use diesel::PgConnection;
+use diesel::r2d2::{ConnectionManager, Pool};
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 use net_timescale::component::timescale::Timescale;
 use postgres::{
-    NoTls,
     Socket,
     tls::{
         MakeTlsConnect,
@@ -13,7 +14,6 @@ use postgres::{
 };
 use net_timescale::tls_configuration::{
     ConnectionFactory,
-    Pool,
     tls_factory::TlsConnectionFactory,
     no_tls_factory::NoTlsConnectionFactory,
 };
@@ -50,21 +50,19 @@ fn get_factory() -> Arc<dyn ConnectionFactory> {
 }
 
 
-
+// TODO: modify configuration after adding diesel
 fn main() {
     init_log();
     info!("Run module");
-    // TODO: add configuration
     let thread_pool = ThreadPool::with_name("worker".into(), 5);
-    let factory = get_factory();
-    match factory.create_pool() {
-        Pool::NoTlsPool(pool) => {
-            Timescale::new(thread_pool.clone(), pool).run();
-        },
-        Pool::TlsPool(pool) => {
-            Timescale::new(thread_pool.clone(), pool).run();
-        }
-    }
+    let connection_string = "postgres://postgres:PsWDgxZb@localhost".to_string();
+    let manager = ConnectionManager::<PgConnection>::new(connection_string);
+    let pool = Pool::builder()
+        .max_size(10)
+        .test_on_check_out(true)
+        .build(manager)
+        .expect("could not build connection pool");
+    Timescale::new(thread_pool.clone(), pool).run();
     thread_pool.join();
 }
 
