@@ -2,67 +2,59 @@ use std::sync::Arc;
 
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
-use r2d2::{Pool, ManageConnection};
+use diesel::r2d2::{Pool, ConnectionManager};
+use diesel::pg::PgConnection;
 use net_core::transport::{
     connector_nng::{ConnectorNNG, Proto},
     connector_nng_pub_sub::ConnectorNNGPubSub,
     dummy_command::DummyCommand,
     polling::nng::NngPoller
 };
+use net_core::transport::connector_zeromq::ConnectorZmq;
+use net_core::transport::polling::zmq::ZmqPoller;
 use crate::command::{
     dispatcher::CommandDispatcher,
-    executor::Executor, transmitter::Transmitter
+    executor::PoolWrapper, transmitter::Transmitter
 };
 use crate::persistence::{
-    network_packet::network_packet_handler::NetworkPacketHandler,
-    select_by_time::select_by_time::SelectInterval
+    network_packet::handler::NetworkPacketHandler,
 };
+use crate::config::Config;
 
-pub struct Timescale<M>
-where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
-{
-    pub thread_pool: ThreadPool,
-    pub connection_pool: Pool<M>
+pub struct Timescale {
+    thread_pool: ThreadPool,
+    connection_pool: Pool<ConnectionManager<PgConnection>>,
+    config: Config,
 }
 
-impl<M> Timescale<M>
-where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
-{
-    pub fn new(thread_pool: ThreadPool, connection_pool: Pool<M>) -> Self {
+impl Timescale {
+    pub fn new(thread_pool: ThreadPool, config: Config) -> Self {
+        let connection_pool = Timescale::configure_connection_pool(&config);
         Self {
             thread_pool,
-            connection_pool
+            connection_pool,
+            config
         }
+    }
+    fn configure_connection_pool(config: &Config) -> Pool<ConnectionManager<PgConnection>> {
+        let manager = ConnectionManager::<PgConnection>::new(config.connection_url.url.clone());
+        Pool::builder()
+            .max_size(config.max_connection_size.size.parse().expect("not a number"))
+            .test_on_check_out(true)
+            .build(manager)
+            .expect("could not build connection pool")
     }
 }
 // TODO: move this to the configuration in future
 pub const TIMESCALE_CONSUMER: &'static str = "inproc://timescale/consumer";
 pub const TIMESCALE_PRODUCER: &'static str = "inproc://timescale/producer";
 
-impl<M> NetComponent for Timescale<M>
-where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error>
-{
+impl NetComponent for Timescale {
     fn run(self) {
         log::info!("Run component");
         self.thread_pool.execute(move || {
-            let consumer = ConnectorNNGPubSub::builder()
-                .with_endpoint(TIMESCALE_CONSUMER.to_owned())
-                .with_handler(DummyCommand)
-                .build_publisher()
-                .bind()
-                .into_inner();
-
-            let dispatcher = CommandDispatcher::new(consumer);
-            let producer_db_service = ConnectorNNG::builder()
-                .with_endpoint("tcp://0.0.0.0:5556".to_string())
-                .with_handler(dispatcher)
-                .with_proto(Proto::Pull)
-                .build()
-                .connect()
-                .into_inner();
-
             let consumer_db_service = ConnectorNNG::builder()
-                .with_endpoint("tcp://0.0.0.0:5558".to_string())
+                .with_endpoint(self.config.timescale_endpoint.addr)
                 .with_handler(DummyCommand)
                 .with_proto(Proto::Push)
                 .build()
@@ -77,11 +69,29 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
                 .into_inner();
             NngPoller::new()
                 .add(transmitter)
+                .poll(-1);
+        });
+        self.thread_pool.execute(move || {
+            let consumer = ConnectorNNGPubSub::builder()
+                .with_endpoint(TIMESCALE_CONSUMER.to_owned())
+                .with_handler(DummyCommand)
+                .build_publisher()
+                .bind()
+                .into_inner();
+
+            let dispatcher = CommandDispatcher::new(consumer);
+            let producer_db_service = ConnectorZmq::builder()
+                .with_endpoint(self.config.translator_connector.addr)
+                .with_handler(dispatcher)
+                .build()
+                .connect()
+                .into_inner();
+            ZmqPoller::new()
                 .add(producer_db_service)
                 .poll(-1);
         });
         self.thread_pool.execute(move || {
-            let executor = Executor::new(self.connection_pool.clone());
+            let executor = PoolWrapper::new(self.connection_pool.clone());
             let result_puller = ConnectorNNGPubSub::builder()
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
                 .with_handler(DummyCommand)
@@ -98,18 +108,9 @@ where M: ManageConnection<Connection = postgres::Client, Error = postgres::Error
                 .build_subscriber()
                 .connect()
                 .into_inner();
-            
-            let select_by_time_interval_handler = SelectInterval::new(executor.clone(), result_puller.clone());
-            let service_select_by_time_interval = ConnectorNNGPubSub::builder()
-                .with_endpoint(TIMESCALE_CONSUMER.to_owned())
-                .with_handler(select_by_time_interval_handler)
-                .with_topic("select_time".as_bytes().into())
-                .build_subscriber()
-                .connect()
-                .into_inner();
+
             NngPoller::new()
                 .add(service_add_packets)
-                .add(service_select_by_time_interval)
                 .poll(-1);
         });
     }

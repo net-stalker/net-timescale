@@ -6,21 +6,19 @@ use net_hub::component::hub::Hub;
 use net_hub::config::Config;
 
 fn main() {
-    env_logger::init();
+    init_log();
     info!("run module");
 
-    match Config::builder().build() {
-        Ok(config) => {
-            info!("{}", config)
-        }
-        Err(e) => {
-            warn!("{}", e)
-        }
-    }
-
+    let config = Config::builder().build().expect("read config error");
     let pool = ThreadPool::with_name("worker".into(), 20);
 
-    Hub::new(pool.clone()).run();
+    Hub::new(pool.clone(), config).run();
 
     pool.join();
+}
+
+fn init_log() {
+    let config_str = include_str!("log4rs.yml");
+    let config = serde_yaml::from_str(config_str).unwrap();
+    log4rs::init_raw_config(config).unwrap();
 }

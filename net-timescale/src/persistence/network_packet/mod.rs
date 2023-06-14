@@ -1,2 +1,2 @@
-pub mod network_packet_handler;
-pub mod network_packet_query;
+pub mod handler;
+pub mod sql_query;

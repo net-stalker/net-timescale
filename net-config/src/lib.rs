@@ -86,7 +86,13 @@ pub fn derive(input: TokenStream) -> TokenStream {
                     builder = builder.add_source(config::File::from(path_buf));
                 }
 
-                builder.build()
+                builder = builder.add_source(config::Environment::with_prefix("net"));
+                builder = builder.add_source(config::Environment::with_prefix("net").separator("DOT"));
+                let config = builder.build();
+                log::info!("{:?}", config);
+
+                config
+
             }
         }
     };

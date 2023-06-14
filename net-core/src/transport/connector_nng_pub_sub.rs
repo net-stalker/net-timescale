@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::os::unix::io::RawFd;
 use std::sync::Arc;
+use log::{debug, info, trace};
 
 use nng::{Socket, Message, Protocol};
 use nng::options::{Options, RecvFd};
@@ -14,23 +15,26 @@ pub struct ConnectorNNGPubSub<HANDLER> {
     endpoint: String,
     handler: Option<Box<HANDLER>>,
     socket: Socket,
-    topic: RefCell<Vec<u8>>
+    topic: RefCell<Vec<u8>>,
 }
 
 impl<HANDLER> Receiver for ConnectorNNGPubSub<HANDLER> {
     fn recv(&self) -> Vec<u8> {
+        trace!("receiving data");
         let data = self.socket.recv().unwrap();
         data[self.topic.borrow().len()..].to_vec()
     }
 }
+
 impl<H: Handler> Pub for ConnectorNNGPubSub<H> {
     fn set_topic(&self, topic: &[u8]) {
-        self.topic.replace(topic.to_owned()); 
+        self.topic.replace(topic.to_owned());
     }
 }
 
 impl<H: Handler> Sender for ConnectorNNGPubSub<H> {
     fn send(&self, data: &[u8]) {
+        trace!("sending data {:?}", data);
         let topic = self.topic.borrow();
         let mut msg = Message::with_capacity(data.len() + topic.len());
         msg.push_back(topic.as_slice());
@@ -38,9 +42,6 @@ impl<H: Handler> Sender for ConnectorNNGPubSub<H> {
         self.socket
             .send(msg)
             .expect("client failed sending data")
-    }
-    fn get_pub(&self) -> Option<&dyn Pub> {
-        Some(self)
     }
 }
 
@@ -66,11 +67,13 @@ impl<HANDLER: Handler> sockets::Socket for ConnectorNNGPubSub<HANDLER>
 
 impl<HANDLER: Handler> ConnectorNNGPubSub<HANDLER> {
     pub fn bind(self) -> Self {
+        info!("bind to {}", &self.endpoint);
         self.socket.listen(&self.endpoint).unwrap();
         self
     }
 
     pub fn connect(self) -> Self {
+        info!("connect to {}", &self.endpoint);
         self.socket
             .dial_async(&self.endpoint)
             .expect(format!("failed connecting to {}", &self.endpoint).as_str());
@@ -90,8 +93,8 @@ impl<HANDLER: Handler> ConnectorNNGPubSub<HANDLER> {
 pub struct PubSubConnectorNngBuilder<HANDLER: Handler> {
     endpoint: Option<String>,
     handler: Option<Box<HANDLER>>,
-    topics:  Vec<u8>,
-    proto: Protocol
+    topics: Vec<u8>,
+    proto: Protocol,
 }
 
 impl<HANDLER: Handler> PubSubConnectorNngBuilder<HANDLER> {
@@ -100,7 +103,7 @@ impl<HANDLER: Handler> PubSubConnectorNngBuilder<HANDLER> {
             endpoint: None,
             handler: None,
             topics: Vec::<u8>::default(),
-            proto: Protocol::Pub0
+            proto: Protocol::Pub0,
         }
     }
 
@@ -116,7 +119,7 @@ impl<HANDLER: Handler> PubSubConnectorNngBuilder<HANDLER> {
 
     pub fn with_topic(mut self, topics: Vec<u8>) -> Self {
         self.topics = topics;
-        self 
+        self
     }
 
     fn build(self) -> ConnectorNNGPubSub<HANDLER> {
@@ -128,7 +131,7 @@ impl<HANDLER: Handler> PubSubConnectorNngBuilder<HANDLER> {
             endpoint: self.endpoint.unwrap(),
             handler: self.handler,
             topic: RefCell::new(self.topics),
-            socket
+            socket,
         }
     }
 

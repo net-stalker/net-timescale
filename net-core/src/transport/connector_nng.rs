@@ -1,5 +1,6 @@
 use std::os::unix::io::RawFd;
-use std::sync::{Arc, RwLock, Mutex};
+use std::sync::Arc;
+use log::{debug, info, trace};
 
 use nng::{Socket, Message, Protocol};
 use nng::options::{Options, RecvFd};
@@ -7,41 +8,31 @@ use nng::options::{Options, RecvFd};
 use crate::transport::sockets;
 use crate::transport::sockets::{Handler, Receiver, Sender};
 
-use super::sockets::Pub;
-
 //TODO Connector Builder should be redesigned as Fluent API with constraints.
 
 pub struct ConnectorNNG<HANDLER> {
     endpoint: String,
-    handler: Option<Box<HANDLER>>,
+    handler: Option<Arc<HANDLER>>,
     socket: Socket
 }
 
 impl<HANDLER> Receiver for ConnectorNNG<HANDLER> {
     fn recv(&self) -> Vec<u8> {
+        trace!("receiving data");
         self.socket.recv()
             .unwrap()
             .as_slice()
             .to_vec() //note: every time data is coped from stack to the heap!
     }
 }
-impl<H: Handler> Pub for ConnectorNNG<H> {
-    fn set_topic(&self, _topic: &[u8]){
-        log::error!("can't set a topic for a non pub connector");
-    }
-}
 
 impl<H: Handler> Sender for ConnectorNNG<H> {
     fn send(&self, data: &[u8]) {
+        trace!("sending data {:?}", data);
         self.socket
             .send(data)
             .expect("client failed sending data");
     }
-
-    fn get_pub(&self) -> Option<&dyn Pub> {
-        None
-    }
-    
 }
 
 impl<HANDLER: Handler> sockets::Socket for ConnectorNNG<HANDLER>
@@ -66,11 +57,13 @@ impl<HANDLER: Handler> sockets::Socket for ConnectorNNG<HANDLER>
 
 impl<HANDLER: Handler> ConnectorNNG<HANDLER> {
     pub fn bind(self) -> ConnectorNNG<HANDLER> {
+        info!("bind to {}", &self.endpoint);
         self.socket.listen(&self.endpoint).unwrap();
         self
     }
 
     pub fn connect(self) -> ConnectorNNG<HANDLER> {
+        info!("connect to {}", &self.endpoint);
         self.socket
             .dial_async(&self.endpoint)
             .expect(format!("failed connecting to {}", &self.endpoint).as_str());
@@ -122,7 +115,7 @@ impl Proto {
 pub struct ConnectorNngBuilder<HANDLER: Handler> {
     endpoint: Option<String>,
     proto: Option<Proto>,
-    handler: Option<Box<HANDLER>>,
+    handler: Option<Arc<HANDLER>>,
 }
 
 impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
@@ -135,10 +128,13 @@ impl<HANDLER: Handler> ConnectorNngBuilder<HANDLER> {
     }
 
     pub fn with_handler(mut self, handler: HANDLER) -> Self {
-        self.handler = Some(Box::new(handler));
+        self.handler = Some(Arc::new(handler));
         self
     }
-
+    pub fn with_shared_handler(mut self, handler: Arc<HANDLER>) -> Self {
+        self.handler = Some(handler);
+        self
+    }
     pub fn with_endpoint(mut self, endpoint: String) -> Self {
         self.endpoint = Some(endpoint);
         self

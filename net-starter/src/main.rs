@@ -1,3 +1,5 @@
+use diesel::PgConnection;
+use diesel::r2d2::{ConnectionManager, Pool};
 use log::info;
 use threadpool::ThreadPool;
 
@@ -7,22 +9,31 @@ use net_hub::component::hub::Hub;
 use net_timescale::component::timescale::Timescale;
 use net_translator::component::translator::Translator;
 
+
 fn main() {
-    env_logger::init();
+    init_log();
     info!("Run module");
 
-    let thread_pool = ThreadPool::with_name("worker".into(), 20 );
+    let thread_pool = ThreadPool::with_name("worker".into(), 20);
 
     //FIXME Currently OCP is violated. The modules should be scanned based on dependencies, iterate through it and start it dynamically
-    Capture::new(thread_pool.clone()).run();
-    Hub::new(thread_pool.clone()).run();
-    Translator::new(thread_pool.clone()).run();
-    let manager = r2d2_postgres::PostgresConnectionManager::new(
-        "postgres://postgres:PsWDgxZb@localhost".parse().unwrap(),
-        postgres::NoTls
-    );
-    let connection_pool = r2d2::Pool::builder().max_size(10).build(manager).unwrap();
-    Timescale::new(thread_pool.clone(), connection_pool).run();
+    let config = net_agent::config::Config::builder().build().expect("read config error");
+    Capture::new(thread_pool.clone(), config).run();
+
+    let config = net_hub::config::Config::builder().build().expect("read config error");
+    Hub::new(thread_pool.clone(), config).run();
+
+    let config = net_translator::config::Config::builder().build().expect("read config error");
+    Translator::new(thread_pool.clone(), config).run();
+
+    let config = net_timescale::config::Config::builder().build().expect("read config error");
+    Timescale::new(thread_pool.clone(), config).run();
 
     thread_pool.join();
+}
+
+fn init_log() {
+    let config_str = include_str!("log4rs.yml");
+    let config = serde_yaml::from_str(config_str).unwrap();
+    log4rs::init_raw_config(config).unwrap();
 }
