@@ -8,6 +8,7 @@ use net_core::transport::{
 };
 use net_core::transport::connector_zeromq::ConnectorZmq;
 use net_core::transport::polling::nng::NngPoller;
+use net_core::transport::polling::zmq::ZmqPoller;
 
 use crate::command::{agent::AgentCommand, dummy_timescale::DummyTimescaleHandler};
 use crate::command::ws_server::WsServerCommand;
@@ -42,16 +43,18 @@ impl NetComponent for Hub {
         self.pool.execute(move || {
             ws_server_command_clone.poll(-1);
         });
-
         self.pool.execute(move || {
-            let timescale_router = ConnectorNNG::builder()
+            let timescale_router = ConnectorZmq::builder()
                 .with_shared_handler(ws_server_command)
                 .with_endpoint(self.config.timescale_router.addr)
-                .with_proto(Proto::Pull)
                 .build()
                 .bind()
                 .into_inner();
-
+            ZmqPoller::new()
+                .add(timescale_router)
+                .poll(-1);
+        });
+        self.pool.execute(move || {
             let translator = ConnectorZmq::builder()
                 .with_endpoint(self.config.translator_gateway.addr)
                 .with_handler(TranslatorCommand)
@@ -71,7 +74,6 @@ impl NetComponent for Hub {
 
             NngPoller::new()
                 .add(agent)
-                .add(timescale_router)
                 .poll(-1);
         });
     }
