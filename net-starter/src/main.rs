@@ -26,14 +26,8 @@ fn main() {
     let config = net_translator::config::Config::builder().build().expect("read config error");
     Translator::new(thread_pool.clone(), config).run();
 
-    let connection_string = "postgres://postgres:PsWDgxZb@localhost".to_string();
-    let manager = ConnectionManager::<PgConnection>::new(connection_string);
-    let pool = Pool::builder()
-        .max_size(10)
-        .test_on_check_out(true)
-        .build(manager)
-        .expect("could not build connection pool");
-    Timescale::new(thread_pool.clone(), pool).run();
+    let config = net_timescale::config::Config::builder().build().expect("read config error");
+    Timescale::new(thread_pool.clone(), config).run();
 
     thread_pool.join();
 }

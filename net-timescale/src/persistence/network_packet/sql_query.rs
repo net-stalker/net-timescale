@@ -1,9 +1,8 @@
 use std::ops::DerefMut;
 use chrono::{DateTime, Utc, TimeZone};
 use diesel::{PgConnection, QueryResult, RunQueryDsl, sql_query};
-use diesel::r2d2::ConnectionManager;
+use diesel::r2d2::{ConnectionManager, PooledConnection};
 use diesel::sql_types::{Jsonb, Text, Timestamptz};
-use r2d2::PooledConnection;
 use net_timescale_api::api::network_packet::NetworkPacketDTO;
 
 pub struct NetworkPacket {

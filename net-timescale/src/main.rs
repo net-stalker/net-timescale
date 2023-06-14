@@ -1,68 +1,18 @@
 use log::info;
-use std::sync::Arc;
-use diesel::PgConnection;
-use diesel::r2d2::{ConnectionManager, Pool};
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 use net_timescale::component::timescale::Timescale;
-use postgres::{
-    Socket,
-    tls::{
-        MakeTlsConnect,
-        TlsConnect
-    }
-};
-use net_timescale::tls_configuration::{
-    ConnectionFactory,
-    tls_factory::TlsConnectionFactory,
-    no_tls_factory::NoTlsConnectionFactory,
-};
+use net_timescale::config::Config;
 
-
-fn get_factory() -> Arc<dyn ConnectionFactory> {
-    // TODO: read this info from config
-    let enable_tls = true;
-    let crt_path = "src/.ssl/client.crt".to_owned();
-    let key_path = "src/.ssl/client.key".to_owned();
-    let connection_string = "postgres://postgres:PsWDgxZb@localhost".to_string();
-    let max_connection_size = 10;
-    let accept_invalid_certs = true;
-
-    match enable_tls {
-        true => {
-            TlsConnectionFactory::builder()
-                .with_crt(crt_path)
-                .with_key(key_path)
-                .with_connection_string(connection_string)
-                .with_max_connection_size(max_connection_size)
-                .accept_invalid_certs(accept_invalid_certs)
-                .build()
-                .into_inner()
-        }
-        false => {
-            NoTlsConnectionFactory::builder()
-                .with_max_connection_size(max_connection_size)
-                .with_connection_string(connection_string)
-                .build()
-                .into_inner()
-        }
-    }
-}
-
-
-// TODO: modify configuration after adding diesel
 fn main() {
     init_log();
     info!("Run module");
+
+    let config = Config::builder().build().expect("read config error");
     let thread_pool = ThreadPool::with_name("worker".into(), 5);
-    let connection_string = "postgres://postgres:PsWDgxZb@localhost".to_string();
-    let manager = ConnectionManager::<PgConnection>::new(connection_string);
-    let pool = Pool::builder()
-        .max_size(10)
-        .test_on_check_out(true)
-        .build(manager)
-        .expect("could not build connection pool");
-    Timescale::new(thread_pool.clone(), pool).run();
+
+    Timescale::new(thread_pool.clone(), config).run();
+
     thread_pool.join();
 }
 
