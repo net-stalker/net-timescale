@@ -4,7 +4,7 @@ use threadpool::ThreadPool;
 
 use net_core::capture;
 use net_core::layer::NetComponent;
-use net_core::transport::connector_nng::{ConnectorNNG, Proto};
+use net_core::transport::connector_zeromq::ConnectorZmq;
 
 use crate::codec::Codec;
 use crate::config::Config;
@@ -34,9 +34,8 @@ impl NetComponent for Capture {
             .open()
             .unwrap();
         self.pool.execute(move || {
-            let client = ConnectorNNG::builder()
+            let client = ConnectorZmq::builder()
                 .with_endpoint(self.config.agent_connector.addr)
-                .with_proto(Proto::Push)
                 .with_handler(DummyCommand)
                 .build()
                 .connect()
