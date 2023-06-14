@@ -50,11 +50,7 @@ impl NetComponent for Hub {
                 .build()
                 .bind()
                 .into_inner();
-            ZmqPoller::new()
-                .add(timescale_router)
-                .poll(-1);
-        });
-        self.pool.execute(move || {
+
             let translator = ConnectorZmq::builder()
                 .with_endpoint(self.config.translator_gateway.addr)
                 .with_handler(TranslatorCommand)
@@ -64,15 +60,15 @@ impl NetComponent for Hub {
 
             let agent_command = AgentCommand { translator };
 
-            let agent = ConnectorNNG::builder()
+            let agent = ConnectorZmq::builder()
                 .with_endpoint(self.config.agent_gateway.addr)
                 .with_handler(agent_command)
-                .with_proto(Proto::Pull)
                 .build()
                 .bind()
                 .into_inner();
 
-            NngPoller::new()
+            ZmqPoller::new()
+                .add(timescale_router)
                 .add(agent)
                 .poll(-1);
         });
