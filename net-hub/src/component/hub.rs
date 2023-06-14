@@ -44,18 +44,12 @@ impl NetComponent for Hub {
             ws_server_command_clone.poll(-1);
         });
         self.pool.execute(move || {
-            let timescale_router = ConnectorNNG::builder()
-                // TODO: delete with_shared_handler method. Create Command trait with into_inner method. Then modify all the connectors
+            let timescale_router = ConnectorZmq::builder()
                 .with_shared_handler(ws_server_command)
                 .with_endpoint(self.config.timescale_router.addr)
-                .with_proto(Proto::Pull)
                 .build()
                 .bind()
                 .into_inner();
-            NngPoller::new()
-                .add(timescale_router);
-        });
-        self.pool.execute(move || {
 
             let translator = ConnectorZmq::builder()
                 .with_endpoint(self.config.translator_gateway.addr)
@@ -74,6 +68,7 @@ impl NetComponent for Hub {
                 .into_inner();
 
             ZmqPoller::new()
+                .add(timescale_router)
                 .add(agent)
                 .poll(-1);
         });

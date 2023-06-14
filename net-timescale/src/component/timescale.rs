@@ -14,7 +14,7 @@ use net_core::transport::connector_zeromq::ConnectorZmq;
 use net_core::transport::polling::zmq::ZmqPoller;
 use crate::command::{
     dispatcher::CommandDispatcher,
-    executor::PoolWrapper, transmitter::Transmitter
+    executor::PoolWrapper, router::Router
 };
 use crate::persistence::{
     network_packet::handler::NetworkPacketHandler,
@@ -53,25 +53,21 @@ impl NetComponent for Timescale {
     fn run(self) {
         log::info!("Run component");
         self.thread_pool.execute(move || {
-            let consumer_db_service = ConnectorNNG::builder()
+            let consumer_db_service = ConnectorZmq::builder()
                 .with_endpoint(self.config.timescale_endpoint.addr)
                 .with_handler(DummyCommand)
-                .with_proto(Proto::Push)
                 .build()
                 .connect()
-                .into_inner(); 
-            let transmitter_command = Transmitter::new(consumer_db_service);
-            let transmitter = ConnectorNNGPubSub::builder()
+                .into_inner();
+
+            let router_command = Router::new(consumer_db_service);
+            let router = ConnectorZmq::builder()
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
-                .with_handler(transmitter_command)
-                .build_subscriber()
+                .with_handler(router_command)
+                .build()
                 .bind()
                 .into_inner();
-            NngPoller::new()
-                .add(transmitter)
-                .poll(-1);
-        });
-        self.thread_pool.execute(move || {
+
             let consumer = ConnectorNNGPubSub::builder()
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
                 .with_handler(DummyCommand)
@@ -86,24 +82,28 @@ impl NetComponent for Timescale {
                 .build()
                 .connect()
                 .into_inner();
+
             ZmqPoller::new()
+                .add(router)
                 .add(producer_db_service)
                 .poll(-1);
         });
         self.thread_pool.execute(move || {
-            let executor = PoolWrapper::new(self.connection_pool.clone());
-            let result_puller = ConnectorNNGPubSub::builder()
+            // TODO: create zmq pub/sub connector. These connector must be able to use inproc proto
+            let executor = PoolWrapper::new(self.connection_pool);
+            let router = ConnectorZmq::builder()
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
                 .with_handler(DummyCommand)
-                .build_publisher()
+                .build()
                 .connect()
                 .into_inner();
 
-            let add_packets_handler = NetworkPacketHandler::new(executor.clone(),
-                    result_puller.clone());
+            let add_packets_handler = NetworkPacketHandler::new(executor,
+                                                                router);
             let service_add_packets = ConnectorNNGPubSub::builder()
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
                 .with_handler(add_packets_handler)
+                // TODO: add these topics to net-timescale-api
                 .with_topic("network_packet".as_bytes().into())
                 .build_subscriber()
                 .connect()

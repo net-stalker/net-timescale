@@ -90,6 +90,11 @@ impl<HANDLER: Handler> ConnectorZmqDealerBuilder<HANDLER> {
             socket: None,
         }
     }
+    // TODO: to remove this method, we need to add a trait to our commands with method into -> Arc<Self>
+    pub fn with_shared_handler(mut self, handler: Arc<HANDLER>) -> Self {
+        self.handler = Some(handler);
+        self
+    }
     pub fn with_handler(mut self, handler: HANDLER) -> Self {
         self.handler = Some(Arc::new(handler));
         self

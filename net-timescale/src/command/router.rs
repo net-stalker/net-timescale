@@ -2,19 +2,19 @@ use std::sync::Arc;
 
 use net_core::transport::sockets::{Sender, Receiver, Handler};
 
-pub struct Transmitter<T>
+pub struct Router<T>
 where T: Sender + Sized
 {
     network_channel: Arc<T>
 }
-impl<T> Transmitter<T>
+impl<T> Router<T>
 where T: Sender + Sized 
 {
     pub fn new(network_channel: Arc<T>) -> Self {
-        Transmitter { network_channel } 
+        Router { network_channel }
     } 
 }
-impl<T> Handler for Transmitter<T>
+impl<T> Handler for Router<T>
 where T: Sender + Sized
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
