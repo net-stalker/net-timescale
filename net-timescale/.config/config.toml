@@ -1,10 +1,10 @@
-[connection_string]
+[connection_url]
 url = "postgres://postgres:PsWDgxZb@localhost/?sslmode=require&sslcert=/.ssl/client.crt&sslkey=/.ssl/client.key"
 
 [max_connection_size]
 size = "10"
 
-[timescale_router]
+[timescale_endpoint]
 addr = "tcp://0.0.0.0:5558"
 
 [translator_connector]

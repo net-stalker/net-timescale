@@ -13,7 +13,6 @@ log = { workspace = true }
 log4rs = { workspace = true }
 threadpool = { workspace = true }
 
-directories = { workspace = true }
 config = { workspace = true }
 serde = { workspace = true }
 toml = { workspace = true }

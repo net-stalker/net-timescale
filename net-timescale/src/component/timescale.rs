@@ -37,7 +37,7 @@ impl Timescale {
         }
     }
     fn configure_connection_pool(config: &Config) -> Pool<ConnectionManager<PgConnection>> {
-        let manager = ConnectionManager::<PgConnection>::new(config.connection_string.url.clone());
+        let manager = ConnectionManager::<PgConnection>::new(config.connection_url.url.clone());
         Pool::builder()
             .max_size(config.max_connection_size.size.parse().expect("not a number"))
             .test_on_check_out(true)
@@ -54,7 +54,7 @@ impl NetComponent for Timescale {
         log::info!("Run component");
         self.thread_pool.execute(move || {
             let consumer_db_service = ConnectorNNG::builder()
-                .with_endpoint(self.config.timescale_router.addr)
+                .with_endpoint(self.config.timescale_endpoint.addr)
                 .with_handler(DummyCommand)
                 .with_proto(Proto::Push)
                 .build()
