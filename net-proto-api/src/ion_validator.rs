@@ -8,7 +8,7 @@ use ion_schema::system::SchemaSystem;
 pub struct IonSchemaValidator;
 
 impl IonSchemaValidator {
-    pub fn validate(data: Vec<u8>, schema_id: &str) -> bool {
+    pub fn validate(data: &[u8], schema_id: &str) -> bool {
         let owned_elements = Element::read_all(data).unwrap();
 
         let document_authorities: Vec<Box<dyn DocumentAuthority>> = vec![Box::new(

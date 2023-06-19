@@ -13,6 +13,8 @@ use ion_rs::IonWriter;
 #[cfg(feature = "ion-endec")]
 use ion_rs::IonReader;
 
+use crate::ion_validator::IonSchemaValidator;
+
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Envelope {
@@ -97,6 +99,10 @@ impl crate::decoder_api::Decoder for Envelope {
 #[cfg(feature = "ion-endec")] 
 impl crate::decoder_api::Decoder for Envelope {
     fn decode(data: Vec<u8>) -> Self {
+        if !IonSchemaValidator::validate(&data, "envelope.isl") {
+            todo!();
+        }
+
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
         binary_user_reader.step_in().unwrap();
@@ -219,6 +225,6 @@ mod tests {
     #[test]
     fn validator_test() {
         let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
-        assert!(IonSchemaValidator::validate(envelope.encode(), "envelope.isl"));
+        assert!(IonSchemaValidator::validate(&envelope.encode(), "envelope.isl"));
     }
 }
