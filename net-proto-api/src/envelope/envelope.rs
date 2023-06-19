@@ -135,6 +135,9 @@ mod tests {
     use ion_schema::authority::DocumentAuthority;
     #[cfg(feature = "ion-schema-validation")]
     use ion_schema::authority::FileSystemDocumentAuthority;
+    #[cfg(feature = "ion-schema-validation")]
+    use crate::ion_validator::IonSchemaValidator;
+
 
     use crate::decoder_api::Decoder;
     use crate::encoder_api::Encoder;
@@ -168,7 +171,6 @@ mod tests {
     #[cfg(feature = "ion-schema-validation")]
     #[test]
     fn ion_schema_validation() {
-
         let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
 
         let owned_elements = ion_schema::external::ion_rs::element::Element::read_all(envelope.encode()).expect("parsing failed unexpectedly");
@@ -199,12 +201,7 @@ mod tests {
             let type_definition = type_ref.next().unwrap();
             let validation_result = type_definition.validate(&owned_element);
 
-            match validation_result {
-                Ok(_) => {}
-                Err(_) => {
-                    panic!()
-                }
-            }
+            assert!(validation_result.is_ok())
         }
     }
 
@@ -216,5 +213,12 @@ mod tests {
         )];
         let mut schema_system = SchemaSystem::new(document_authorities);
         assert!(schema_system.load_schema("envelope.isl").is_ok());
+    }
+
+    #[cfg(feature = "ion-schema-validation")]
+    #[test]
+    fn validator_test() {
+        let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
+        assert!(IonSchemaValidator::validate(envelope.encode(), "envelope.isl"));
     }
 }
