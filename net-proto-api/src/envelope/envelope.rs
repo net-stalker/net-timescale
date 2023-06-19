@@ -126,9 +126,15 @@ mod tests {
     use ion_rs::StreamItem;
 
     #[cfg(feature = "ion-schema-validation")]
+    use std::path::Path;
+    #[cfg(feature = "ion-schema-validation")]
     use ion_schema::authority::MapDocumentAuthority;
     #[cfg(feature = "ion-schema-validation")]
     use ion_schema::system::SchemaSystem;
+    #[cfg(feature = "ion-schema-validation")]
+    use ion_schema::authority::DocumentAuthority;
+    #[cfg(feature = "ion-schema-validation")]
+    use ion_schema::authority::FileSystemDocumentAuthority;
 
     use crate::decoder_api::Decoder;
     use crate::encoder_api::Encoder;
@@ -162,6 +168,7 @@ mod tests {
     #[cfg(feature = "ion-schema-validation")]
     #[test]
     fn ion_schema_validation() {
+
         let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
 
         let owned_elements = ion_schema::external::ion_rs::element::Element::read_all(envelope.encode()).expect("parsing failed unexpectedly");
@@ -184,7 +191,8 @@ mod tests {
             "#
         )];
         let mut schema_system = SchemaSystem::new(vec![Box::new(MapDocumentAuthority::new(document_authorities))]);
-        let schema = schema_system.load_schema("schema").unwrap();
+
+        let schema = schema_system.load_schema("envelope.isl").unwrap();
         let mut type_ref = schema.get_types();
         
         for owned_element in owned_elements {
@@ -198,5 +206,15 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[cfg(feature = "ion-schema-validation")]
+    #[test]
+    fn ion_schema_load() {
+        let document_authorities: Vec<Box<dyn DocumentAuthority>> = vec![Box::new(
+            FileSystemDocumentAuthority::new(Path::new(".isl")),
+        )];
+        let mut schema_system = SchemaSystem::new(document_authorities);
+        assert!(schema_system.load_schema("envelope.isl").is_ok());
     }
 }

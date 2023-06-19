@@ -18,4 +18,4 @@ capnp-endec = []
 ion-endec = []
 ion-schema-validation = []
 
-default = ["ion-endec"]
+default = ["ion-endec", "ion-schema-validation"]
