@@ -200,7 +200,7 @@ mod tests {
         )];
         let mut schema_system = SchemaSystem::new(vec![Box::new(MapDocumentAuthority::new(document_authorities))]);
 
-        let schema = schema_system.load_schema("schema.isl").unwrap();
+        let schema = schema_system.load_schema("schema").unwrap();
         let mut type_ref = schema.get_types();
         
         for owned_element in owned_elements {
