@@ -1,9 +1,10 @@
+use std::ops::DerefMut;
 use std::sync::Arc;
 
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 use diesel::r2d2::{Pool, ConnectionManager};
-use diesel::pg::PgConnection;
+use diesel::pg::{Pg, PgConnection};
 use net_core::transport::{
     connector_nng::{ConnectorNNG, Proto},
     connector_nng_pub_sub::ConnectorNNGPubSub,
