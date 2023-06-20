@@ -39,7 +39,7 @@ impl NetComponent for Translator {
                 .with_endpoint(self.config.translator_endpoint.addr)
                 .with_handler(DummyCommand)
                 .build()
-                .bind()
+                .connect()
                 .into_inner();
 
             let db_command = ConnectorNNGPubSub::builder()

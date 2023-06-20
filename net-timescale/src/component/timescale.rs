@@ -81,7 +81,7 @@ impl NetComponent for Timescale {
                 .with_endpoint(self.config.translator_connector.addr)
                 .with_handler(dispatcher)
                 .build()
-                .connect()
+                .bind()
                 .into_inner();
 
             ZmqPoller::new()
