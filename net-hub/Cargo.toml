@@ -28,3 +28,4 @@ toml = { workspace = true }
 
 simple-websockets = "0.1.4"
 serde_yaml = "0.9.21" # uses to parse log4rs config
+chrono = "0.4.26"

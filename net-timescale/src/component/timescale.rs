@@ -48,7 +48,7 @@ impl Timescale {
 }
 // TODO: move this to the configuration in future
 pub const TIMESCALE_CONSUMER: &'static str = "inproc://timescale/consumer";
-pub const TIMESCALE_PRODUCER: &'static str = "inproc://timescale/producer";
+pub const TIMESCALE_PRODUCER: &'static str = "tcp://0.0.0.0:8001";
 
 impl NetComponent for Timescale {
     fn run(self) {

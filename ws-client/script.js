@@ -56,9 +56,43 @@ function closeConnection() {
   connectButton.value = "Connect";
 }
 
+function blobToArrayBuffer(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      if (reader.readyState === FileReader.DONE) {
+        resolve(reader.result);
+      } else {
+        reject(new Error('Unable to read Blob as ArrayBuffer.'));
+      }
+    };
+
+    reader.onerror = () => {
+      reject(new Error('Error occurred while reading Blob.'));
+    };
+
+    reader.readAsArrayBuffer(blob);
+  });
+}
+
 function readIncomingMessage(event) {
   // display the incoming message:
-  incomingSpan.innerHTML = JSON.parse(event.data);
+  const blob = event.data;
+  console.log(blob);
+   blobToArrayBuffer(blob)
+     .then((arrayBuffer) => {
+       let buffer = new Uint8Array(arrayBuffer);
+       console.log(buffer);
+       let envelope = Envelope.decode(buffer);
+       console.log(envelope);
+       let network_graph = NetworkGraphDTO.decode(envelope.data);
+       incomingSpan.innerHTML = network_graph;
+       console.log(network_graph);
+     })
+     .catch((error) => {
+        incomingSpan.innerHTML = error;
+     });
 }
 
 function sendMessage() {
