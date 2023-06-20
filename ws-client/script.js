@@ -1,3 +1,11 @@
+import { Envelope } from './transport/net-proto-api/envelope.js';
+
+import { TimeIntervalDTO } from './transport/net-timescale-api/time_interval.js';
+
+import { GraphEdgeDTO } from './transport/net-timescale-api/graph_edge.js';
+import { GraphNodeDTO } from './transport/net-timescale-api/graph_node.js';
+import { NetworkGraphDTO } from './transport/net-timescale-api/network_graph.js';
+
 const serverURL = 'ws://localhost:9091';
 
 let socket;
@@ -59,6 +67,16 @@ function sendMessage() {
     socket.send(outgoingText.value);
   }
 }
+
+let textEncoder = new TextEncoder();
+
+console.log(Envelope.decode((new Envelope("ENVELOPE_TYPE", textEncoder.encode("ENVELOPE_DATA"))).encode()));
+
+console.log(TimeIntervalDTO.decode((new TimeIntervalDTO(0, 100)).encode()))
+
+console.log(GraphNodeDTO.decode((new GraphNodeDTO("GRAPH_NODE")).encode()));
+console.log(GraphEdgeDTO.decode((new GraphEdgeDTO("GRAPH_FIRST_NODE", "GRAPH_SECOND_NODE")).encode()));
+console.log(NetworkGraphDTO.decode((new NetworkGraphDTO([new GraphNodeDTO("GRAPH_FIRST_NODE"), new GraphNodeDTO("GRAPH_SECOND_NODE")], [new GraphEdgeDTO("GRAPH_FIRST_NODE", "GRAPH_SECOND_NODE")])).encode()))
 
 // add a listener for the page to load:
 window.addEventListener('load', setup);
