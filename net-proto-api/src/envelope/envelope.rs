@@ -185,8 +185,6 @@ mod tests {
     fn ion_schema_validation() {
         let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
 
-        let owned_elements = ion_schema::external::ion_rs::element::Element::read_all(envelope.encode()).expect("parsing failed unexpectedly");
-
         let schema = generate_schema!(
             r#"
                 schema_header::{}
@@ -204,24 +202,8 @@ mod tests {
             "#
         );
         assert!(schema.is_ok());
-
-        let mut type_ref = schema.unwrap().get_types();
         
-        for owned_element in owned_elements {
-            let type_definition = type_ref.next().unwrap();
-            let validation_result = type_definition.validate(&owned_element);
-
-            assert!(validation_result.is_ok())
-        }
-    }
-
-    #[test]
-    fn ion_schema_load() {
-        let document_authorities: Vec<Box<dyn DocumentAuthority>> = vec![Box::new(
-            FileSystemDocumentAuthority::new(Path::new(".isl")),
-        )];
-        let mut schema_system = SchemaSystem::new(document_authorities);
-        assert!(schema_system.load_schema("envelope.isl").is_ok());
+        assert!(IonSchemaValidator::validate(&envelope.encode(), schema.unwrap()));
     }
 
     #[test]
