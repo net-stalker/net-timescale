@@ -14,6 +14,9 @@ let incomingSpan;
 let outgoingText;
 let connectionSpan;
 let connectButton;
+let queryBtn;
+let startDate;
+let endDate;
 
 function setup() {
   // get all the DOM elements that need listeners:
@@ -21,9 +24,13 @@ function setup() {
   outgoingText = document.getElementById('outgoing');
   connectionSpan = document.getElementById('connection');
   connectButton = document.getElementById('connectButton');
+  queryBtn = document.getElementById('queryBtn');
+  startDate = document.getElementById('start');
+  endDate = document.getElementById('end');
   // set the listeners:
   outgoingText.addEventListener('change', sendMessage);
   connectButton.addEventListener('click', changeConnection);
+  queryBtn.addEventListener('click', sendQuery);
   openSocket(serverURL);
 }
 
@@ -100,6 +107,17 @@ function sendMessage() {
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(outgoingText.value);
   }
+}
+function sendQuery() {
+  if (socket.readyState === WebSocket.OPEN) {
+    let start = new Date(startDate.value);
+    let end = new Date(endDate.value);
+    start = start.getUTCMilliseconds();
+    end = end.getUTCMilliseconds();
+    let timeDto = new TimeIntervalDTO(start, end).encode();
+    let envelope = new Envelope('network_graph', timeDto).encode();
+    socket.send(envelope);
+  } 
 }
 
 
