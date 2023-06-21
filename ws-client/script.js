@@ -102,15 +102,26 @@ function sendMessage() {
   }
 }
 
+
 let textEncoder = new TextEncoder();
+let textDecoder = new TextDecoder();
 
 console.log(Envelope.decode((new Envelope("ENVELOPE_TYPE", textEncoder.encode("ENVELOPE_DATA"))).encode()));
+console.log((new Envelope("ENVELOPE_TYPE", textEncoder.encode("ENVELOPE_DATA"))).encode());
+console.log(textDecoder.decode((new Envelope("ENVELOPE_TYPE", textEncoder.encode("ENVELOPE_DATA"))).encode()));
+//Encoded from Rust side
+console.log(Envelope.decode([123, 116, 121, 112, 101, 58, 32, 34, 69, 78, 86, 69, 76, 79, 80, 69, 95, 84, 89, 80, 69, 34, 44, 32, 100, 97, 116, 97, 58, 32, 123, 123, 82, 85, 53, 87, 82, 85, 120, 80, 85, 69, 86, 102, 82, 69, 70, 85, 81, 81, 61, 61, 125, 125, 125]));
 
 console.log(TimeIntervalDTO.decode((new TimeIntervalDTO(0, 100)).encode()))
 
 console.log(GraphNodeDTO.decode((new GraphNodeDTO("GRAPH_NODE")).encode()));
 console.log(GraphEdgeDTO.decode((new GraphEdgeDTO("GRAPH_FIRST_NODE", "GRAPH_SECOND_NODE")).encode()));
-console.log(NetworkGraphDTO.decode((new NetworkGraphDTO([new GraphNodeDTO("GRAPH_FIRST_NODE"), new GraphNodeDTO("GRAPH_SECOND_NODE")], [new GraphEdgeDTO("GRAPH_FIRST_NODE", "GRAPH_SECOND_NODE")])).encode()))
+
+console.log(NetworkGraphDTO.decode((new NetworkGraphDTO([new GraphNodeDTO("GRAPH_FIRST_NODE"), new GraphNodeDTO("GRAPH_SECOND_NODE")], [new GraphEdgeDTO("GRAPH_FIRST_NODE", "GRAPH_SECOND_NODE")])).encode()));
+console.log((new NetworkGraphDTO([new GraphNodeDTO("GRAPH_FIRST_NODE"), new GraphNodeDTO("GRAPH_SECOND_NODE")], [new GraphEdgeDTO("GRAPH_FIRST_NODE", "GRAPH_SECOND_NODE")])).encode());
+console.log(textDecoder.decode((new NetworkGraphDTO([new GraphNodeDTO("GRAPH_FIRST_NODE"), new GraphNodeDTO("GRAPH_SECOND_NODE")], [new GraphEdgeDTO("GRAPH_FIRST_NODE", "GRAPH_SECOND_NODE")])).encode()));
+//Encoded from Rust side
+console.log(NetworkGraphDTO.decode([123, 103, 114, 97, 112, 104, 95, 110, 111, 100, 101, 115, 58, 32, 91, 123, 97, 100, 100, 114, 101, 115, 115, 58, 32, 34, 71, 82, 65, 80, 72, 95, 70, 73, 82, 83, 84, 95, 78, 79, 68, 69, 34, 125, 44, 32, 123, 97, 100, 100, 114, 101, 115, 115, 58, 32, 34, 71, 82, 65, 80, 72, 95, 83, 69, 67, 79, 78, 68, 95, 78, 79, 68, 69, 34, 125, 93, 44, 32, 103, 114, 97, 112, 104, 95, 101, 100, 103, 101, 115, 58, 32, 91, 123, 115, 114, 99, 95, 97, 100, 100, 114, 58, 32, 34, 71, 82, 65, 80, 72, 95, 70, 73, 82, 83, 84, 95, 78, 79, 68, 69, 34, 44, 32, 100, 115, 116, 95, 97, 100, 100, 114, 58, 32, 34, 71, 82, 65, 80, 72, 95, 83, 69, 67, 79, 78, 68, 95, 78, 79, 68, 69, 34, 125, 93, 125]));
 
 // add a listener for the page to load:
 window.addEventListener('load', setup);

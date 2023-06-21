@@ -12,6 +12,9 @@ use ion_rs;
 use ion_rs::IonWriter;
 #[cfg(feature = "ion-endec")]
 use ion_rs::IonReader;
+#[cfg(feature = "ion-endec")]
+#[cfg(feature = "ion-text")] 
+use ion_rs::element::writer::TextKind;
 
 
 #[derive(Debug, PartialEq, Eq)]
@@ -58,23 +61,30 @@ impl crate::encoder_api::Encoder for Envelope {
 #[cfg(feature = "ion-endec")] 
 impl crate::encoder_api::Encoder for Envelope {
     fn encode(&self) -> Vec<u8> {
-        let mut buffer: Vec<u8> = Vec::new();
+        let buffer: Vec<u8> = Vec::new();
 
+        #[cfg(feature = "ion-binary")]
         let binary_writer_builder = ion_rs::BinaryWriterBuilder::new();
-        let mut binary_writer = binary_writer_builder.build(&mut buffer).unwrap();
+        #[cfg(feature = "ion-text")]
+        let text_writer_builder = ion_rs::TextWriterBuilder::new(TextKind::Compact); 
 
-        binary_writer.step_in(ion_rs::IonType::Struct).expect("Error while creating an ion struct");
+        #[cfg(feature = "ion-binary")]
+        let mut writer = binary_writer_builder.build(buffer).unwrap();
+        #[cfg(feature = "ion-text")]
+        let mut writer = text_writer_builder.build(buffer).unwrap();
+
+        writer.step_in(ion_rs::IonType::Struct).expect("Error while creating an ion struct");
         
-        binary_writer.set_field_name("type");
-        binary_writer.write_string(&self.envelope_type).unwrap();
+        writer.set_field_name("type");
+        writer.write_string(&self.envelope_type).unwrap();
 
-        binary_writer.set_field_name("data");
-        binary_writer.write_blob(&self.data).unwrap();
+        writer.set_field_name("data");
+        writer.write_blob(&self.data).unwrap();
 
-        binary_writer.step_out().unwrap();
-        binary_writer.flush().unwrap();
+        writer.step_out().unwrap();
+        writer.flush().unwrap();
 
-        buffer
+        writer.output().as_slice().into()
     }
 }
 
@@ -137,7 +147,7 @@ mod tests {
 
     #[test]
     fn reader_correctly_read_encoded_envelope() {
-        let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
+        let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOPE_DATA".into());
         
         let mut binary_user_reader = ReaderBuilder::new().build(envelope.encode()).unwrap();
 
@@ -150,7 +160,7 @@ mod tests {
         
         assert_eq!(StreamItem::Value(IonType::Blob), binary_user_reader.next().unwrap());
         assert_eq!("data", binary_user_reader.field_name().unwrap());
-        assert_eq!("ENVELOP_DATA".as_bytes(), binary_user_reader.read_blob().unwrap().as_slice());
+        assert_eq!("ENVELOPE_DATA".as_bytes(), binary_user_reader.read_blob().unwrap().as_slice());
     }
 
     #[test]

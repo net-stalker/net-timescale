@@ -1,4 +1,4 @@
-import '../ion-bundle.js'
+import '../../vendor/ion-bundle.js'
 
 class GraphNodeDTO {
     address;
@@ -8,7 +8,7 @@ class GraphNodeDTO {
     }
 
     encode() {
-        let writer = ion.makeBinaryWriter();
+        let writer = ion.makeTextWriter();
 
         writer.stepIn(ion.IonTypes.STRUCT);
 

@@ -1,4 +1,4 @@
-import '../ion-bundle.js'
+import '../../vendor/ion-bundle.js'
 
 class GraphEdgeDTO {
     src_addr;
@@ -10,7 +10,7 @@ class GraphEdgeDTO {
     }
 
     encode() {
-        let writer = ion.makeBinaryWriter();
+        let writer = ion.makeTextWriter();
 
         writer.stepIn(ion.IonTypes.STRUCT);
 

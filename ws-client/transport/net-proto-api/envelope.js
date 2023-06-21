@@ -1,5 +1,5 @@
 // import 'https://amazon-ion.github.io/ion-js/browser/scripts/ion-bundle.js';
-import '../ion-bundle.js'
+import '../../vendor/ion-bundle.js'
 
 class Envelope {
     type;
@@ -11,7 +11,7 @@ class Envelope {
     }
 
     encode() {
-        let writer = ion.makeBinaryWriter();
+        let writer = ion.makeTextWriter();
 
         writer.stepIn(ion.IonTypes.STRUCT);
 
