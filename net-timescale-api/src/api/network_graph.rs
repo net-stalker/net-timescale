@@ -26,6 +26,10 @@ use ion_rs::StreamItem;
 #[cfg(feature = "ion-endec")]
 use ion_rs::element::writer::TextKind;
 
+#[cfg(feature = "ion-endec")]
+use net_proto_api::ion_validator::IonSchemaValidator;
+#[cfg(feature = "ion-endec")]
+use net_proto_api::load_schema;
 
 use net_proto_api::encoder_api::Encoder;
 use net_proto_api::decoder_api::Decoder;
