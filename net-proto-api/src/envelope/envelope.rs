@@ -16,7 +16,10 @@ use ion_rs::IonReader;
 #[cfg(feature = "ion-text")] 
 use ion_rs::element::writer::TextKind;
 
+#[cfg(feature = "ion-endec")]
 use crate::ion_validator::IonSchemaValidator;
+#[cfg(feature = "ion-endec")]
+use crate::load_schema;
 
 
 #[derive(Debug, PartialEq, Eq)]
@@ -109,7 +112,7 @@ impl crate::decoder_api::Decoder for Envelope {
 #[cfg(feature = "ion-endec")] 
 impl crate::decoder_api::Decoder for Envelope {
     fn decode(data: Vec<u8>) -> Self {
-        if !IonSchemaValidator::validate(&data, "envelope.isl") {
+        if !IonSchemaValidator::validate(&data, load_schema!(".isl", "envelope.isl").unwrap()) {
             todo!();
         }
 
@@ -150,6 +153,7 @@ mod tests {
 
     use crate::decoder_api::Decoder;
     use crate::encoder_api::Encoder;
+    use crate::load_schema;
 
     use super::Envelope;
 
@@ -223,8 +227,17 @@ mod tests {
     }
 
     #[test]
+    fn schema_load_test() {
+        assert!(load_schema!(".isl", "envelope.isl").is_ok())
+    }
+
+    #[test]
     fn validator_test() {
         let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
-        assert!(IonSchemaValidator::validate(&envelope.encode(), "envelope.isl"));
+
+        let schema = load_schema!(".isl", "envelope.isl");
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(&envelope.encode(), schema.unwrap()));
     }
 }

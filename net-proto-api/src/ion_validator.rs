@@ -1,21 +1,12 @@
-use std::path::Path;
+use std::sync::Arc;
 
-use ion_schema::authority::DocumentAuthority;
-use ion_schema::authority::FileSystemDocumentAuthority;
 use ion_schema::external::ion_rs::element::Element;
-use ion_schema::system::SchemaSystem;
 
 pub struct IonSchemaValidator;
 
 impl IonSchemaValidator {
-    pub fn validate(data: &[u8], schema_id: &str) -> bool {
+    pub fn validate(data: &[u8], schema: Arc<ion_schema::schema::Schema>) -> bool {
         let owned_elements = Element::read_all(data).unwrap();
-
-        let document_authorities: Vec<Box<dyn DocumentAuthority>> = vec![Box::new(
-            FileSystemDocumentAuthority::new(Path::new(".isl")),
-        )];
-        let mut schema_system = SchemaSystem::new(document_authorities);
-        let schema = schema_system.load_schema(schema_id).unwrap();
 
         let mut type_ref = schema.get_types();
         
@@ -30,4 +21,17 @@ impl IonSchemaValidator {
         
         true
     }
+}
+
+#[macro_export]
+macro_rules! load_schema {
+    ($schemas_root:expr, $schema_id:expr $(,)?) => {
+        ion_schema::system::SchemaSystem::new(
+            vec![Box::new(
+                ion_schema::authority::FileSystemDocumentAuthority::new(
+                    std::path::Path::new($schemas_root)
+                )
+            )]      
+        ).load_schema($schema_id)
+    };
 }
