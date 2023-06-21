@@ -1,4 +1,4 @@
-import '../ion-bundle.js'
+import '../../vendor/ion-bundle.js'
 import { GraphEdgeDTO } from './graph_edge.js';
 import { GraphNodeDTO } from './graph_node.js';
 
@@ -12,7 +12,7 @@ class NetworkGraphDTO {
     }
 
     encode() {
-        let writer = ion.makeBinaryWriter();
+        let writer = ion.makeTextWriter();
 
         writer.stepIn(ion.IonTypes.STRUCT);
 
