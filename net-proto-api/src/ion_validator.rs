@@ -24,6 +24,19 @@ impl IonSchemaValidator {
 }
 
 #[macro_export]
+macro_rules! generate_schema {
+    ($schema_text:expr) => {
+        ion_schema::system::SchemaSystem::new(
+            vec![Box::new(
+                ion_schema::authority::MapDocumentAuthority::new(
+                    [("schema", $schema_text)]
+                )
+            )]
+        ).load_schema("schema")
+    };
+}
+
+#[macro_export]
 macro_rules! load_schema {
     ($schemas_root:expr, $schema_id:expr $(,)?) => {
         ion_schema::system::SchemaSystem::new(
@@ -34,4 +47,58 @@ macro_rules! load_schema {
             )]      
         ).load_schema($schema_id)
     };
+}
+
+
+#[cfg(test)]
+mod tests {
+    use crate::encoder_api::Encoder;
+    use crate::envelope::envelope::Envelope;
+    use crate::ion_validator::IonSchemaValidator;
+
+
+    #[test]
+    fn schema_generation_test() {
+        assert!(generate_schema!(
+            r#"
+                schema_header::{}
+
+                type::{
+                    name: envelope,
+                    type: struct,
+                    fields: {
+                        type: string,
+                        data: blob
+                    },
+                }
+
+                schema_footer::{}
+            "#
+        ).is_ok());
+    }
+
+    #[test]
+    fn validation_test() {
+        let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
+
+        let schema = generate_schema!(
+            r#"
+                schema_header::{}
+
+                type::{
+                    name: envelope,
+                    type: struct,
+                    fields: {
+                        type: string,
+                        data: blob
+                    },
+                }
+
+                schema_footer::{}
+            "#
+        );
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(&envelope.encode(), schema.unwrap()));
+    }
 }

@@ -145,7 +145,6 @@ mod tests {
     use ion_rs::StreamItem;
 
     use std::path::Path;
-    use ion_schema::authority::MapDocumentAuthority;
     use ion_schema::system::SchemaSystem;
     use ion_schema::authority::DocumentAuthority;
     use ion_schema::authority::FileSystemDocumentAuthority;
@@ -153,6 +152,7 @@ mod tests {
 
     use crate::decoder_api::Decoder;
     use crate::encoder_api::Encoder;
+    use crate::generate_schema;
     use crate::load_schema;
 
     use super::Envelope;
@@ -187,8 +187,7 @@ mod tests {
 
         let owned_elements = ion_schema::external::ion_rs::element::Element::read_all(envelope.encode()).expect("parsing failed unexpectedly");
 
-        let document_authorities = [(
-            "schema", 
+        let schema = generate_schema!(
             r#"
                 schema_header::{}
 
@@ -203,11 +202,10 @@ mod tests {
 
                 schema_footer::{}
             "#
-        )];
-        let mut schema_system = SchemaSystem::new(vec![Box::new(MapDocumentAuthority::new(document_authorities))]);
+        );
+        assert!(schema.is_ok());
 
-        let schema = schema_system.load_schema("schema").unwrap();
-        let mut type_ref = schema.get_types();
+        let mut type_ref = schema.unwrap().get_types();
         
         for owned_element in owned_elements {
             let type_definition = type_ref.next().unwrap();
