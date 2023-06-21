@@ -34,7 +34,7 @@ commands:
 
 ```shell
 docker-compose build timescaledb && docker-compose up timescaledb
-docker-compose build timescaledb-migrations && docker-compose up timescaledb-migrations
+docker-compose build timescaledb-migrations_liquibase && docker-compose up timescaledb-migrations_liquibase
 ```
 
 After that, open your preferred IDE, find the net-all-in-one binary, and run it. You should be able

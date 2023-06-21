@@ -1,9 +1,10 @@
+use std::ops::DerefMut;
 use std::sync::Arc;
 
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 use diesel::r2d2::{Pool, ConnectionManager};
-use diesel::pg::PgConnection;
+use diesel::pg::{Pg, PgConnection};
 use net_core::transport::{
     connector_nng::{ConnectorNNG, Proto},
     connector_nng_pub_sub::ConnectorNNGPubSub,
@@ -14,10 +15,10 @@ use net_core::transport::connector_zeromq::ConnectorZmq;
 use net_core::transport::polling::zmq::ZmqPoller;
 use crate::command::{
     dispatcher::CommandDispatcher,
-    executor::PoolWrapper, router::Router
-};
-use crate::persistence::{
-    network_packet::handler::NetworkPacketHandler,
+    executor::PoolWrapper,
+    router::Router,
+    network_packet_handler::NetworkPacketHandler,
+    network_graph_handler::NetworkGraphHandler,
 };
 use crate::config::Config;
 
@@ -98,19 +99,29 @@ impl NetComponent for Timescale {
                 .connect()
                 .into_inner();
 
-            let add_packets_handler = NetworkPacketHandler::new(executor,
-                                                                router);
-            let service_add_packets = ConnectorNNGPubSub::builder()
+            let network_packet_handler = NetworkPacketHandler::new(executor.clone(),
+                                                                   router.clone());
+            let network_packet_connector = ConnectorNNGPubSub::builder()
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
-                .with_handler(add_packets_handler)
+                .with_handler(network_packet_handler)
                 // TODO: add these topics to net-timescale-api
                 .with_topic("network_packet".as_bytes().into())
                 .build_subscriber()
                 .connect()
                 .into_inner();
+            let network_graph_handler = NetworkGraphHandler::new(executor.clone(),
+                                                                 router.clone());
+            let network_graph_connector = ConnectorNNGPubSub::builder()
+                .with_endpoint(TIMESCALE_CONSUMER.to_owned())
+                .with_handler(network_graph_handler)
+                .with_topic("network_graph".as_bytes().into())
+                .build_subscriber()
+                .connect()
+                .into_inner();
 
             NngPoller::new()
-                .add(service_add_packets)
+                .add(network_packet_connector)
+                .add(network_graph_connector)
                 .poll(-1);
         });
     }

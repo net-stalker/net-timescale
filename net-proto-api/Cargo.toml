@@ -16,6 +16,8 @@ capnpc = "0.17.0"
 [features]
 capnp-endec = []
 ion-endec = []
+ion-text = []
+ion-binary = []
 ion-schema-validation = []
 
-default = ["ion-endec", "ion-schema-validation"]
+default = ["ion-endec", "ion-text", "ion-schema-validation"]

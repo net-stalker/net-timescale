@@ -12,6 +12,8 @@ use ion_rs;
 use ion_rs::IonWriter;
 #[cfg(feature = "ion-endec")]
 use ion_rs::IonReader;
+#[cfg(feature = "ion-endec")]
+use ion_rs::element::writer::TextKind;
 
 
 use net_proto_api::encoder_api::Encoder;
@@ -58,18 +60,25 @@ impl Encoder for GraphNodeDTO {
     fn encode(&self) -> Vec<u8> {
         let mut buffer: Vec<u8> = Vec::new();
 
+        #[cfg(feature = "ion-binary")]
         let binary_writer_builder = ion_rs::BinaryWriterBuilder::new();
-        let mut binary_writer = binary_writer_builder.build(&mut buffer).unwrap();
+        #[cfg(feature = "ion-text")]
+        let text_writer_builder = ion_rs::TextWriterBuilder::new(TextKind::Compact); 
 
-        binary_writer.step_in(ion_rs::IonType::Struct).expect("Error while creating an ion struct");
+        #[cfg(feature = "ion-binary")]
+        let mut writer = binary_writer_builder.build(buffer).unwrap();
+        #[cfg(feature = "ion-text")]
+        let mut writer = text_writer_builder.build(buffer).unwrap();
+
+        writer.step_in(ion_rs::IonType::Struct).expect("Error while creating an ion struct");
         
-        binary_writer.set_field_name("address");
-        binary_writer.write_string(&self.address).unwrap();
+        writer.set_field_name("address");
+        writer.write_string(&self.address).unwrap();
 
-        binary_writer.step_out().unwrap();
-        binary_writer.flush().unwrap();
+        writer.step_out().unwrap();
+        writer.flush().unwrap();
 
-        buffer
+        writer.output().as_slice().into()
     }
 }
 
