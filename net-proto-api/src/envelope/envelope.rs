@@ -143,15 +143,10 @@ mod tests {
     use ion_rs::IonReader;
     use ion_rs::ReaderBuilder;
     use ion_rs::StreamItem;
-
-    use std::path::Path;
-    use ion_schema::system::SchemaSystem;
-    use ion_schema::authority::DocumentAuthority;
-    use ion_schema::authority::FileSystemDocumentAuthority;
-    use crate::ion_validator::IonSchemaValidator;
-
+    
     use crate::decoder_api::Decoder;
     use crate::encoder_api::Encoder;
+    use crate::ion_validator::IonSchemaValidator;
     use crate::generate_schema;
     use crate::load_schema;
 
@@ -202,7 +197,7 @@ mod tests {
             "#
         );
         assert!(schema.is_ok());
-        
+
         assert!(IonSchemaValidator::validate(&envelope.encode(), schema.unwrap()));
     }
 
