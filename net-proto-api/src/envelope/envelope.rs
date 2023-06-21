@@ -141,19 +141,12 @@ mod tests {
     use ion_rs::ReaderBuilder;
     use ion_rs::StreamItem;
 
-    #[cfg(feature = "ion-schema-validation")]
     use std::path::Path;
-    #[cfg(feature = "ion-schema-validation")]
     use ion_schema::authority::MapDocumentAuthority;
-    #[cfg(feature = "ion-schema-validation")]
     use ion_schema::system::SchemaSystem;
-    #[cfg(feature = "ion-schema-validation")]
     use ion_schema::authority::DocumentAuthority;
-    #[cfg(feature = "ion-schema-validation")]
     use ion_schema::authority::FileSystemDocumentAuthority;
-    #[cfg(feature = "ion-schema-validation")]
     use crate::ion_validator::IonSchemaValidator;
-
 
     use crate::decoder_api::Decoder;
     use crate::encoder_api::Encoder;
@@ -184,7 +177,6 @@ mod tests {
         assert_eq!(envelope, Envelope::decode(envelope.encode()));
     }
 
-    #[cfg(feature = "ion-schema-validation")]
     #[test]
     fn ion_schema_validation() {
         let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
@@ -221,7 +213,6 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "ion-schema-validation")]
     #[test]
     fn ion_schema_load() {
         let document_authorities: Vec<Box<dyn DocumentAuthority>> = vec![Box::new(
@@ -231,7 +222,6 @@ mod tests {
         assert!(schema_system.load_schema("envelope.isl").is_ok());
     }
 
-    #[cfg(feature = "ion-schema-validation")]
     #[test]
     fn validator_test() {
         let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
