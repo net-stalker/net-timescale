@@ -200,7 +200,7 @@ mod tests {
         );
         assert!(schema.is_ok());
 
-        assert!(IonSchemaValidator::validate(&graph_edge.encode(), schema.unwrap()));
+        assert!(IonSchemaValidator::validate(&graph_edge.encode(), schema.unwrap()).is_ok());
     }
 
     #[test]
@@ -217,6 +217,6 @@ mod tests {
         let schema = load_schema!(".isl", "graph_edge.isl");
         assert!(schema.is_ok());
 
-        assert!(IonSchemaValidator::validate(&graph_edge.encode(), schema.unwrap()));
+        assert!(IonSchemaValidator::validate(&graph_edge.encode(), schema.unwrap()).is_ok());
     }
 }

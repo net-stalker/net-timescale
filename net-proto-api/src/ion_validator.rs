@@ -5,7 +5,7 @@ use ion_schema::external::ion_rs::element::Element;
 pub struct IonSchemaValidator;
 
 impl IonSchemaValidator {
-    pub fn validate(data: &[u8], schema: Arc<ion_schema::schema::Schema>) -> bool {
+    pub fn validate(data: &[u8], schema: Arc<ion_schema::schema::Schema>) -> Result<(), String> {
         let owned_elements = Element::read_all(data).unwrap();
 
         let mut type_ref = schema.get_types();
@@ -15,11 +15,11 @@ impl IonSchemaValidator {
             let validation_result = type_definition.validate(&owned_element);
 
             if validation_result.is_err() {
-                return false;
+                return Err(format!("{}", validation_result.unwrap_err()));
             }
         }
         
-        true
+        Ok(())
     }
 }
 
@@ -99,6 +99,6 @@ mod tests {
         );
         assert!(schema.is_ok());
 
-        assert!(IonSchemaValidator::validate(&envelope.encode(), schema.unwrap()));
+        assert!(IonSchemaValidator::validate(&envelope.encode(), schema.unwrap()).is_ok());
     }
 }

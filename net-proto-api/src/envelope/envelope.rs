@@ -112,7 +112,7 @@ impl crate::decoder_api::Decoder for Envelope {
 #[cfg(feature = "ion-endec")] 
 impl crate::decoder_api::Decoder for Envelope {
     fn decode(data: Vec<u8>) -> Self {
-        if !IonSchemaValidator::validate(&data, load_schema!(".isl", "envelope.isl").unwrap()) {
+        if !IonSchemaValidator::validate(&data, load_schema!(".isl", "envelope.isl").unwrap()).is_ok() {
             todo!();
         }
 
@@ -198,7 +198,7 @@ mod tests {
         );
         assert!(schema.is_ok());
 
-        assert!(IonSchemaValidator::validate(&envelope.encode(), schema.unwrap()));
+        assert!(IonSchemaValidator::validate(&envelope.encode(), schema.unwrap()).is_ok());
     }
 
     #[test]
@@ -213,6 +213,6 @@ mod tests {
         let schema = load_schema!(".isl", "envelope.isl");
         assert!(schema.is_ok());
 
-        assert!(IonSchemaValidator::validate(&envelope.encode(), schema.unwrap()));
+        assert!(IonSchemaValidator::validate(&envelope.encode(), schema.unwrap()).is_ok());
     }
 }
