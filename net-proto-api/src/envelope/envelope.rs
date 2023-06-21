@@ -13,7 +13,6 @@ use ion_rs::IonWriter;
 #[cfg(feature = "ion-endec")]
 use ion_rs::IonReader;
 #[cfg(feature = "ion-endec")]
-#[cfg(feature = "ion-text")] 
 use ion_rs::element::writer::TextKind;
 
 #[cfg(feature = "ion-endec")]
@@ -112,7 +111,7 @@ impl crate::decoder_api::Decoder for Envelope {
 #[cfg(feature = "ion-endec")] 
 impl crate::decoder_api::Decoder for Envelope {
     fn decode(data: Vec<u8>) -> Self {
-        if !IonSchemaValidator::validate(&data, load_schema!(".isl", "envelope.isl").unwrap()).is_ok() {
+        if IonSchemaValidator::validate(&data, load_schema!(".isl", "envelope.isl").unwrap()).is_err() {
             todo!();
         }
 

@@ -15,6 +15,11 @@ use ion_rs::IonReader;
 #[cfg(feature = "ion-endec")]
 use ion_rs::element::writer::TextKind;
 
+#[cfg(feature = "ion-endec")]
+use net_proto_api::ion_validator::IonSchemaValidator;
+#[cfg(feature = "ion-endec")]
+use net_proto_api::load_schema;
+
 
 use net_proto_api::encoder_api::Encoder;
 use net_proto_api::decoder_api::Decoder;
@@ -112,6 +117,10 @@ impl Decoder for GraphEdgeDTO {
 #[cfg(feature = "ion-endec")] 
 impl Decoder for GraphEdgeDTO {
     fn decode(data: Vec<u8>) -> Self {
+        if IonSchemaValidator::validate(&data, load_schema!(".isl", "graph_edge.isl").unwrap()).is_err() {
+            todo!();
+        }
+
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
         binary_user_reader.step_in().unwrap();
