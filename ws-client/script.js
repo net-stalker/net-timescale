@@ -112,9 +112,7 @@ function sendQuery() {
   if (socket.readyState === WebSocket.OPEN) {
     let start = new Date(startDate.value);
     let end = new Date(endDate.value);
-    start = start.getUTCMilliseconds();
-    end = end.getUTCMilliseconds();
-    let timeDto = new TimeIntervalDTO(start, end).encode();
+    let timeDto = new TimeIntervalDTO(start.getTime(), end.getTime()).encode();
     let envelope = new Envelope('network_graph', timeDto).encode();
     socket.send(envelope);
   } 

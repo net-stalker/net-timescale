@@ -65,18 +65,21 @@ where S: Sender
                     self.clients.write().unwrap().remove(&client_id);
                 }
                 Event::Message(client_id, message) => {
-                    log::debug!(
-                            "received a message from client #{}: {:?}",
-                            client_id, message
-                        );
-                    // Test query
-                    // let timestamp1 = Utc.datetime_from_str("2023-01-01 07:00:00 +02:00", "%Y-%m-%d %H:%M:%S %z").unwrap();
-                    // let timestamp1 = timestamp1.timestamp_millis();
-                    // let timestamp2 = Utc.datetime_from_str("2020-01-02 07:00:00 +02:00", "%Y-%m-%d %H:%M:%S %z").unwrap();
-                    // let timestamp2 = timestamp2.timestamp_millis();
-                    let time_interval = TimeIntervalDTO::new(1672569900000, 1672656300000);
-                    let data = Envelope::new("network_graph".to_string(), time_interval.encode()).encode();
-                    self.consumer.send(data.as_slice());
+                    match message {
+                        Message::Binary(data) => {
+                            log::debug!(
+                                "received a query from client #{}: {:?}",
+                                client_id, data
+                            );
+                            self.consumer.send(data.as_slice());
+                        },
+                        Message::Text(msg) => {
+                            log::debug!(
+                                "received a message from client #{}: {:?}",
+                                client_id, msg
+                            );
+                        }
+                    }
                 }
             }
             counter += 1;
