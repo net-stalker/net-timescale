@@ -142,6 +142,9 @@ mod tests {
 
     use net_proto_api::decoder_api::Decoder;
     use net_proto_api::encoder_api::Encoder;
+    use net_proto_api::ion_validator::IonSchemaValidator;
+    use net_proto_api::generate_schema;
+    use net_proto_api::load_schema;
 
     use crate::api::graph_edge::GraphEdgeDTO;
 
@@ -173,9 +176,47 @@ mod tests {
         assert_eq!(graph_edge, GraphEdgeDTO::decode(graph_edge.encode()));
     }
 
-    #[cfg(feature = "ion-schema-validation")]
     #[test]
     fn ion_schema_validation() {
-        //TODO: Write schema validation tests (should be done in #85zta68kj task)
+        const SRC_ADDR: &str = "0.0.0.0:0000";
+        const DST_ADDR: &str = "0.0.0.0:5656";
+        let graph_edge = GraphEdgeDTO::new(SRC_ADDR.to_owned(), DST_ADDR.to_owned());
+
+        let schema = generate_schema!(
+            r#"
+                schema_header::{}
+
+                type::{
+                    name: graph_edge,
+                    type: struct,
+                    fields: {
+                        src_addr: string,
+                        dst_addr: string
+                    },
+                }
+
+                schema_footer::{}
+            "#
+        );
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(&graph_edge.encode(), schema.unwrap()));
+    }
+
+    #[test]
+    fn schema_load_test() {
+        assert!(load_schema!(".isl", "graph_edge.isl").is_ok())
+    }
+
+    #[test]
+    fn validator_test() {
+        const SRC_ADDR: &str = "0.0.0.0:0000";
+        const DST_ADDR: &str = "0.0.0.0:5656";
+        let graph_edge = GraphEdgeDTO::new(SRC_ADDR.to_owned(), DST_ADDR.to_owned());
+
+        let schema = load_schema!(".isl", "graph_edge.isl");
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(&graph_edge.encode(), schema.unwrap()));
     }
 }
