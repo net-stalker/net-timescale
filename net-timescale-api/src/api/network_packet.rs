@@ -84,7 +84,7 @@ impl Encoder for NetworkPacketDTO {
 #[cfg(feature = "ion-endec")] 
 impl Encoder for NetworkPacketDTO {
     fn encode(&self) -> Vec<u8> {
-        let mut buffer: Vec<u8> = Vec::new();
+        let buffer: Vec<u8> = Vec::new();
 
         #[cfg(feature = "ion-binary")]
         let binary_writer_builder = ion_rs::BinaryWriterBuilder::new();
