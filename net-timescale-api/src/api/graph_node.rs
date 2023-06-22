@@ -105,6 +105,10 @@ impl Decoder for GraphNodeDTO {
 #[cfg(feature = "ion-endec")] 
 impl Decoder for GraphNodeDTO {
     fn decode(data: Vec<u8>) -> Self {
+        if IonSchemaValidator::validate(&data, load_schema!(".isl", "graph_node.isl").unwrap()).is_err() {
+            todo!();
+        }
+
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
         binary_user_reader.step_in().unwrap();
@@ -130,6 +134,9 @@ mod tests {
 
     use net_proto_api::decoder_api::Decoder;
     use net_proto_api::encoder_api::Encoder;
+    use net_proto_api::ion_validator::IonSchemaValidator;
+    use net_proto_api::generate_schema;
+    use net_proto_api::load_schema;
 
     use crate::api::graph_node::GraphNodeDTO;
 
@@ -155,9 +162,44 @@ mod tests {
         assert_eq!(graph_node, GraphNodeDTO::decode(graph_node.encode()));
     }
 
-    #[cfg(feature = "ion-schema-validation")]
     #[test]
     fn ion_schema_validation() {
-        //TODO: Write schema validation tests (should be done in #85zta68kj task)
+        const ADDRESS: &str = "0.0.0.0:0000";
+        let graph_node = GraphNodeDTO::new(ADDRESS.to_owned());
+
+        let schema = generate_schema!(
+            r#"
+                schema_header::{}
+
+                type::{
+                    name: graph_node,
+                    type: struct,
+                    fields: {
+                        address: string,
+                    },
+                }
+
+                schema_footer::{}
+            "#
+        );
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(&graph_node.encode(), schema.unwrap()).is_ok());
+    }
+
+    #[test]
+    fn schema_load_test() {
+        assert!(load_schema!(".isl", "graph_node.isl").is_ok())
+    }
+
+    #[test]
+    fn validator_test() {
+        const ADDRESS: &str = "0.0.0.0:0000";
+        let graph_node = GraphNodeDTO::new(ADDRESS.to_owned());
+
+        let schema = load_schema!(".isl", "graph_node.isl");
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(&graph_node.encode(), schema.unwrap()).is_ok());
     }
 }

@@ -182,6 +182,10 @@ impl Decoder for NetworkGraphDTO {
 #[cfg(feature = "ion-endec")] 
 impl Decoder for NetworkGraphDTO {
     fn decode(data: Vec<u8>) -> Self {
+        if IonSchemaValidator::validate(&data, load_schema!(".isl", "network_graph.isl").unwrap()).is_err() {
+            todo!();
+        }
+
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
         binary_user_reader.step_in().unwrap();
@@ -232,6 +236,9 @@ mod tests {
 
     use net_proto_api::decoder_api::Decoder;
     use net_proto_api::encoder_api::Encoder;
+    use net_proto_api::ion_validator::IonSchemaValidator;
+    use net_proto_api::generate_schema;
+    use net_proto_api::load_schema;
 
     use crate::api::graph_edge::GraphEdgeDTO;
     use crate::api::graph_node::GraphNodeDTO;
@@ -317,9 +324,84 @@ mod tests {
         assert_eq!(network_graph, NetworkGraphDTO::decode(network_graph.encode()));
     }
 
-    #[cfg(feature = "ion-schema-validation")]
     #[test]
     fn ion_schema_validation() {
-        //TODO: Write schema validation tests (should be done in #85zta68kj task)
+        const FIRST_NODE_ADDRESS: &str = "0.0.0.0:0000";
+        let first_graph_node = GraphNodeDTO::new(FIRST_NODE_ADDRESS.to_owned());
+        const SECOND_NODE_ADDRESS: &str = "0.0.0.0:5656";
+        let second_graph_node = GraphNodeDTO::new(SECOND_NODE_ADDRESS.to_owned());
+
+        const SRC_ADDR: &str = "0.0.0.0:0000";
+        const DST_ADDR: &str = "0.0.0.0:5656";
+        let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ADDR.to_owned(), DST_ADDR.to_owned());
+
+        let network_graph = NetworkGraphDTO::new(
+            vec![first_graph_node, second_graph_node],
+            vec![graph_edge],
+        );
+
+        let schema = generate_schema!(
+            r#"
+                schema_header::{}
+
+                type::{
+                    name: network_graph,
+                    type: struct,
+                    fields: {
+                        graph_nodes: {
+                            type: list,
+                            element: {
+                                type: struct,
+                                fields: {
+                                    address: string,
+                                },
+                            },
+                        },
+                        graph_edges: {
+                            type: list,
+                            element: {
+                                type: struct,
+                                fields: {
+                                    src_addr: string,
+                                    dst_addr: string
+                                },
+                            },
+                        },
+                    },
+                }
+
+                schema_footer::{}
+            "#
+        );
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(&network_graph.encode(), schema.unwrap()).is_ok());
+    }
+
+    #[test]
+    fn schema_load_test() {
+        assert!(load_schema!(".isl", "network_graph.isl").is_ok())
+    }
+
+    #[test]
+    fn validator_test() {
+        const FIRST_NODE_ADDRESS: &str = "0.0.0.0:0000";
+        let first_graph_node = GraphNodeDTO::new(FIRST_NODE_ADDRESS.to_owned());
+        const SECOND_NODE_ADDRESS: &str = "0.0.0.0:5656";
+        let second_graph_node = GraphNodeDTO::new(SECOND_NODE_ADDRESS.to_owned());
+
+        const SRC_ADDR: &str = "0.0.0.0:0000";
+        const DST_ADDR: &str = "0.0.0.0:5656";
+        let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ADDR.to_owned(), DST_ADDR.to_owned());
+
+        let network_graph = NetworkGraphDTO::new(
+            vec![first_graph_node, second_graph_node],
+            vec![graph_edge],
+        );
+
+        let schema = load_schema!(".isl", "network_graph.isl");
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(&network_graph.encode(), schema.unwrap()).is_ok());
     }
 }

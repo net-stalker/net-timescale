@@ -12,6 +12,7 @@ impl IonSchemaValidator {
         
         for owned_element in owned_elements {
             let type_definition = type_ref.next().unwrap();
+
             let validation_result = type_definition.validate(&owned_element);
 
             if validation_result.is_err() {
@@ -52,6 +53,9 @@ macro_rules! load_schema {
 
 #[cfg(test)]
 mod tests {
+    use ion_rs::IonWriter;
+    use ion_rs::element::writer::TextKind;
+
     use crate::encoder_api::Encoder;
     use crate::envelope::envelope::Envelope;
     use crate::ion_validator::IonSchemaValidator;
@@ -100,5 +104,43 @@ mod tests {
         assert!(schema.is_ok());
 
         assert!(IonSchemaValidator::validate(&envelope.encode(), schema.unwrap()).is_ok());
+    }
+
+    #[test]
+    fn validation_fail_test() {
+        let buffer: Vec<u8> = Vec::new();
+
+        #[cfg(feature = "ion-binary")]
+        let binary_writer_builder = ion_rs::BinaryWriterBuilder::new();
+        #[cfg(feature = "ion-text")]
+        let text_writer_builder = ion_rs::TextWriterBuilder::new(TextKind::Compact); 
+
+        #[cfg(feature = "ion-binary")]
+        let mut writer = binary_writer_builder.build(buffer).unwrap();
+        #[cfg(feature = "ion-text")]
+        let mut writer = text_writer_builder.build(buffer).unwrap();
+
+        writer.write_i64(0).unwrap();
+        writer.flush().unwrap();
+
+        let schema = generate_schema!(
+            r#"
+                schema_header::{}
+
+                type::{
+                    name: envelope,
+                    type: struct,
+                    fields: {
+                        type: string,
+                        data: blob
+                    },
+                }
+
+                schema_footer::{}
+            "#
+        );
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(writer.output().as_slice().into(), schema.unwrap()).is_err());
     }
 }

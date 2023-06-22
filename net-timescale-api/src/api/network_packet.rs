@@ -178,6 +178,9 @@ mod tests {
 
     use net_proto_api::decoder_api::Decoder;
     use net_proto_api::encoder_api::Encoder;
+    use net_proto_api::ion_validator::IonSchemaValidator;
+    use net_proto_api::generate_schema;
+    use net_proto_api::load_schema;
 
     use crate::api::network_packet::NetworkPacketDTO;
 
@@ -231,9 +234,63 @@ mod tests {
         assert_eq!(network_paket, NetworkPacketDTO::decode(network_paket.encode()));
     }
 
-    #[cfg(feature = "ion-schema-validation")]
     #[test]
     fn ion_schema_validation() {
-        //TODO: Write schema validation tests (should be done in #85zta68kj task)
+        const FRAME_TIME: i64 = i64::MIN;
+        const SRC_ADDR: &str = "0.0.0.0:0000";
+        const DST_ADDR: &str = "0.0.0.0:5656";
+        const NETWORK_PACKET_DATA: &[u8] = "NETWORK_PACKET_DATA".as_bytes();
+        let network_paket = NetworkPacketDTO::new(
+            FRAME_TIME, 
+            SRC_ADDR.to_owned(), 
+            DST_ADDR.to_owned(), 
+            NETWORK_PACKET_DATA.to_owned()
+        );
+
+        let schema = generate_schema!(
+            r#"
+                schema_header::{}
+
+                type::{
+                    name: network_packet,
+                    type: struct,
+                    fields: {
+                        frame_time: int,
+                        src_addr: string,
+                        dst_addr: string,
+                        network_packet_data: blob,
+                    },
+                }
+
+                schema_footer::{}
+            "#
+        );
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(&network_paket.encode(), schema.unwrap()).is_ok());
+    }
+
+    #[test]
+    fn schema_load_test() {
+        assert!(load_schema!(".isl", "network_packet.isl").is_ok())
+    }
+
+    #[test]
+    fn validator_test() {
+        const FRAME_TIME: i64 = i64::MIN;
+        const SRC_ADDR: &str = "0.0.0.0:0000";
+        const DST_ADDR: &str = "0.0.0.0:5656";
+        const NETWORK_PACKET_DATA: &[u8] = "NETWORK_PACKET_DATA".as_bytes();
+        let network_paket = NetworkPacketDTO::new(
+            FRAME_TIME, 
+            SRC_ADDR.to_owned(), 
+            DST_ADDR.to_owned(), 
+            NETWORK_PACKET_DATA.to_owned()
+        );
+
+        let schema = load_schema!(".isl", "network_packet.isl");
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(&network_paket.encode(), schema.unwrap()).is_ok());
     }
 }
