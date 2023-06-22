@@ -116,6 +116,10 @@ impl Decoder for TimeIntervalDTO {
 #[cfg(feature = "ion-endec")] 
 impl Decoder for TimeIntervalDTO {
     fn decode(data: Vec<u8>) -> Self {
+        if IonSchemaValidator::validate(&data, load_schema!(".isl", "time_interval.isl").unwrap()).is_err() {
+            todo!();
+        }
+
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
         binary_user_reader.step_in().unwrap();
