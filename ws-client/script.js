@@ -72,6 +72,7 @@ function sendMessage() {
 let textEncoder = new TextEncoder();
 let textDecoder = new TextDecoder();
 
+
 console.log(Envelope.decode((new Envelope("ENVELOPE_TYPE", textEncoder.encode("ENVELOPE_DATA"))).encode()));
 console.log((new Envelope("ENVELOPE_TYPE", textEncoder.encode("ENVELOPE_DATA"))).encode());
 console.log(textDecoder.decode((new Envelope("ENVELOPE_TYPE", textEncoder.encode("ENVELOPE_DATA"))).encode()));
