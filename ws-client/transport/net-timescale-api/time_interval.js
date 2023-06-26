@@ -3,10 +3,12 @@ import '../../vendor/ion-bundle.js'
 class TimeIntervalDTO {
     start_date_time;
     end_date_time;
+    is_realtime;
 
-    constructor(start_date_time, end_date_time) {
+    constructor(start_date_time, end_date_time, is_realtime) {
         this.start_date_time = start_date_time;
         this.end_date_time = end_date_time;
+        this.is_realtime = is_realtime;
     }
 
     encode() {
@@ -19,6 +21,9 @@ class TimeIntervalDTO {
 
         writer.writeFieldName("end_date_time");
         writer.writeInt(this.end_date_time);
+
+        writer.writeFieldName("is_realtime");
+        writer.writeBoolean(this.is_realtime);
 
         writer.stepOut();
         writer.close();
@@ -38,7 +43,10 @@ class TimeIntervalDTO {
         reader.next();
         let end_date_time = reader.bigIntValue();
 
-        return new TimeIntervalDTO(start_date_time, end_date_time);
+        reader.next();
+        let is_realtime = reader.booleanValue();
+
+        return new TimeIntervalDTO(start_date_time, end_date_time, is_realtime);
     }
 }
 

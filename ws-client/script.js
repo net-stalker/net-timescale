@@ -78,7 +78,7 @@ console.log(textDecoder.decode((new Envelope("ENVELOPE_TYPE", textEncoder.encode
 //Encoded from Rust side
 console.log(Envelope.decode([123, 116, 121, 112, 101, 58, 32, 34, 69, 78, 86, 69, 76, 79, 80, 69, 95, 84, 89, 80, 69, 34, 44, 32, 100, 97, 116, 97, 58, 32, 123, 123, 82, 85, 53, 87, 82, 85, 120, 80, 85, 69, 86, 102, 82, 69, 70, 85, 81, 81, 61, 61, 125, 125, 125]));
 
-console.log(TimeIntervalDTO.decode((new TimeIntervalDTO(0, 100)).encode()))
+console.log(TimeIntervalDTO.decode((new TimeIntervalDTO(0, 100, true)).encode()))
 
 console.log(GraphNodeDTO.decode((new GraphNodeDTO("GRAPH_NODE")).encode()));
 console.log(GraphEdgeDTO.decode((new GraphEdgeDTO("GRAPH_FIRST_NODE", "GRAPH_SECOND_NODE")).encode()));
