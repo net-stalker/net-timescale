@@ -77,6 +77,7 @@ impl crate::decoder_api::Decoder for Envelope {
     }
 }
 
+
 #[cfg(test)]
 mod tests {
     use ion_rs::IonType;

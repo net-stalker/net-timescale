@@ -1,20 +1,7 @@
-#[cfg(feature = "capnp-endec")] 
-pub mod graph_node_capnp {
-    include!(concat!(env!("OUT_DIR"), "/graph_node_capnp.rs"));
-}
-#[cfg(feature = "capnp-endec")] 
-use graph_node_capnp::graph_node;
-
-
-#[cfg(feature = "ion-endec")]
 use ion_rs;
-#[cfg(feature = "ion-endec")]
 use ion_rs::IonWriter;
-#[cfg(feature = "ion-endec")]
 use ion_rs::IonReader;
-#[cfg(feature = "ion-endec")]
 use ion_rs::element::writer::TextKind;
-
 
 use net_proto_api::encoder_api::Encoder;
 use net_proto_api::decoder_api::Decoder;
@@ -38,24 +25,6 @@ impl GraphNodeDTO {
     }
 }
 
-#[cfg(feature = "capnp-endec")] 
-impl Encoder for GraphNodeDTO {
-    fn encode(&self) -> Vec<u8> {    
-        let mut buffer: Vec<u8> = Vec::new();
-
-        let mut message = ::capnp::message::Builder::new_default();
-        let mut struct_to_encode = message.init_root::<graph_node::Builder>();
-        
-        struct_to_encode.set_address(&self.address);
-    
-        match ::capnp::serialize_packed::write_message(&mut buffer, &message) {
-            Ok(_) => buffer,
-            Err(_) => todo!(),
-        }
-    }
-}
-
-#[cfg(feature = "ion-endec")] 
 impl Encoder for GraphNodeDTO {
     fn encode(&self) -> Vec<u8> {
         let mut buffer: Vec<u8> = Vec::new();
@@ -82,23 +51,6 @@ impl Encoder for GraphNodeDTO {
     }
 }
 
-#[cfg(feature = "capnp-endec")] 
-impl Decoder for GraphNodeDTO {
-    fn decode(data: Vec<u8>) -> Self {
-//TODO: Think about using std::io::Cursor here
-        let message_reader = ::capnp::serialize_packed::read_message(
-            data.as_slice(),
-            ::capnp::message::ReaderOptions::new()).unwrap();
-    
-        let decoded_struct = message_reader.get_root::<graph_node::Reader>().unwrap();
-
-        GraphNodeDTO {  
-            address: String::from(decoded_struct.get_address().unwrap()),
-        }
-    }
-}
-
-#[cfg(feature = "ion-endec")] 
 impl Decoder for GraphNodeDTO {
     fn decode(data: Vec<u8>) -> Self {
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
@@ -116,7 +68,6 @@ impl Decoder for GraphNodeDTO {
 }
 
 
-#[cfg(feature = "ion-endec")]
 #[cfg(test)]
 mod tests {
     use ion_rs::IonType;
