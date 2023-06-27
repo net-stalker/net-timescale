@@ -186,6 +186,10 @@ mod tests {
         assert_eq!(StreamItem::Value(IonType::Int), binary_user_reader.next().unwrap());
         assert_eq!("end_date_time", binary_user_reader.field_name().unwrap());
         assert_eq!(END_DATE_TIME,  binary_user_reader.read_i64().unwrap());
+
+        assert_eq!(StreamItem::Value(IonType::Bool), binary_user_reader.next().unwrap());
+        assert_eq!("is_realtime", binary_user_reader.field_name().unwrap());
+        assert_eq!(IS_REALTIME,  binary_user_reader.read_bool().unwrap());
     }
 
     #[test]
@@ -201,7 +205,8 @@ mod tests {
     fn ion_schema_validation() {
         const START_DATE_TIME: i64 = i64::MIN;
         const END_DATE_TIME: i64 = i64::MAX;
-        let time_interval = TimeIntervalDTO::new(START_DATE_TIME, END_DATE_TIME);
+        const IS_REALTIME: bool = true;
+        let time_interval = TimeIntervalDTO::new(START_DATE_TIME, END_DATE_TIME, IS_REALTIME);
 
         let schema = generate_schema!(
             r#"
@@ -213,6 +218,7 @@ mod tests {
                     fields: {
                         start_date_time: int,
                         end_date_time: int,
+                        is_realtime: bool,
                     },
                 }
 
@@ -233,7 +239,8 @@ mod tests {
     fn validator_test() {
         const START_DATE_TIME: i64 = i64::MIN;
         const END_DATE_TIME: i64 = i64::MAX;
-        let time_interval = TimeIntervalDTO::new(START_DATE_TIME, END_DATE_TIME);
+        const IS_REALTIME: bool = true;
+        let time_interval = TimeIntervalDTO::new(START_DATE_TIME, END_DATE_TIME, IS_REALTIME);
 
         let schema = load_schema!(".isl", "time_interval.isl");
         assert!(schema.is_ok());
