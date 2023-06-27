@@ -11,7 +11,7 @@ use net_core::transport::{
     dummy_command::DummyCommand,
     polling::nng::NngPoller
 };
-use net_core::transport::connector_zeromq::ConnectorZmq;
+use net_core::transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
 use net_core::transport::polling::zmq::ZmqPoller;
 use crate::command::{
     dispatcher::CommandDispatcher,
@@ -53,18 +53,20 @@ pub const TIMESCALE_PRODUCER: &'static str = "inproc://timescale/producer";
 impl NetComponent for Timescale {
     fn run(self) {
         log::info!("Run component");
+        let context = zmq::Context::new();
+        let context_clone = context.clone();
         self.thread_pool.execute(move || {
-            let consumer_db_service = ConnectorZmq::builder()
+            let consumer_db_service = ConnectorZmqDealerBuilder::new(context_clone.clone())
                 .with_endpoint(self.config.timescale_endpoint.addr)
-                .with_handler(DummyCommand)
+                .with_handler(Arc::new(DummyCommand))
                 .build()
                 .connect()
                 .into_inner();
 
             let router_command = Router::new(consumer_db_service);
-            let router = ConnectorZmq::builder()
+            let router = ConnectorZmqDealerBuilder::new(context_clone.clone())
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
-                .with_handler(router_command)
+                .with_handler(Arc::new(router_command))
                 .build()
                 .bind()
                 .into_inner();
@@ -77,9 +79,9 @@ impl NetComponent for Timescale {
                 .into_inner();
 
             let dispatcher = CommandDispatcher::new(consumer);
-            let producer_db_service = ConnectorZmq::builder()
+            let producer_db_service = ConnectorZmqDealerBuilder::new(context_clone.clone())
                 .with_endpoint(self.config.translator_connector.addr)
-                .with_handler(dispatcher)
+                .with_handler(Arc::new(dispatcher))
                 .build()
                 .connect()
                 .into_inner();
@@ -89,12 +91,13 @@ impl NetComponent for Timescale {
                 .add(producer_db_service)
                 .poll(-1);
         });
+        let context_clone = context.clone();
         self.thread_pool.execute(move || {
             // TODO: create zmq pub/sub connector. These connector must be able to use inproc proto
             let executor = PoolWrapper::new(self.connection_pool);
-            let router = ConnectorZmq::builder()
+            let router = ConnectorZmqDealerBuilder::new(context_clone.clone())
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
-                .with_handler(DummyCommand)
+                .with_handler(Arc::new(DummyCommand))
                 .build()
                 .connect()
                 .into_inner();

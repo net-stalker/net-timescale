@@ -16,6 +16,9 @@ const TimeIntervalDTO = function(start_date_time, end_date_time) {
         writer.writeFieldName("end_date_time");
         writer.writeInt(this.end_date_time);
         
+        writer.writeFieldName("is_realtime");
+        writer.writeBoolean(this.is_realtime);
+
         writer.stepOut();
         writer.close();
         
@@ -37,7 +40,11 @@ TimeIntervalDTO.decode = function (data) {
     reader.next();
     let end_date_time = reader.bigIntValue();
 
-    return new TimeIntervalDTO(start_date_time, end_date_time);
+        reader.next();
+        let is_realtime = reader.booleanValue();
+
+        return new TimeIntervalDTO(start_date_time, end_date_time, is_realtime);
+    }
 }
 
 export {TimeIntervalDTO}

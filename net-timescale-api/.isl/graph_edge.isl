@@ -1,11 +1,11 @@
 schema_header::{}
 
 type::{
-    name: envelope,
+    name: graph_edge,
     type: struct,
     fields: {
-        type: string,
-        data: blob
+        src_addr: string,
+        dst_addr: string
     },
 }
 

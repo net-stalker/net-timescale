@@ -13,17 +13,14 @@ pub fn select_address_info_by_date_cut(con: &mut PgConnection, start_date: DateT
                                         -> Vec<AddressInfo>
 {
     let query = sql_query(
-    "SELECT addr
-        FROM (
-            SELECT DISTINCT src_addr AS addr, frame_time
-            FROM captured_traffic
-            WHERE frame_time >= $1 AND frame_time <= $2
-            UNION ALL
-            SELECT DISTINCT dst_addr AS addr, frame_time
-            FROM captured_traffic
-            WHERE frame_time >= $1 AND frame_time <= $2
-        ) AS subquery
-        GROUP BY time_bucket('1 minute', frame_time), addr;"
+        // TODO: this query isn't very efficient because we have to do 2 sub-queries.
+    "SELECT distinct src_addr as addr
+        FROM captured_traffic
+        WHERE frame_time >= $1 AND frame_time <= $2
+        union
+        SELECT distinct dst_addr as addr
+        FROM captured_traffic
+        WHERE frame_time >= $1 AND frame_time <= $2;"
     );
     query
         .bind::<Timestamptz, _>(start_date)

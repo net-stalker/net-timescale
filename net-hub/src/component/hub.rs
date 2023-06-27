@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use log::{info};
 use threadpool::ThreadPool;
 use net_core::{layer::NetComponent, transport::{sockets::Sender, dummy_command::DummyCommand}};
@@ -6,7 +7,7 @@ use net_core::transport::{
     connector_nng_pub_sub::ConnectorNNGPubSub,
     connector_nng::{ConnectorNNG, Proto},
 };
-use net_core::transport::connector_zeromq::ConnectorZmq;
+use net_core::transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
 use net_core::transport::polling::nng::NngPoller;
 use net_core::transport::polling::zmq::ZmqPoller;
 
@@ -43,26 +44,27 @@ impl NetComponent for Hub {
         self.pool.execute(move || {
             ws_server_command_clone.poll(-1);
         });
+        let context = zmq::Context::new();
         self.pool.execute(move || {
-            let timescale_router = ConnectorZmq::builder()
-                .with_shared_handler(ws_server_command)
+            let timescale_router = ConnectorZmqDealerBuilder::new(context.clone())
+                .with_handler(ws_server_command)
                 .with_endpoint(self.config.timescale_router.addr)
                 .build()
                 .bind()
                 .into_inner();
 
-            let translator = ConnectorZmq::builder()
+            let translator = ConnectorZmqDealerBuilder::new(context.clone())
                 .with_endpoint(self.config.translator_gateway.addr)
-                .with_handler(TranslatorCommand)
+                .with_handler(Arc::new(TranslatorCommand))
                 .build()
                 .bind()
                 .into_inner();
 
             let agent_command = AgentCommand { translator };
 
-            let agent = ConnectorZmq::builder()
+            let agent = ConnectorZmqDealerBuilder::new(context.clone())
                 .with_endpoint(self.config.agent_gateway.addr)
-                .with_handler(agent_command)
+                .with_handler(Arc::new(agent_command))
                 .build()
                 .bind()
                 .into_inner();
