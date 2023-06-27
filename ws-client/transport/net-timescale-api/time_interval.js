@@ -1,8 +1,9 @@
 import '../../vendor/ion-bundle.js'
 
-const TimeIntervalDTO = function(start_date_time, end_date_time) {
+const TimeIntervalDTO = function(start_date_time, end_date_time, is_realtime) {
     this.start_date_time = start_date_time;
     this.end_date_time = end_date_time;
+    this.is_realtime = is_realtime;
 
     
     this.encode = function() {
@@ -40,11 +41,10 @@ TimeIntervalDTO.decode = function (data) {
     reader.next();
     let end_date_time = reader.bigIntValue();
 
-        reader.next();
-        let is_realtime = reader.booleanValue();
+    reader.next();
+    let is_realtime = reader.booleanValue();
 
-        return new TimeIntervalDTO(start_date_time, end_date_time, is_realtime);
-    }
+    return new TimeIntervalDTO(start_date_time, end_date_time, is_realtime);
 }
 
 export {TimeIntervalDTO}
