@@ -3,6 +3,9 @@ use ion_rs::IonWriter;
 use ion_rs::IonReader;
 use ion_rs::element::writer::TextKind;
 
+use crate::ion_validator::IonSchemaValidator;
+use crate::load_schema;
+
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Envelope {
@@ -58,6 +61,10 @@ impl crate::encoder_api::Encoder for Envelope {
 
 impl crate::decoder_api::Decoder for Envelope {
     fn decode(data: Vec<u8>) -> Self {
+        if IonSchemaValidator::validate(&data, load_schema!(".isl", "envelope.isl").unwrap()).is_err() {
+            todo!();
+        }
+
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
         binary_user_reader.step_in().unwrap();
@@ -84,14 +91,12 @@ mod tests {
     use ion_rs::IonReader;
     use ion_rs::ReaderBuilder;
     use ion_rs::StreamItem;
-
-    #[cfg(feature = "ion-schema-validation")]
-    use ion_schema::authority::MapDocumentAuthority;
-    #[cfg(feature = "ion-schema-validation")]
-    use ion_schema::system::SchemaSystem;
-
+    
     use crate::decoder_api::Decoder;
     use crate::encoder_api::Encoder;
+    use crate::ion_validator::IonSchemaValidator;
+    use crate::generate_schema;
+    use crate::load_schema;
 
     use super::Envelope;
 
@@ -119,15 +124,11 @@ mod tests {
         assert_eq!(envelope, Envelope::decode(envelope.encode()));
     }
 
-    #[cfg(feature = "ion-schema-validation")]
     #[test]
     fn ion_schema_validation() {
         let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
 
-        let owned_elements = ion_schema::external::ion_rs::element::Element::read_all(envelope.encode()).expect("parsing failed unexpectedly");
-
-        let document_authorities = [(
-            "schema", 
+        let schema = generate_schema!(
             r#"
                 schema_header::{}
 
@@ -142,21 +143,24 @@ mod tests {
 
                 schema_footer::{}
             "#
-        )];
-        let mut schema_system = SchemaSystem::new(vec![Box::new(MapDocumentAuthority::new(document_authorities))]);
-        let schema = schema_system.load_schema("schema").unwrap();
-        let mut type_ref = schema.get_types();
-        
-        for owned_element in owned_elements {
-            let type_definition = type_ref.next().unwrap();
-            let validation_result = type_definition.validate(&owned_element);
+        );
+        assert!(schema.is_ok());
 
-            match validation_result {
-                Ok(_) => {}
-                Err(_) => {
-                    panic!()
-                }
-            }
-        }
+        assert!(IonSchemaValidator::validate(&envelope.encode(), schema.unwrap()).is_ok());
+    }
+
+    #[test]
+    fn schema_load_test() {
+        assert!(load_schema!(".isl", "envelope.isl").is_ok())
+    }
+
+    #[test]
+    fn validator_test() {
+        let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
+
+        let schema = load_schema!(".isl", "envelope.isl");
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(&envelope.encode(), schema.unwrap()).is_ok());
     }
 }

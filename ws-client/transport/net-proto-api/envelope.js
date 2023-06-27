@@ -1,46 +1,43 @@
 // import 'https://amazon-ion.github.io/ion-js/browser/scripts/ion-bundle.js';
 import '../../vendor/ion-bundle.js'
 
-class Envelope {
-    type;
-    data;
+const Envelope = function(type, data) {
+    this.type = type;
+    this.data = data;
 
-    constructor(type, data) {
-        this.type = type;
-        this.data = data;
-    }
-
-    encode() {
+    this.encode = function () {
         let writer = ion.makeTextWriter();
 
         writer.stepIn(ion.IonTypes.STRUCT);
-
+    
         writer.writeFieldName("type");
         writer.writeString(this.type);
-
+    
         writer.writeFieldName("data");
         writer.writeBlob(this.data);
-
+    
         writer.stepOut();
         writer.close();
-
+    
         return writer.getBytes();
     }
 
-    static decode(data) {
-        let reader = ion.makeReader(data);
+    return this;
+}
 
-        reader.next();
-        reader.stepIn();
+Envelope.decode = function (data) {
+    let reader = ion.makeReader(data);
 
-        reader.next();
-        let envelope_type = reader.stringValue();
+    reader.next();
+    reader.stepIn();
 
-        reader.next();
-        let envelope_data = reader.uInt8ArrayValue();
+    reader.next();
+    let envelope_type = reader.stringValue();
 
-        return new Envelope(envelope_type, envelope_data);
-    }
+    reader.next();
+    let envelope_data = reader.uInt8ArrayValue();
+
+    return new Envelope(envelope_type, envelope_data);
 }
 
 export {Envelope}

@@ -13,6 +13,5 @@ ion-schema = "0.7.0"
 [features]
 ion-text = []
 ion-binary = []
-ion-schema-validation = []
 
 default = ["ion-text"]
