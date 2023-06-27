@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 ion-rs = "0.18.1"
-ion-schema = "0.7.0"
 
 [features]
 ion-text = []
