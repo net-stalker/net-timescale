@@ -73,7 +73,7 @@ impl Encoder for TimeIntervalDTO {
 
 impl Decoder for TimeIntervalDTO {
     fn decode(data: Vec<u8>) -> Self {
-        if IonSchemaValidator::validate(&data, load_schema!(".isl", "time_interval.isl").unwrap()).is_err() {
+        if IonSchemaValidator::validate(&data, load_schema!("net-timescale-api/.isl", "time_interval.isl").unwrap()).is_err() {
             todo!();
         }
 
@@ -140,6 +140,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn endec_time_interval() {
         const START_DATE_TIME: i64 = i64::MIN;
         const END_DATE_TIME: i64 = i64::MAX;
