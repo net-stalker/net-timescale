@@ -1,10 +1,11 @@
+use std::sync::Arc;
 use log::info;
 use net_core::transport::dummy_command::DummyCommand;
 use threadpool::ThreadPool;
 
 use net_core::capture;
 use net_core::layer::NetComponent;
-use net_core::transport::connector_zeromq::ConnectorZmq;
+use net_core::transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
 
 use crate::codec::Codec;
 use crate::config::Config;
@@ -33,10 +34,11 @@ impl NetComponent for Capture {
             .buffer_size(self.config.capture.buffer_size)
             .open()
             .unwrap();
+        let zmq_context = zmq::Context::new();
         self.pool.execute(move || {
-            let client = ConnectorZmq::builder()
+            let client = ConnectorZmqDealerBuilder::new(zmq_context.clone())
                 .with_endpoint(self.config.agent_connector.addr)
-                .with_handler(DummyCommand)
+                .with_handler(Arc::new(DummyCommand))
                 .build()
                 .connect()
                 .into_inner();
