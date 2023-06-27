@@ -1,8 +1,8 @@
 use chrono::{DateTime, Utc};
 use diesel::PgConnection;
-use net_timescale_api::api::graph_edge::GraphEdgeDTO;
-use net_timescale_api::api::graph_node::GraphNodeDTO;
-use net_timescale_api::api::network_graph::NetworkGraphDTO;
+use net_timescale_api::api::network_graph::graph_edge::GraphEdgeDTO;
+use net_timescale_api::api::network_graph::graph_node::GraphNodeDTO;
+use net_timescale_api::api::network_graph::network_graph::NetworkGraphDTO;
 use crate::repository::address_pair::{AddressPair, self};
 use crate::repository::address_info::{AddressInfo, self};
 

@@ -92,7 +92,7 @@ mod tests {
     use net_proto_api::decoder_api::Decoder;
     use net_proto_api::encoder_api::Encoder;
 
-    use crate::api::graph_edge::GraphEdgeDTO;
+    use crate::api::network_graph::graph_edge::GraphEdgeDTO;
 
 
     #[test]
