@@ -8,7 +8,6 @@ edition = "2021"
 net-proto-api = { path = "../net-proto-api" }
 
 ion-rs = "0.18.1"
-ion-schema = "0.7.0"
 
 [features]
 ion-text = []

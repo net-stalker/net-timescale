@@ -3,6 +3,7 @@ use ion_rs::IonWriter;
 use ion_rs::IonReader;
 use ion_rs::element::writer::TextKind;
 
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct Envelope {
     envelope_type: String,
