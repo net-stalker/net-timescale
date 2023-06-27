@@ -4,6 +4,7 @@ use net_core::transport::sockets::{Handler, Receiver, Sender};
 use net_proto_api::decoder_api::Decoder;
 use chrono::{TimeZone, Utc};
 use net_proto_api::encoder_api::Encoder;
+use net_proto_api::envelope::envelope::Envelope;
 use crate::command::executor::PoolWrapper;
 use net_timescale_api::api::time_interval::TimeIntervalDTO;
 use crate::persistence::network_graph;
@@ -38,6 +39,7 @@ impl<T> Handler for NetworkGraphHandler<T>
         );
         log::info!("got network graph {:?}", network_graph);
         let data = network_graph.encode();
+        let data = Envelope::new("network_graph".to_string(), data).encode();
         self.router.send(data.as_slice());
     }
 }

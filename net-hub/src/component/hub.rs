@@ -11,7 +11,7 @@ use net_core::transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
 use net_core::transport::polling::nng::NngPoller;
 use net_core::transport::polling::zmq::ZmqPoller;
 
-use crate::command::{agent::AgentCommand, dummy_timescale::DummyTimescaleHandler};
+use crate::command::{agent::AgentCommand, timescale_router_handler::TimescaleRouter};
 use crate::command::ws_server::WsServerCommand;
 use crate::command::translator::TranslatorCommand;
 use crate::config::Config;
@@ -26,19 +26,21 @@ impl Hub {
         Hub { pool, config }
     }
 }
+pub const WS_CONSUMER: &'static str = "inproc://ws/consumer";
+pub const WS_PRODUCER: &'static str = "inproc://ws/producer";
 
 impl NetComponent for Hub {
     fn run(self) {
         info!("run component");
-        let dummy = ConnectorNNG::builder()
+        let ws_consumer = ConnectorNNG::builder()
+            .with_endpoint(WS_PRODUCER.to_string())
             .with_handler(DummyCommand)
-            .with_endpoint("inproc://dummy".to_string())
-            .with_proto(Proto::Pull)
+            .with_proto(Proto::Push)
             .build()
             .bind()
             .into_inner();
-        let ws_server_command = WsServerCommand::new(dummy)
-            .bind(self.config.frontend_gateway.ws_addr.clone())
+        let ws_server_command = WsServerCommand::new(ws_consumer)
+            .bind(self.config.frontend_gateway.ws_addr)
             .into_inner();
         let ws_server_command_clone = ws_server_command.clone();
         self.pool.execute(move || {

@@ -9,8 +9,12 @@ use net_proto_api::decoder_api::Decoder;
 use net_timescale_api::api::network_packet::NetworkPacketDTO;
 
 use simple_websockets::{Event, EventHub, Message, Responder};
+use chrono::{Utc, DateTime, TimeZone};
 
 use std::sync::atomic::AtomicBool;
+use net_proto_api::encoder_api::Encoder;
+use net_proto_api::envelope::envelope::Envelope;
+use net_timescale_api::api::time_interval::TimeIntervalDTO;
 
 pub struct WsServerCommand<S>
 where S: Sender
@@ -41,11 +45,11 @@ where S: Sender
         );
         self
     }
-    pub fn send(&self, msg: String) {
+    pub fn send(&self, msg: Vec<u8>) {
         self.clients.write().unwrap().iter().for_each(|endpoint| {
             log::debug!("connections: {:?}", endpoint);
             let responder = endpoint.1;
-            responder.send(Message::Text(format!("{:?}", msg)));
+            responder.send(Message::Binary(msg.clone()));
         });
     }
     pub fn poll(&self, events_count: i32) {
@@ -61,12 +65,21 @@ where S: Sender
                     self.clients.write().unwrap().remove(&client_id);
                 }
                 Event::Message(client_id, message) => {
-                    log::debug!(
-                            "received a message from client #{}: {:?}",
-                            client_id, message
-                        );
-                    // TODO: finish with sending data to consumer
-                    // self.consumer.send(message)
+                    match message {
+                        Message::Binary(data) => {
+                            log::debug!(
+                                "received a query from client #{}: {:?}",
+                                client_id, data
+                            );
+                            self.consumer.send(data.as_slice());
+                        },
+                        Message::Text(msg) => {
+                            log::debug!(
+                                "received a message from client #{}: {:?}",
+                                client_id, msg
+                            );
+                        }
+                    }
                 }
             }
             counter += 1;
@@ -82,11 +95,11 @@ where S: Sender
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        let formated_string = match String::from_utf8(data) {
-            Ok(msg) => msg,
-            Err(_) => "error while parsing the msg".to_string()
-        };
-        log::debug!("received from timescale {}", formated_string);
-        self.send(formated_string);
+        // let formatted_string = match String::from_utf8(data) {
+        //     Ok(msg) => msg,
+        //     Err(_) => "error while parsing the msg".to_string()
+        // };
+        log::debug!("received from timescale {:?}", data);
+        self.send(data);
     }
 }

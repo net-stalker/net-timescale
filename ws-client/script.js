@@ -14,6 +14,9 @@ let incomingSpan;
 let outgoingText;
 let connectionSpan;
 let connectButton;
+let queryBtn;
+let startDate;
+let endDate;
 
 function setup() {
   // get all the DOM elements that need listeners:
@@ -21,9 +24,13 @@ function setup() {
   outgoingText = document.getElementById('outgoing');
   connectionSpan = document.getElementById('connection');
   connectButton = document.getElementById('connectButton');
+  queryBtn = document.getElementById('queryBtn');
+  startDate = document.getElementById('start');
+  endDate = document.getElementById('end');
   // set the listeners:
   outgoingText.addEventListener('change', sendMessage);
   connectButton.addEventListener('click', changeConnection);
+  queryBtn.addEventListener('click', sendQuery);
   openSocket(serverURL);
 }
 
@@ -56,9 +63,43 @@ function closeConnection() {
   connectButton.value = "Connect";
 }
 
+function blobToArrayBuffer(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      if (reader.readyState === FileReader.DONE) {
+        resolve(reader.result);
+      } else {
+        reject(new Error('Unable to read Blob as ArrayBuffer.'));
+      }
+    };
+
+    reader.onerror = () => {
+      reject(new Error('Error occurred while reading Blob.'));
+    };
+
+    reader.readAsArrayBuffer(blob);
+  });
+}
+
 function readIncomingMessage(event) {
   // display the incoming message:
-  incomingSpan.innerHTML = JSON.parse(event.data);
+  const blob = event.data;
+  console.log(blob);
+   blobToArrayBuffer(blob)
+     .then((arrayBuffer) => {
+       let buffer = new Uint8Array(arrayBuffer);
+       console.log(buffer);
+       let envelope = Envelope.decode(buffer);
+       console.log(envelope);
+       let network_graph = NetworkGraphDTO.decode(envelope.data);
+       incomingSpan.innerHTML = network_graph;
+       console.log(network_graph);
+     })
+     .catch((error) => {
+        incomingSpan.innerHTML = error;
+     });
 }
 
 function sendMessage() {
@@ -66,6 +107,15 @@ function sendMessage() {
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(outgoingText.value);
   }
+}
+function sendQuery() {
+  if (socket.readyState === WebSocket.OPEN) {
+    let start = new Date(startDate.value);
+    let end = new Date(endDate.value);
+    let timeDto = new TimeIntervalDTO(start.getTime(), end.getTime()).encode();
+    let envelope = new Envelope('network_graph', timeDto).encode();
+    socket.send(envelope);
+  } 
 }
 
 
