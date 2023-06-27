@@ -1,11 +1,11 @@
 schema_header::{}
 
 type::{
-    name: envelope,
+    name: time_interval,
     type: struct,
     fields: {
-        type: string,
-        data: blob
+        start_date_time: int,
+        end_date_time: int,
     },
 }
 

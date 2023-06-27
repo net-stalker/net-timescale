@@ -15,6 +15,10 @@ use ion_rs::IonReader;
 #[cfg(feature = "ion-endec")]
 use ion_rs::element::writer::TextKind;
 
+#[cfg(feature = "ion-endec")]
+use net_proto_api::ion_validator::IonSchemaValidator;
+#[cfg(feature = "ion-endec")]
+use net_proto_api::load_schema;
 
 use net_proto_api::encoder_api::Encoder;
 use net_proto_api::decoder_api::Decoder;
@@ -70,7 +74,7 @@ impl Encoder for TimeIntervalDTO {
 #[cfg(feature = "ion-endec")] 
 impl Encoder for TimeIntervalDTO {
     fn encode(&self) -> Vec<u8> {
-        let mut buffer: Vec<u8> = Vec::new();
+        let buffer: Vec<u8> = Vec::new();
 
         #[cfg(feature = "ion-binary")]
         let binary_writer_builder = ion_rs::BinaryWriterBuilder::new();
@@ -121,6 +125,10 @@ impl Decoder for TimeIntervalDTO {
 #[cfg(feature = "ion-endec")] 
 impl Decoder for TimeIntervalDTO {
     fn decode(data: Vec<u8>) -> Self {
+        if IonSchemaValidator::validate(&data, load_schema!(".isl", "time_interval.isl").unwrap()).is_err() {
+            todo!();
+        }
+
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
         binary_user_reader.step_in().unwrap();
@@ -153,6 +161,9 @@ mod tests {
 
     use net_proto_api::decoder_api::Decoder;
     use net_proto_api::encoder_api::Encoder;
+    use net_proto_api::ion_validator::IonSchemaValidator;
+    use net_proto_api::generate_schema;
+    use net_proto_api::load_schema;
 
     use crate::api::time_interval::TimeIntervalDTO;
 
@@ -186,9 +197,47 @@ mod tests {
         assert_eq!(time_interval, TimeIntervalDTO::decode(time_interval.encode()));
     }
 
-    #[cfg(feature = "ion-schema-validation")]
     #[test]
     fn ion_schema_validation() {
-        //TODO: Write schema validation tests (should be done in #85zta68kj task)
+        const START_DATE_TIME: i64 = i64::MIN;
+        const END_DATE_TIME: i64 = i64::MAX;
+        let time_interval = TimeIntervalDTO::new(START_DATE_TIME, END_DATE_TIME);
+
+        let schema = generate_schema!(
+            r#"
+                schema_header::{}
+
+                type::{
+                    name: time_interval,
+                    type: struct,
+                    fields: {
+                        start_date_time: int,
+                        end_date_time: int,
+                    },
+                }
+
+                schema_footer::{}
+            "#
+        );
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(&time_interval.encode(), schema.unwrap()).is_ok());
+    }
+
+    #[test]
+    fn schema_load_test() {
+        assert!(load_schema!(".isl", "time_interval.isl").is_ok())
+    }
+
+    #[test]
+    fn validator_test() {
+        const START_DATE_TIME: i64 = i64::MIN;
+        const END_DATE_TIME: i64 = i64::MAX;
+        let time_interval = TimeIntervalDTO::new(START_DATE_TIME, END_DATE_TIME);
+
+        let schema = load_schema!(".isl", "time_interval.isl");
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(&time_interval.encode(), schema.unwrap()).is_ok());
     }
 }

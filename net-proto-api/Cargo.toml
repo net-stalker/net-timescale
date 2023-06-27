@@ -18,6 +18,5 @@ capnp-endec = []
 ion-endec = []
 ion-text = []
 ion-binary = []
-ion-schema-validation = []
 
 default = ["ion-endec", "ion-text"]
