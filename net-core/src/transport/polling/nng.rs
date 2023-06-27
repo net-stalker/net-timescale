@@ -57,9 +57,6 @@ mod tests {
     use std::{thread, time::Duration};
     use crate::transport::{
         connector_nng::{ConnectorNNG, Proto},
-        connector_zeromq::{
-            ConnectorZmq
-        }
     };
     use crate::transport::sockets::{Handler, Receiver, Sender};
 
