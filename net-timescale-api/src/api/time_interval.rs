@@ -1,23 +1,9 @@
-#[cfg(feature = "capnp-endec")] 
-pub mod time_interval_capnp {
-    include!(concat!(env!("OUT_DIR"), "/time_interval_capnp.rs"));
-}
-#[cfg(feature = "capnp-endec")] 
-use time_interval_capnp::time_interval;
-
-
-#[cfg(feature = "ion-endec")]
 use ion_rs;
-#[cfg(feature = "ion-endec")]
 use ion_rs::IonWriter;
-#[cfg(feature = "ion-endec")]
 use ion_rs::IonReader;
-#[cfg(feature = "ion-endec")]
 use ion_rs::element::writer::TextKind;
 
-#[cfg(feature = "ion-endec")]
 use net_proto_api::ion_validator::IonSchemaValidator;
-#[cfg(feature = "ion-endec")]
 use net_proto_api::load_schema;
 
 use net_proto_api::encoder_api::Encoder;
@@ -53,25 +39,6 @@ impl TimeIntervalDTO {
     }
 }
 
-#[cfg(feature = "capnp-endec")] 
-impl Encoder for TimeIntervalDTO {
-    fn encode(&self) -> Vec<u8> {    
-        let mut buffer: Vec<u8> = Vec::new();
-
-        let mut message = ::capnp::message::Builder::new_default();
-        let mut struct_to_encode = message.init_root::<time_interval::Builder>();
-        
-        struct_to_encode.set_start_date_time(self.start_date_time);
-        struct_to_encode.set_end_date_time(self.end_date_time);
-    
-        match ::capnp::serialize_packed::write_message(&mut buffer, &message) {
-            Ok(_) => buffer,
-            Err(_) => todo!(),
-        }
-    }
-}
-
-#[cfg(feature = "ion-endec")] 
 impl Encoder for TimeIntervalDTO {
     fn encode(&self) -> Vec<u8> {
         let buffer: Vec<u8> = Vec::new();
@@ -104,25 +71,6 @@ impl Encoder for TimeIntervalDTO {
     }
 }
 
-#[cfg(feature = "capnp-endec")] 
-impl Decoder for TimeIntervalDTO {
-    fn decode(data: Vec<u8>) -> Self {
-//TODO: Think about using std::io::Cursor here
-        let message_reader = ::capnp::serialize_packed::read_message(
-            data.as_slice(),
-            ::capnp::message::ReaderOptions::new()).unwrap();
-    
-        let decoded_struct = message_reader.get_root::<time_interval::Reader>().unwrap();
-
-        TimeIntervalDTO { 
-            start_date_time: decoded_struct.get_start_date_time(),
-            end_date_time: decoded_struct.get_end_date_time(), 
-            
-        }
-    }
-}
-
-#[cfg(feature = "ion-endec")] 
 impl Decoder for TimeIntervalDTO {
     fn decode(data: Vec<u8>) -> Self {
         if IonSchemaValidator::validate(&data, load_schema!(".isl", "time_interval.isl").unwrap()).is_err() {
@@ -151,7 +99,6 @@ impl Decoder for TimeIntervalDTO {
 }
 
 
-#[cfg(feature = "ion-endec")]
 #[cfg(test)]
 mod tests {
     use ion_rs::IonType;

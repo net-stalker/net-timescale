@@ -7,22 +7,11 @@ edition = "2021"
 [dependencies]
 net-proto-api = { path = "../net-proto-api" }
 
-capnp = "0.16.1"
-capnpc = "0.16.1"
-
 ion-rs = "0.18.1"
 ion-schema = "0.7.0"
 
-[build-dependencies]
-net-core = { path = "../net-core" }
-
-[build-dependencies.capnpc]
-capnpc = "0.17.0"
-
 [features]
-capnp-endec = []
-ion-endec = []
 ion-text = []
 ion-binary = []
 
-default = ["ion-endec", "ion-text"]
+default = ["ion-text"]
