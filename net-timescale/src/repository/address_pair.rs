@@ -15,12 +15,11 @@ pub fn select_address_pairs_by_date_cut(con: &mut PgConnection, start_date: Date
 {
     let query = sql_query(
         "SELECT \
-            TIME_BUCKET('1 minute', \"frame_time\") AS bucket,
             src_addr,
             dst_addr
         FROM captured_traffic
         WHERE frame_time >= $1 AND frame_time <= $2
-        GROUP BY bucket, src_addr, dst_addr;"
+        GROUP BY src_addr, dst_addr;"
     );
     query
         .bind::<Timestamptz, _>(start_date)

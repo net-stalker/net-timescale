@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use log::{info};
 use threadpool::ThreadPool;
 use net_core::{layer::NetComponent, transport::{sockets::Sender, dummy_command::DummyCommand}};
@@ -6,7 +7,7 @@ use net_core::transport::{
     connector_nng_pub_sub::ConnectorNNGPubSub,
     connector_nng::{ConnectorNNG, Proto},
 };
-use net_core::transport::connector_zeromq::ConnectorZmq;
+use net_core::transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
 use net_core::transport::polling::nng::NngPoller;
 use net_core::transport::polling::zmq::ZmqPoller;
 
@@ -45,63 +46,27 @@ impl NetComponent for Hub {
         self.pool.execute(move || {
             ws_server_command_clone.poll(-1);
         });
+        let context = zmq::Context::new();
         self.pool.execute(move || {
-            let ws_producer = ConnectorNNG::builder()
-                .with_endpoint(WS_CONSUMER.to_string())
-                .with_shared_handler(ws_server_command)
-                .with_proto(Proto::Pull)
-                .build()
-                .bind()
-                .into_inner();
-
-            let timescale = ConnectorZmq::builder()
-                .with_endpoint("tcp://0.0.0.0:5557".to_string())
-                .with_handler(DummyCommand)
-                .build()
-                .connect()
-                .into_inner();
-
-            let timescale_producer = ConnectorNNG::builder()
-                .with_endpoint(WS_PRODUCER.to_string())
-                .with_handler(TimescaleRouter {consumer: timescale})
-                .with_proto(Proto::Pull)
-                .build()
-                .connect()
-                .into_inner();
-
-            NngPoller::new()
-                .add(timescale_producer)
-                .add(ws_producer)
-                .poll(-1);
-        });
-        self.pool.execute(move || {
-
-            let ws_consumer = ConnectorNNG::builder()
-                .with_endpoint(WS_CONSUMER.to_string())
-                .with_handler(DummyCommand)
-                .with_proto(Proto::Push)
-                .build()
-                .connect()
-                .into_inner();
-            let timescale_router = ConnectorZmq::builder()
-                .with_handler(TimescaleRouter {consumer: ws_consumer})
+            let timescale_router = ConnectorZmqDealerBuilder::new(context.clone())
+                .with_handler(ws_server_command)
                 .with_endpoint(self.config.timescale_router.addr)
                 .build()
                 .bind()
                 .into_inner();
 
-            let translator = ConnectorZmq::builder()
+            let translator = ConnectorZmqDealerBuilder::new(context.clone())
                 .with_endpoint(self.config.translator_gateway.addr)
-                .with_handler(TranslatorCommand)
+                .with_handler(Arc::new(TranslatorCommand))
                 .build()
                 .bind()
                 .into_inner();
 
             let agent_command = AgentCommand { translator };
 
-            let agent = ConnectorZmq::builder()
+            let agent = ConnectorZmqDealerBuilder::new(context.clone())
                 .with_endpoint(self.config.agent_gateway.addr)
-                .with_handler(agent_command)
+                .with_handler(Arc::new(agent_command))
                 .build()
                 .bind()
                 .into_inner();

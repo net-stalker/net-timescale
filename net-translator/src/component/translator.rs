@@ -1,4 +1,5 @@
 use std::env;
+use std::sync::Arc;
 use net_core::transport::connector_nng_pub_sub::ConnectorNNGPubSub;
 use net_core::transport::dummy_command::DummyCommand;
 use threadpool::ThreadPool;
@@ -7,7 +8,7 @@ use net_core::layer::NetComponent;
 use net_core::transport::{
     connector_nng::{ConnectorNNG, Proto}
 };
-use net_core::transport::connector_zeromq::ConnectorZmq;
+use net_core::transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
 use net_core::transport::polling::nng::NngPoller;
 use net_core::transport::polling::zmq::ZmqPoller;
 
@@ -33,11 +34,13 @@ const DECODER: &'static str = "inproc://decoder";
 impl NetComponent for Translator {
     fn run(self) {
         log::info!("Run component");
+        let context = zmq::Context::new();
+        let context_clone = context.clone();
         self.pool.execute(move || {
             // build timescale command
-            let timescale = ConnectorZmq::builder()
+            let timescale = ConnectorZmqDealerBuilder::new(context_clone.clone())
                 .with_endpoint(self.config.translator_endpoint.addr)
-                .with_handler(DummyCommand)
+                .with_handler(Arc::new(DummyCommand))
                 .build()
                 .connect()
                 .into_inner();
@@ -69,7 +72,7 @@ impl NetComponent for Translator {
                 .add(decoder)
                 .poll(-1);
         });
-
+        let context_clone = context.clone();
         self.pool.execute(move || {
             let consumer = ConnectorNNG::builder()
                 .with_endpoint(DISPATCHER.to_owned())
@@ -80,9 +83,9 @@ impl NetComponent for Translator {
                 .into_inner();
 
             let dispatcher_command = TranslatorDispatcher { consumer };
-            let dispatcher = ConnectorZmq::builder()
+            let dispatcher = ConnectorZmqDealerBuilder::new(context_clone.clone())
                 .with_endpoint(self.config.translator_connector.addr)
-                .with_handler(dispatcher_command)
+                .with_handler(Arc::new(dispatcher_command))
                 .build()
                 .connect()
                 .into_inner();

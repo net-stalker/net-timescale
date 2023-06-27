@@ -10,6 +10,6 @@ CREATE TABLE captured_traffic
 
 CREATE INDEX ON captured_traffic (src_addr, frame_time DESC);
 
-CREATE INDEX ON captured_traffic (src_addr, frame_time DESC);
+CREATE INDEX ON captured_traffic (dst_addr, frame_time DESC);
 
 SELECT create_hypertable('captured_traffic', 'frame_time');

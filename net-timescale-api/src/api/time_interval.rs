@@ -15,6 +15,10 @@ use ion_rs::IonReader;
 #[cfg(feature = "ion-endec")]
 use ion_rs::element::writer::TextKind;
 
+#[cfg(feature = "ion-endec")]
+use net_proto_api::ion_validator::IonSchemaValidator;
+#[cfg(feature = "ion-endec")]
+use net_proto_api::load_schema;
 
 use net_proto_api::encoder_api::Encoder;
 use net_proto_api::decoder_api::Decoder;
@@ -24,13 +28,15 @@ use net_proto_api::decoder_api::Decoder;
 pub struct TimeIntervalDTO {
     start_date_time: i64,
     end_date_time: i64,
+    is_realtime: bool,
 }
 
 impl TimeIntervalDTO {
-    pub fn new (start_date_time: i64, end_date_time: i64) -> Self {
+    pub fn new (start_date_time: i64, end_date_time: i64, is_realtime: bool,) -> Self {
         TimeIntervalDTO {
             start_date_time,
             end_date_time,
+            is_realtime
         }
     }
 
@@ -40,6 +46,10 @@ impl TimeIntervalDTO {
 
     pub fn get_end_date_time (&self) -> i64 {
         self.end_date_time
+    }
+
+    pub fn is_realtime (&self) -> bool {
+        self.is_realtime
     }
 }
 
@@ -64,7 +74,7 @@ impl Encoder for TimeIntervalDTO {
 #[cfg(feature = "ion-endec")] 
 impl Encoder for TimeIntervalDTO {
     fn encode(&self) -> Vec<u8> {
-        let mut buffer: Vec<u8> = Vec::new();
+        let buffer: Vec<u8> = Vec::new();
 
         #[cfg(feature = "ion-binary")]
         let binary_writer_builder = ion_rs::BinaryWriterBuilder::new();
@@ -83,6 +93,9 @@ impl Encoder for TimeIntervalDTO {
 
         writer.set_field_name("end_date_time");
         writer.write_i64(self.end_date_time).unwrap();
+
+        writer.set_field_name("is_realtime");
+        writer.write_bool(self.is_realtime).unwrap();
 
         writer.step_out().unwrap();
         writer.flush().unwrap();
@@ -112,6 +125,10 @@ impl Decoder for TimeIntervalDTO {
 #[cfg(feature = "ion-endec")] 
 impl Decoder for TimeIntervalDTO {
     fn decode(data: Vec<u8>) -> Self {
+        if IonSchemaValidator::validate(&data, load_schema!(".isl", "time_interval.isl").unwrap()).is_err() {
+            todo!();
+        }
+
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
         binary_user_reader.step_in().unwrap();
@@ -122,9 +139,13 @@ impl Decoder for TimeIntervalDTO {
         binary_user_reader.next().unwrap();
         let end_date_time = binary_user_reader.read_i64().unwrap();
 
+        binary_user_reader.next().unwrap();
+        let is_realtime = binary_user_reader.read_bool().unwrap();
+
         TimeIntervalDTO {
             start_date_time,
             end_date_time,
+            is_realtime
         }
     }
 }
@@ -140,6 +161,9 @@ mod tests {
 
     use net_proto_api::decoder_api::Decoder;
     use net_proto_api::encoder_api::Encoder;
+    use net_proto_api::ion_validator::IonSchemaValidator;
+    use net_proto_api::generate_schema;
+    use net_proto_api::load_schema;
 
     use crate::api::time_interval::TimeIntervalDTO;
 
@@ -147,7 +171,8 @@ mod tests {
     fn reader_correctly_read_encoded_time_interval() {
         const START_DATE_TIME: i64 = i64::MIN;
         const END_DATE_TIME: i64 = i64::MAX;
-        let time_interval = TimeIntervalDTO::new(START_DATE_TIME, END_DATE_TIME);
+        const IS_REALTIME: bool = true;
+        let time_interval = TimeIntervalDTO::new(START_DATE_TIME, END_DATE_TIME, IS_REALTIME);
         
         let mut binary_user_reader = ReaderBuilder::new().build(time_interval.encode()).unwrap();
 
@@ -161,19 +186,65 @@ mod tests {
         assert_eq!(StreamItem::Value(IonType::Int), binary_user_reader.next().unwrap());
         assert_eq!("end_date_time", binary_user_reader.field_name().unwrap());
         assert_eq!(END_DATE_TIME,  binary_user_reader.read_i64().unwrap());
+
+        assert_eq!(StreamItem::Value(IonType::Bool), binary_user_reader.next().unwrap());
+        assert_eq!("is_realtime", binary_user_reader.field_name().unwrap());
+        assert_eq!(IS_REALTIME,  binary_user_reader.read_bool().unwrap());
     }
 
     #[test]
     fn endec_time_interval() {
         const START_DATE_TIME: i64 = i64::MIN;
         const END_DATE_TIME: i64 = i64::MAX;
-        let time_interval = TimeIntervalDTO::new(START_DATE_TIME, END_DATE_TIME);
+        const IS_REALTIME: bool = true;
+        let time_interval = TimeIntervalDTO::new(START_DATE_TIME, END_DATE_TIME, IS_REALTIME);
         assert_eq!(time_interval, TimeIntervalDTO::decode(time_interval.encode()));
     }
 
-    #[cfg(feature = "ion-schema-validation")]
     #[test]
     fn ion_schema_validation() {
-        //TODO: Write schema validation tests (should be done in #85zta68kj task)
+        const START_DATE_TIME: i64 = i64::MIN;
+        const END_DATE_TIME: i64 = i64::MAX;
+        const IS_REALTIME: bool = true;
+        let time_interval = TimeIntervalDTO::new(START_DATE_TIME, END_DATE_TIME, IS_REALTIME);
+
+        let schema = generate_schema!(
+            r#"
+                schema_header::{}
+
+                type::{
+                    name: time_interval,
+                    type: struct,
+                    fields: {
+                        start_date_time: int,
+                        end_date_time: int,
+                        is_realtime: bool,
+                    },
+                }
+
+                schema_footer::{}
+            "#
+        );
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(&time_interval.encode(), schema.unwrap()).is_ok());
+    }
+
+    #[test]
+    fn schema_load_test() {
+        assert!(load_schema!(".isl", "time_interval.isl").is_ok())
+    }
+
+    #[test]
+    fn validator_test() {
+        const START_DATE_TIME: i64 = i64::MIN;
+        const END_DATE_TIME: i64 = i64::MAX;
+        const IS_REALTIME: bool = true;
+        let time_interval = TimeIntervalDTO::new(START_DATE_TIME, END_DATE_TIME, IS_REALTIME);
+
+        let schema = load_schema!(".isl", "time_interval.isl");
+        assert!(schema.is_ok());
+
+        assert!(IonSchemaValidator::validate(&time_interval.encode(), schema.unwrap()).is_ok());
     }
 }
