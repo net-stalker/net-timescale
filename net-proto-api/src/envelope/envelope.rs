@@ -3,10 +3,6 @@ use ion_rs::IonWriter;
 use ion_rs::IonReader;
 use ion_rs::element::writer::TextKind;
 
-use crate::ion_validator::IonSchemaValidator;
-use crate::load_schema;
-
-
 #[derive(Debug, PartialEq, Eq)]
 pub struct Envelope {
     envelope_type: String,
@@ -61,9 +57,6 @@ impl crate::encoder_api::Encoder for Envelope {
 
 impl crate::decoder_api::Decoder for Envelope {
     fn decode(data: Vec<u8>) -> Self {
-        if IonSchemaValidator::validate(&data, load_schema!("net-proto-api/.isl", "envelope.isl").unwrap()).is_err() {
-            todo!();
-        }
 
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
@@ -94,9 +87,6 @@ mod tests {
     
     use crate::decoder_api::Decoder;
     use crate::encoder_api::Encoder;
-    use crate::ion_validator::IonSchemaValidator;
-    use crate::generate_schema;
-    use crate::load_schema;
 
     use super::Envelope;
 
@@ -123,45 +113,5 @@ mod tests {
     fn endec_envelope() {
         let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
         assert_eq!(envelope, Envelope::decode(envelope.encode()));
-    }
-
-    #[test]
-    fn ion_schema_validation() {
-        let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
-
-        let schema = generate_schema!(
-            r#"
-                schema_header::{}
-
-                type::{
-                    name: envelope,
-                    type: struct,
-                    fields: {
-                        type: string,
-                        data: blob
-                    },
-                }
-
-                schema_footer::{}
-            "#
-        );
-        assert!(schema.is_ok());
-
-        assert!(IonSchemaValidator::validate(&envelope.encode(), schema.unwrap()).is_ok());
-    }
-
-    #[test]
-    fn schema_load_test() {
-        assert!(load_schema!(".isl", "envelope.isl").is_ok())
-    }
-
-    #[test]
-    fn validator_test() {
-        let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
-
-        let schema = load_schema!(".isl", "envelope.isl");
-        assert!(schema.is_ok());
-
-        assert!(IonSchemaValidator::validate(&envelope.encode(), schema.unwrap()).is_ok());
     }
 }
