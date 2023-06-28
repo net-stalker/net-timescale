@@ -1,9 +1,10 @@
 import { Envelope } from './transport/net-proto-api/envelope.js';
 
-import { TimeIntervalDTO } from './transport/net-timescale-api/time_interval.js';
+import { DateCutDTO } from './transport/net-timescale-api/date_cut.js';
 
 import { GraphEdgeDTO } from './transport/net-timescale-api/graph_edge.js';
 import { GraphNodeDTO } from './transport/net-timescale-api/graph_node.js';
+import { IsRealtimeDTO } from './transport/net-timescale-api/is_realtime.js';
 import { NetworkGraphDTO } from './transport/net-timescale-api/network_graph.js';
 
 const serverURL = 'ws://localhost:9091';
@@ -112,7 +113,7 @@ function sendQuery() {
   if (socket.readyState === WebSocket.OPEN) {
     let start = new Date(startDate.value);
     let end = new Date(endDate.value);
-    let timeDto = new TimeIntervalDTO(start.getTime(), end.getTime()).encode();
+    let timeDto = new DateCutDTO(start.getTime(), end.getTime()).encode();
     let envelope = new Envelope('network_graph', timeDto).encode();
     socket.send(envelope);
   } 
@@ -129,7 +130,8 @@ console.log(textDecoder.decode((new Envelope("ENVELOPE_TYPE", textEncoder.encode
 //Encoded from Rust side
 console.log(Envelope.decode([123, 116, 121, 112, 101, 58, 32, 34, 69, 78, 86, 69, 76, 79, 80, 69, 95, 84, 89, 80, 69, 34, 44, 32, 100, 97, 116, 97, 58, 32, 123, 123, 82, 85, 53, 87, 82, 85, 120, 80, 85, 69, 86, 102, 82, 69, 70, 85, 81, 81, 61, 61, 125, 125, 125]));
 
-console.log(TimeIntervalDTO.decode((new TimeIntervalDTO(0, 100, true)).encode()))
+console.log(DateCutDTO.decode((new DateCutDTO(0, 100)).encode()))
+console.log(IsRealtimeDTO.decode((new IsRealtimeDTO(true)).encode()))
 
 console.log(GraphNodeDTO.decode((new GraphNodeDTO("GRAPH_NODE")).encode()));
 console.log(GraphEdgeDTO.decode((new GraphEdgeDTO("GRAPH_FIRST_NODE", "GRAPH_SECOND_NODE")).encode()));

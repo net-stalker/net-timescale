@@ -6,7 +6,7 @@ use chrono::{TimeZone, Utc};
 use net_proto_api::encoder_api::Encoder;
 use net_proto_api::envelope::envelope::Envelope;
 use crate::command::executor::PoolWrapper;
-use net_timescale_api::api::time_interval::TimeIntervalDTO;
+use net_timescale_api::api::date_cut::DateCutDTO;
 use crate::persistence::network_graph;
 
 pub struct NetworkGraphHandler<T>
@@ -31,7 +31,7 @@ impl<T> Handler for NetworkGraphHandler<T>
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
         let mut pooled_connection = self.connection_pool.get_connection();
-        let date_cut = TimeIntervalDTO::decode(data);
+        let date_cut = DateCutDTO::decode(data);
         let start_date = Utc.timestamp_millis_opt(date_cut.get_start_date_time()).unwrap();
         let end_date = Utc.timestamp_millis_opt(date_cut.get_end_date_time()).unwrap();
         let network_graph = network_graph::get_network_graph_by_date_cut(pooled_connection.deref_mut(),

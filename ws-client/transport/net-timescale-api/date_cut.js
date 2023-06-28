@@ -1,9 +1,8 @@
 import '../../vendor/ion-bundle.js'
 
-const TimeIntervalDTO = function(start_date_time, end_date_time, is_realtime) {
+const DateCutDTO = function(start_date_time, end_date_time) {
     this.start_date_time = start_date_time;
     this.end_date_time = end_date_time;
-    this.is_realtime = is_realtime;
 
     
     this.encode = function() {
@@ -16,9 +15,6 @@ const TimeIntervalDTO = function(start_date_time, end_date_time, is_realtime) {
 
         writer.writeFieldName("end_date_time");
         writer.writeInt(this.end_date_time);
-        
-        writer.writeFieldName("is_realtime");
-        writer.writeBoolean(this.is_realtime);
 
         writer.stepOut();
         writer.close();
@@ -29,7 +25,7 @@ const TimeIntervalDTO = function(start_date_time, end_date_time, is_realtime) {
     return this;
 }
 
-TimeIntervalDTO.decode = function (data) {
+DateCutDTO.decode = function (data) {
     let reader = ion.makeReader(data);
 
     reader.next();
@@ -41,10 +37,7 @@ TimeIntervalDTO.decode = function (data) {
     reader.next();
     let end_date_time = reader.bigIntValue();
 
-    reader.next();
-    let is_realtime = reader.booleanValue();
-
-    return new TimeIntervalDTO(start_date_time, end_date_time, is_realtime);
+    return new DateCutDTO(start_date_time, end_date_time);
 }
 
-export {TimeIntervalDTO}
+export {DateCutDTO}

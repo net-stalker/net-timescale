@@ -14,7 +14,7 @@ use chrono::{Utc, DateTime, TimeZone};
 use std::sync::atomic::AtomicBool;
 use net_proto_api::encoder_api::Encoder;
 use net_proto_api::envelope::envelope::Envelope;
-use net_timescale_api::api::time_interval::TimeIntervalDTO;
+use net_timescale_api::api::date_cut::DateCutDTO;
 
 pub struct WsServerCommand<S>
 where S: Sender

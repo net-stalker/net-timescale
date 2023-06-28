@@ -8,18 +8,16 @@ use net_proto_api::decoder_api::Decoder;
 
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct TimeIntervalDTO {
+pub struct DateCutDTO {
     start_date_time: i64,
     end_date_time: i64,
-    is_realtime: bool,
 }
 
-impl TimeIntervalDTO {
-    pub fn new (start_date_time: i64, end_date_time: i64, is_realtime: bool,) -> Self {
-        TimeIntervalDTO {
+impl DateCutDTO {
+    pub fn new (start_date_time: i64, end_date_time: i64) -> Self {
+        DateCutDTO {
             start_date_time,
             end_date_time,
-            is_realtime
         }
     }
 
@@ -30,13 +28,9 @@ impl TimeIntervalDTO {
     pub fn get_end_date_time (&self) -> i64 {
         self.end_date_time
     }
-
-    pub fn is_realtime (&self) -> bool {
-        self.is_realtime
-    }
 }
 
-impl Encoder for TimeIntervalDTO {
+impl Encoder for DateCutDTO {
     fn encode(&self) -> Vec<u8> {
         let buffer: Vec<u8> = Vec::new();
 
@@ -58,9 +52,6 @@ impl Encoder for TimeIntervalDTO {
         writer.set_field_name("end_date_time");
         writer.write_i64(self.end_date_time).unwrap();
 
-        writer.set_field_name("is_realtime");
-        writer.write_bool(self.is_realtime).unwrap();
-
         writer.step_out().unwrap();
         writer.flush().unwrap();
 
@@ -68,7 +59,7 @@ impl Encoder for TimeIntervalDTO {
     }
 }
 
-impl Decoder for TimeIntervalDTO {
+impl Decoder for DateCutDTO {
     fn decode(data: Vec<u8>) -> Self {
 
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
@@ -81,13 +72,9 @@ impl Decoder for TimeIntervalDTO {
         binary_user_reader.next().unwrap();
         let end_date_time = binary_user_reader.read_i64().unwrap();
 
-        binary_user_reader.next().unwrap();
-        let is_realtime = binary_user_reader.read_bool().unwrap();
-
-        TimeIntervalDTO {
+        DateCutDTO {
             start_date_time,
             end_date_time,
-            is_realtime
         }
     }
 }
@@ -103,14 +90,13 @@ mod tests {
     use net_proto_api::decoder_api::Decoder;
     use net_proto_api::encoder_api::Encoder;
 
-    use crate::api::time_interval::TimeIntervalDTO;
+    use crate::api::date_cut::DateCutDTO;
 
     #[test]
-    fn reader_correctly_read_encoded_time_interval() {
+    fn reader_correctly_read_encoded_date_cut() {
         const START_DATE_TIME: i64 = i64::MIN;
         const END_DATE_TIME: i64 = i64::MAX;
-        const IS_REALTIME: bool = true;
-        let time_interval = TimeIntervalDTO::new(START_DATE_TIME, END_DATE_TIME, IS_REALTIME);
+        let time_interval = DateCutDTO::new(START_DATE_TIME, END_DATE_TIME);
         
         let mut binary_user_reader = ReaderBuilder::new().build(time_interval.encode()).unwrap();
 
@@ -124,19 +110,14 @@ mod tests {
         assert_eq!(StreamItem::Value(IonType::Int), binary_user_reader.next().unwrap());
         assert_eq!("end_date_time", binary_user_reader.field_name().unwrap());
         assert_eq!(END_DATE_TIME,  binary_user_reader.read_i64().unwrap());
-
-        assert_eq!(StreamItem::Value(IonType::Bool), binary_user_reader.next().unwrap());
-        assert_eq!("is_realtime", binary_user_reader.field_name().unwrap());
-        assert_eq!(IS_REALTIME,  binary_user_reader.read_bool().unwrap());
     }
 
     #[test]
     #[ignore]
-    fn endec_time_interval() {
+    fn endec_date_cut() {
         const START_DATE_TIME: i64 = i64::MIN;
         const END_DATE_TIME: i64 = i64::MAX;
-        const IS_REALTIME: bool = true;
-        let time_interval = TimeIntervalDTO::new(START_DATE_TIME, END_DATE_TIME, IS_REALTIME);
-        assert_eq!(time_interval, TimeIntervalDTO::decode(time_interval.encode()));
+        let time_interval = DateCutDTO::new(START_DATE_TIME, END_DATE_TIME);
+        assert_eq!(time_interval, DateCutDTO::decode(time_interval.encode()));
     }
 }
