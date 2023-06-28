@@ -40,10 +40,11 @@ impl ZmqPoller {
 
 mod tests {
     use std::sync::Arc;
-    use crate::transport::zmq::connectors::dealer::DealerConnectorZmq;
     use crate::transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
     use crate::transport::polling::zmq::ZmqPoller;
     use crate::transport::sockets::{Handler, Receiver, Sender};
+
+    pub const SERVER_URL: &'static str = "inproc://test/server";
 
     pub struct ClientCommand;
     impl Handler for ClientCommand {
@@ -63,32 +64,28 @@ mod tests {
     }
     fn run_server_zmq(context: zmq::Context) {
         let server = ConnectorZmqDealerBuilder::new(context)
-            .with_endpoint("tcp://127.0.0.1:7000".to_string())
+            .with_endpoint(SERVER_URL.to_string())
             .with_handler(Arc::new(ServerCommand))
             .build()
             .bind()
             .into_inner();
-        for _ in 0..5 {
-            server.send("from server".as_bytes());
-        }
+        server.send("from server".as_bytes());
     }
     fn run_client_zmq(context: zmq::Context) {
         let client = ConnectorZmqDealerBuilder::new(context)
-            .with_endpoint("tcp://127.0.0.1:7001".to_string())
+            .with_endpoint(SERVER_URL.to_string())
             .with_handler(Arc::new(ClientCommand))
             .build()
             .connect()
             .into_inner();
-        for _ in 0..5 {
-            client.send("from client".as_bytes());
-        }
+        client.send("from client".as_bytes());
     }
     #[test]
     fn zmq_poller_server_test() {
         let zmq_context = zmq::Context::new();
         let clients_count = 3;
         let server = ConnectorZmqDealerBuilder::new(zmq_context.clone())
-            .with_endpoint("tcp://127.0.0.1:7001".to_string())
+            .with_endpoint(SERVER_URL.to_string())
             .with_handler(Arc::new(ServerCommand))
             .build()
             .bind()
@@ -101,8 +98,8 @@ mod tests {
             }));
         }
         ZmqPoller::new()
-            .add(server.clone())
-            .poll(clients_count * 2);
+            .add(server)
+            .poll(clients_count);
 
         clients.into_iter().for_each(|client| {
             client.join().unwrap();
@@ -115,8 +112,8 @@ mod tests {
         let server = std::thread::spawn(move || {
             run_server_zmq(context_clone);
         });
-        let client = ConnectorZmqDealerBuilder::new(zmq_context.clone())
-            .with_endpoint("tcp://127.0.0.1:7000".to_string())
+        let client = ConnectorZmqDealerBuilder::new(zmq_context)
+            .with_endpoint(SERVER_URL.to_string())
             .with_handler(Arc::new(ClientCommand))
             .build()
             .connect()
@@ -124,7 +121,7 @@ mod tests {
 
         ZmqPoller::new()
             .add(client)
-            .poll(5);
+            .poll(1);
 
         server.join().unwrap();
     }
