@@ -47,14 +47,57 @@ impl NetComponent for Hub {
             ws_server_command_clone.poll(-1);
         });
         let context = zmq::Context::new();
+        let context_clone = context.clone();
         self.pool.execute(move || {
-            let timescale_router = ConnectorZmqDealerBuilder::new(context.clone())
-                .with_handler(ws_server_command)
+            let ws_producer = ConnectorNNG::builder()
+                .with_endpoint(WS_CONSUMER.to_string())
+                .with_shared_handler(ws_server_command)
+                .with_proto(Proto::Pull)
+                .build()
+                .bind()
+                .into_inner();
+
+            let timescale = ConnectorZmqDealerBuilder::new(context_clone)
+                .with_endpoint("tcp://0.0.0.0:5557".to_string())
+                .with_handler(Arc::new(DummyCommand))
+                .build()
+                .connect()
+                .into_inner();
+
+            let timescale_producer = ConnectorNNG::builder()
+                .with_endpoint(WS_PRODUCER.to_string())
+                .with_handler(TimescaleRouter {consumer: timescale})
+                .with_proto(Proto::Pull)
+                .build()
+                .connect()
+                .into_inner();
+
+            NngPoller::new()
+                .add(timescale_producer)
+                .add(ws_producer)
+                .poll(-1);
+        });
+        let context_clone = context.clone();
+        self.pool.execute(move || {
+            let ws_consumer = ConnectorNNG::builder()
+                .with_endpoint(WS_CONSUMER.to_string())
+                .with_handler(DummyCommand)
+                .with_proto(Proto::Push)
+                .build()
+                .connect()
+                .into_inner();
+            let timescale_router = ConnectorZmqDealerBuilder::new(context_clone.clone())
+                .with_handler(Arc::new(TimescaleRouter {consumer: ws_consumer}))
                 .with_endpoint(self.config.timescale_router.addr)
                 .build()
                 .bind()
                 .into_inner();
 
+            ZmqPoller::new()
+                .add(timescale_router)
+                .poll(-1);
+        });
+        self.pool.execute(move || {
             let translator = ConnectorZmqDealerBuilder::new(context.clone())
                 .with_endpoint(self.config.translator_gateway.addr)
                 .with_handler(Arc::new(TranslatorCommand))
@@ -72,7 +115,6 @@ impl NetComponent for Hub {
                 .into_inner();
 
             ZmqPoller::new()
-                .add(timescale_router)
                 .add(agent)
                 .poll(-1);
         });
