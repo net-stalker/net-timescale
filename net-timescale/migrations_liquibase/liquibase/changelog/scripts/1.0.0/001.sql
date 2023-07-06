@@ -3,11 +3,12 @@
 --changeset dshcherbatiuk:1
 CREATE TABLE captured_traffic
 (
+    id SERIAL,
     frame_time  TIMESTAMPTZ NOT NULL,
     src_addr    text        NOT null,
     dst_addr    text        NOT null,
     binary_data JSONB       NOT null,
-    PRIMARY KEY (frame_time)
+    PRIMARY KEY (id, frame_time)
 );
 
 --changeset dshcherbatiuk:2
