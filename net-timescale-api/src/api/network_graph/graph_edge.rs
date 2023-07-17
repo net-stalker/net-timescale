@@ -7,17 +7,17 @@ use net_proto_api::encoder_api::Encoder;
 use net_proto_api::decoder_api::Decoder;
 
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct GraphEdgeDTO {
     src_addr: String,
     dst_addr: String,
 }
 
 impl GraphEdgeDTO {
-    pub fn new ( src_addr: String, dst_addr: String) -> Self {
+    pub fn new ( src_addr: &str, dst_addr: &str) -> Self {
         GraphEdgeDTO {
-            src_addr, 
-            dst_addr, 
+            src_addr: src_addr.into(), 
+            dst_addr: dst_addr.into(), 
         }
     }
 
@@ -60,7 +60,7 @@ impl Encoder for GraphEdgeDTO {
 }
 
 impl Decoder for GraphEdgeDTO {
-    fn decode(data: Vec<u8>) -> Self {
+    fn decode(data: &[u8]) -> Self {
 
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
@@ -68,16 +68,16 @@ impl Decoder for GraphEdgeDTO {
 
         binary_user_reader.next().unwrap();
         let binding = binary_user_reader.read_string().unwrap();
-        let src_addr = String::from(binding.text());
+        let src_addr = binding.text();
 
         binary_user_reader.next().unwrap();
         let binding = binary_user_reader.read_string().unwrap();
-        let dst_addr = String::from(binding.text());
+        let dst_addr = binding.text();
 
-        GraphEdgeDTO {
+        GraphEdgeDTO::new(
             src_addr,
             dst_addr,
-        }
+        )
     }
 }
 
@@ -99,7 +99,7 @@ mod tests {
     fn reader_correctly_read_encoded_graph_edge() {
         const SRC_ADDR: &str = "0.0.0.0:0000";
         const DST_ADDR: &str = "0.0.0.0:5656";
-        let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ADDR.to_owned(), DST_ADDR.to_owned());
+        let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ADDR, DST_ADDR);
         let mut binary_user_reader = ReaderBuilder::new().build(graph_edge.encode()).unwrap();
 
         assert_eq!(StreamItem::Value(IonType::Struct), binary_user_reader.next().unwrap());
@@ -119,7 +119,7 @@ mod tests {
     fn endec_graph_edge() {
         const SRC_ADDR: &str = "0.0.0.0:0000";
         const DST_ADDR: &str = "0.0.0.0:5656";
-        let graph_edge = GraphEdgeDTO::new(SRC_ADDR.to_owned(), DST_ADDR.to_owned());
-        assert_eq!(graph_edge, GraphEdgeDTO::decode(graph_edge.encode()));
+        let graph_edge = GraphEdgeDTO::new(SRC_ADDR, DST_ADDR);
+        assert_eq!(graph_edge, GraphEdgeDTO::decode(&graph_edge.encode()));
     }
 }

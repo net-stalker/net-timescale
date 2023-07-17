@@ -31,7 +31,7 @@ impl<T> Handler for NetworkPacketHandler<T>
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        let packet = NetworkPacketDTO::decode(data.to_owned());
+        let packet = NetworkPacketDTO::decode(&data);
         let mut pooled_connection = self.pool.get_connection();
         match network_packet::insert_network_packet(pooled_connection.deref_mut(), packet.into()) {
             Ok(rows_count) => {

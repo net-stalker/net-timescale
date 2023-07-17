@@ -38,9 +38,9 @@ fn integration_test_insert() {
     let timestamp = timestamp.timestamp_millis();
     let network_packet_dto = NetworkPacketDTO::new(
         timestamp,
-        "src".to_string(),
-        "dst".to_string(),
-        binary_json.clone(),
+        "src",
+        "dst",
+        &binary_json,
     );
     let result = network_packet::insert_network_packet(
         &mut con, network_packet_dto.into()

@@ -31,7 +31,7 @@ impl<T> Handler for NetworkGraphHandler<T>
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
         let mut pooled_connection = self.connection_pool.get_connection();
-        let date_cut = DateCutDTO::decode(data);
+        let date_cut = DateCutDTO::decode(&data);
         let start_date = Utc.timestamp_millis_opt(date_cut.get_start_date_time()).unwrap();
         let end_date = Utc.timestamp_millis_opt(date_cut.get_end_date_time()).unwrap();
         let network_graph = network_graph::get_network_graph_by_date_cut(pooled_connection.deref_mut(),
@@ -39,7 +39,7 @@ impl<T> Handler for NetworkGraphHandler<T>
         );
         log::info!("got network graph {:?}", network_graph);
         let data = network_graph.encode();
-        let data = Envelope::new("network_graph".to_string(), data).encode();
+        let data = Envelope::new("network_graph", &data).encode();
         self.router.send(data.as_slice());
     }
 }

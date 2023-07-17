@@ -60,7 +60,7 @@ impl Encoder for DateCutDTO {
 }
 
 impl Decoder for DateCutDTO {
-    fn decode(data: Vec<u8>) -> Self {
+    fn decode(data: &[u8]) -> Self {
 
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
@@ -72,10 +72,10 @@ impl Decoder for DateCutDTO {
         binary_user_reader.next().unwrap();
         let end_date_time = binary_user_reader.read_i64().unwrap();
 
-        DateCutDTO {
+        DateCutDTO::new(
             start_date_time,
             end_date_time,
-        }
+        )
     }
 }
 
@@ -118,6 +118,6 @@ mod tests {
         const START_DATE_TIME: i64 = i64::MIN;
         const END_DATE_TIME: i64 = i64::MAX;
         let time_interval = DateCutDTO::new(START_DATE_TIME, END_DATE_TIME);
-        assert_eq!(time_interval, DateCutDTO::decode(time_interval.encode()));
+        assert_eq!(time_interval, DateCutDTO::decode(&time_interval.encode()));
     }
 }

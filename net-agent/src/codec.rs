@@ -37,8 +37,8 @@ where S: Sender + ?Sized
 
         self.client.send(
             Envelope::new(
-            "".to_owned(),
-            buf
+            "",
+            &buf
             ).encode()
         .as_slice());
     }

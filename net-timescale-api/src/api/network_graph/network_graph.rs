@@ -18,10 +18,10 @@ pub struct NetworkGraphDTO {
 }
 
 impl NetworkGraphDTO {
-    pub fn new ( graph_nodes: Vec<GraphNodeDTO>, graph_edges: Vec<GraphEdgeDTO>) -> Self {
+    pub fn new ( graph_nodes: &[GraphNodeDTO], graph_edges: &[GraphEdgeDTO]) -> Self {
         NetworkGraphDTO {
-            graph_nodes,
-            graph_edges,
+            graph_nodes: graph_nodes.to_vec(),
+            graph_edges: graph_edges.to_vec(),
         }
     }
 
@@ -85,7 +85,7 @@ impl Encoder for NetworkGraphDTO {
 }
 
 impl Decoder for NetworkGraphDTO {
-    fn decode(data: Vec<u8>) -> Self {
+    fn decode(data: &[u8]) -> Self {
 
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
@@ -98,7 +98,7 @@ impl Decoder for NetworkGraphDTO {
             binary_user_reader.step_in().unwrap();
             binary_user_reader.next().unwrap();
             let binding = binary_user_reader.read_string().unwrap();
-            let address = String::from(binding.text());
+            let address = binding.text();
             graph_nodes.push(GraphNodeDTO::new(address));
             binary_user_reader.step_out().unwrap();
         }
@@ -111,10 +111,10 @@ impl Decoder for NetworkGraphDTO {
             binary_user_reader.step_in().unwrap();
             binary_user_reader.next().unwrap();
             let binding = binary_user_reader.read_string().unwrap();
-            let src_addr = String::from(binding.text());
+            let src_addr = binding.text();
             binary_user_reader.next().unwrap();
             let binding = binary_user_reader.read_string().unwrap();
-            let dst_addr = String::from(binding.text());
+            let dst_addr = binding.text();
             graph_edges.push(GraphEdgeDTO::new(src_addr, dst_addr));
             binary_user_reader.step_out().unwrap();
         }
@@ -145,17 +145,17 @@ mod tests {
     #[test]
     fn reader_correctly_read_encoded_graph_edge() {
         const FIRST_NODE_ADDRESS: &str = "0.0.0.0:0000";
-        let first_graph_node = GraphNodeDTO::new(FIRST_NODE_ADDRESS.to_owned());
+        let first_graph_node = GraphNodeDTO::new(FIRST_NODE_ADDRESS);
         const SECOND_NODE_ADDRESS: &str = "0.0.0.0:5656";
-        let second_graph_node = GraphNodeDTO::new(SECOND_NODE_ADDRESS.to_owned());
+        let second_graph_node = GraphNodeDTO::new(SECOND_NODE_ADDRESS);
 
         const SRC_ADDR: &str = "0.0.0.0:0000";
         const DST_ADDR: &str = "0.0.0.0:5656";
-        let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ADDR.to_owned(), DST_ADDR.to_owned());
+        let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ADDR, DST_ADDR);
 
         let network_graph = NetworkGraphDTO::new(
-            vec![first_graph_node, second_graph_node],
-            vec![graph_edge],
+            &vec![first_graph_node, second_graph_node],
+            &vec![graph_edge],
         );
 
         let mut binary_user_reader = ReaderBuilder::new().build(network_graph.encode()).unwrap();
@@ -206,19 +206,19 @@ mod tests {
     #[ignore]
     fn endec_network_graph() {
         const FIRST_NODE_ADDRESS: &str = "0.0.0.0:0000";
-        let first_graph_node = GraphNodeDTO::new(FIRST_NODE_ADDRESS.to_owned());
+        let first_graph_node = GraphNodeDTO::new(FIRST_NODE_ADDRESS);
         const SECOND_NODE_ADDRESS: &str = "0.0.0.0:5656";
-        let second_graph_node = GraphNodeDTO::new(SECOND_NODE_ADDRESS.to_owned());
+        let second_graph_node = GraphNodeDTO::new(SECOND_NODE_ADDRESS);
 
         const SRC_ADDR: &str = "0.0.0.0:0000";
         const DST_ADDR: &str = "0.0.0.0:5656";
-        let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ADDR.to_owned(), DST_ADDR.to_owned());
+        let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ADDR, DST_ADDR);
 
         let network_graph = NetworkGraphDTO::new(
-            vec![first_graph_node, second_graph_node],
-            vec![graph_edge],
+            &vec![first_graph_node, second_graph_node],
+            &vec![graph_edge],
         );
 
-        assert_eq!(network_graph, NetworkGraphDTO::decode(network_graph.encode()));
+        assert_eq!(network_graph, NetworkGraphDTO::decode(&network_graph.encode()));
     }
 }

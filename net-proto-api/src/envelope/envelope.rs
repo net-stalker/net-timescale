@@ -10,11 +10,11 @@ pub struct Envelope {
     data: Vec<u8>,
 }
 
-impl Envelope{
-    pub fn new( envelope_type: String, data: Vec<u8>) -> Self {
+impl Envelope {
+    pub fn new( envelope_type: &str, data: &[u8]) -> Self {
         Envelope { 
-            envelope_type, 
-            data
+            envelope_type: envelope_type.into(), 
+            data: data.into()
         }
     }
 
@@ -52,12 +52,12 @@ impl crate::encoder_api::Encoder for Envelope {
         writer.step_out().unwrap();
         writer.flush().unwrap();
 
-        writer.output().as_slice().into()
+        writer.output().as_slice().to_owned()
     }
 }
 
 impl crate::decoder_api::Decoder for Envelope {
-    fn decode(data: Vec<u8>) -> Self {
+    fn decode(data: &[u8]) -> Self {
 
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
@@ -65,16 +65,16 @@ impl crate::decoder_api::Decoder for Envelope {
 
         binary_user_reader.next().unwrap();
         let binding = binary_user_reader.read_string().unwrap();
-        let envelope_type = String::from(binding.text());
+        let envelope_type = binding.text();
         
         binary_user_reader.next().unwrap();
         let binding = binary_user_reader.read_blob().unwrap();
-        let data = binding.as_slice().to_owned();
+        let data = binding.as_slice();
 
-        Envelope {
+        Envelope::new(
             envelope_type,
             data,
-        }
+        )
     }
 }
 
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn reader_correctly_read_encoded_envelope() {
-        let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOPE_DATA".into());
+        let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOPE_DATA".as_bytes());
         
         let mut binary_user_reader = ReaderBuilder::new().build(envelope.encode()).unwrap();
 
@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn endec_envelope() {
-        let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".into());
-        assert_eq!(envelope, Envelope::decode(envelope.encode()));
+        let envelope = Envelope::new("ENVELOPE_TYPE".into(), "ENVELOP_DATA".as_bytes());
+        assert_eq!(envelope, Envelope::decode(&envelope.encode()));
     }
 }

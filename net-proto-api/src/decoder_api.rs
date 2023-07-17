@@ -1,3 +1,3 @@
 pub trait Decoder {
-    fn decode(data: Vec<u8>) -> Self;
+    fn decode(data: &[u8]) -> Self;
 } 

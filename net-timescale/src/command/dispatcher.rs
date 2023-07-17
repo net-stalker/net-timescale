@@ -23,7 +23,7 @@ where T: Sender + Pub + ?Sized
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
-        let envelope = Envelope::decode(data);
+        let envelope = Envelope::decode(&data);
         self.consumer.set_topic(envelope.get_type().as_bytes());
         self.consumer.send(envelope.get_data());
     }

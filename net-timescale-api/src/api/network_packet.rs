@@ -18,12 +18,12 @@ pub struct NetworkPacketDTO {
 }
 
 impl NetworkPacketDTO {
-    pub fn new ( frame_time: i64, src_addr: String, dst_addr: String, network_packet_data: Vec<u8>) -> Self {
+    pub fn new ( frame_time: i64, src_addr: &str, dst_addr: &str, network_packet_data: &[u8]) -> Self {
         NetworkPacketDTO { 
             frame_time, 
-            src_addr, 
-            dst_addr, 
-            network_packet_data
+            src_addr: src_addr.into(), 
+            dst_addr: dst_addr.into(), 
+            network_packet_data: network_packet_data.into()
         }
     }
 
@@ -80,7 +80,7 @@ impl Encoder for NetworkPacketDTO {
 }
 
 impl Decoder for NetworkPacketDTO {
-    fn decode(data: Vec<u8>) -> Self {
+    fn decode(data: &[u8]) -> Self {
 
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
@@ -91,22 +91,22 @@ impl Decoder for NetworkPacketDTO {
         
         binary_user_reader.next().unwrap();
         let binding = binary_user_reader.read_string().unwrap();
-        let src_addr = String::from(binding.text());
+        let src_addr = binding.text();
 
         binary_user_reader.next().unwrap();
         let binding = binary_user_reader.read_string().unwrap();
-        let dst_addr = String::from(binding.text());
+        let dst_addr = binding.text();
 
         binary_user_reader.next().unwrap();
         let binding = binary_user_reader.read_blob().unwrap();
-        let network_packet_data = binding.as_slice().to_owned();
+        let network_packet_data = binding.as_slice();
 
-        NetworkPacketDTO {
-            frame_time,
-            src_addr,
-            dst_addr,
-            network_packet_data,
-        }
+        NetworkPacketDTO::new(
+            frame_time, 
+            src_addr, 
+            dst_addr, 
+            network_packet_data
+        )
     }
 }
 
@@ -132,9 +132,9 @@ mod tests {
         const NETWORK_PACKET_DATA: &[u8] = "NETWORK_PACKET_DATA".as_bytes();
         let network_paket = NetworkPacketDTO::new(
             FRAME_TIME, 
-            SRC_ADDR.to_owned(), 
-            DST_ADDR.to_owned(), 
-            NETWORK_PACKET_DATA.to_owned()
+            SRC_ADDR, 
+            DST_ADDR, 
+            NETWORK_PACKET_DATA
         );
         let mut binary_user_reader = ReaderBuilder::new().build(network_paket.encode()).unwrap();
 
@@ -167,10 +167,10 @@ mod tests {
         const NETWORK_PACKET_DATA: &[u8] = "NETWORK_PACKET_DATA".as_bytes();
         let network_paket = NetworkPacketDTO::new(
             FRAME_TIME, 
-            SRC_ADDR.to_owned(), 
-            DST_ADDR.to_owned(), 
-            NETWORK_PACKET_DATA.to_owned()
+            SRC_ADDR, 
+            DST_ADDR, 
+            NETWORK_PACKET_DATA
         );
-        assert_eq!(network_paket, NetworkPacketDTO::decode(network_paket.encode()));
+        assert_eq!(network_paket, NetworkPacketDTO::decode(&network_paket.encode()));
     }
 }

@@ -28,7 +28,7 @@ impl<S> Handler for DecoderCommand<S>
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
 
-        let message = Envelope::decode(data);
+        let message = Envelope::decode(&data);
 
         let _msg_type = message.get_type().to_owned();
         let data = message.get_data().to_owned();
@@ -60,13 +60,13 @@ impl<S> Handler for DecoderCommand<S>
 
         let net_packet = NetworkPacketDTO::new(
             frame_time.timestamp_millis(),
-            src_addr,
-            dst_addr,
-            binary_json);
+            &src_addr,
+            &dst_addr,
+            &binary_json);
 
         let envelope = Envelope::new(
-            "network_packet".to_owned(),
-            net_packet.encode(),
+            "network_packet",
+            &net_packet.encode(),
         );
 
         let message: Vec<u8> = envelope.encode();

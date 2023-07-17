@@ -51,7 +51,7 @@ impl Encoder for IsRealtimeDTO {
 }
 
 impl Decoder for IsRealtimeDTO {
-    fn decode(data: Vec<u8>) -> Self {
+    fn decode(data: &[u8]) -> Self {
 
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
@@ -60,9 +60,9 @@ impl Decoder for IsRealtimeDTO {
         binary_user_reader.next().unwrap();
         let is_realtime = binary_user_reader.read_bool().unwrap();
 
-        IsRealtimeDTO {
+        IsRealtimeDTO::new(
             is_realtime,
-        }
+        )
     }
 }
 
@@ -98,6 +98,6 @@ mod tests {
     fn endec_date_cut() {
         const IS_REALTIME: bool = true;
         let is_realtime = IsRealtimeDTO::new(IS_REALTIME);
-        assert_eq!(is_realtime, IsRealtimeDTO::decode(is_realtime.encode()));
+        assert_eq!(is_realtime, IsRealtimeDTO::decode(&is_realtime.encode()));
     }
 }

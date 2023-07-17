@@ -9,13 +9,13 @@ use crate::repository::address_info::{AddressInfo, self};
 
 impl Into<GraphNodeDTO> for AddressInfo {
     fn into(self) -> GraphNodeDTO {
-        GraphNodeDTO::new(self.addr)
+        GraphNodeDTO::new(&self.addr)
     }
 }
 
 impl Into<GraphEdgeDTO> for AddressPair {
     fn into(self) -> GraphEdgeDTO {
-        GraphEdgeDTO::new(self.src_addr, self.dst_addr)
+        GraphEdgeDTO::new(&self.src_addr, &self.dst_addr)
     }
 }
 
@@ -35,5 +35,5 @@ pub fn get_network_graph_by_date_cut(connection: &mut PgConnection, date_start: 
     for address in addresses.into_iter() {
         nodes_dto.push(address.into());
     }
-    NetworkGraphDTO::new(nodes_dto, edges_dto)
+    NetworkGraphDTO::new(&nodes_dto, &edges_dto)
 }

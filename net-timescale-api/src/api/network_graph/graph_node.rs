@@ -7,16 +7,16 @@ use net_proto_api::encoder_api::Encoder;
 use net_proto_api::decoder_api::Decoder;
 
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct GraphNodeDTO {
     address: String,
 }
 
 
 impl GraphNodeDTO {
-    pub fn new ( address: String) -> Self {
+    pub fn new ( address: &str) -> Self {
         GraphNodeDTO {
-            address,
+            address: address.into(),
         }
     }
 
@@ -52,7 +52,7 @@ impl Encoder for GraphNodeDTO {
 }
 
 impl Decoder for GraphNodeDTO {
-    fn decode(data: Vec<u8>) -> Self {
+    fn decode(data: &[u8]) -> Self {
 
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
         binary_user_reader.next().unwrap();
@@ -60,11 +60,11 @@ impl Decoder for GraphNodeDTO {
 
         binary_user_reader.next().unwrap();
         let binding = binary_user_reader.read_string().unwrap();
-        let address = String::from(binding.text());
+        let address = binding.text();
 
-        GraphNodeDTO {
+        GraphNodeDTO::new(
             address,
-        }
+        )
     }
 }
 
@@ -85,7 +85,7 @@ mod tests {
     #[test]
     fn reader_correctly_read_encoded_graph_node() {
         const ADDRESS: &str = "0.0.0.0:0000";
-        let graph_node = GraphNodeDTO::new(ADDRESS.to_owned());
+        let graph_node = GraphNodeDTO::new(ADDRESS);
         let mut binary_user_reader = ReaderBuilder::new().build(graph_node.encode()).unwrap();
 
         assert_eq!(StreamItem::Value(IonType::Struct), binary_user_reader.next().unwrap());
@@ -100,7 +100,7 @@ mod tests {
     #[ignore]
     fn endec_graph_node() {
         const ADDRESS: &str = "0.0.0.0:0000";
-        let graph_node = GraphNodeDTO::new(ADDRESS.to_owned());
-        assert_eq!(graph_node, GraphNodeDTO::decode(graph_node.encode()));
+        let graph_node = GraphNodeDTO::new(ADDRESS);
+        assert_eq!(graph_node, GraphNodeDTO::decode(&graph_node.encode()));
     }
 }
