@@ -6,6 +6,7 @@ use threadpool::ThreadPool;
 use net_core::capture;
 use net_core::layer::NetComponent;
 use net_core::transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
+use net_core::transport::zmq::contexts::dealer::DealerContext;
 
 use crate::codec::Codec;
 use crate::config::Config;
@@ -34,9 +35,9 @@ impl NetComponent for Capture {
             .buffer_size(self.config.capture.buffer_size)
             .open()
             .unwrap();
-        let zmq_context = zmq::Context::new();
+        let zmq_context = DealerContext::default();
         self.pool.execute(move || {
-            let client = ConnectorZmqDealerBuilder::new(zmq_context.clone())
+            let client = ConnectorZmqDealerBuilder::new(&zmq_context)
                 .with_endpoint(self.config.agent_connector.addr)
                 .with_handler(Arc::new(DummyCommand))
                 .build()

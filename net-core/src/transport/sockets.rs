@@ -1,6 +1,11 @@
 use std::num::TryFromIntError;
 use std::os::unix::io::RawFd;
 
+pub trait Context {
+    type S;
+    fn create_socket(&self) -> Self::S;
+}
+
 pub trait Handler {
     fn handle(&self, receiver: &dyn Receiver, sender: &dyn Sender);
 }

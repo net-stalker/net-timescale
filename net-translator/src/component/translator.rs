@@ -11,6 +11,7 @@ use net_core::transport::{
 use net_core::transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
 use net_core::transport::polling::nng::NngPoller;
 use net_core::transport::polling::zmq::ZmqPoller;
+use net_core::transport::zmq::contexts::dealer::DealerContext;
 
 use crate::command::decoder::DecoderCommand;
 use crate::command::dispatcher::TranslatorDispatcher;
@@ -34,11 +35,11 @@ const DECODER: &'static str = "inproc://decoder";
 impl NetComponent for Translator {
     fn run(self) {
         log::info!("Run component");
-        let context = zmq::Context::new();
+        let context = DealerContext::default();
         let context_clone = context.clone();
         self.pool.execute(move || {
             // build timescale command
-            let timescale = ConnectorZmqDealerBuilder::new(context_clone.clone())
+            let timescale = ConnectorZmqDealerBuilder::new(&context_clone)
                 .with_endpoint(self.config.translator_endpoint.addr)
                 .with_handler(Arc::new(DummyCommand))
                 .build()
@@ -83,7 +84,7 @@ impl NetComponent for Translator {
                 .into_inner();
 
             let dispatcher_command = TranslatorDispatcher { consumer };
-            let dispatcher = ConnectorZmqDealerBuilder::new(context_clone.clone())
+            let dispatcher = ConnectorZmqDealerBuilder::new(&context_clone)
                 .with_endpoint(self.config.translator_connector.addr)
                 .with_handler(Arc::new(dispatcher_command))
                 .build()

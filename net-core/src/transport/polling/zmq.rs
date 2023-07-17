@@ -43,6 +43,7 @@ mod tests {
     use crate::transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
     use crate::transport::polling::zmq::ZmqPoller;
     use crate::transport::sockets::{Handler, Receiver, Sender};
+    use crate::transport::zmq::contexts::dealer::DealerContext;
 
     pub const SERVER_URL: &'static str = "inproc://test/server";
 
@@ -62,8 +63,8 @@ mod tests {
             assert_eq!(msg, "from client".as_bytes());
         }
     }
-    fn run_server_zmq(context: zmq::Context) {
-        let server = ConnectorZmqDealerBuilder::new(context)
+    fn run_server_zmq(context: DealerContext) {
+        let server = ConnectorZmqDealerBuilder::new(&context)
             .with_endpoint(SERVER_URL.to_string())
             .with_handler(Arc::new(ServerCommand))
             .build()
@@ -71,8 +72,8 @@ mod tests {
             .into_inner();
         server.send("from server".as_bytes());
     }
-    fn run_client_zmq(context: zmq::Context) {
-        let client = ConnectorZmqDealerBuilder::new(context)
+    fn run_client_zmq(context: DealerContext) {
+        let client = ConnectorZmqDealerBuilder::new(&context)
             .with_endpoint(SERVER_URL.to_string())
             .with_handler(Arc::new(ClientCommand))
             .build()
@@ -82,9 +83,9 @@ mod tests {
     }
     #[test]
     fn zmq_poller_server_test() {
-        let zmq_context = zmq::Context::new();
+        let zmq_context = DealerContext::default();
         let clients_count = 3;
-        let server = ConnectorZmqDealerBuilder::new(zmq_context.clone())
+        let server = ConnectorZmqDealerBuilder::new(&zmq_context.clone())
             .with_endpoint(SERVER_URL.to_string())
             .with_handler(Arc::new(ServerCommand))
             .build()
@@ -107,12 +108,12 @@ mod tests {
     }
     #[test]
     fn zmq_poller_client_test() {
-        let zmq_context = zmq::Context::new();
+        let zmq_context = DealerContext::default();
         let context_clone = zmq_context.clone();
         let server = std::thread::spawn(move || {
             run_server_zmq(context_clone);
         });
-        let client = ConnectorZmqDealerBuilder::new(zmq_context)
+        let client = ConnectorZmqDealerBuilder::new(&zmq_context)
             .with_endpoint(SERVER_URL.to_string())
             .with_handler(Arc::new(ClientCommand))
             .build()

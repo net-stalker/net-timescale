@@ -10,6 +10,7 @@ use net_core::transport::{
 use net_core::transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
 use net_core::transport::polling::nng::NngPoller;
 use net_core::transport::polling::zmq::ZmqPoller;
+use net_core::transport::zmq::contexts::dealer::DealerContext;
 
 use crate::command::{agent::AgentCommand, timescale_router_handler::TimescaleRouter};
 use crate::command::ws_server::WsServerCommand;
@@ -46,7 +47,7 @@ impl NetComponent for Hub {
         self.pool.execute(move || {
             ws_server_command_clone.poll(-1);
         });
-        let context = zmq::Context::new();
+        let context = DealerContext::default();
         let context_clone = context.clone();
         self.pool.execute(move || {
             let ws_producer = ConnectorNNG::builder()
@@ -57,7 +58,7 @@ impl NetComponent for Hub {
                 .bind()
                 .into_inner();
 
-            let timescale = ConnectorZmqDealerBuilder::new(context_clone)
+            let timescale = ConnectorZmqDealerBuilder::new(&context_clone)
                 .with_endpoint("tcp://0.0.0.0:5557".to_string())
                 .with_handler(Arc::new(DummyCommand))
                 .build()
@@ -86,7 +87,7 @@ impl NetComponent for Hub {
                 .build()
                 .connect()
                 .into_inner();
-            let timescale_router = ConnectorZmqDealerBuilder::new(context_clone.clone())
+            let timescale_router = ConnectorZmqDealerBuilder::new(&context_clone)
                 .with_handler(Arc::new(TimescaleRouter {consumer: ws_consumer}))
                 .with_endpoint(self.config.timescale_router.addr)
                 .build()
@@ -98,7 +99,7 @@ impl NetComponent for Hub {
                 .poll(-1);
         });
         self.pool.execute(move || {
-            let translator = ConnectorZmqDealerBuilder::new(context.clone())
+            let translator = ConnectorZmqDealerBuilder::new(&context)
                 .with_endpoint(self.config.translator_gateway.addr)
                 .with_handler(Arc::new(TranslatorCommand))
                 .build()
@@ -107,7 +108,7 @@ impl NetComponent for Hub {
 
             let agent_command = AgentCommand { translator };
 
-            let agent = ConnectorZmqDealerBuilder::new(context.clone())
+            let agent = ConnectorZmqDealerBuilder::new(&context)
                 .with_endpoint(self.config.agent_gateway.addr)
                 .with_handler(Arc::new(agent_command))
                 .build()
