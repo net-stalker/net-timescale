@@ -1,17 +1,17 @@
 use std::env;
 use std::sync::Arc;
-use net_core::transport::connector_nng_pub_sub::ConnectorNNGPubSub;
 use net_core::transport::dummy_command::DummyCommand;
 use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 
-use net_core::transport::{
-    connector_nng::{ConnectorNNG, Proto}
-};
 use net_core::transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
-use net_core::transport::polling::nng::NngPoller;
 use net_core::transport::polling::zmq::ZmqPoller;
+use net_core::transport::sockets::Context;
+use net_core::transport::zmq::builders::publisher::ConnectorZmqPublisherBuilder;
+use net_core::transport::zmq::builders::subscriber::ConnectorZmqSubscriberBuilder;
 use net_core::transport::zmq::contexts::dealer::DealerContext;
+use net_core::transport::zmq::contexts::publisher::PublisherContext;
+use net_core::transport::zmq::contexts::subscriber::SubscriberContext;
 
 use crate::command::decoder::DecoderCommand;
 use crate::command::dispatcher::TranslatorDispatcher;
@@ -29,62 +29,62 @@ impl Translator {
     }
 }
 
-const DISPATCHER: &'static str = "inproc://dispatcher";
-const DECODER: &'static str = "inproc://decoder";
+const DISPATCHER: &'static str = "inproc://translator/dispatcher";
+const DECODER: &'static str = "inproc://translator/decoder";
 
 impl NetComponent for Translator {
     fn run(self) {
         log::info!("Run component");
-        let context = DealerContext::default();
-        let context_clone = context.clone();
+        let dealer_context = DealerContext::default();
+        let dealer_context_clone = dealer_context.clone();
+        let sub_context = SubscriberContext::default();
+        let pub_context = PublisherContext::new(sub_context.get_context());
         self.pool.execute(move || {
             // build timescale command
-            let timescale = ConnectorZmqDealerBuilder::new(&context_clone)
+            let timescale = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
                 .with_endpoint(self.config.translator_endpoint.addr)
                 .with_handler(Arc::new(DummyCommand))
                 .build()
                 .connect()
                 .into_inner();
 
-            let db_command = ConnectorNNGPubSub::builder()
+            let db_command = ConnectorZmqSubscriberBuilder::new(&sub_context)
                 .with_endpoint(DECODER.to_owned())
-                .with_handler(TimescaleCommand { consumer: timescale })
-                .build_subscriber()
-                .connect()
-                .into_inner();
-
-            let decoder_consumer = ConnectorNNGPubSub::builder()
-                .with_endpoint(DECODER.to_owned())
-                .with_handler(DummyCommand)
-                .build_publisher()
-                .bind()
-                .into_inner();
-
-            let decoder = ConnectorNNG::builder()
-                .with_endpoint(DISPATCHER.to_owned())
-                .with_handler(DecoderCommand { consumer: decoder_consumer })
-                .with_proto(Proto::Pull)
+                .with_handler(Arc::new(TimescaleCommand { consumer: timescale }))
                 .build()
                 .connect()
                 .into_inner();
 
-            NngPoller::new()
+            let decoder_consumer = ConnectorZmqPublisherBuilder::new(&pub_context)
+                .with_endpoint(DECODER.to_owned())
+                .with_handler(Arc::new(DummyCommand))
+                .build()
+                .bind()
+                .into_inner();
+
+            let decoder = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
+                .with_endpoint(DISPATCHER.to_owned())
+                .with_handler(Arc::new(DecoderCommand { consumer: decoder_consumer }))
+                .build()
+                .connect()
+                .into_inner();
+
+            ZmqPoller::new()
                 .add(db_command)
                 .add(decoder)
                 .poll(-1);
         });
-        let context_clone = context.clone();
+        let dealer_context_clone = dealer_context.clone();
         self.pool.execute(move || {
-            let consumer = ConnectorNNG::builder()
+            let consumer = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
                 .with_endpoint(DISPATCHER.to_owned())
-                .with_handler(DummyCommand)
-                .with_proto(Proto::Push)
+                .with_handler(Arc::new(DummyCommand))
                 .build()
                 .bind()
                 .into_inner();
 
             let dispatcher_command = TranslatorDispatcher { consumer };
-            let dispatcher = ConnectorZmqDealerBuilder::new(&context_clone)
+            let dispatcher = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
                 .with_endpoint(self.config.translator_connector.addr)
                 .with_handler(Arc::new(dispatcher_command))
                 .build()

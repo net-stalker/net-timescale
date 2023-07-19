@@ -1,15 +1,25 @@
 use std::sync::Arc;
-use crate::transport::sockets::Handler;
-use crate::transport::zmq::connectors::publisher::PubConnectorZmq;
+use crate::{
+    transport::{
+        sockets::{
+            Handler,
+            Context,
+        },
+        zmq::{
+            connectors::publisher::PubConnectorZmq,
+            contexts::publisher::PublisherContext,
+        }
+    }
+};
 
-pub struct ConnectorZmqPublisherBuilder<HANDLER: Handler> {
-    context: zmq::Context,
+pub struct ConnectorZmqPublisherBuilder<'a, HANDLER: Handler> {
+    context: &'a PublisherContext,
     endpoint: Option<String>,
     handler: Option<Arc<HANDLER>>,
 }
 
-impl<HANDLER: Handler> ConnectorZmqPublisherBuilder<HANDLER> {
-    pub fn new(context: zmq::Context) -> Self {
+impl<'a, HANDLER: Handler> ConnectorZmqPublisherBuilder<'a, HANDLER> {
+    pub fn new(context: &'a PublisherContext) -> Self {
         ConnectorZmqPublisherBuilder {
             context,
             endpoint: None,
@@ -25,7 +35,7 @@ impl<HANDLER: Handler> ConnectorZmqPublisherBuilder<HANDLER> {
         self
     }
     pub fn build(self) -> PubConnectorZmq<HANDLER> {
-        let socket = self.context.socket(zmq::PUB).unwrap();
+        let socket = self.context.create_socket();
         PubConnectorZmq::new(
             self.endpoint.as_ref().unwrap().to_string(),
             self.handler.as_ref().unwrap().clone(),

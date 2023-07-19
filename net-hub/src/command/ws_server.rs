@@ -71,7 +71,17 @@ where S: Sender
                                 "received a query from client #{}: {:?}",
                                 client_id, data
                             );
-                            self.consumer.send(data.as_slice());
+                            let envelope = Envelope::decode(data.as_slice());
+                            match envelope.get_type() {
+                                "network_graph" => {
+                                    // TODO: add some logs here
+                                    self.send(data.to_owned());
+                                },
+                                _ => {
+                                    log::info!("msg type {}", envelope.get_type());
+                                    self.consumer.send(data.as_slice());
+                                }
+                            }
                         },
                         Message::Text(msg) => {
                             log::debug!(
@@ -87,19 +97,5 @@ where S: Sender
     }
     pub fn into_inner(mut self) -> Arc<Self> {
         Arc::new(self)
-    }
-}
-
-impl<S> Handler for WsServerCommand<S>
-where S: Sender
-{
-    fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
-        let data = receiver.recv();
-        // let formatted_string = match String::from_utf8(data) {
-        //     Ok(msg) => msg,
-        //     Err(_) => "error while parsing the msg".to_string()
-        // };
-        log::debug!("received from timescale {:?}", data);
-        self.send(data);
     }
 }

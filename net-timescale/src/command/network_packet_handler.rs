@@ -41,6 +41,5 @@ impl<T> Handler for NetworkPacketHandler<T>
                 log::error!("{}", error);
             }
         };
-        self.result_receiver.send("packets have been added".as_bytes());
     }
 }

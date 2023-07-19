@@ -3,13 +3,13 @@ use crate::transport::sockets::{Handler, Context};
 use crate::transport::zmq::connectors::dealer::DealerConnectorZmq;
 
 pub struct ConnectorZmqDealerBuilder<'a, HANDLER: Handler> {
-    context: &'a dyn Context<S=zmq::Socket>,
+    context: &'a dyn Context<S = zmq::Socket, C = zmq::Context>,
     endpoint: Option<String>,
     handler: Option<Arc<HANDLER>>,
 }
 
 impl<'a, HANDLER: Handler> ConnectorZmqDealerBuilder<'a, HANDLER> {
-    pub fn new(context: &'a dyn Context<S=zmq::Socket>) -> Self {
+    pub fn new(context: &'a dyn Context<S = zmq::Socket, C = zmq::Context>) -> Self {
         ConnectorZmqDealerBuilder {
             context,
             endpoint: None,

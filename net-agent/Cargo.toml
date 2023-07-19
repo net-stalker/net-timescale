@@ -46,4 +46,3 @@ directories = { workspace = true }
 config = { workspace = true }
 serde = { workspace = true }
 toml = { workspace = true }
-zmq = "0.10.0"

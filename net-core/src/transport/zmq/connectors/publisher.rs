@@ -88,9 +88,11 @@ mod tests {
     use std::time::Duration;
     use threadpool::ThreadPool;
     use crate::transport::polling::zmq::ZmqPoller;
-    use crate::transport::sockets::{Handler, Pub, Receiver, Sender};
+    use crate::transport::sockets::{Context, Handler, Pub, Receiver, Sender};
     use crate::transport::zmq::builders::publisher::ConnectorZmqPublisherBuilder;
     use crate::transport::zmq::builders::subscriber::ConnectorZmqSubscriberBuilder;
+    use crate::transport::zmq::contexts::publisher::PublisherContext;
+    use crate::transport::zmq::contexts::subscriber::SubscriberContext;
 
     pub const SERVER_URL: &str = "inproc://test/pub-sub/server";
 
@@ -116,11 +118,11 @@ mod tests {
     impl Handler for ServerCommand {
         fn handle(&self, _receiver: &dyn Receiver, _sender: &dyn Sender) { }
     }
-    fn spawn_clients_topic1(context: zmq::Context, count: i32) {
+    fn spawn_clients_topic1(context: &SubscriberContext, count: i32) {
         let mut poller = ZmqPoller::new();
         for _ in 0..count {
             println!("spawning topic1");
-            let client = ConnectorZmqSubscriberBuilder::new(context.clone())
+            let client = ConnectorZmqSubscriberBuilder::new(&context)
                 .with_handler(Arc::new(ClientCommandTopic1))
                 .with_endpoint(SERVER_URL.to_string())
                 .with_topic("topic1".as_bytes().to_owned())
@@ -131,11 +133,11 @@ mod tests {
         }
         poller.poll(count);
     }
-    fn spawn_clients_topic2(context: zmq::Context, count: i32) {
+    fn spawn_clients_topic2(context: &SubscriberContext, count: i32) {
         let mut poller = ZmqPoller::new();
         for _ in 0..count {
             println!("spawning topic2");
-            let client = ConnectorZmqSubscriberBuilder::new(context.clone())
+            let client = ConnectorZmqSubscriberBuilder::new(&context)
                 .with_handler(Arc::new(ClientCommandTopic2))
                 .with_endpoint(SERVER_URL.to_string())
                 .with_topic("topic2".as_bytes().to_owned())
@@ -151,19 +153,19 @@ mod tests {
         const CLIENTS_TOPIC1_COUNT: i32 = 3;
         const CLIENTS_TOPIC2_COUNT: i32 = 3;
         let thread_pool = ThreadPool::with_name("pub/sub zmq test".to_string(), 2);
-        let zmq_context = zmq::Context::new();
+        let pub_context = PublisherContext::default();
+        let sub_context = SubscriberContext::new(pub_context.get_context());
         // spawn clients here
         println!("test_pub");
-        let context_clone = zmq_context.clone();
+        let sub_context_clone = sub_context.clone();
         thread_pool.execute(move || {
-            spawn_clients_topic1(context_clone, CLIENTS_TOPIC1_COUNT);
+            spawn_clients_topic1(&sub_context_clone, CLIENTS_TOPIC1_COUNT);
         });
-        let context_clone = zmq_context.clone();
         thread_pool.execute(move || {
-            spawn_clients_topic2(context_clone, CLIENTS_TOPIC2_COUNT);
+            spawn_clients_topic2(&sub_context, CLIENTS_TOPIC2_COUNT);
         });
         thread::sleep(Duration::from_millis(500));
-        let server = ConnectorZmqPublisherBuilder::new(zmq_context.clone())
+        let server = ConnectorZmqPublisherBuilder::new(&pub_context)
             .with_handler(Arc::new(ServerCommand))
             .with_endpoint(SERVER_URL.to_string())
             .build()

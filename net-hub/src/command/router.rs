@@ -1,13 +1,13 @@
 use std::sync::Arc;
 use net_core::transport::sockets::{Handler, Receiver, Sender};
 
-pub struct TimescaleRouter<S>
+pub struct Router<S>
 where S: Sender
 {
     pub consumer: Arc<S>
 }
 
-impl<S> Handler for TimescaleRouter<S>
+impl<S> Handler for Router<S>
 where S: Sender
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {

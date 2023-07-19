@@ -3,7 +3,9 @@ use std::os::unix::io::RawFd;
 
 pub trait Context {
     type S;
+    type C;
     fn create_socket(&self) -> Self::S;
+    fn get_context(&self) -> Self::C;
 }
 
 pub trait Handler {

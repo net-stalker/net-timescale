@@ -1,16 +1,25 @@
 use std::sync::Arc;
-use crate::transport::sockets::Handler;
-use crate::transport::zmq::connectors::subscriber::SubConnectorZmq;
-
-pub struct ConnectorZmqSubscriberBuilder<HANDLER: Handler> {
-    context: zmq::Context,
+use crate::{
+    transport::{
+        sockets::{
+            Handler,
+            Context,
+        },
+        zmq::{
+            connectors::subscriber::SubConnectorZmq,
+            contexts::subscriber::SubscriberContext,
+        }
+    }
+};
+pub struct ConnectorZmqSubscriberBuilder<'a, HANDLER: Handler> {
+    context: &'a SubscriberContext,
     endpoint: Option<String>,
     handler: Option<Arc<HANDLER>>,
     topic: Vec<u8>,
 }
 
-impl<HANDLER: Handler> ConnectorZmqSubscriberBuilder<HANDLER> {
-    pub fn new(context: zmq::Context) -> Self {
+impl<'a, HANDLER: Handler> ConnectorZmqSubscriberBuilder<'a, HANDLER> {
+    pub fn new(context: &'a SubscriberContext) -> Self {
         ConnectorZmqSubscriberBuilder {
             context,
             endpoint: None,
@@ -31,7 +40,7 @@ impl<HANDLER: Handler> ConnectorZmqSubscriberBuilder<HANDLER> {
         self
     }
     pub fn build(self) -> SubConnectorZmq<HANDLER> {
-        let socket = self.context.socket(zmq::SUB).unwrap();
+        let socket = self.context.create_socket();
         socket.set_subscribe(self.topic.as_slice()).unwrap();
         SubConnectorZmq::new(
             self.endpoint.as_ref().unwrap().to_string(),
