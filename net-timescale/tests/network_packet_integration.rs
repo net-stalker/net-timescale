@@ -34,8 +34,7 @@ fn integration_test_insert() {
         "test": "test",
     });
     let binary_json = JsonParser::get_vec(json_data.clone());
-    let timestamp = Utc.datetime_from_str("2020-01-01 08:56:00 +00:00", "%Y-%m-%d %H:%M:%S %z").unwrap();
-    let timestamp = timestamp.timestamp_millis();
+    let timestamp = 1688714981480935000;
     let network_packet_dto = NetworkPacketDTO::new(
         timestamp,
         "src",
@@ -52,7 +51,7 @@ fn integration_test_insert() {
         .unwrap();
     assert_eq!(query_result.len(), 1);
     let query_result = query_result.first().unwrap();
-    assert_eq!(query_result.frame_time, Utc.timestamp_millis_opt(timestamp).unwrap());
+    assert_eq!(query_result.frame_time, Utc.timestamp_nanos(timestamp));
     assert_eq!(query_result.src_addr, "src");
     assert_eq!(query_result.dst_addr, "dst");
     assert_eq!(query_result.binary_data, json_data);

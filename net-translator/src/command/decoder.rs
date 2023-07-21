@@ -40,8 +40,7 @@ impl<S> Handler for DecoderCommand<S>
         let filtered_value_json = JsonPcapParser::filter_source_layer(&json_bytes);
         let first_json_value = JsonParser::first(&filtered_value_json).unwrap();
         let layered_json = JsonPcapParser::split_into_layers(first_json_value);
-
-        let frame_time = JsonPcapParser::find_frame_time(&json_bytes);
+        let frame_time = JsonPcapParser::find_utc_timestamp_nanos(&json_bytes);
         let src_addr = match JsonPcapParser::extract_src_addr_l3(&layered_json) {
             Some(src) => src,
             None => {
@@ -59,7 +58,7 @@ impl<S> Handler for DecoderCommand<S>
         let binary_json = JsonParser::get_vec(layered_json);
 
         let net_packet = NetworkPacketDTO::new(
-            frame_time.timestamp_millis(),
+            frame_time,
             &src_addr,
             &dst_addr,
             &binary_json);

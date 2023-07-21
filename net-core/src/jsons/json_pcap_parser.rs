@@ -6,7 +6,8 @@ use crate::jsons::json_parser::JsonParser;
 
 pub const PATH_SOURCE_LAYER: &str = "$.._source.layers";
 pub const PATH_FRAME_TIME: &str = "$..frame['frame.time']";
-const L3_PATH: &'static str = "/l3";
+pub const PATH_FRAME_TIME_EPOCH: &str = "$..frame['frame.time_epoch']";
+const L3_PATH: &str = "/l3";
 
 pub struct JsonPcapParser;
 
@@ -17,7 +18,17 @@ impl JsonPcapParser {
 
     pub fn find_frame_time(json_binary: &Vec<u8>) -> DateTime<Utc> {
         let value = JsonParser::find(json_binary, PATH_FRAME_TIME);
-        JsonParser::get_timestamp_with_tz(value)
+        JsonParser::get_utc_frame_time(value)
+    }
+
+    pub fn find_utc_timestamp_millis(json_binary: &Vec<u8>) -> i64 {
+        let value = JsonParser::find(json_binary, PATH_FRAME_TIME_EPOCH);
+        JsonParser::get_utc_timestamp_millis(value)
+    }
+
+    pub fn find_utc_timestamp_nanos(json_binary: &Vec<u8>) -> i64 {
+        let value = JsonParser::find(json_binary, PATH_FRAME_TIME_EPOCH);
+        JsonParser::get_utc_timestamp_nanos(value)
     }
 
     pub fn split_into_layers(value_json: &Value) -> Value {
@@ -141,6 +152,36 @@ mod tests {
         let result = JsonPcapParser::find_frame_time(&pcap_buffer);
 
         assert_eq!(result.to_string(), "2013-09-18 04:49:07 UTC");
+    }
+
+    #[test]
+    fn expected_extract_utc_timestamp_millis() {
+        const EXPECTED_TIME: i64 = 1379479747000;
+        let pcap_buffer =
+            Files::read_vector(test_resources!("captures/arp_layer_extracted_pretty.json"));
+        let result = JsonPcapParser::find_utc_timestamp_millis(&pcap_buffer);
+
+        assert_eq!(EXPECTED_TIME, result);
+    }
+
+    #[test]
+    fn expected_extract_utc_timestamp_nanos() {
+        const EXPECTED_TIME: i64 = 1379479747000000000;
+        let pcap_buffer =
+            Files::read_vector(test_resources!("captures/arp_layer_extracted_pretty.json"));
+        let result = JsonPcapParser::find_utc_timestamp_nanos(&pcap_buffer);
+
+        assert_eq!(EXPECTED_TIME, result);
+    }
+
+    #[test]
+    fn expected_extract_utc_timestamp_nanos_2() {
+        const EXPECTED_TIME: i64 = 1688714981480935000;
+        let pcap_buffer =
+            Files::read_vector(test_resources!("captures/epoch_frame_time.json"));
+        let result = JsonPcapParser::find_utc_timestamp_nanos(&pcap_buffer);
+
+        assert_eq!(EXPECTED_TIME, result);
     }
 
     #[test]
