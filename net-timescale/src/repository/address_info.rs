@@ -14,13 +14,19 @@ pub fn select_address_info_by_date_cut(con: &mut PgConnection, start_date: DateT
 {
     let query = sql_query(
         // TODO: this query isn't very efficient because we have to do 2 sub-queries.
-    "SELECT distinct src_addr as addr
-        FROM captured_traffic
-        WHERE frame_time >= $1 AND frame_time <= $2
-        union
-        SELECT distinct dst_addr as addr
-        FROM captured_traffic
-        WHERE frame_time >= $1 AND frame_time <= $2;"
+    "
+            SELECT addr
+            FROM (
+                SELECT DISTINCT src_addr AS addr
+                FROM address_pair_aggregate
+                WHERE bucket >= $1 AND bucket < $2
+                UNION
+                SELECT distinct dst_addr as addr
+                FROM address_pair_aggregate
+                WHERE bucket >= $1 AND bucket < $2
+            ) AS info
+            ORDER BY addr;
+        "
     );
     query
         .bind::<Timestamptz, _>(start_date)

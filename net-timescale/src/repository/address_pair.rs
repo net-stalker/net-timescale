@@ -14,12 +14,13 @@ pub fn select_address_pairs_by_date_cut(con: &mut PgConnection, start_date: Date
                                         -> Vec<AddressPair>
 {
     let query = sql_query(
-        "SELECT \
-            src_addr,
-            dst_addr
-        FROM captured_traffic
-        WHERE frame_time >= $1 AND frame_time <= $2
-        GROUP BY src_addr, dst_addr;"
+        "
+            SELECT src_addr, dst_addr
+            FROM address_pair_aggregate
+            WHERE bucket >= $1 AND bucket < $2
+            GROUP BY src_addr, dst_addr
+            ORDER BY src_addr, dst_addr;
+        "
     );
     query
         .bind::<Timestamptz, _>(start_date)

@@ -22,6 +22,7 @@ use crate::command::{
     network_graph_handler::NetworkGraphHandler,
 };
 use crate::config::Config;
+use crate::repository::continuous_aggregate;
 
 pub struct Timescale {
     thread_pool: ThreadPool,
@@ -32,12 +33,14 @@ pub struct Timescale {
 impl Timescale {
     pub fn new(thread_pool: ThreadPool, config: Config) -> Self {
         let connection_pool = Timescale::configure_connection_pool(&config);
+        Timescale::create_continuous_aggregate(connection_pool.get().unwrap().deref_mut());
         Self {
             thread_pool,
             connection_pool,
             config
         }
     }
+
     fn configure_connection_pool(config: &Config) -> Pool<ConnectionManager<PgConnection>> {
         let manager = ConnectionManager::<PgConnection>::new(config.connection_url.url.clone());
         Pool::builder()
@@ -45,6 +48,25 @@ impl Timescale {
             .test_on_check_out(true)
             .build(manager)
             .expect("could not build connection pool")
+    }
+
+    fn create_continuous_aggregate(con: &mut PgConnection) {
+        match continuous_aggregate::create_address_pair_aggregate(con) {
+            Ok(_) => {
+                log::info!("successfully created address pair continuous aggregate");
+            },
+            Err(err) => {
+                log::debug!("couldn't create an address pair continuous aggregate: {}", err);
+            }
+        }
+        match continuous_aggregate::add_refresh_policy_for_address_pair_aggregate(con) {
+            Ok(_) => {
+                log::info!("successfully created a refresh policy for address pair continuous aggregate");
+            },
+            Err(err) => {
+                log::debug!("couldn't create a refresh policy for address pair continuous aggregate: {}", err);
+            }
+        }
     }
 }
 // TODO: move this to the configuration in future
