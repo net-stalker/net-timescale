@@ -1,5 +1,5 @@
 [connection_url]
-url = "postgres://postgres:PsWDgxZb@localhost/?sslmode=require&sslcert=/.ssl/client.crt&sslkey=/.ssl/client.key"
+url = "postgres://postgres:PsWDgxZb@localhost/?sslmode=require&sslcert=net-timescale/src/.ssl/client.crt&sslkey=net-timescale/src/.ssl/client.key"
 
 [max_connection_size]
 size = "10"

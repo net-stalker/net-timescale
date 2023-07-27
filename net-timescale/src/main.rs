@@ -3,15 +3,17 @@ use threadpool::ThreadPool;
 use net_core::layer::NetComponent;
 use net_timescale::component::timescale::Timescale;
 use net_timescale::config::Config;
+use sqlx::postgres::PgPoolOptions;
 
-fn main() {
+#[async_std::main]
+async fn main() {
     init_log();
     info!("Run module");
 
     let config = Config::builder().build().expect("read config error");
     let thread_pool = ThreadPool::with_name("worker".into(), 5);
 
-    Timescale::new(thread_pool.clone(), config).run();
+    Timescale::new(thread_pool.clone(), config).await.run();
 
     thread_pool.join();
 }

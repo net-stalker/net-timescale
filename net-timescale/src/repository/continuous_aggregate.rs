@@ -1,7 +1,10 @@
-use diesel::{PgConnection, QueryableByName, QueryResult, RunQueryDsl, sql_query};
+use sqlx::{Acquire, Database, Error, Pool, Postgres};
+use sqlx::postgres::{PgConnection, PgQueryResult};
 
-pub fn create_address_pair_aggregate(con: &mut PgConnection) -> QueryResult<usize> {
-    sql_query("
+
+pub async fn create_address_pair_aggregate<'e>(con: &'e Pool<Postgres>)
+    -> Result<PgQueryResult, Error> {
+    sqlx::query("
         CREATE MATERIALIZED VIEW address_pair_aggregate
         WITH (timescaledb.continuous) AS
         SELECT
@@ -12,9 +15,11 @@ pub fn create_address_pair_aggregate(con: &mut PgConnection) -> QueryResult<usiz
         GROUP BY bucket, src_addr, dst_addr;
     ")
         .execute(con)
+        .await
 }
-pub fn add_refresh_policy_for_address_pair_aggregate(con: &mut PgConnection) -> QueryResult<usize> {
-    sql_query(
+pub async fn add_refresh_policy_for_address_pair_aggregate<'e>(con: &'e Pool<Postgres>)
+    -> Result<PgQueryResult, Error> {
+    sqlx::query(
         "SELECT add_continuous_aggregate_policy(
 	    'address_pair_aggregate',
 	    start_offset => NULL,
@@ -22,4 +27,5 @@ pub fn add_refresh_policy_for_address_pair_aggregate(con: &mut PgConnection) -> 
 	    schedule_interval => INTERVAL '1 minute');"
     )
         .execute(con)
+        .await
 }

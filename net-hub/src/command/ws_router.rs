@@ -39,8 +39,7 @@ impl Handler for WsRouter {
     fn handle(&self, receiver: &dyn Receiver, sender: &dyn Sender) {
         let data = receiver.recv();
         let envelope = Envelope::decode(data.as_slice());
-        let network_graph = NetworkGraphDTO::decode(envelope.get_data());
-        log::info!("network_graph in ws_router {:?}", network_graph);
+        log::debug!("msg {} in ws_router", envelope.get_type());
         self.send(data);
     }
 }

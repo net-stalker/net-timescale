@@ -1,25 +1,33 @@
-use diesel::r2d2::{Pool, ConnectionManager, PooledConnection};
-use diesel::pg::PgConnection;
 use std::sync::{Arc, Mutex};
+use sqlx::{
+    postgres::PgPoolOptions,
+    Database,
+    Pool
+};
 
-
-pub struct PoolWrapper {
-    connection_pool: Arc<Mutex<Pool<ConnectionManager<PgConnection>>>>
+pub struct PoolWrapper<DB>
+where DB: Database
+{
+    connection_pool: Pool<DB>,
 }
-impl Clone for PoolWrapper {
+
+impl<DB> Clone for PoolWrapper<DB>
+where DB: Database
+{
     fn clone(&self) -> Self {
-        Self { connection_pool: self.connection_pool.clone() }
+        Self {
+            connection_pool: self.connection_pool.clone(),
+        }
     }
 }
-
-impl PoolWrapper {
-    pub fn new(connection_pool: Pool<ConnectionManager<PgConnection>>) -> Self {
-        PoolWrapper { connection_pool: Arc::new(Mutex::new(connection_pool)) }
+impl<DB> PoolWrapper<DB>
+where DB: Database
+{
+    pub fn new(connection_pool: Pool<DB>) -> Self {
+        PoolWrapper { connection_pool }
     }
-    pub fn get_connection(&self) -> PooledConnection<ConnectionManager<PgConnection>> {
-        self.connection_pool.lock()
-        .unwrap()
-        .get()
-        .unwrap()
+    pub fn into_inner(self) -> Arc<Self> { Arc::new(self) }
+    pub async fn get_connection(&self) -> &Pool<DB> {
+        &self.connection_pool
     }
 }

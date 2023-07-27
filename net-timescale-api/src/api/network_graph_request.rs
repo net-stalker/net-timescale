@@ -8,14 +8,14 @@ use net_proto_api::decoder_api::Decoder;
 
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct DateCutDTO {
+pub struct NetworkGraphRequest {
     start_date_time: i64,
     end_date_time: i64,
 }
 
-impl DateCutDTO {
+impl NetworkGraphRequest {
     pub fn new (start_date_time: i64, end_date_time: i64) -> Self {
-        DateCutDTO {
+        NetworkGraphRequest {
             start_date_time,
             end_date_time,
         }
@@ -30,7 +30,7 @@ impl DateCutDTO {
     }
 }
 
-impl Encoder for DateCutDTO {
+impl Encoder for NetworkGraphRequest {
     fn encode(&self) -> Vec<u8> {
         let buffer: Vec<u8> = Vec::new();
 
@@ -59,7 +59,7 @@ impl Encoder for DateCutDTO {
     }
 }
 
-impl Decoder for DateCutDTO {
+impl Decoder for NetworkGraphRequest {
     fn decode(data: &[u8]) -> Self {
 
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
@@ -72,7 +72,7 @@ impl Decoder for DateCutDTO {
         binary_user_reader.next().unwrap();
         let end_date_time = binary_user_reader.read_i64().unwrap();
 
-        DateCutDTO::new(
+        NetworkGraphRequest::new(
             start_date_time,
             end_date_time,
         )
@@ -90,15 +90,18 @@ mod tests {
     use net_proto_api::decoder_api::Decoder;
     use net_proto_api::encoder_api::Encoder;
 
-    use crate::api::date_cut::DateCutDTO;
+    use crate::api::network_graph_request::NetworkGraphRequest;
 
     #[test]
-    fn reader_correctly_read_encoded_date_cut() {
+    fn reader_correctly_read_encoded_ng_request() {
         const START_DATE_TIME: i64 = i64::MIN;
         const END_DATE_TIME: i64 = i64::MAX;
-        let time_interval = DateCutDTO::new(START_DATE_TIME, END_DATE_TIME);
+        let network_graph_request = NetworkGraphRequest::new(
+            START_DATE_TIME,
+            END_DATE_TIME,
+        );
         
-        let mut binary_user_reader = ReaderBuilder::new().build(time_interval.encode()).unwrap();
+        let mut binary_user_reader = ReaderBuilder::new().build(network_graph_request.encode()).unwrap();
 
         assert_eq!(StreamItem::Value(IonType::Struct), binary_user_reader.next().unwrap());
         binary_user_reader.step_in().unwrap();
@@ -113,11 +116,13 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
-    fn endec_date_cut() {
+    fn endec_ng_request() {
         const START_DATE_TIME: i64 = i64::MIN;
         const END_DATE_TIME: i64 = i64::MAX;
-        let time_interval = DateCutDTO::new(START_DATE_TIME, END_DATE_TIME);
-        assert_eq!(time_interval, DateCutDTO::decode(&time_interval.encode()));
+        let network_graph_request = NetworkGraphRequest::new(
+            START_DATE_TIME,
+            END_DATE_TIME,
+        );
+        assert_eq!(network_graph_request, NetworkGraphRequest::decode(&network_graph_request.encode()));
     }
 }

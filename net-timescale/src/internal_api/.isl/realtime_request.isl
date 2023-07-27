@@ -1,10 +1,10 @@
 schema_header::{}
 
 type::{
-    name: is_realtime,
+    name: realtime_request,
     type: struct,
     fields: {
-        is_realtime: bool,
+        connection_id: int,
     },
 }
 

@@ -1,7 +1,7 @@
 schema_header::{}
 
 type::{
-    name: date_cut,
+    name: network_graph_request,
     type: struct,
     fields: {
         start_date_time: int,

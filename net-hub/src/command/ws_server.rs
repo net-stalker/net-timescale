@@ -14,15 +14,16 @@ use chrono::{Utc, DateTime, TimeZone};
 use std::sync::atomic::AtomicBool;
 use net_proto_api::encoder_api::Encoder;
 use net_proto_api::envelope::envelope::Envelope;
-use net_timescale_api::api::date_cut::DateCutDTO;
+use net_timescale_api::api::network_graph_request::NetworkGraphRequest;
+use net_timescale_api::api::network_graph::network_graph::NetworkGraphDTO;
 
 pub struct WsServerCommand<S>
 where S: Sender
 {
     clients: Arc<RwLock<HashMap<u64, Responder>>>,
     event_hub: Option<EventHub>,
-    // TODO: for now consumer is unused. Is meant to be used for sending data to net-timescale
-    consumer: Arc<S>
+    consumer: Arc<S>,
+    graphs_history: Arc<RwLock<HashMap<u64, (DateTime<Utc>, NetworkGraphDTO)>>>,
 }
 impl<S> WsServerCommand<S>
 where S: Sender
@@ -31,11 +32,11 @@ where S: Sender
         WsServerCommand {
             clients: Arc::new(RwLock::new(HashMap::new())),
             event_hub: None,
-            consumer
+            consumer,
+            graphs_history: Arc::new(RwLock::new(HashMap::default())),
         }
     }
     pub fn bind(mut self, end_point: String) -> Self {
-        // TODO: changed ws server creation
         let listener = TcpListener::bind(end_point.as_str()).expect(
             format!("failed to bind web socket on address {}", end_point.as_str()).as_str()
         );
@@ -57,11 +58,11 @@ where S: Sender
         while counter != events_count {
             match self.event_hub.as_ref().unwrap().poll_event() {
                 Event::Connect(client_id, responder) => {
-                    log::info!("a client connected with id #{}", client_id);
+                    log::debug!("a client connected with id #{}", client_id);
                     self.clients.write().unwrap().insert(client_id, responder.clone());
                 }
                 Event::Disconnect(client_id) => {
-                    log::info!("client #{} disconnected.", client_id);
+                    log::debug!("client #{} disconnected.", client_id);
                     self.clients.write().unwrap().remove(&client_id);
                 }
                 Event::Message(client_id, message) => {
@@ -74,11 +75,43 @@ where S: Sender
                             let envelope = Envelope::decode(data.as_slice());
                             match envelope.get_type() {
                                 "network_graph" => {
-                                    // TODO: add some logs here
+                                    log::debug!("got network graph in ws_server");
                                     self.send(data.to_owned());
                                 },
+                                "NG_request" => {
+                                    let graph_request = NetworkGraphRequest::decode(envelope.get_data());
+                                    match graph_request.get_end_date_time() == 0 {
+                                        true => {
+                                            // TODO: change realtime requesting in net-explorer to make it work
+                                            log::debug!("adding {} to graph_history", client_id);
+                                            self.graphs_history
+                                                .write()
+                                                .unwrap()
+                                                .insert(
+                                                    client_id,
+                                                    (
+                                                        Utc.timestamp_millis_opt(graph_request.get_start_date_time()).unwrap(),
+                                                        NetworkGraphDTO::new(&[], &[])
+                                                    )
+                                                );
+                                        },
+                                        false => {
+                                            log::debug!("removing {} from client_id", client_id);
+                                            self.graphs_history
+                                                .write()
+                                                .unwrap()
+                                                .remove(
+                                                    &client_id
+                                                );
+                                        }
+                                    }
+                                    self.consumer.send(data.as_slice());
+                                },
+                                "notification" => {
+                                    log::debug!("notification has been received in ws_server");
+                                },
                                 _ => {
-                                    log::info!("msg type {}", envelope.get_type());
+                                    log::debug!("msg type {}", envelope.get_type());
                                     self.consumer.send(data.as_slice());
                                 }
                             }

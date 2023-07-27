@@ -1,19 +1,21 @@
 use chrono::{DateTime, Utc};
-use diesel::{PgConnection, QueryableByName, RunQueryDsl, sql_query};
-use diesel::sql_types::{Timestamptz, Text};
+use futures::stream::BoxStream;
+use sqlx::{Database, Error, Pool, Postgres};
+use sqlx::postgres::PgConnection;
 
-#[derive(QueryableByName, Debug)]
+#[derive(sqlx::FromRow, Debug)]
 pub struct AddressPair {
-    #[diesel(sql_type = Text)]
     pub src_addr: String,
-    #[diesel(sql_type = Text)]
     pub dst_addr: String,
 }
 
-pub fn select_address_pairs_by_date_cut(con: &mut PgConnection, start_date: DateTime<Utc>, end_date: DateTime<Utc>)
-                                        -> Vec<AddressPair>
+pub async fn select_address_pairs_by_date_cut<'e>(
+    con: &'e Pool<Postgres>,
+    start_date: DateTime<Utc>,
+    end_date: DateTime<Utc>
+) -> BoxStream<'e, Result<AddressPair, Error>>
 {
-    let query = sql_query(
+    sqlx::query_as::<_, AddressPair>(
         "
             SELECT src_addr, dst_addr
             FROM address_pair_aggregate
@@ -21,9 +23,8 @@ pub fn select_address_pairs_by_date_cut(con: &mut PgConnection, start_date: Date
             GROUP BY src_addr, dst_addr
             ORDER BY src_addr, dst_addr;
         "
-    );
-    query
-        .bind::<Timestamptz, _>(start_date)
-        .bind::<Timestamptz, _>(end_date)
-        .load::<AddressPair>(con).unwrap()
+    )
+        .bind(start_date)
+        .bind(end_date)
+        .fetch(con)
 }

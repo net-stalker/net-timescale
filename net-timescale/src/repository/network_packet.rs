@@ -1,14 +1,14 @@
 use chrono::{DateTime, TimeZone, Utc};
-use diesel::{PgConnection, QueryResult, RunQueryDsl, sql_query};
-use diesel::sql_types::{Timestamptz, Text, Jsonb};
+use sqlx::{Acquire, Database, Error, Pool, Postgres};
+use sqlx::postgres::{PgConnection, PgQueryResult};
 use net_timescale_api::api::network_packet::NetworkPacketDTO;
 
-
+#[derive(sqlx::FromRow, Debug)]
 pub struct NetworkPacket {
-    frame_time: DateTime<Utc>,
-    src_addr: String,
-    dst_addr: String,
-    binary_data: serde_json::Value,
+    pub frame_time: DateTime<Utc>,
+    pub src_addr: String,
+    pub dst_addr: String,
+    pub binary_data: serde_json::Value,
 }
 impl Into<NetworkPacket> for NetworkPacketDTO {
     fn into(self) -> NetworkPacket {
@@ -21,12 +21,15 @@ impl Into<NetworkPacket> for NetworkPacketDTO {
     }
 }
 
-pub fn insert_network_packet(con: &mut PgConnection, packet: NetworkPacket) -> QueryResult<usize> {
-    let query = sql_query("INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)");
-    query
-        .bind::<Timestamptz, _>(packet.frame_time)
-        .bind::<Text, _>(packet.src_addr)
-        .bind::<Text, _>(packet.dst_addr)
-        .bind::<Jsonb, _>(packet.binary_data)
+pub async fn insert_network_packet(
+    con: &Pool<Postgres>,
+    packet: NetworkPacket
+) -> Result<PgQueryResult, Error> {
+     sqlx::query("INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)")
+        .bind(packet.frame_time)
+        .bind(packet.src_addr)
+        .bind(packet.dst_addr)
+        .bind(packet.binary_data)
         .execute(con)
+        .await
 }

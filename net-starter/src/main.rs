@@ -1,5 +1,3 @@
-use diesel::PgConnection;
-use diesel::r2d2::{ConnectionManager, Pool};
 use log::info;
 use threadpool::ThreadPool;
 
@@ -9,8 +7,8 @@ use net_hub::component::hub::Hub;
 use net_timescale::component::timescale::Timescale;
 use net_translator::component::translator::Translator;
 
-
-fn main() {
+#[async_std::main]
+async fn main() {
     init_log();
     info!("Run module");
 
@@ -27,7 +25,7 @@ fn main() {
     Translator::new(thread_pool.clone(), config).run();
 
     let config = net_timescale::config::Config::builder().build().expect("read config error");
-    Timescale::new(thread_pool.clone(), config).run();
+    Timescale::new(thread_pool.clone(), config).await.run();
 
     thread_pool.join();
 }

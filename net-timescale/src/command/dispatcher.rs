@@ -5,6 +5,7 @@ use net_core::transport::{
 
 use net_proto_api::envelope::envelope::Envelope;
 use net_proto_api::decoder_api::Decoder;
+use net_proto_api::encoder_api::Encoder;
 
 pub struct CommandDispatcher<T>
 where T: Sender + Pub + ?Sized
@@ -25,6 +26,6 @@ where T: Sender + Pub + ?Sized
         let data = receiver.recv();
         let envelope = Envelope::decode(&data);
         self.consumer.set_topic(envelope.get_type().as_bytes());
-        self.consumer.send(envelope.get_data());
+        self.consumer.send(envelope.encode().as_slice());
     }
 }

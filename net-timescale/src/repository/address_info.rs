@@ -1,20 +1,24 @@
 use chrono::{DateTime, Utc};
-use diesel::{PgConnection, QueryableByName, RunQueryDsl, sql_query};
-use diesel::sql_types::{Timestamptz, Text};
+use sqlx::{Error, Pool, Postgres};
+use sqlx::postgres::PgConnection;
+use futures::stream::BoxStream;
 
-#[derive(QueryableByName, Debug)]
+
+#[derive(sqlx::FromRow, Debug)]
 pub struct AddressInfo {
-    #[diesel(sql_type = Text)]
     pub addr: String
     // may be expandable in future
 }
 
-pub fn select_address_info_by_date_cut(con: &mut PgConnection, start_date: DateTime<Utc>, end_date: DateTime<Utc>)
-                                        -> Vec<AddressInfo>
+pub async fn select_address_info_by_date_cut<'e>(
+    con: &'e Pool<Postgres>,
+    start_date: DateTime<Utc>,
+    end_date: DateTime<Utc>
+) -> BoxStream<'e, Result<AddressInfo, Error>>
 {
-    let query = sql_query(
-        // TODO: this query isn't very efficient because we have to do 2 sub-queries.
-    "
+    // TODO: this query isn't very efficient because we have to do 2 sub-queries.
+    sqlx::query_as::<_, AddressInfo>(
+        "
             SELECT addr
             FROM (
                 SELECT DISTINCT src_addr AS addr
@@ -27,9 +31,8 @@ pub fn select_address_info_by_date_cut(con: &mut PgConnection, start_date: DateT
             ) AS info
             ORDER BY addr;
         "
-    );
-    query
-        .bind::<Timestamptz, _>(start_date)
-        .bind::<Timestamptz, _>(end_date)
-        .load::<AddressInfo>(con).unwrap()
+    )
+        .bind(start_date)
+        .bind(end_date)
+        .fetch(con)
 }

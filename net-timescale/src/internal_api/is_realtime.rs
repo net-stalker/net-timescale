@@ -8,23 +8,23 @@ use net_proto_api::decoder_api::Decoder;
 
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct IsRealtimeDTO {
-    is_realtime: bool,
+pub struct RealtimeRequestDTO {
+    connection_id: i64,
 }
 
-impl IsRealtimeDTO {
-    pub fn new (is_realtime: bool) -> Self {
-        IsRealtimeDTO {
-            is_realtime,
+impl RealtimeRequestDTO {
+    pub fn new (connection_id: i64) -> Self {
+        RealtimeRequestDTO {
+            connection_id,
         }
     }
 
-    pub fn is_realtime (&self) -> bool {
-        self.is_realtime
+    pub fn get_connection_id (&self) -> i64 {
+        self.connection_id
     }
 }
 
-impl Encoder for IsRealtimeDTO {
+impl Encoder for RealtimeRequestDTO {
     fn encode(&self) -> Vec<u8> {
         let buffer: Vec<u8> = Vec::new();
 
@@ -40,8 +40,8 @@ impl Encoder for IsRealtimeDTO {
 
         writer.step_in(ion_rs::IonType::Struct).expect("Error while creating an ion struct");
         
-        writer.set_field_name("is_realtime");
-        writer.write_bool(self.is_realtime).unwrap();
+        writer.set_field_name("connection_id");
+        writer.write_i64(self.get_connection_id()).unwrap();
 
         writer.step_out().unwrap();
         writer.flush().unwrap();
@@ -50,7 +50,7 @@ impl Encoder for IsRealtimeDTO {
     }
 }
 
-impl Decoder for IsRealtimeDTO {
+impl Decoder for RealtimeRequestDTO {
     fn decode(data: &[u8]) -> Self {
 
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
@@ -58,10 +58,10 @@ impl Decoder for IsRealtimeDTO {
         binary_user_reader.step_in().unwrap();
         
         binary_user_reader.next().unwrap();
-        let is_realtime = binary_user_reader.read_bool().unwrap();
+        let connection_id = binary_user_reader.read_i64().unwrap();
 
-        IsRealtimeDTO::new(
-            is_realtime,
+        RealtimeRequestDTO::new(
+            connection_id,
         )
     }
 }
@@ -77,27 +77,27 @@ mod tests {
     use net_proto_api::decoder_api::Decoder;
     use net_proto_api::encoder_api::Encoder;
 
-    use crate::api::is_realtime::IsRealtimeDTO;
+    use crate::internal_api::is_realtime::RealtimeRequestDTO;
 
     #[test]
     fn reader_correctly_read_encoded_date_cut() {
-        const IS_REALTIME: bool = true;
-        let is_realtime = IsRealtimeDTO::new(IS_REALTIME);
+        const CONNECTION_ID: i64 = 228;
+        let real_req = RealtimeRequestDTO::new(CONNECTION_ID);
         
-        let mut binary_user_reader = ReaderBuilder::new().build(is_realtime.encode()).unwrap();
+        let mut binary_user_reader = ReaderBuilder::new().build(real_req.encode()).unwrap();
 
         assert_eq!(StreamItem::Value(IonType::Struct), binary_user_reader.next().unwrap());
         binary_user_reader.step_in().unwrap();
 
-        assert_eq!(StreamItem::Value(IonType::Bool), binary_user_reader.next().unwrap());
-        assert_eq!("is_realtime", binary_user_reader.field_name().unwrap());
-        assert_eq!(IS_REALTIME, binary_user_reader.read_bool().unwrap());
+        assert_eq!(StreamItem::Value(IonType::Int), binary_user_reader.next().unwrap());
+        assert_eq!("connection_id", binary_user_reader.field_name().unwrap());
+        assert_eq!(CONNECTION_ID, binary_user_reader.read_i64().unwrap());
     }
 
     #[test]
     fn endec_date_cut() {
-        const IS_REALTIME: bool = true;
-        let is_realtime = IsRealtimeDTO::new(IS_REALTIME);
-        assert_eq!(is_realtime, IsRealtimeDTO::decode(&is_realtime.encode()));
+        const CONNECTION_ID: i64 = 228;
+        let real_req = RealtimeRequestDTO::new(CONNECTION_ID);
+        assert_eq!(real_req, RealtimeRequestDTO::decode(&real_req.encode()));
     }
 }

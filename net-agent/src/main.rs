@@ -11,9 +11,7 @@ fn main() {
 
     let config = Config::builder().build().expect("read config error");
     let pool = ThreadPool::with_name("worker".into(), 2);
-
     Capture::new(pool.clone(), config).run();
-
     pool.join();
 }
 
