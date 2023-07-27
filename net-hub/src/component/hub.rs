@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use log::{info};
 use threadpool::ThreadPool;
@@ -9,6 +9,7 @@ use net_core::transport::polling::zmq::ZmqPoller;
 use net_core::transport::zmq::contexts::dealer::DealerContext;
 
 use crate::command::{agent::AgentCommand, router::Router};
+use crate::command::ws_context::WsContext;
 use crate::command::ws_server::WsServerCommand;
 use crate::command::translator::TranslatorCommand;
 use crate::command::ws_router::WsRouter;
@@ -26,14 +27,14 @@ impl Hub {
 }
 pub const WS_CONSUMER: &'static str = "inproc://ws/consumer";
 pub const WS_PRODUCER: &'static str = "inproc://ws/producer";
-pub const WS_SERVER: &'static str = "ws://0.0.0.0:9091";
 
 impl NetComponent for Hub {
     fn run(self) {
         info!("run component");
         let context = DealerContext::default();
         let context_clone = context.clone();
-
+        let ws_context = Arc::new(Mutex::new(WsContext::default()));
+        let ws_context_clone = ws_context.clone();
         self.pool.execute(move || {
             let ws_consumer = ConnectorZmqDealerBuilder::new(&context_clone)
                 .with_endpoint("tcp://0.0.0.0:5557".to_string())
@@ -41,16 +42,18 @@ impl NetComponent for Hub {
                 .build()
                 .connect()
                 .into_inner();
-            let ws_server_command = WsServerCommand::new(ws_consumer)
+            let mut ws_server_command = WsServerCommand::default()
                 .bind(self.config.frontend_gateway.ws_addr)
+                .set_consumer(ws_consumer)
                 .into_inner();
+            ws_context_clone.lock().unwrap().set_context(ws_server_command.get_context());
             ws_server_command.poll(-1);
         });
         let context_clone = context.clone();
 
         self.pool.execute(move || {
             std::thread::sleep(Duration::from_secs(1));
-            let ws_router = WsRouter::new(WS_SERVER);
+            let ws_router = WsRouter::new(ws_context.lock().unwrap().to_owned());
             let timescale_router = ConnectorZmqDealerBuilder::new(&context_clone)
                 .with_handler(Arc::new(ws_router))
                 .with_endpoint(self.config.timescale_router.addr)
