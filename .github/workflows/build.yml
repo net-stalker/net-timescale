@@ -49,7 +49,10 @@ jobs:
           sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto tree
       
       - name: Set up Git URL
-        run: git config --global url."https://${{ secrets.GIT_CREDENTIALS }}/github.com".insteadOf ssh://github.com
+        run: |
+          git config --global credential.helper store
+          echo "https://${{secrets.GITHUB_TOKEN}}/github.com" > ~/.git-credentials
+          git config --global url."https://${{secrets.GITHUB_TOKEN}}/github.com".insteadOf ssh://github.com
         
       - name: Build and Test
         env:
