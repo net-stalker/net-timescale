@@ -48,7 +48,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto tree
       
-      - name: Set up Git URL
+      - name: Set up Git Url
         run: |
           git config --global credential.helper store
           echo "https://${{ secrets.GITHUB_TOKEN }}/github.com" > ~/.git-credentials
