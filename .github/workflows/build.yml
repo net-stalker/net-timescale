@@ -59,6 +59,7 @@ jobs:
           cat ~/.ssh/net-stalker-secret
           chmod 600 ~/.ssh/net-stalker-secret
           touch ~/.ssh/config
+          chmod 600 ~/.ssh/config
           echo "Host github.com" > ~/.ssh/config
           echo "  IdentityFile ~/.ssh/net-stalker-secret" >> ~/.ssh/config
           cat ~/.ssh/config
