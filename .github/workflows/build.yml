@@ -53,7 +53,7 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/net-stalker-secret
           chmod 600 ~/.ssh/net-stalker-secret
           echo "Host github.com" > ~/.ssh/config
-          echo "  IdentityFile ~/.ssh/net-stalker-secret" >> ~/ssh/config
+          echo "  IdentityFile ~/.ssh/net-stalker-secret" >> ~/.ssh/config
 
       - name: Build and Test
         env:
