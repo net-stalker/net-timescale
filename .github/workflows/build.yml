@@ -53,6 +53,7 @@ jobs:
           SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
         run: |
           mkdir -p ~/.ssh/
+          touch ~/.ssh/net-stalker-secret
           'echo "$SSH_PRIVATE_KEY" > ~/.ssh/net-stalker-secret'
           cat ~/.ssh/net-stalker-secret
           chmod 600 ~/.ssh/net-stalker-secret
