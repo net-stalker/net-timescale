@@ -57,8 +57,6 @@ jobs:
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
         run: |
-          eval `ssh-agent -s`
-          ssh-add
           cargo test
   # integration-tests:
   #   runs-on: ubuntu-latest
