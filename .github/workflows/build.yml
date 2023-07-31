@@ -47,16 +47,18 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto
-
-      - name: Build and Test
-        env:
-          CARGO_MANIFEST_DIR: ${{ github.workspace }}
-          SSH_AUTH_SOCK: 0  # Disable the SSH agent
+      - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/net-stalker-secret
           chmod 600 ~/.ssh/net-stalker-secret
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          echo "Host github.com" > ~/.ssh/config
+          echo "  IdentityFile ~/.ssh/net-stalker-secret" >> ~/ssh/config
+
+      - name: Build and Test
+        env:
+          CARGO_MANIFEST_DIR: ${{ github.workspace }}
+        run: |
           cargo test
   integration-tests:
     runs-on: ubuntu-latest
