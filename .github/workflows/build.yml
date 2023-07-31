@@ -54,7 +54,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh/
           touch ~/.ssh/net-stalker-secret
-          tree
+          ls -a ~
           'echo "$SSH_PRIVATE_KEY" > ~/.ssh/net-stalker-secret'
           cat ~/.ssh/net-stalker-secret
           chmod 600 ~/.ssh/net-stalker-secret
