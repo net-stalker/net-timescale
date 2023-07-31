@@ -63,14 +63,14 @@ jobs:
       #     echo "Host github.com" > ~/.ssh/config
       #     echo "  IdentityFile ~/.ssh/net-stalker-secret" >> ~/.ssh/config
       #     cat ~/.ssh/config
-      - name: Set up Git credentials
-        run: |
-          echo "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com" > ~/.git-credentials
-          git config --global credential.helper store
+      # - name: Set up Git credentials
+      #   run: |
+      #     echo "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com" > ~/.git-credentials
+      #     git config --global credential.helper store
       
       - name: Set up Git URL
-        run: git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}/github.com".insteadOf "ssh://github.com"
-
+        run: git config --global url."https://${{ secrets.GIT_CREDENTIALS }}@github.com".insteadOf ssh://git@github.com
+        
       - name: Build and Test
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
