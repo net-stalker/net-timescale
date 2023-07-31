@@ -69,7 +69,7 @@ jobs:
           git config --global credential.helper store
       
       - name: Set up Git URL
-        run: git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com".insteadOf "ssh://github.com"
+        run: git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}/github.com".insteadOf "ssh://github.com"
 
       - name: Build and Test
         env:
