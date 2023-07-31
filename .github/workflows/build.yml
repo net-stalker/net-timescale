@@ -51,6 +51,7 @@ jobs:
       - name: Build and Test
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
+          SSH_AUTH_SOCK: 0  # Disable the SSH agent
         run: |
           mkdir -p ~/.ssh/
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/net-stalker-secret
