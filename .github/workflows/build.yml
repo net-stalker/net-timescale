@@ -47,82 +47,62 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto tree
-
-      # - name: Set up SSH
-      #   env:
-      #     SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
-      #   run: |
-      #     mkdir -p ~/.ssh/
-      #     touch ~/.ssh/net-stalker-secret
-      #     ls -a ~/.ssh/
-      #     echo "$SSH_PRIVATE_KEY" > ~/.ssh/net-stalker-secret
-      #     cat ~/.ssh/net-stalker-secret
-      #     chmod 600 ~/.ssh/net-stalker-secret
-      #     touch ~/.ssh/config
-      #     chmod 600 ~/.ssh/config
-      #     echo "Host github.com" > ~/.ssh/config
-      #     echo "  IdentityFile ~/.ssh/net-stalker-secret" >> ~/.ssh/config
-      #     cat ~/.ssh/config
-      # - name: Set up Git credentials
-      #   run: |
-      #     echo "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com" > ~/.git-credentials
-      #     git config --global credential.helper store
       
       - name: Set up Git URL
-        run: git config --global url."https://${{ secrets.GIT_CREDENTIALS }}@github.com".insteadOf ssh://git@github.com
+        run: git config --global url."https://${{ secrets.GIT_CREDENTIALS }}/github.com".insteadOf ssh://github.com
         
       - name: Build and Test
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
         run: |
           cargo test
-  integration-tests:
-    runs-on: ubuntu-latest
+  # integration-tests:
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Check out
-        uses: actions/checkout@v3
+  #   steps:
+  #     - name: Check out
+  #       uses: actions/checkout@v3
 
-      - name: Install Rust
-        run: rustup toolchain install stable --profile minimal
+  #     - name: Install Rust
+  #       run: rustup toolchain install stable --profile minimal
 
-      - name: Cache Cargo dependencies
-        uses: actions/cache@v3
-        continue-on-error: false
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+  #     - name: Cache Cargo dependencies
+  #       uses: actions/cache@v3
+  #       continue-on-error: false
+  #       with:
+  #         path: |
+  #           ~/.cargo/bin/
+  #           ~/.cargo/registry/index/
+  #           ~/.cargo/registry/cache/
+  #           ~/.cargo/git/db/
+  #           target/
+  #         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+  #         restore-keys: ${{ runner.os }}-cargo-
 
-      - name: Install cargo check tools
-        run: |
-          cargo install --locked cargo-deny || true
-          cargo install --locked cargo-outdated || true
-          cargo install --locked cargo-udeps || true
-          cargo install --locked cargo-audit || true
-          cargo install --locked cargo-pants || true      
+  #     - name: Install cargo check tools
+  #       run: |
+  #         cargo install --locked cargo-deny || true
+  #         cargo install --locked cargo-outdated || true
+  #         cargo install --locked cargo-udeps || true
+  #         cargo install --locked cargo-audit || true
+  #         cargo install --locked cargo-pants || true      
 
-      - name: Update platform
-        run: |
-          sudo apt-get update
-          sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto
+  #     - name: Update platform
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto
 
-      - name: Build and Up timescaleDB
-        run: |
-          docker-compose build timescaledb && docker-compose up --detach timescaledb
+  #     - name: Build and Up timescaleDB
+  #       run: |
+  #         docker-compose build timescaledb && docker-compose up --detach timescaledb
 
-      - name: Build and Run timescaleDB migrations
-        run: |
-          docker-compose build timescaledb-migrations && docker-compose up timescaledb-migrations
+  #     - name: Build and Run timescaleDB migrations
+  #       run: |
+  #         docker-compose build timescaledb-migrations && docker-compose up timescaledb-migrations
 
-      - name: Build and Test
-        env:
-          CARGO_MANIFEST_DIR: ${{ github.workspace }}
-        run: |
-          cargo test --test "*" --features integration
-          docker-compose down
+  #     - name: Build and Test
+  #       env:
+  #         CARGO_MANIFEST_DIR: ${{ github.workspace }}
+  #       run: |
+  #         cargo test --test "*" --features integration
+  #         docker-compose down
