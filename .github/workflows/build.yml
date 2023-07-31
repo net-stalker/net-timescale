@@ -59,8 +59,8 @@ jobs:
           cat ~/.ssh/net-stalker-secret
           chmod 600 ~/.ssh/net-stalker-secret
           touch ~/.ssh/config
-          'echo "Host github.com" > ~/.ssh/config'
-          'echo "  IdentityFile ~/.ssh/net-stalker-secret" >> ~/.ssh/config'
+          echo "Host github.com" > ~/.ssh/config
+          echo "  IdentityFile ~/.ssh/net-stalker-secret" >> ~/.ssh/config
           cat ~/.ssh/config
 
       - name: Build and Test
