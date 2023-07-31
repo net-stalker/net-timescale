@@ -48,16 +48,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto
 
-      - name: Build and Install NNG
-        run: |
-          git clone https://github.com/nanomsg/nng.git
-          cd nng
-          mkdir build
-          cd build
-          cmake ..
-          make
-          sudo make install
-
       - name: Build and Test
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
@@ -98,16 +88,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto
-
-      - name: Build and Install NNG
-        run: |
-          git clone https://github.com/nanomsg/nng.git
-          cd nng
-          mkdir build
-          cd build
-          cmake ..
-          make
-          sudo make install
 
       - name: Build and Up timescaleDB
         run: |

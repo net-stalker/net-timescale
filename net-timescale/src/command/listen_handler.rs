@@ -8,9 +8,9 @@ use async_std::task;
 use async_std::sync::RwLock;
 use async_std::task::block_on;
 use sqlx::{Pool, Postgres, postgres::PgListener};
-use net_core::transport::dummy_command::DummyCommand;
-use net_core::transport::sockets::{Handler, Receiver, Sender};
-use net_core::transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
+use net_transport::dummy_command::DummyCommand;
+use net_transport::sockets::{Handler, Receiver, Sender};
+use net_transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
 use net_proto_api::{
     decoder_api::Decoder,
     encoder_api::Encoder,

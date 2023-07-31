@@ -1,7 +1,7 @@
 use std::ops::DerefMut;
 use std::sync::Arc;
 use futures::executor::block_on;
-use net_core::transport::sockets::{Handler, Receiver, Sender};
+use net_transport::sockets::{Handler, Receiver, Sender};
 use net_proto_api::decoder_api::Decoder;
 use serde_json::Value;
 use sqlx::Postgres;

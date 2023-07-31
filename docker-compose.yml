@@ -3,35 +3,6 @@ version: '3.8'
 #https://docs.docker.com/desktop/networking/#i-want-to-connect-from-a-container-to-a-service-on-the-host
 #the special DNS name host.docker.internal which resolves to the internal IP address used by the host
 services:
-  net-agent:
-    hostname: net-agent
-    build:
-      context: .
-      args:
-        PROJ_NAME: net-agent
-    environment:
-      HOST: net-hub
-    networks:
-      - skynet
-
-  net-hub:
-    hostname: net-hub
-    build:
-      context: .
-      args:
-        PROJ_NAME: net-hub
-    networks:
-      - skynet
-
-  net-translator:
-    hostname: net-translator
-    build:
-      context: .
-      args:
-        PROJ_NAME: net-translator
-    networks:
-      - skynet
-
   net-timescale:
     hostname: net-timescale
     build:

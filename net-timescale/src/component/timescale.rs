@@ -6,21 +6,20 @@ use async_std::task::block_on;
 use chrono::{TimeZone, Utc};
 
 use threadpool::ThreadPool;
-use net_core::layer::NetComponent;
 use sqlx::{
     Postgres,
     postgres::PgPoolOptions,
     Pool,
 };
-use net_core::transport::{
+use net_transport::{
     dummy_command::DummyCommand,
 };
-use net_core::transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
-use net_core::transport::polling::zmq::ZmqPoller;
-use net_core::transport::sockets::Context;
-use net_core::transport::zmq::builders::publisher::ConnectorZmqPublisherBuilder;
-use net_core::transport::zmq::builders::subscriber::ConnectorZmqSubscriberBuilder;
-use net_core::transport::zmq::contexts::dealer::DealerContext;
+use net_transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
+use net_transport::polling::zmq::ZmqPoller;
+use net_transport::sockets::Context;
+use net_transport::zmq::builders::publisher::ConnectorZmqPublisherBuilder;
+use net_transport::zmq::builders::subscriber::ConnectorZmqSubscriberBuilder;
+use net_transport::zmq::contexts::dealer::DealerContext;
 use net_proto_api::{
     decoder_api::Decoder,
     encoder_api::Encoder,
@@ -28,8 +27,8 @@ use net_proto_api::{
 };
 use net_timescale_api::api::network_graph::network_graph;
 use net_timescale_api::api::network_packet::NetworkPacketDTO;
-use net_core::transport::zmq::contexts::publisher::PublisherContext;
-use net_core::transport::zmq::contexts::subscriber::SubscriberContext;
+use net_transport::zmq::contexts::publisher::PublisherContext;
+use net_transport::zmq::contexts::subscriber::SubscriberContext;
 use crate::command::{
     dispatcher::CommandDispatcher,
     executor::PoolWrapper,
@@ -41,6 +40,10 @@ use crate::command::realtime_handler::IsRealtimeHandler;
 use crate::command::listen_handler::ListenHandler;
 use crate::config::Config;
 use crate::repository::continuous_aggregate;
+
+pub const TIMESCALE_CONSUMER: &'static str = "inproc://timescale/consumer";
+pub const TIMESCALE_PRODUCER: &'static str = "inproc://timescale/producer";
+pub const IS_REALTIME: &'static str = "inproc://timescale/is-realtime";
 
 pub struct Timescale {
     thread_pool: ThreadPool,
@@ -85,14 +88,8 @@ impl Timescale {
             }
         }
     }
-}
-// TODO: move this to the configuration in future
-pub const TIMESCALE_CONSUMER: &'static str = "inproc://timescale/consumer";
-pub const TIMESCALE_PRODUCER: &'static str = "inproc://timescale/producer";
-pub const IS_REALTIME: &'static str = "inproc://timescale/is-realtime";
 
-impl NetComponent for Timescale {
-    fn run(self) {
+    pub async fn run(self) {
         log::info!("Run component");
         let dealer_context = DealerContext::default();
         let pub_context = PublisherContext::default();

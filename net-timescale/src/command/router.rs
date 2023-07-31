@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use net_core::transport::sockets::{Sender, Receiver, Handler};
+use net_transport::sockets::{Sender, Receiver, Handler};
 
 pub struct Router<T>
 where T: Sender + Sized

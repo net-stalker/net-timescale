@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use net_core::transport::{
+use net_transport::{
     sockets::{Handler, Receiver, Sender, Pub},
 };
 

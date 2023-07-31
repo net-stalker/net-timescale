@@ -5,7 +5,9 @@ edition = "2021"
 
 
 [dependencies]
-net-proto-api = { path = "../net-proto-api" }
+net-proto-api.workspace = true
+net-transport.workspace = true
+net-config.workspace = true
 
 ion-rs = "0.18.1"
 
@@ -14,3 +16,6 @@ ion-text = []
 ion-binary = []
 
 default = ["ion-text"]
+
+[net]
+git-fetch-with-cli.workspace = true

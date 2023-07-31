@@ -4,19 +4,20 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-net-core = { path = "../net-core" }
-net-config = { path = "../net-config" }
-net-proto-api = { path = "../net-proto-api" }
+net-proto-api.workspace = true
+net-transport.workspace = true
+net-config.workspace = true
+net-file.workspace = true
 net-timescale-api = { path = "../net-timescale-api" }
 
 
-log = { workspace = true }
-log4rs = { workspace = true }
-threadpool = { workspace = true }
+log.workspace = true
+log4rs.workspace = true
+threadpool.workspace = true
 
-config = { workspace = true }
-serde = { workspace = true }
-toml = { workspace = true }
+config.workspace = true
+serde.workspace = true
+toml.workspace = true
 
 
 chrono = { version = "0.4.23", feature = ["clock"] }
@@ -40,3 +41,6 @@ ion-text = []
 ion-binary = []
 
 default = ["ion-text"]
+
+[net]
+git-fetch-with-cli.workspace = true

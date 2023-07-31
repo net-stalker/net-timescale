@@ -3,7 +3,7 @@ use std::ops::DerefMut;
 use async_std::sync::Arc;
 use async_std::sync::RwLock;
 use async_std::task::block_on;
-use net_core::transport::sockets::{Handler, Receiver, Sender};
+use net_transport::sockets::{Handler, Receiver, Sender};
 use net_proto_api::decoder_api::Decoder;
 use chrono::{TimeZone, Utc};
 use sqlx::Postgres;
