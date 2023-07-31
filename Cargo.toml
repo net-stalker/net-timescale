@@ -9,7 +9,7 @@ members = [
 net-proto-api = { git = "ssh://github.com/net-stalker/net-core", branch = "develop" }
 net-transport = { git = "ssh://github.com/net-stalker/net-core", branch = "develop" }
 net-file = { git = "ssh://github.com/net-stalker/net-core", branch = "develop" }
-# net-config = { git = "ssh://github.com/net-stalker/net-config", branch = "develop" }
+net-config = { git = "ssh://github.com/net-stalker/net-config", branch = "develop" }
 
 log = "0.4.17"
 log4rs = "1.2.0"
