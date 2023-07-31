@@ -46,6 +46,7 @@ jobs:
       - name: Update platform
         run: |
           sudo apt-get update
+          sudo apt-get -y upgrade
           sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto tree
       
       - name: Set up Git Url
