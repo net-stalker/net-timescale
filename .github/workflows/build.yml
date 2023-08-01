@@ -46,12 +46,11 @@ jobs:
       - name: Update platform
         run: |
           sudo apt-get update
-          sudo apt-get -y upgrade
           sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto tree
       
       - name: Set up Git Url
         run: |
-          git config --global url."https://${{ secrets.GITHUB_TOKEN }}/github.com".insteadOf "ssh://github.com"
+          git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}/github.com".insteadOf "ssh://github.com"
         
       - name: Build and Test
         env:
