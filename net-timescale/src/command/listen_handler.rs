@@ -1,16 +1,12 @@
 use std::{
-    collections::HashSet,
     sync::Arc,
 };
-use std::cell::RefCell;
-use async_std::prelude::FutureExt;
+use std::sync::atomic::{AtomicBool, Ordering};
 use async_std::task;
 use async_std::sync::RwLock;
 use async_std::task::block_on;
-use sqlx::{Pool, Postgres, postgres::PgListener};
-use net_transport::dummy_command::DummyCommand;
-use net_transport::sockets::{Handler, Receiver, Sender};
-use net_transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
+use sqlx::{Postgres, postgres::PgListener};
+use net_transport::sockets::Sender;
 use net_proto_api::{
     decoder_api::Decoder,
     encoder_api::Encoder,
@@ -22,23 +18,24 @@ use crate::command::executor::PoolWrapper;
 pub struct ListenHandler<S>
 where S: Sender
 {
-    pub connection_pool: PoolWrapper<Postgres>,
-    pub connections: Arc<RwLock<HashSet<i64>>>,
-    pub router: Arc<S>,
+    listener: Arc<RwLock<PgListener>>,
+    router: Arc<S>,
 }
 
 // TODO: need to write integration tests
 impl<S> ListenHandler<S>
     where S: Sender
 {
-    pub fn new(
+    pub async fn new(
         connection_pool: PoolWrapper<Postgres>,
-        connections: Arc<RwLock<HashSet<i64>>>,
         router: Arc<S>,
     ) -> Self {
+        let listener = PgListener::connect_with(connection_pool.get_connection().await)
+            .await
+            .expect("expected to construct listener");
+        let listener = Arc::new(RwLock::new(listener));
         Self {
-            connection_pool,
-            connections,
+            listener,
             router,
         }
     }
@@ -46,31 +43,47 @@ impl<S> ListenHandler<S>
         ListenHandlerBuilder::<S>::new()
     }
 
-    pub async fn add_tenant(&mut self, connection: i64) {
-        self.connections.write().await.insert(connection);
+    async fn dispatch_command(&self, command: &str, channel: &str) {
+        match command {
+            "listen" => {
+                let mut listener = self.listener.write().await;
+                match listener.listen(channel).await {
+                    Ok(_) => {
+                        log::debug!("started listening on {}", channel);
+                    },
+                    Err(err) => {
+                        log::error!("error while trying to listen on {}: {}", channel, err);
+                    }
+                }
+            },
+            "unlisten" => {
+                let mut listener = self.listener.write().await;
+                match listener.unlisten(channel).await {
+                    Ok(_) => {
+                        log::debug!("stopped listening on {}", channel);
+                    },
+                    Err(err) => {
+                        log::error!("error while trying to stop listening on {}: {}", channel, err);
+                    }
+                }
+            },
+            _ => {
+                log::error!("wrong api command {}", command);
+            }
+        }
     }
 
-    pub fn get_tenants(&mut self) -> Arc<RwLock<HashSet<i64>>> {
-        self.connections.clone()
-    }
-
-    pub async fn remove_tenant(&mut self, connection: i64) -> bool {
-        self.connections.write().await.remove(&connection)
-    }
-
-    pub async fn start(mut self, channel_to_listen: &str, poll_count: i64) {
-        let mut listener = PgListener::connect_with(
-            self.connection_pool.get_connection().await)
-            .await.unwrap();
-        listener.listen(channel_to_listen).await.unwrap();
+    pub async fn poll(&self, poll_count: i64) {
         let (sender, receiver) = async_channel::unbounded();
-        let tenants_clone = self.connections.clone();
+        let listener = self.listener.clone();
+        let stopper = Arc::new(AtomicBool::new(false));
+        let stopper_clone = stopper.clone();
         let poller = task::spawn(async move {
-            ListenHandler::<S>::poll(
+            ListenHandler::<S>::_poll(
                 poll_count,
-                tenants_clone,
                 sender,
-                listener
+                listener,
+                stopper_clone
             ).await;
         });
         let mut count = 0;
@@ -80,35 +93,46 @@ impl<S> ListenHandler<S>
             }
             match receiver.recv().await {
                 Ok(data) => {
-                    log::info!("connections in listen_handler {:?}", self.connections.read().await);
-                    if !self.connections.read().await.is_empty() {
-                        log::info!("notification in listen_handler");
+                    let envelope = Envelope::decode(data.as_slice());
+                    if envelope.get_type() == "notification" {
                         self.router.send(data.as_slice());
-                    } else {
-                        log::error!("no connections");
+                    }
+                    match envelope.get_type() {
+                        "notification" => {
+                            self.router.send(data.as_slice());
+                            count += 1;
+                        },
+                        "close_all" => {
+                            break;
+                        }
+                        _ => {
+                            // do something here
+                            self.dispatch_command("test", "test").await;
+                        }
                     }
                 },
                 Err(err) => {
                     log::error!("{}", err);
                 }
             }
-            count += poll_count;
         }
+        stopper.store(true, Ordering::Relaxed);
         poller.await;
     }
 
-    async fn poll(
+    async fn _poll(
         poll_count: i64,
-        connections: Arc<RwLock<HashSet<i64>>>,
         sender: async_channel::Sender<Vec<u8>>,
-        mut listener: PgListener,
+        listener: Arc<RwLock<PgListener>>,
+        stopper: Arc<AtomicBool>,
     ) {
         let mut count = 0;
         loop {
-            if count == poll_count {
+            if count == poll_count || stopper.load(Ordering::Relaxed) {
                 break;
             }
-            let notification = match listener.recv().await {
+            // use try_recv here
+            let notification = match listener.write().await.recv().await {
                 Ok(notification) => {
                     notification
                 },
@@ -117,6 +141,7 @@ impl<S> ListenHandler<S>
                     continue;
                 }
             };
+
             // TODO: need to receive necessary info using payload
             let notification = NotificationDTO::new(notification.payload()).encode();
             let envelope = Envelope::new("notification", notification.as_slice()).encode();
@@ -131,7 +156,6 @@ pub struct ListenHandlerBuilder<S>
 where S: Sender
 {
     pub connection_pool: Option<PoolWrapper<Postgres>>,
-    pub connections: Arc<RwLock<HashSet<i64>>>,
     pub router: Option<Arc<S>>,
 }
 
@@ -140,7 +164,6 @@ where S: Sender {
     pub fn new() -> Self {
         Self {
             connection_pool: None,
-            connections: Arc::new(RwLock::new(HashSet::default())),
             router: None,
         }
     }
@@ -148,19 +171,14 @@ where S: Sender {
         self.router = Some(router);
         self
     }
-    pub fn add_tenant(mut self, connection: i64) -> Self {
-        block_on(self.connections.write()).insert(connection);
-        self
-    }
     pub fn with_connection_pool(mut self, connection_pool: PoolWrapper<Postgres>) -> Self {
         self.connection_pool = Some(connection_pool);
         self
     }
     pub fn build(mut self) -> ListenHandler<S> {
-        ListenHandler::new(
+        block_on(ListenHandler::new(
             self.connection_pool.unwrap(),
-            self.connections.clone(),
             self.router.unwrap(),
-        )
+        ))
     }
 }
