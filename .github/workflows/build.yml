@@ -50,8 +50,10 @@ jobs:
       
       - name: Set up Git Url
         run: |
-          git config --global url."https://x-access-token/${{ secrets.GITHUB_TOKEN }}@github.com".insteadOf "ssh://github.com"
-        
+          git config --global credential.helper store
+          echo "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com" > ~/.git-credentials
+          git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com".insteadOf "ssh://github.com"
+
       - name: Build and Test
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
