@@ -48,13 +48,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto tree
       
-      - name: Set up Git Url
-        run: |
-          git config --global credential.helper store
-          echo "https://:${{secrets.GITHUB_TOKEN}}@github.com" > ~/.git-credentials
-          cat ~/.git-credentials
-          git config --global url."https://github.com".insteadOf "ssh://github.com"
-
+      - name: Give GitHub Actions access to repos
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ NET_CORE_DEPLOY_KEY }}
+          
       - name: Build and Test
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
