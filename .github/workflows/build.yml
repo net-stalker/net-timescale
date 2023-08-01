@@ -50,7 +50,7 @@ jobs:
       
       - name: Set up Git Url
         run: |
-          git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com".insteadOf "ssh://github.com"
+          git config --global url."https://x-access-token/${{ secrets.GITHUB_TOKEN }}@github.com".insteadOf "ssh://github.com"
         
       - name: Build and Test
         env:
