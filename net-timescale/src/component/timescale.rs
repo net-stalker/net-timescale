@@ -37,7 +37,7 @@ use crate::command::{
     network_graph_handler::NetworkGraphHandler,
 };
 use crate::command::realtime_handler::IsRealtimeHandler;
-use crate::command::listen_handler::ListenHandler;
+use crate::command::listen_command::listen_handler::ListenHandler;
 use crate::config::Config;
 use crate::repository::continuous_aggregate;
 
