@@ -134,11 +134,6 @@ impl Timescale {
         });
         let dealer_context_clone = dealer_context.clone();
         let connection_pool_clone = self.connection_pool.clone();
-        // TODO: create a wrapper for tenants
-        let mut tenants = Arc::new(Mutex::new(
-            Arc::new(async_std::sync::RwLock::new(HashSet::default()))
-        ));
-        let mut tenants_clone = tenants.clone();
         self.thread_pool.execute(move || {
             let router = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
@@ -151,11 +146,7 @@ impl Timescale {
                 .with_connection_pool(pool)
                 .with_router(router)
                 .build();
-            if let Ok(mut guard) = tenants_clone.lock() {
-                let mut temp = guard.deref_mut();
-                *temp = listen_handler.get_tenants();
-            }
-            block_on(listen_handler.start("insert_channel", -1));
+            block_on(listen_handler.poll(-1));
         });
 
         std::thread::sleep(Duration::from_secs(1));
@@ -218,7 +209,7 @@ impl Timescale {
                 .build()
                 .connect()
                 .into_inner();
-            let is_realtime_handler = IsRealtimeHandler::new(tenants.lock().unwrap().to_owned());
+            let is_realtime_handler = IsRealtimeHandler::default();
             let is_realtime_connector = ConnectorZmqDealerBuilder::new(&dealer_context)
                 .with_endpoint(IS_REALTIME.to_owned())
                 .with_handler(Arc::new(is_realtime_handler))
