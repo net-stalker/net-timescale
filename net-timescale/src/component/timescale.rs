@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::ops::{Deref, DerefMut};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 use std::time::Duration;
 use async_std::task::block_on;
 use chrono::{TimeZone, Utc};
@@ -209,7 +209,9 @@ impl Timescale {
                 .build()
                 .connect()
                 .into_inner();
-            let is_realtime_handler = IsRealtimeHandler::default();
+            let is_realtime_handler = IsRealtimeHandler::new(executor.clone(),
+                Arc::new(RwLock::new(HashSet::default()))
+            );
             let is_realtime_connector = ConnectorZmqDealerBuilder::new(&dealer_context)
                 .with_endpoint(IS_REALTIME.to_owned())
                 .with_handler(Arc::new(is_realtime_handler))

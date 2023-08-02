@@ -50,9 +50,24 @@ where
         let graph_request = NetworkGraphRequest::decode(envelope.get_data());
         let start_date = Utc.timestamp_millis_opt(graph_request.get_start_date_time()).unwrap();
         let end_date = Utc.timestamp_millis_opt(graph_request.get_end_date_time()).unwrap();
-        let network_graph = block_on(network_graph::get_network_graph_by_date_cut(pooled_connection,
-            start_date, end_date
-        ));
+        let (network_graph, last_index) = match graph_request.get_end_date_time() == 0 {
+            true => {
+                // perform transaction
+                let mock_index = 1;
+                (block_on(network_graph::get_network_graph_by_date_cut(
+                    pooled_connection,
+                    start_date, end_date
+                )), mock_index)
+            },
+            false => {
+                // do plain graph query
+                let mock_index = 1;
+                (block_on(network_graph::get_network_graph_by_date_cut(
+                    pooled_connection,
+                    start_date, end_date
+                )), mock_index)
+            }
+        };
         log::info!("got network graph {:?}", network_graph);
         let data = network_graph.encode();
         let data = Envelope::new("network_graph", &data).encode();

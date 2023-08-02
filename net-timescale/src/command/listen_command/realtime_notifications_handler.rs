@@ -1,22 +1,13 @@
-use std::collections::{BTreeMap, HashSet};
+use std::collections::HashSet;
 use std::sync::{Arc, RwLock};
-use futures::executor::block_on;
 use net_transport::sockets::{Handler, Receiver, Sender};
 use net_proto_api::decoder_api::Decoder;
-use serde_json::Value;
 use sqlx::Postgres;
-use net_proto_api::encoder_api::Encoder;
 use net_proto_api::envelope::envelope::Envelope;
 use crate::command::executor::PoolWrapper;
-use net_timescale_api::api::{network_packet::NetworkPacketDTO};
-use crate::repository::{
-    network_packet::{
-        NetworkPacket,
-        self
-    },
-};
+use crate::internal_api::notification::NotificationDTO;
 
-pub struct ReltimeNotificationHandler<S>
+pub struct RealtimeNotificationHandler<S>
 where S: Sender
 {
     pool: Arc<PoolWrapper<Postgres>>,
@@ -24,35 +15,40 @@ where S: Sender
     // TODO: create wrapper for connections
     connections: Arc<RwLock<HashSet<i64>>>,
 }
-impl<S> ReltimeNotificationHandler<S>
+impl<S> RealtimeNotificationHandler<S>
 where S: Sender
 {
     pub fn new(pool: Arc<PoolWrapper<Postgres>>,
                router: Arc<S>,
                connections: Arc<RwLock<HashSet<i64>>>,
     ) -> Self {
-        ReltimeNotificationHandler {
+        RealtimeNotificationHandler {
             pool,
             router,
             connections,
         }
     }
 }
-impl<S> Handler for ReltimeNotificationHandler<S>
+impl<S> Handler for RealtimeNotificationHandler<S>
 where S: Sender
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
         let envelope = Envelope::decode(data.as_slice());
-        let packet = NetworkPacketDTO::decode(envelope.get_data());
-        let mut pooled_connection = block_on(self.pool.get_connection());
-        match block_on(network_packet::insert_network_packet(pooled_connection, packet.into())) {
-            Ok(rows_count) => {
-                log::info!("{} rows were affected", rows_count.rows_affected());
+        let notification = NotificationDTO::decode(envelope.get_data());
+        // index must be present in the table here
+        match notification.get_channel() {
+            "insert_channel" => {
+                log::info!("got notification from {}", notification.get_channel());
+                // find minimum index in the table
+                // query data from captured_traffic
+                // update indexes in the table with indexes
+                // form graph
+                // send graph to router. TODO: think about optimizing this step
+            },
+            _ => {
+                log::error!("wrong channel {}", notification.get_channel());
             }
-            Err(error) => {
-                log::error!("{}", error);
-            }
-        };
+        }
     }
 }
