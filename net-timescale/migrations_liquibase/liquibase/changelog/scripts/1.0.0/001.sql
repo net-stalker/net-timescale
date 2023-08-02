@@ -17,8 +17,5 @@ CREATE INDEX ON captured_traffic (src_addr, frame_time DESC);
 --changeset dshcherbatiuk:3
 CREATE INDEX ON captured_traffic (dst_addr, frame_time DESC);
 
---changeset net-illia-stetsenko:1
-CREATE INDEX ON captured_traffic (id);
-
 --changeset dshcherbatiuk:4
 SELECT create_hypertable('captured_traffic', 'frame_time');
