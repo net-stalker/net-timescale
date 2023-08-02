@@ -1,21 +1,19 @@
 use chrono::{DateTime, Utc};
 use futures::TryStreamExt;
 use sqlx::{
-    Database,
     Pool,
     Postgres
 };
 use net_timescale_api::api::{
-    network_packet::NetworkPacketDTO,
     network_graph::{
         graph_edge::GraphEdgeDTO,
         graph_node::GraphNodeDTO,
         network_graph::NetworkGraphDTO,
     }
 };
-use crate::command::executor::PoolWrapper;
 use crate::repository::address_pair::{AddressPair, self};
 use crate::repository::address_info::{AddressInfo, self};
+use crate::repository::realtime_client;
 
 
 impl Into<GraphNodeDTO> for AddressInfo {
@@ -30,13 +28,13 @@ impl Into<GraphEdgeDTO> for AddressPair {
     }
 }
 
-pub async fn get_network_graph_by_date_cut(connection: &Pool<Postgres>, date_start: DateTime<Utc>,
-                                     date_end: DateTime<Utc>) -> NetworkGraphDTO {
+pub async fn get_network_graph_by_date_cut(pool: &Pool<Postgres>, date_start: DateTime<Utc>,
+                                           date_end: DateTime<Utc>) -> NetworkGraphDTO {
     let mut address_pairs = address_pair::select_address_pairs_by_date_cut(
-        connection, date_start, date_end
+        pool, date_start, date_end
     ).await;
     let mut addresses = address_info::select_address_info_by_date_cut(
-        connection, date_start, date_end
+        pool, date_start, date_end
     ).await;
 
     let mut edges_dto = Vec::default();
@@ -52,16 +50,22 @@ pub async fn get_network_graph_by_date_cut(connection: &Pool<Postgres>, date_sta
     NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice())
 }
 
-pub fn convert_network_packet_to_network_graph(network_packet: NetworkPacketDTO) -> NetworkGraphDTO {
-    let edges_dto = vec![
-        GraphEdgeDTO::new(
-            network_packet.get_src_addr(),
-            network_packet.get_dst_addr(),
-        )
-    ];
-    let nodes_dto = vec![
-        GraphNodeDTO::new(network_packet.get_src_addr()),
-        GraphNodeDTO::new(network_packet.get_dst_addr()),
-    ];
-    NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice())
+pub async fn get_network_graph_and_handle_client_realtime(
+    pool: &Pool<Postgres>, date_start: DateTime<Utc>,
+    date_end: DateTime<Utc>, client_id: i64
+) -> (NetworkGraphDTO, i64)
+{
+    let mut transaction = pool.begin().await.unwrap();
+    let mut address_pairs = address_pair::select_address_pairs_by_date_cut_transaction(
+        &mut transaction, date_start, date_end
+    ).await;
+    let mut addresses = address_info::select_address_info_by_date_cut_transaction(
+        &mut transaction, date_start, date_end
+    ).await;
+
+    realtime_client::update_client_id(&mut transaction, client_id).await;
+
+    transaction.commit().await.unwrap();
+
+    todo!()
 }
