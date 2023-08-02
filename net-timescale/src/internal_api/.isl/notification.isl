@@ -5,6 +5,7 @@ type::{
     type: struct,
     fields: {
         payload: string,
+        channel: string,
     },
 }
 

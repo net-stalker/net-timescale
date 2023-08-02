@@ -10,17 +10,23 @@ use net_proto_api::decoder_api::Decoder;
 #[derive(Debug, PartialEq, Eq)]
 pub struct NotificationDTO {
     payload: String,
+    channel: String,
 }
 
 impl NotificationDTO {
-    pub fn new (payload: &str) -> Self {
+    pub fn new (payload: &str, channel: &str) -> Self {
         NotificationDTO {
             payload: payload.to_string(),
+            channel: channel.to_string(),
         }
     }
 
     pub fn get_payload (&self) -> &str {
         self.payload.as_str()
+    }
+
+    pub fn get_channel (&self) -> &str {
+        self.channel.as_str()
     }
 }
 
@@ -43,6 +49,9 @@ impl Encoder for NotificationDTO {
         writer.set_field_name("payload");
         writer.write_string(self.payload.as_str()).unwrap();
 
+        writer.set_field_name("channel");
+        writer.write_string(self.channel.as_str()).unwrap();
+
         writer.step_out().unwrap();
         writer.flush().unwrap();
 
@@ -58,9 +67,13 @@ impl Decoder for NotificationDTO {
         binary_user_reader.step_in().unwrap();
 
         binary_user_reader.next().unwrap();
-        let payload = binary_user_reader.read_str().unwrap();
+        let payload = binary_user_reader.read_string().unwrap();
+        let payload = payload.as_ref();
 
-        NotificationDTO::new(payload)
+        binary_user_reader.next().unwrap();
+        let channel = binary_user_reader.read_str().unwrap();
+
+        NotificationDTO::new(payload, channel)
     }
 }
 
@@ -80,8 +93,9 @@ mod tests {
     #[test]
     fn reader_correctly_read_encoded_date_cut() {
         const PAYLOAD: &str = "some important info";
+        const CHANNEL: &str = "from a very important channel";
 
-        let notification = NotificationDTO::new(PAYLOAD);
+        let notification = NotificationDTO::new(PAYLOAD, CHANNEL);
 
         let mut binary_user_reader = ReaderBuilder::new().build(notification.encode()).unwrap();
 
@@ -91,12 +105,18 @@ mod tests {
         assert_eq!(StreamItem::Value(IonType::String), binary_user_reader.next().unwrap());
         assert_eq!("payload", binary_user_reader.field_name().unwrap());
         assert_eq!(PAYLOAD, binary_user_reader.read_str().unwrap());
+
+        assert_eq!(StreamItem::Value(IonType::String), binary_user_reader.next().unwrap());
+        assert_eq!("channel", binary_user_reader.field_name().unwrap());
+        assert_eq!(CHANNEL, binary_user_reader.read_str().unwrap());
     }
 
     #[test]
     fn endec_date_cut() {
         const PAYLOAD: &str = "some important info";
-        let notification = NotificationDTO::new(PAYLOAD);
+        const CHANNEL: &str = "from a very important channel";
+
+        let notification = NotificationDTO::new(PAYLOAD, CHANNEL);
         assert_eq!(notification, NotificationDTO::decode(&notification.encode()));
     }
 }

@@ -16,20 +16,31 @@ use crate::repository::{
     },
 };
 
-pub struct NetworkPacketHandler {
+pub struct ReltimeNotificationHandler<S>
+where S: Sender
+{
     pool: Arc<PoolWrapper<Postgres>>,
+    router: Arc<S>,
     // TODO: create wrapper for connections
     connections: Arc<RwLock<HashSet<i64>>>,
 }
-impl NetworkPacketHandler {
-    pub fn new(pool: Arc<PoolWrapper<Postgres>>, connections: Arc<RwLock<HashSet<i64>>>) -> Self {
-        NetworkPacketHandler {
+impl<S> ReltimeNotificationHandler<S>
+where S: Sender
+{
+    pub fn new(pool: Arc<PoolWrapper<Postgres>>,
+               router: Arc<S>,
+               connections: Arc<RwLock<HashSet<i64>>>,
+    ) -> Self {
+        ReltimeNotificationHandler {
             pool,
+            router,
             connections,
         }
     }
 }
-impl Handler for NetworkPacketHandler {
+impl<S> Handler for ReltimeNotificationHandler<S>
+where S: Sender
+{
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
         let envelope = Envelope::decode(data.as_slice());
