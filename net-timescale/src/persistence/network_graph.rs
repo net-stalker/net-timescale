@@ -62,8 +62,8 @@ pub async fn get_network_graph_and_handle_client_realtime(
     let mut addresses = address_info::select_address_info_by_date_cut_transaction(
         &mut transaction, date_start, date_end
     ).await;
-
-    realtime_client::update_client_id(&mut transaction, client_id).await;
+    let mock_index = 90;
+    realtime_client::update_last_index(&mut transaction, client_id, mock_index).await.unwrap();
 
     transaction.commit().await.unwrap();
 

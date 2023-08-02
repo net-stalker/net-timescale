@@ -2,7 +2,6 @@ use chrono::{DateTime, TimeZone, Utc};
 use futures::executor::block_on;
 use serde_json::json;
 use sqlx::{Pool, Postgres};
-use net_core::jsons::json_parser::JsonParser;
 use net_timescale_api::api::network_packet::NetworkPacketDTO;
 use net_timescale::repository::network_packet;
 use net_timescale::repository::network_packet::NetworkPacket;
@@ -20,7 +19,7 @@ fn integration_test_insert() {
     let json_data = json!({
         "test": "test",
     });
-    let binary_json = JsonParser::get_vec(json_data.clone());
+    let binary_json = serde_json::to_vec(&json_data).unwrap();
     let timestamp = 1688714981480935000;
     let network_packet_dto = NetworkPacketDTO::new(
         timestamp,
