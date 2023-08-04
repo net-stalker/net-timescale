@@ -50,19 +50,19 @@ where
         let pooled_connection = block_on(self.connection_pool.get_connection());
         const MOCK_CONNECTION_ID: i64 = 90;
         let graph_request = NetworkGraphRequestDTO::decode(envelope.get_data());
-        let start_date = Utc.timestamp_millis_opt(graph_request.get_start_date_time()).unwrap();
-        let end_date = Utc.timestamp_millis_opt(graph_request.get_end_date_time()).unwrap();
 
-        let network_graph = block_on(network_graph::get_network_graph_by_date_cut(
+        let end_date_time = graph_request.get_end_date_time();
+        // TODO: there is a need to return result
+        let network_graph = block_on(network_graph::reply_network_graph_request(
             pooled_connection,
-            start_date,
-            end_date,
+            graph_request.into(),
             MOCK_CONNECTION_ID
         ));
+
         log::info!("got network graph {:?}", network_graph);
         let data = network_graph.encode();
         let data = Envelope::new("network_graph", &data).encode();
-        if graph_request.get_end_date_time() == 0 {
+        if end_date_time == 0 {
             self.is_realtime_handler.send(RealtimeRequestDTO::new(MOCK_CONNECTION_ID).encode().as_slice());
         }
         self.router.send(data.as_slice());
