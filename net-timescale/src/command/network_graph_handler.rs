@@ -52,6 +52,7 @@ where
         let graph_request = NetworkGraphRequestDTO::decode(envelope.get_data());
 
         let end_date_time = graph_request.get_end_date_time();
+        let subscription = graph_request.is_subscribe();
         // TODO: there is a need to return result
         let network_graph = block_on(network_graph::reply_network_graph_request(
             pooled_connection,
@@ -63,7 +64,10 @@ where
         let data = network_graph.encode();
         let data = Envelope::new("network_graph", &data).encode();
         if end_date_time == 0 {
-            self.is_realtime_handler.send(RealtimeRequestDTO::new(MOCK_CONNECTION_ID).encode().as_slice());
+            self.is_realtime_handler.send(RealtimeRequestDTO::new(
+                MOCK_CONNECTION_ID,
+                subscription
+            ).encode().as_slice());
         }
         self.router.send(data.as_slice());
     }
