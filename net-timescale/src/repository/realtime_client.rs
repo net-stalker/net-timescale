@@ -5,21 +5,6 @@ const CHECK_EXISTENCE_QUERY: &str = "
     SELECT * FROM realtime_updating_history
     WHERE connection_id = $1;
 ";
-const INSERT_CLIENT_QUERY: &str = "
-    INSERT INTO realtime_updating_history (connection_id, last_used_index) VALUES ($1, $2);
-";
-
-const UPDATE_LAST_USED_INDEX_QUERY: &str = "
-    UPDATE realtime_updating_history
-    SET last_used_index = $1
-    WHERE connection_id = $2;
-";
-
-const DELETE_CLIENT_QUERY: &str = "
-    DELETE FROM realtime_updating_history
-    WHERE connection_id = $1;
-";
-
 pub async fn check_client_id_existence(
     transaction: &mut sqlx::Transaction<'_, Postgres>,
     client_id: i64
@@ -31,6 +16,9 @@ pub async fn check_client_id_existence(
         .await
 }
 
+const INSERT_CLIENT_QUERY: &str = "
+    INSERT INTO realtime_updating_history (connection_id, last_used_index) VALUES ($1, $2);
+";
 pub async fn insert_client(
     transaction: &mut sqlx::Transaction<'_, Postgres>,
     client_id: i64,
@@ -44,6 +32,11 @@ pub async fn insert_client(
         .await
 }
 
+const UPDATE_LAST_USED_INDEX_QUERY: &str = "
+    UPDATE realtime_updating_history
+    SET last_used_index = $1
+    WHERE connection_id = $2;
+";
 pub async fn update_last_index(
     transaction: &mut sqlx::Transaction<'_, Postgres>,
     client_id: i64,
@@ -57,6 +50,10 @@ pub async fn update_last_index(
         .await
 }
 
+const DELETE_CLIENT_QUERY: &str = "
+    DELETE FROM realtime_updating_history
+    WHERE connection_id = $1;
+";
 pub async fn delete_client(
     transaction: &mut sqlx::Transaction<'_, Postgres>,
     client_id: i64,

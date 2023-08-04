@@ -48,7 +48,7 @@ where
         let envelope = Envelope::decode(&data);
 
         let pooled_connection = block_on(self.connection_pool.get_connection());
-        let mock_connection_id = 90;
+        const MOCK_CONNECTION_ID: i64 = 90;
         let graph_request = NetworkGraphRequest::decode(envelope.get_data());
         let start_date = Utc.timestamp_millis_opt(graph_request.get_start_date_time()).unwrap();
         let end_date = Utc.timestamp_millis_opt(graph_request.get_end_date_time()).unwrap();
@@ -57,13 +57,13 @@ where
             pooled_connection,
             start_date,
             end_date,
-            mock_connection_id
+            MOCK_CONNECTION_ID
         ));
         log::info!("got network graph {:?}", network_graph);
         let data = network_graph.encode();
         let data = Envelope::new("network_graph", &data).encode();
         if graph_request.get_end_date_time() == 0 {
-            self.is_realtime_handler.send(RealtimeRequestDTO::new(mock_connection_id).encode().as_slice());
+            self.is_realtime_handler.send(RealtimeRequestDTO::new(MOCK_CONNECTION_ID).encode().as_slice());
         }
         self.router.send(data.as_slice());
     }
