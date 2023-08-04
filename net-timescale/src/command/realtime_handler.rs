@@ -10,7 +10,7 @@ use sqlx::Postgres;
 use net_proto_api::encoder_api::Encoder;
 use net_proto_api::envelope::envelope::Envelope;
 use crate::command::executor::PoolWrapper;
-use net_timescale_api::api::network_graph_request::NetworkGraphRequest;
+use net_timescale_api::api::network_graph_request::NetworkGraphRequestDTO;
 use crate::internal_api::is_realtime::RealtimeRequestDTO;
 use crate::persistence::network_graph;
 
