@@ -46,18 +46,23 @@ where
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
         let envelope = Envelope::decode(&data);
+
         let pooled_connection = block_on(self.connection_pool.get_connection());
+        let mock_connection_id = 90;
         let graph_request = NetworkGraphRequest::decode(envelope.get_data());
         let start_date = Utc.timestamp_millis_opt(graph_request.get_start_date_time()).unwrap();
         let end_date = Utc.timestamp_millis_opt(graph_request.get_end_date_time()).unwrap();
-        let network_graph = block_on(network_graph::get_network_graph_by_date_cut(pooled_connection,
-            start_date, end_date
+
+        let network_graph = block_on(network_graph::get_network_graph_by_date_cut(
+            pooled_connection,
+            start_date,
+            end_date,
+            mock_connection_id
         ));
         log::info!("got network graph {:?}", network_graph);
         let data = network_graph.encode();
         let data = Envelope::new("network_graph", &data).encode();
         if graph_request.get_end_date_time() == 0 {
-            let mock_connection_id = 90;
             self.is_realtime_handler.send(RealtimeRequestDTO::new(mock_connection_id).encode().as_slice());
         }
         self.router.send(data.as_slice());
