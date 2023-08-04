@@ -111,7 +111,7 @@ mod tests {
         assert_eq!("connection_id", binary_user_reader.field_name().unwrap());
         assert_eq!(CONNECTION_ID, binary_user_reader.read_i64().unwrap());
 
-        assert_eq!(StreamItem::Value(IonType::Int), binary_user_reader.next().unwrap());
+        assert_eq!(StreamItem::Value(IonType::Bool), binary_user_reader.next().unwrap());
         assert_eq!("is_subscribe", binary_user_reader.field_name().unwrap());
         assert_eq!(IS_SUBSCRIBE, binary_user_reader.read_bool().unwrap());
     }
