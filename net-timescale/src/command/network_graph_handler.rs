@@ -8,7 +8,7 @@ use sqlx::Postgres;
 use net_proto_api::encoder_api::Encoder;
 use net_proto_api::envelope::envelope::Envelope;
 use crate::command::executor::PoolWrapper;
-use net_timescale_api::api::network_graph_request::NetworkGraphRequest;
+use net_timescale_api::api::network_graph_request::NetworkGraphRequestDTO;
 use crate::internal_api::is_realtime::RealtimeRequestDTO;
 use crate::persistence::network_graph;
 
@@ -47,7 +47,7 @@ where
         let data = receiver.recv();
         let envelope = Envelope::decode(&data);
         let pooled_connection = block_on(self.connection_pool.get_connection());
-        let graph_request = NetworkGraphRequest::decode(envelope.get_data());
+        let graph_request = NetworkGraphRequestDTO::decode(envelope.get_data());
         let start_date = Utc.timestamp_millis_opt(graph_request.get_start_date_time()).unwrap();
         let end_date = Utc.timestamp_millis_opt(graph_request.get_end_date_time()).unwrap();
         let network_graph = block_on(network_graph::get_network_graph_by_date_cut(pooled_connection,
