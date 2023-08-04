@@ -10,15 +10,7 @@ pub struct AddressInfo {
     // may be expandable in future
 }
 
-pub async fn select_address_info_by_date_cut<'e>(
-    con: &'e Pool<Postgres>,
-    start_date: DateTime<Utc>,
-    end_date: DateTime<Utc>
-) -> BoxStream<'e, Result<AddressInfo, Error>>
-{
-    // TODO: this query isn't very efficient because we have to do 2 sub-queries.
-    sqlx::query_as::<_, AddressInfo>(
-        "
+const QUERY: &str = "
             SELECT addr
             FROM (
                 SELECT DISTINCT src_addr AS addr
@@ -30,9 +22,29 @@ pub async fn select_address_info_by_date_cut<'e>(
                 WHERE bucket >= $1 AND bucket < $2
             ) AS info
             ORDER BY addr;
-        "
-    )
+        ";
+
+pub async fn select_address_info_by_date_cut<'e>(
+    con: &'e Pool<Postgres>,
+    start_date: DateTime<Utc>,
+    end_date: DateTime<Utc>
+) -> BoxStream<'e, Result<AddressInfo, Error>>
+{
+    sqlx::query_as::<_, AddressInfo>(QUERY)
         .bind(start_date)
         .bind(end_date)
         .fetch(con)
+}
+
+pub async fn select_address_info_by_date_cut_transaction<'e>(
+    transaction: &'e mut sqlx::Transaction<'_, Postgres>,
+    start_date: DateTime<Utc>,
+    end_date: DateTime<Utc>,
+) -> Result<Vec<AddressInfo>, Error>
+{
+    sqlx::query_as::<_, AddressInfo>(QUERY)
+        .bind(start_date)
+        .bind(end_date)
+        .fetch_all(&mut **transaction)
+        .await
 }
