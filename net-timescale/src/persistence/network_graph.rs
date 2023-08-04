@@ -49,7 +49,8 @@ impl Into<NetworkGraphRequest> for NetworkGraphRequestDTO {
     }
 }
 
-async fn handle_realtime_request(
+// TODO: write tests
+pub async fn handle_realtime_request(
     transaction: &mut sqlx::Transaction<'_, Postgres>,
     ng_request: &NetworkGraphRequest,
     connection_id: i64,
