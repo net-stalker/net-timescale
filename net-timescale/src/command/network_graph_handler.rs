@@ -57,8 +57,12 @@ where
         let data = network_graph.encode();
         let data = Envelope::new("network_graph", &data).encode();
         if graph_request.get_end_date_time() == 0 {
-            let mock_connection_id = 90;
-            self.is_realtime_handler.send(RealtimeRequestDTO::new(mock_connection_id).encode().as_slice());
+            const MOCK_CONNECTION_ID: i64 = 90;
+            const MOCK_IS_SUBSCRIPTION: bool = false;
+            self.is_realtime_handler.send(RealtimeRequestDTO::new(
+                MOCK_CONNECTION_ID,
+                MOCK_IS_SUBSCRIPTION
+            ).encode().as_slice());
         }
         self.router.send(data.as_slice());
     }
