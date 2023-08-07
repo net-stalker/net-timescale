@@ -1,4 +1,4 @@
-use sqlx::{Error, Postgres};
+use sqlx::{Error, Postgres, Row};
 use sqlx::postgres::{PgQueryResult, PgRow};
 
 const CHECK_EXISTENCE_QUERY: &str = "
@@ -63,4 +63,22 @@ pub async fn delete_client(
         .bind(client_id)
         .execute(&mut **transaction)
         .await
+}
+const GET_MIN_INDEX: &str = "
+    SELECT MIN(last_used_index) AS index
+    FROM realtime_updating_history;
+";
+pub async fn get_min_index(transaction: &mut sqlx::Transaction<'_, Postgres>) -> Result<i64, Error> {
+    let res = sqlx::query(GET_MIN_INDEX)
+        .fetch_one(&mut **transaction)
+        .await;
+    match res {
+        Ok(row) => {
+            let index: i64 = row.try_get("index").expect("index is expected to be queried");
+            Ok(index)
+        },
+        Err(err) => {
+            Err(err)
+        }
+    }
 }

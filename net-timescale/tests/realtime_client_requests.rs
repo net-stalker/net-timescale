@@ -1,3 +1,4 @@
+use std::cmp::min;
 use futures::executor::block_on;
 use sqlx::{Pool, Postgres};
 use net_timescale::repository::realtime_client;
@@ -89,4 +90,40 @@ fn client_delete_test() {
 
     assert_eq!(ans.is_ok(), true);
     assert_eq!(ans.unwrap().rows_affected(), 1);
+}
+#[cfg(feature = "integration")]
+#[test]
+fn get_min_index_test() {
+    const CONNECTION_ID_1: i64 = 1;
+    const LAST_UPDATED_INDEX_1: i64 = 1;
+
+    const CONNECTION_ID_2: i64 = 2;
+    const LAST_UPDATED_INDEX_2: i64 = 2;
+
+    let expected_res: i64 = min(LAST_UPDATED_INDEX_1, LAST_UPDATED_INDEX_2);
+
+    let con = block_on(establish_connection());
+    let mut transaction = block_on(con.begin()).unwrap();
+    let ans = block_on(realtime_client::insert_client(
+        &mut transaction,
+        CONNECTION_ID_1,
+        LAST_UPDATED_INDEX_1)
+    );
+    assert_eq!(ans.is_ok(), true);
+    assert_eq!(ans.unwrap().rows_affected(), 1);
+    let ans = block_on(realtime_client::insert_client(
+        &mut transaction,
+        CONNECTION_ID_2,
+        LAST_UPDATED_INDEX_2)
+    );
+    assert_eq!(ans.is_ok(), true);
+    assert_eq!(ans.unwrap().rows_affected(), 1);
+
+    let ans = block_on(realtime_client::get_min_index(
+        &mut transaction
+    ));
+
+    assert!(ans.is_ok());
+    let index = ans.unwrap();
+    assert_eq!(index, expected_res);
 }
