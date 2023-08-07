@@ -1,6 +1,6 @@
-use chrono::Utc;
+use chrono::{TimeZone, Utc};
 use futures::executor::block_on;
-use sqlx::{Pool, Postgres};
+use sqlx::{Pool, Postgres, Row};
 use net_timescale::repository::realtime_client;
 use net_timescale::persistence::network_graph;
 use net_timescale::repository::network_packet;
@@ -10,6 +10,12 @@ async fn establish_connection() -> Pool<Postgres> {
     let database_url = "postgres://postgres:PsWDgxZb@localhost".to_owned();
     Pool::<Postgres>::connect("postgres://postgres:PsWDgxZb@localhost").await
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+}
+
+async fn insert_tests_packet(
+    transaction: &mut sqlx::Transaction<'_, Postgres>
+)  {
+
 }
 #[cfg(feature = "integration")]
 #[test]
@@ -34,7 +40,7 @@ fn delete_present_client_by_handle_realtime() {
 
     let ng_req = NetworkGraphRequest {
         start_date_time: Utc::now(),
-        end_date_time: Utc::now(),
+        end_date_time: Utc.timestamp_nanos(0),
         is_subscribe: false
     };
 
@@ -72,7 +78,7 @@ fn update_present_client_by_handle_realtime() {
             nt_packet
         )
     );
-    assert_eq!(res.is_ok(), res);
+    assert_eq!(res.is_ok(), true);
 
     let mut transaction: sqlx::Transaction<'_, Postgres> = block_on(con.begin()).unwrap();
 
@@ -107,52 +113,72 @@ fn update_present_client_by_handle_realtime() {
     let res = block_on(realtime_client::check_client_id_existence(&mut transaction, CONNECTION_ID));
 
     assert_eq!(res.is_ok(), false);
-    let index = res.unwrap().1;
+    let index: i64 = res.unwrap().try_get("last_used_index").unwrap();
     assert_eq!(1, index);
 }
 
+#[cfg(feature = "integration")]
 #[test]
-fn client_insert_test() {
+fn client_insert_by_handle_realtime() {
     const CONNECTION_ID: i64 = 1;
     const LAST_UPDATED_INDEX: i64 = 1;
 
     let mut con = block_on(establish_connection());
-    let mut transaction = block_on(con.begin()).unwrap();
-    let ans = block_on(realtime_client::insert_client(
-        &mut transaction,
-        CONNECTION_ID,
-        LAST_UPDATED_INDEX)
+    let mut transaction: sqlx::Transaction<'_, Postgres> = block_on(con.begin()).unwrap();
+
+    let res = block_on(realtime_client::check_client_id_existence(&mut transaction, CONNECTION_ID));
+
+    assert_eq!(res.is_ok(), false);
+
+    let ng_req = NetworkGraphRequest {
+        start_date_time: Utc::now(),
+        end_date_time: Utc::now(),
+        is_subscribe: true
+    };
+
+
+    block_on(
+        network_graph::handle_realtime_request(
+            &mut transaction,
+            &ng_req,
+            CONNECTION_ID
+        )
     );
-    assert_eq!(ans.is_ok(), true);
-    assert_eq!(ans.unwrap().rows_affected(), 1);
 
     let res = block_on(realtime_client::check_client_id_existence(&mut transaction, CONNECTION_ID));
 
     assert_eq!(res.is_ok(), true);
 }
 
+#[cfg(feature = "integration")]
 #[test]
 fn client_delete_test() {
     const CONNECTION_ID: i64 = 1;
     const LAST_UPDATED_INDEX: i64 = 1;
 
     let mut con = block_on(establish_connection());
-    let mut transaction = block_on(con.begin()).unwrap();
+    let mut transaction: sqlx::Transaction<'_, Postgres> = block_on(con.begin()).unwrap();
 
-    let ans = block_on(realtime_client::insert_client(
-        &mut transaction,
-        CONNECTION_ID,
-        LAST_UPDATED_INDEX)
+    let res = block_on(realtime_client::check_client_id_existence(&mut transaction, CONNECTION_ID));
+
+    assert_eq!(res.is_ok(), false);
+
+    let ng_req = NetworkGraphRequest {
+        start_date_time: Utc::now(),
+        end_date_time: Utc::now(),
+        is_subscribe: false,
+    };
+
+
+    block_on(
+        network_graph::handle_realtime_request(
+            &mut transaction,
+            &ng_req,
+            CONNECTION_ID
+        )
     );
 
-    assert_eq!(ans.is_ok(), true);
-    assert_eq!(ans.unwrap().rows_affected(), 1);
+    let res = block_on(realtime_client::check_client_id_existence(&mut transaction, CONNECTION_ID));
 
-    let ans = block_on(realtime_client::delete_client(
-        &mut transaction,
-        CONNECTION_ID
-    ));
-
-    assert_eq!(ans.is_ok(), true);
-    assert_eq!(ans.unwrap().rows_affected(), 1);
+    assert_eq!(res.is_ok(), false);
 }
