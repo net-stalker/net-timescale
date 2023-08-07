@@ -1,6 +1,6 @@
 use chrono::{DateTime, TimeZone, Utc};
-use sqlx::{Acquire, Database, Error, Pool, Postgres};
-use sqlx::postgres::{PgConnection, PgQueryResult};
+use sqlx::{Error, Pool, Postgres};
+use sqlx::postgres::PgQueryResult;
 use net_timescale_api::api::network_packet::NetworkPacketDTO;
 
 #[derive(sqlx::FromRow, Debug)]
@@ -21,15 +21,32 @@ impl Into<NetworkPacket> for NetworkPacketDTO {
     }
 }
 
+const INSERT_NP_QUERY: &str =
+    "INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)";
+
 pub async fn insert_network_packet(
     con: &Pool<Postgres>,
     packet: NetworkPacket
 ) -> Result<PgQueryResult, Error> {
-     sqlx::query("INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)")
+    sqlx::query(INSERT_NP_QUERY)
         .bind(packet.frame_time)
         .bind(packet.src_addr)
         .bind(packet.dst_addr)
         .bind(packet.binary_data)
         .execute(con)
+        .await
+}
+
+pub async fn insert_network_packet_transaction(
+    transaction: &mut sqlx::Transaction<'_, Postgres>,
+    packet: NetworkPacket
+) -> Result<PgQueryResult, Error>
+{
+    sqlx::query(INSERT_NP_QUERY)
+        .bind(packet.frame_time)
+        .bind(packet.src_addr)
+        .bind(packet.dst_addr)
+        .bind(packet.binary_data)
+        .execute(&mut **transaction)
         .await
 }
