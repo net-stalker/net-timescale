@@ -10,17 +10,23 @@ use net_proto_api::decoder_api::Decoder;
 #[derive(Debug, PartialEq, Eq)]
 pub struct RealtimeRequestDTO {
     connection_id: i64,
+    is_subscribe: bool,
 }
 
 impl RealtimeRequestDTO {
-    pub fn new (connection_id: i64) -> Self {
+    pub fn new (connection_id: i64, is_subscribe: bool) -> Self {
         RealtimeRequestDTO {
             connection_id,
+            is_subscribe,
         }
     }
 
     pub fn get_connection_id (&self) -> i64 {
         self.connection_id
+    }
+
+    pub fn is_subscribe (&self) -> bool {
+        self.is_subscribe
     }
 }
 
@@ -43,6 +49,9 @@ impl Encoder for RealtimeRequestDTO {
         writer.set_field_name("connection_id");
         writer.write_i64(self.get_connection_id()).unwrap();
 
+        writer.set_field_name("is_subscribe");
+        writer.write_bool(self.is_subscribe()).unwrap();
+
         writer.step_out().unwrap();
         writer.flush().unwrap();
 
@@ -60,8 +69,12 @@ impl Decoder for RealtimeRequestDTO {
         binary_user_reader.next().unwrap();
         let connection_id = binary_user_reader.read_i64().unwrap();
 
+        binary_user_reader.next().unwrap();
+        let is_subscribe = binary_user_reader.read_bool().unwrap();
+
         RealtimeRequestDTO::new(
             connection_id,
+            is_subscribe
         )
     }
 }
@@ -82,7 +95,12 @@ mod tests {
     #[test]
     fn reader_correctly_read_encoded_date_cut() {
         const CONNECTION_ID: i64 = 228;
-        let real_req = RealtimeRequestDTO::new(CONNECTION_ID);
+        const IS_SUBSCRIBE: bool = true;
+
+        let real_req = RealtimeRequestDTO::new(
+            CONNECTION_ID,
+            IS_SUBSCRIBE
+        );
         
         let mut binary_user_reader = ReaderBuilder::new().build(real_req.encode()).unwrap();
 
@@ -92,12 +110,21 @@ mod tests {
         assert_eq!(StreamItem::Value(IonType::Int), binary_user_reader.next().unwrap());
         assert_eq!("connection_id", binary_user_reader.field_name().unwrap());
         assert_eq!(CONNECTION_ID, binary_user_reader.read_i64().unwrap());
+
+        assert_eq!(StreamItem::Value(IonType::Bool), binary_user_reader.next().unwrap());
+        assert_eq!("is_subscribe", binary_user_reader.field_name().unwrap());
+        assert_eq!(IS_SUBSCRIBE, binary_user_reader.read_bool().unwrap());
     }
 
     #[test]
     fn endec_date_cut() {
         const CONNECTION_ID: i64 = 228;
-        let real_req = RealtimeRequestDTO::new(CONNECTION_ID);
+        const IS_SUBSCRIBE: bool = true;
+
+        let real_req = RealtimeRequestDTO::new(
+            CONNECTION_ID,
+            IS_SUBSCRIBE
+        );
         assert_eq!(real_req, RealtimeRequestDTO::decode(&real_req.encode()));
     }
 }

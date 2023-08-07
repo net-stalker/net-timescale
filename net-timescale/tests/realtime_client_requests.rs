@@ -29,6 +29,7 @@ fn client_verify_present_test() {
     assert_eq!(res.is_ok(), true);
 }
 
+#[cfg(feature = "integration")]
 #[test]
 fn client_verify_missing_test() {
     const CONNECTION_ID: i64 = 1;
@@ -42,6 +43,7 @@ fn client_verify_missing_test() {
     assert_eq!(res.is_ok(), false);
 }
 
+#[cfg(feature = "integration")]
 #[test]
 fn client_insert_test() {
     const CONNECTION_ID: i64 = 1;
@@ -62,6 +64,7 @@ fn client_insert_test() {
     assert_eq!(res.is_ok(), true);
 }
 
+#[cfg(feature = "integration")]
 #[test]
 fn client_delete_test() {
     const CONNECTION_ID: i64 = 1;

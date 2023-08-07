@@ -5,6 +5,7 @@ type::{
     type: struct,
     fields: {
         connection_id: int,
+        is_subscribe: bool,
     },
 }
 

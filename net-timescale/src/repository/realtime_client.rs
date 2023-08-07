@@ -34,8 +34,8 @@ pub async fn insert_client(
 
 const UPDATE_LAST_USED_INDEX_QUERY: &str = "
     UPDATE realtime_updating_history
-    SET last_used_index = $1
-    WHERE connection_id = $2;
+    SET last_used_index = $2
+    WHERE connection_id = $1;
 ";
 pub async fn update_last_index(
     transaction: &mut sqlx::Transaction<'_, Postgres>,
