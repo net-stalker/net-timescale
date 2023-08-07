@@ -1,5 +1,6 @@
 use chrono::{TimeZone, Utc};
 use futures::executor::block_on;
+use serde_json::json;
 use sqlx::{Pool, Postgres, Row};
 use net_timescale::repository::realtime_client;
 use net_timescale::persistence::network_graph;
@@ -15,8 +16,19 @@ async fn establish_connection() -> Pool<Postgres> {
 async fn insert_tests_packet(
     transaction: &mut sqlx::Transaction<'_, Postgres>
 )  {
-
+    let nt_packet = network_packet::NetworkPacket {
+        frame_time: Utc::now(),
+        src_addr: "".to_string(),
+        dst_addr: "".to_string(),
+        binary_data: json!({"test": "test",}),
+    };
+    let res = network_packet::insert_network_packet_transaction(
+        transaction,
+        nt_packet
+    ).await;
+    assert!(res.is_ok());
 }
+
 #[cfg(feature = "integration")]
 #[test]
 fn delete_present_client_by_handle_realtime() {
@@ -25,6 +37,8 @@ fn delete_present_client_by_handle_realtime() {
 
     let mut con = block_on(establish_connection());
     let mut transaction: sqlx::Transaction<'_, Postgres> = block_on(con.begin()).unwrap();
+
+    // block_on(insert_tests_packet(&mut transaction));
 
     block_on(
         realtime_client::insert_client(
@@ -36,7 +50,7 @@ fn delete_present_client_by_handle_realtime() {
 
     let res = block_on(realtime_client::check_client_id_existence(&mut transaction, CONNECTION_ID));
 
-    assert_eq!(res.is_ok(), true);
+    assert!(res.is_ok());
 
     let ng_req = NetworkGraphRequest {
         start_date_time: Utc::now(),
@@ -56,7 +70,7 @@ fn delete_present_client_by_handle_realtime() {
 
     let res = block_on(realtime_client::check_client_id_existence(&mut transaction, CONNECTION_ID));
 
-    assert_eq!(res.is_ok(), false);
+    assert!(res.is_err());
 }
 
 #[cfg(feature = "integration")]
@@ -66,21 +80,9 @@ fn update_present_client_by_handle_realtime() {
     const LAST_UPDATED_INDEX: i64 = 0;
 
     let mut con = block_on(establish_connection());
-    let nt_packet = network_packet::NetworkPacket {
-        frame_time: Utc::now(),
-        src_addr: "".to_string(),
-        dst_addr: "".to_string(),
-        binary_data: serde_json::from_slice(&[]).unwrap(),
-    };
-    let res = block_on(
-        network_packet::insert_network_packet(
-            &con,
-            nt_packet
-        )
-    );
-    assert_eq!(res.is_ok(), true);
-
     let mut transaction: sqlx::Transaction<'_, Postgres> = block_on(con.begin()).unwrap();
+
+    block_on(insert_tests_packet(&mut transaction));
 
     block_on(
         realtime_client::insert_client(
@@ -92,14 +94,14 @@ fn update_present_client_by_handle_realtime() {
 
     let res = block_on(realtime_client::check_client_id_existence(&mut transaction, CONNECTION_ID));
 
-    assert_eq!(res.is_ok(), true);
+    assert!(res.is_ok());
 
     let ng_req = NetworkGraphRequest {
         start_date_time: Utc::now(),
-        end_date_time: Utc::now(),
+        end_date_time: Utc.timestamp_nanos(0),
         is_subscribe: true
     };
-
+    let test_date = ng_req.end_date_time.timestamp_nanos();
 
     block_on(
         network_graph::handle_realtime_request(
@@ -112,9 +114,9 @@ fn update_present_client_by_handle_realtime() {
 
     let res = block_on(realtime_client::check_client_id_existence(&mut transaction, CONNECTION_ID));
 
-    assert_eq!(res.is_ok(), false);
-    let index: i64 = res.unwrap().try_get("last_used_index").unwrap();
-    assert_eq!(1, index);
+    assert!(res.is_ok());
+    let new_index: i64 = res.unwrap().try_get("last_used_index").unwrap();
+    assert_ne!(LAST_UPDATED_INDEX, new_index);
 }
 
 #[cfg(feature = "integration")]
@@ -126,13 +128,15 @@ fn client_insert_by_handle_realtime() {
     let mut con = block_on(establish_connection());
     let mut transaction: sqlx::Transaction<'_, Postgres> = block_on(con.begin()).unwrap();
 
+    block_on(insert_tests_packet(&mut transaction));
+
     let res = block_on(realtime_client::check_client_id_existence(&mut transaction, CONNECTION_ID));
 
-    assert_eq!(res.is_ok(), false);
+    assert!(res.is_err());
 
     let ng_req = NetworkGraphRequest {
         start_date_time: Utc::now(),
-        end_date_time: Utc::now(),
+        end_date_time: Utc.timestamp_nanos(0),
         is_subscribe: true
     };
 
@@ -147,25 +151,25 @@ fn client_insert_by_handle_realtime() {
 
     let res = block_on(realtime_client::check_client_id_existence(&mut transaction, CONNECTION_ID));
 
-    assert_eq!(res.is_ok(), true);
+    assert!(res.is_ok());
 }
 
 #[cfg(feature = "integration")]
 #[test]
-fn client_delete_test() {
+fn client_delete_by_handle_realtime() {
     const CONNECTION_ID: i64 = 1;
     const LAST_UPDATED_INDEX: i64 = 1;
 
     let mut con = block_on(establish_connection());
     let mut transaction: sqlx::Transaction<'_, Postgres> = block_on(con.begin()).unwrap();
 
-    let res = block_on(realtime_client::check_client_id_existence(&mut transaction, CONNECTION_ID));
-
-    assert_eq!(res.is_ok(), false);
+    assert!(
+        block_on(realtime_client::insert_client(&mut transaction, CONNECTION_ID, LAST_UPDATED_INDEX)).is_ok()
+    );
 
     let ng_req = NetworkGraphRequest {
         start_date_time: Utc::now(),
-        end_date_time: Utc::now(),
+        end_date_time: Utc.timestamp_nanos(0),
         is_subscribe: false,
     };
 
@@ -180,5 +184,5 @@ fn client_delete_test() {
 
     let res = block_on(realtime_client::check_client_id_existence(&mut transaction, CONNECTION_ID));
 
-    assert_eq!(res.is_ok(), false);
+    assert!(res.is_err());
 }

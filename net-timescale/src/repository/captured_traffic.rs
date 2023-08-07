@@ -11,7 +11,7 @@ const GET_LAST_PACKET_ID_QUERY: &str = "
 
 pub async fn get_max_id(
     transaction: &mut sqlx::Transaction<'_, Postgres>
-) -> Result<i64, Error>
+) -> Result<i32, Error>
 {
     let res = sqlx::query(GET_LAST_PACKET_ID_QUERY)
         .fetch_one(&mut **transaction)

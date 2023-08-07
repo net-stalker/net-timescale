@@ -60,12 +60,12 @@ pub async fn handle_realtime_request(
         return;
     }
     // real-time
-    let last_index_in_captured_traffic =
-        captured_traffic::get_max_id(transaction).await.unwrap();
     match realtime_client::check_client_id_existence(transaction, connection_id).await {
         Ok(_) => {
             match ng_request.is_subscribe {
                 true => {
+                    let last_index_in_captured_traffic =
+                        captured_traffic::get_max_id(transaction).await.unwrap() as i64;
                     realtime_client::update_last_index(
                         transaction,
                         connection_id,
@@ -81,6 +81,9 @@ pub async fn handle_realtime_request(
         Err(_) => {
             match ng_request.is_subscribe {
                 true => {
+                    let last_index_in_captured_traffic =
+                        captured_traffic::get_max_id(transaction).await.unwrap() as i64;
+
                     realtime_client::insert_client(transaction, connection_id, last_index_in_captured_traffic).await.unwrap();
                 },
                 false => {
