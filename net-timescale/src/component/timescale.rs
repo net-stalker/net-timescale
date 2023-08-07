@@ -25,8 +25,6 @@ use net_proto_api::{
     encoder_api::Encoder,
     envelope::envelope::Envelope,
 };
-use net_timescale_api::api::network_graph::network_graph;
-use net_timescale_api::api::network_packet::NetworkPacketDTO;
 use net_transport::zmq::contexts::publisher::PublisherContext;
 use net_transport::zmq::contexts::subscriber::SubscriberContext;
 use crate::command::{
@@ -38,12 +36,15 @@ use crate::command::{
 };
 use crate::command::realtime_handler::IsRealtimeHandler;
 use crate::command::listen_command::listen_handler::ListenHandler;
+use crate::command::listen_command::realtime_notifications_handler;
+use crate::command::listen_command::realtime_notifications_handler::RealtimeNotificationHandler;
 use crate::config::Config;
 use crate::repository::continuous_aggregate;
 
-pub const TIMESCALE_CONSUMER: &'static str = "inproc://timescale/consumer";
-pub const TIMESCALE_PRODUCER: &'static str = "inproc://timescale/producer";
-pub const IS_REALTIME: &'static str = "inproc://timescale/is-realtime";
+pub const TIMESCALE_CONSUMER: &str = "inproc://timescale/consumer";
+pub const TIMESCALE_PRODUCER: &str = "inproc://timescale/producer";
+pub const IS_REALTIME: &str = "inproc://timescale/is-realtime";
+pub const LISTEN_HANDLER: &str = "inproc://timescale/listen-handler";
 
 pub struct Timescale {
     thread_pool: ThreadPool,
@@ -93,6 +94,8 @@ impl Timescale {
         log::info!("Run component");
         let dealer_context = DealerContext::default();
         let pub_context = PublisherContext::default();
+        let pub_context_clone = pub_context.clone();
+
         let sub_context = SubscriberContext::new(pub_context.get_context());
         let dealer_context_clone = dealer_context.clone();
 
@@ -112,7 +115,7 @@ impl Timescale {
                 .bind()
                 .into_inner();
 
-            let consumer = ConnectorZmqPublisherBuilder::new(&pub_context)
+            let consumer = ConnectorZmqPublisherBuilder::new(&pub_context_clone)
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
                 .with_handler(Arc::new(DummyCommand))
                 .build()
@@ -134,15 +137,16 @@ impl Timescale {
         });
         let dealer_context_clone = dealer_context.clone();
         let connection_pool_clone = self.connection_pool.clone();
+        let pub_context_clone = pub_context.clone();
         let (sender, receiver) = async_channel::unbounded();
         let sender_clone = sender.clone();
         let receiver_clone = receiver.clone();
         self.thread_pool.execute(move || {
-            let router = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
-                .with_endpoint(TIMESCALE_PRODUCER.to_owned())
+            let router = ConnectorZmqPublisherBuilder::new(&pub_context_clone)
+                .with_endpoint(LISTEN_HANDLER.to_owned())
                 .with_handler(Arc::new(DummyCommand))
                 .build()
-                .connect()
+                .bind()
                 .into_inner();
             let pool = PoolWrapper::new(connection_pool_clone);
             let mut listen_handler = ListenHandler::builder()
@@ -153,7 +157,34 @@ impl Timescale {
                 .build();
             block_on(listen_handler.poll(-1));
         });
-
+        let pool = self.connection_pool.clone();
+        let sub_context_clone = sub_context.clone();
+        let connections = Arc::new(RwLock::new(HashSet::default()));
+        let connections_clone = connections.clone();
+        self.thread_pool.execute(move || {
+            let router = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
+                .with_endpoint(TIMESCALE_PRODUCER.to_owned())
+                .with_handler(Arc::new(DummyCommand))
+                .build()
+                .connect()
+                .into_inner();
+            let realtime_notification_handler = RealtimeNotificationHandler::new(
+                PoolWrapper::new(pool).into_inner(),
+                router,
+                connections_clone
+            );
+            let realtime_notification_connector =
+                ConnectorZmqSubscriberBuilder::new(&sub_context_clone)
+                .with_endpoint(LISTEN_HANDLER.to_owned())
+                .with_handler(Arc::new(realtime_notification_handler))
+                .with_topic("realtime_notification_handler".as_bytes().to_vec())
+                .build()
+                .connect()
+                .into_inner();
+            ZmqPoller::new()
+                .add(realtime_notification_connector)
+                .poll(-1);
+        });
         std::thread::sleep(Duration::from_secs(1));
         let dealer_context_clone = dealer_context.clone();
         let sub_context_clone = sub_context.clone();
@@ -185,7 +216,6 @@ impl Timescale {
         });
         let connection_pool = self.connection_pool.clone();
         let dealer_context_clone = dealer_context.clone();
-
         self.thread_pool.execute(move || {
             let executor = PoolWrapper::new(connection_pool).into_inner();
             let router = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
@@ -215,7 +245,7 @@ impl Timescale {
                 .connect()
                 .into_inner();
             let is_realtime_handler = IsRealtimeHandler::new(
-                Arc::new(RwLock::new(HashSet::default())),
+                connections,
                 sender
             );
             let is_realtime_connector = ConnectorZmqDealerBuilder::new(&dealer_context)
