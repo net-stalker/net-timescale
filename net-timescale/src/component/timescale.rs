@@ -134,6 +134,9 @@ impl Timescale {
         });
         let dealer_context_clone = dealer_context.clone();
         let connection_pool_clone = self.connection_pool.clone();
+        let (sender, receiver) = async_channel::unbounded();
+        let sender_clone = sender.clone();
+        let receiver_clone = receiver.clone();
         self.thread_pool.execute(move || {
             let router = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
@@ -145,6 +148,8 @@ impl Timescale {
             let mut listen_handler = ListenHandler::builder()
                 .with_connection_pool(pool)
                 .with_router(router)
+                .with_receiver(receiver_clone)
+                .with_sender(sender_clone)
                 .build();
             block_on(listen_handler.poll(-1));
         });
@@ -209,8 +214,9 @@ impl Timescale {
                 .build()
                 .connect()
                 .into_inner();
-            let is_realtime_handler = IsRealtimeHandler::new(executor.clone(),
-                Arc::new(RwLock::new(HashSet::default()))
+            let is_realtime_handler = IsRealtimeHandler::new(
+                Arc::new(RwLock::new(HashSet::default())),
+                sender
             );
             let is_realtime_connector = ConnectorZmqDealerBuilder::new(&dealer_context)
                 .with_endpoint(IS_REALTIME.to_owned())

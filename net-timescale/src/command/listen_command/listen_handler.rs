@@ -20,6 +20,8 @@ where S: Sender
 {
     listener: Arc<RwLock<PgListener>>,
     router: Arc<S>,
+    sender: async_channel::Sender<Vec<u8>>,
+    receiver: async_channel::Receiver<Vec<u8>>,
 }
 
 // TODO: need to write integration tests
@@ -28,6 +30,8 @@ impl<S> ListenHandler<S>
 {
     pub async fn new(
         connection_pool: PoolWrapper<Postgres>,
+        sender: async_channel::Sender<Vec<u8>>,
+        receiver: async_channel::Receiver<Vec<u8>>,
         router: Arc<S>,
     ) -> Self {
         let listener = PgListener::connect_with(connection_pool.get_connection().await)
@@ -37,6 +41,8 @@ impl<S> ListenHandler<S>
         Self {
             listener,
             router,
+            sender,
+            receiver
         }
     }
     pub fn builder() -> ListenHandlerBuilder<S> {
@@ -104,10 +110,13 @@ impl<S> ListenHandler<S>
                         },
                         "close_all" => {
                             break;
-                        }
+                        },
                         _ => {
                             // do something here
-                            self.dispatch_command("test", "test").await;
+                            self.dispatch_command(
+                                envelope.get_type(),
+                                String::from_utf8(envelope.get_data().to_vec()).unwrap().as_str())
+                                .await;
                         }
                     }
                 },
@@ -157,8 +166,10 @@ impl<S> ListenHandler<S>
 pub struct ListenHandlerBuilder<S>
 where S: Sender
 {
-    pub connection_pool: Option<PoolWrapper<Postgres>>,
-    pub router: Option<Arc<S>>,
+    connection_pool: Option<PoolWrapper<Postgres>>,
+    router: Option<Arc<S>>,
+    sender: Option<async_channel::Sender<Vec<u8>>>,
+    receiver: Option<async_channel::Receiver<Vec<u8>>>,
 }
 
 impl<S> ListenHandlerBuilder<S>
@@ -167,6 +178,8 @@ where S: Sender {
         Self {
             connection_pool: None,
             router: None,
+            sender: None,
+            receiver: None,
         }
     }
     pub fn with_router(mut self, router: Arc<S>) -> Self {
@@ -177,9 +190,19 @@ where S: Sender {
         self.connection_pool = Some(connection_pool);
         self
     }
+    pub fn with_sender(mut self, sender: async_channel::Sender<Vec<u8>>) -> Self {
+        self.sender = Some(sender);
+        self
+    }
+    pub fn with_receiver(mut self, receiver: async_channel::Receiver<Vec<u8>>) -> Self {
+        self.receiver = Some(receiver);
+        self
+    }
     pub fn build(mut self) -> ListenHandler<S> {
         block_on(ListenHandler::new(
             self.connection_pool.unwrap(),
+            self.sender.unwrap(),
+            self.receiver.unwrap(),
             self.router.unwrap(),
         ))
     }

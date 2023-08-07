@@ -48,6 +48,7 @@ where
         let envelope = Envelope::decode(&data);
 
         let pooled_connection = block_on(self.connection_pool.get_connection());
+        // TODO: add connection_id as a field in DTO structures
         const MOCK_CONNECTION_ID: i64 = 90;
         let graph_request = NetworkGraphRequestDTO::decode(envelope.get_data());
 
