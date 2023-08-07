@@ -1,9 +1,12 @@
 use std::collections::HashSet;
 use std::sync::{Arc, RwLock};
+use futures::executor::block_on;
 use net_transport::sockets::{Handler, Receiver, Sender};
 use net_proto_api::decoder_api::Decoder;
+use net_proto_api::encoder_api::Encoder;
 use sqlx::Postgres;
 use net_proto_api::envelope::envelope::Envelope;
+use net_timescale_api::api::network_graph::network_graph::NetworkGraphDTO;
 use crate::command::executor::PoolWrapper;
 use crate::internal_api::notification::NotificationDTO;
 
@@ -28,6 +31,16 @@ where S: Sender
             connections,
         }
     }
+    async fn handle_insert_channel(&self) -> NetworkGraphDTO {
+        // 1) find minimum index from the table
+        // 2) query graph by index
+        // 3) update indexes
+        // 4) send to router
+        let mut db_connection = self.pool.get_connection().await;
+        let mut transction = db_connection.begin().await.unwrap();
+
+        todo!();
+    }
 }
 impl<S> Handler for RealtimeNotificationHandler<S>
 where S: Sender
@@ -40,11 +53,10 @@ where S: Sender
         match notification.get_channel() {
             "insert_channel" => {
                 log::info!("got notification from {}", notification.get_channel());
-                // find minimum index in the table
-                // query data from captured_traffic
-                // update indexes in the table with indexes
-                // form graph
-                // send graph to router. TODO: think about optimizing this step
+                // 1) find minimum index from the table
+                let graph = block_on(self.handle_insert_channel()).encode();
+                let envelope = Envelope::new("network_graph", graph.as_slice()).encode();
+                self.router.send(envelope.as_slice());
             },
             _ => {
                 log::error!("wrong channel {}", notification.get_channel());
