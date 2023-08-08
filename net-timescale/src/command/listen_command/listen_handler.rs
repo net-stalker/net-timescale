@@ -18,7 +18,7 @@ use crate::command::executor::PoolWrapper;
 pub struct ListenHandler<S>
 where S: Sender
 {
-    listener: Arc<RwLock<PgListener>>,
+    listener: PgListener,
     router: Arc<S>,
     sender: async_channel::Sender<Vec<u8>>,
     receiver: async_channel::Receiver<Vec<u8>>,
@@ -37,7 +37,6 @@ impl<S> ListenHandler<S>
         let listener = PgListener::connect_with(connection_pool.get_connection().await)
             .await
             .expect("expected to construct listener");
-        let listener = Arc::new(RwLock::new(listener));
         Self {
             listener,
             router,
@@ -49,11 +48,10 @@ impl<S> ListenHandler<S>
         ListenHandlerBuilder::<S>::new()
     }
 
-    async fn dispatch_command(&self, command: &str, channel: &str) {
+    async fn dispatch_command(&mut self, command: &str, channel: &str) {
         match command {
             "listen" => {
                 log::info!("got listen, waiting for lock");
-                let mut listener = self.listener.write().await;
                 match listener.listen(channel).await {
                     Ok(_) => {
                         log::debug!("started listening on {}", channel);
@@ -64,7 +62,7 @@ impl<S> ListenHandler<S>
                 }
             },
             "unlisten" => {
-                let mut listener = self.listener.write().await;
+                // let mut listener = self.listener.write().await;
                 match listener.unlisten(channel).await {
                     Ok(_) => {
                         log::debug!("stopped listening on {}", channel);
@@ -80,8 +78,8 @@ impl<S> ListenHandler<S>
         }
     }
 
-    pub async fn poll(&self, poll_count: i64) {
-        let listener = self.listener.clone();
+    pub async fn poll(&mut self, poll_count: i64) {
+        let listener = self.listener;
         let stopper = Arc::new(AtomicBool::new(false));
         let stopper_clone = stopper.clone();
         let sender= self.sender.clone();
