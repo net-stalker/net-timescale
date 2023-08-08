@@ -174,7 +174,8 @@ where S: Sender
 }
 
 impl<S> ListenHandlerBuilder<S>
-where S: Sender {
+where S: Sender
+{
     pub fn new() -> Self {
         Self {
             connection_pool: None,
