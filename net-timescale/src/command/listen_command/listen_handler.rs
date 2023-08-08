@@ -52,6 +52,7 @@ impl<S> ListenHandler<S>
     async fn dispatch_command(&self, command: &str, channel: &str) {
         match command {
             "listen" => {
+                log::info!("got listen, waiting for lock");
                 let mut listener = self.listener.write().await;
                 match listener.listen(channel).await {
                     Ok(_) => {
@@ -80,10 +81,10 @@ impl<S> ListenHandler<S>
     }
 
     pub async fn poll(&self, poll_count: i64) {
-        let (sender, receiver) = async_channel::unbounded();
         let listener = self.listener.clone();
         let stopper = Arc::new(AtomicBool::new(false));
         let stopper_clone = stopper.clone();
+        let sender= self.sender.clone();
         let poller = task::spawn(async move {
             ListenHandler::<S>::_poll(
                 poll_count,
@@ -97,8 +98,9 @@ impl<S> ListenHandler<S>
             if count == poll_count {
                 break;
             }
-            match receiver.recv().await {
+            match self.receiver.recv().await {
                 Ok(data) => {
+                    log::info!("got some data");
                     let envelope = Envelope::decode(data.as_slice());
                     if envelope.get_type() == "notification" {
                         self.router.send(data.as_slice());
@@ -112,6 +114,7 @@ impl<S> ListenHandler<S>
                             break;
                         },
                         _ => {
+                            log::info!("is dispatch command");
                             // do something here
                             self.dispatch_command(
                                 envelope.get_type(),
@@ -141,8 +144,10 @@ impl<S> ListenHandler<S>
                 break;
             }
             // use try_recv here
+            log::debug!("waiting for something in _poll");
             let notification = match listener.write().await.recv().await {
                 Ok(notification) => {
+                    log::debug!("got notification from {}", notification.channel());
                     notification
                 },
                 Err(err) => {

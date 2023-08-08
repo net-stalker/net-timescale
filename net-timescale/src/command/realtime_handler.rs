@@ -26,6 +26,7 @@ impl IsRealtimeHandler {
         }
     }
     fn activate_listening(&self) {
+        log::info!("activating realtime");
         let envelope = Envelope::new(
             "listen",
             "insert_channel".as_bytes()).encode();
@@ -33,6 +34,7 @@ impl IsRealtimeHandler {
             .expect("expected to be sent to listen handler");
     }
     fn deactivate_listening(&self) {
+        log::info!("deactivating realtime");
         let envelope = Envelope::new(
             "unlisten",
             "insert_channel".as_bytes()).encode();
