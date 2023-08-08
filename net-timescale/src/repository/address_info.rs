@@ -52,11 +52,11 @@ pub async fn select_address_info_by_date_cut_transaction<'e>(
 const QUERY_BY_INDEX: &str = "
     SELECT addr
     FROM (
-        SELECT DISTINCT(src_addr)
+        SELECT DISTINCT(src_addr) AS addr
         FROM captured_traffic
         WHERE id >= $1
         UNION
-        SELECT DISTINCT(dst_addr)
+        SELECT DISTINCT(dst_addr) AS addr
         FROM captured_traffic
         WHERE id >= $1
     ) AS info
