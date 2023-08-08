@@ -1,9 +1,6 @@
-use std::{
-    sync::Arc,
-};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::collections::HashMap;
 use async_std::task;
-use async_std::sync::RwLock;
 use async_std::task::block_on;
 use sqlx::{Postgres, postgres::PgListener};
 use net_transport::sockets::Sender;
@@ -18,10 +15,11 @@ use crate::command::executor::PoolWrapper;
 pub struct ListenHandler<S>
 where S: Sender
 {
-    listener: PgListener,
+    connection_pool: PoolWrapper<Postgres>,
     router: Arc<S>,
     sender: async_channel::Sender<Vec<u8>>,
     receiver: async_channel::Receiver<Vec<u8>>,
+    tasks: HashMap<String, task::JoinHandle<()>>,
 }
 
 // TODO: need to write integration tests
@@ -34,63 +32,67 @@ impl<S> ListenHandler<S>
         receiver: async_channel::Receiver<Vec<u8>>,
         router: Arc<S>,
     ) -> Self {
-        let listener = PgListener::connect_with(connection_pool.get_connection().await)
-            .await
-            .expect("expected to construct listener");
         Self {
-            listener,
+            connection_pool,
             router,
             sender,
-            receiver
+            receiver,
+            tasks: HashMap::default(),
         }
     }
     pub fn builder() -> ListenHandlerBuilder<S> {
         ListenHandlerBuilder::<S>::new()
     }
 
-    async fn dispatch_command(&mut self, command: &str, channel: &str) {
+    async fn dispatch_command(&mut self, command: &str, channel: &str) -> Result<(), sqlx::Error> {
         match command {
             "listen" => {
                 log::info!("got listen, waiting for lock");
-                match listener.listen(channel).await {
-                    Ok(_) => {
-                        log::debug!("started listening on {}", channel);
-                    },
-                    Err(err) => {
-                        log::error!("error while trying to listen on {}: {}", channel, err);
-                    }
+                if self.tasks.contains_key(channel) {
+                    log::debug!("{} is already being listened", channel);
+                    return Ok(());
                 }
+                let sender = self.sender.clone();
+                let mut listener = PgListener::connect_with(
+                    self.connection_pool.get_connection().await,
+                ).await?;
+                listener.listen(channel).await?;
+                self.tasks.insert(
+                    channel.to_owned(),
+                    task::spawn(
+                        async move {
+                            ListenHandler::<S>::_poll(
+                                -1,
+                                sender,
+                                listener,
+                            ).await
+                        }
+                    )
+                );
+                Ok(())
             },
             "unlisten" => {
-                // let mut listener = self.listener.write().await;
-                match listener.unlisten(channel).await {
-                    Ok(_) => {
-                        log::debug!("stopped listening on {}", channel);
-                    },
-                    Err(err) => {
-                        log::error!("error while trying to stop listening on {}: {}", channel, err);
-                    }
+                if !self.tasks.contains_key(channel) {
+                    log::debug!("{} is already stopped to be listened", channel);
+                    return Ok(());
                 }
+                if let Some(channel_poller) = self.tasks.remove(channel) {
+                    channel_poller
+                        .cancel()
+                        .await;
+                }
+                Ok(())
             },
             _ => {
-                log::error!("wrong api command {}", command);
+                // TODO: it is weird to return Ok here because it is actual is an error
+                // need to think about improving this behaviour
+                log::error!("unknown api command {}", command);
+                Ok(())
             }
         }
     }
 
     pub async fn poll(&mut self, poll_count: i64) {
-        let listener = self.listener;
-        let stopper = Arc::new(AtomicBool::new(false));
-        let stopper_clone = stopper.clone();
-        let sender= self.sender.clone();
-        let poller = task::spawn(async move {
-            ListenHandler::<S>::_poll(
-                poll_count,
-                sender,
-                listener,
-                stopper_clone
-            ).await;
-        });
         let mut count = 0;
         loop {
             if count == poll_count {
@@ -114,10 +116,12 @@ impl<S> ListenHandler<S>
                         _ => {
                             log::info!("is dispatch command");
                             // do something here
-                            self.dispatch_command(
+                            if let Err(err) = self.dispatch_command(
                                 envelope.get_type(),
                                 String::from_utf8(envelope.get_data().to_vec()).unwrap().as_str())
-                                .await;
+                                .await {
+                                log::error!("couldn't dispatch a command: {}", err);
+                            }
                         }
                     }
                 },
@@ -126,24 +130,20 @@ impl<S> ListenHandler<S>
                 }
             }
         }
-        stopper.store(true, Ordering::Relaxed);
-        poller.await;
     }
 
     async fn _poll(
         poll_count: i64,
         sender: async_channel::Sender<Vec<u8>>,
-        listener: Arc<RwLock<PgListener>>,
-        stopper: Arc<AtomicBool>,
+        mut listener: PgListener,
     ) {
         let mut count = 0;
         loop {
-            if count == poll_count || stopper.load(Ordering::Relaxed) {
+            if count == poll_count {
                 break;
             }
-            // use try_recv here
             log::debug!("waiting for something in _poll");
-            let notification = match listener.write().await.recv().await {
+            let notification = match listener.recv().await {
                 Ok(notification) => {
                     log::debug!("got notification from {}", notification.channel());
                     notification
@@ -153,8 +153,6 @@ impl<S> ListenHandler<S>
                     continue;
                 }
             };
-
-            // TODO: need to receive necessary info using payload
             let notification = NotificationDTO::new(
                 notification.payload(),
                 notification.channel()).encode();
