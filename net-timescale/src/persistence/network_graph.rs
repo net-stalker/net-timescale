@@ -129,3 +129,30 @@ pub async fn reply_network_graph_request(
 
     NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice())
 }
+
+pub async fn get_network_graph_by_index(
+    transaction: &mut sqlx::Transaction<'_, Postgres>,
+    index: i64
+) -> Result<NetworkGraphDTO, sqlx::Error>
+{
+    let address_pairs = address_pair::select_address_pairs_by_index_transaction(
+        transaction,
+        index
+    ).await?;
+    let addresses = address_info::select_address_info_by_index_transaction(
+        transaction,
+        index
+    ).await?;
+    let mut edges_dto = Vec::with_capacity(address_pairs.len());
+    let mut nodes_dto = Vec::with_capacity(addresses.len());
+
+    for pair in address_pairs.into_iter() {
+        edges_dto.push(pair.into());
+    }
+
+    for node in addresses.into_iter() {
+        nodes_dto.push(node.into());
+    }
+
+    Ok(NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice()))
+}
