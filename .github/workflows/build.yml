@@ -105,6 +105,14 @@ jobs:
         run: |
           docker-compose build timescaledb-migrations && docker-compose up timescaledb-migrations
 
+      - name: Set up GIT credentials
+        run: |
+          git config --global credential.helper store
+          echo "https://${{ secrets.OWNER }}:${{ secrets.OWNER_PAT }}@github.com" > ~/.git-credentials
+          touch ~/.cargo/config
+          echo "[net]" > ~/.cargo/config
+          echo "git-fetch-with-cli = true" >> ~/.cargo/config
+
       - name: Build and Test
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
