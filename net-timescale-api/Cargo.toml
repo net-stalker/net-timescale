@@ -16,6 +16,3 @@ ion-text = []
 ion-binary = []
 
 default = ["ion-text"]
-
-[net]
-git-fetch-with-cli.workspace = true

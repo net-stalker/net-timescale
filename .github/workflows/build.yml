@@ -48,21 +48,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto tree
 
-      - name: Set up SSH
-        env:
-          SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
+      - name: Set up GIT credentials
         run: |
-          mkdir -p ~/.ssh/
-          touch ~/.ssh/net-stalker-secret
-          ls -a ~/.ssh/
-          'echo "$SSH_PRIVATE_KEY" > ~/.ssh/net-stalker-secret'
-          cat ~/.ssh/net-stalker-secret
-          chmod 600 ~/.ssh/net-stalker-secret
-          touch ~/.ssh/config
-          'echo "Host github.com" > ~/.ssh/config'
-          'echo "  IdentityFile ~/.ssh/net-stalker-secret" >> ~/.ssh/config'
-          cat ~/.ssh/config
-
+          git config --global credential.helper store
+          echo "https://${{ secrets.OWNER }}:${{ secrets.OWNER_PAT }}@github.com" > ~/.git-credentials
+          touch ~/.cargo/config
+          echo "[net]" > ~/.cargo/config
+          echo "git-fetch-with-cli = true" >> ~/.cargo/config
+          
       - name: Build and Test
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
@@ -111,6 +104,14 @@ jobs:
       - name: Build and Run timescaleDB migrations
         run: |
           docker-compose build timescaledb-migrations && docker-compose up timescaledb-migrations
+
+      - name: Set up GIT credentials
+        run: |
+          git config --global credential.helper store
+          echo "https://${{ secrets.OWNER }}:${{ secrets.OWNER_PAT }}@github.com" > ~/.git-credentials
+          touch ~/.cargo/config
+          echo "[net]" > ~/.cargo/config
+          echo "git-fetch-with-cli = true" >> ~/.cargo/config
 
       - name: Build and Test
         env:
