@@ -1,4 +1,3 @@
-use std::ops::DerefMut;
 use std::sync::Arc;
 use async_std::task::block_on;
 use net_transport::sockets::{Handler, Receiver, Sender};
