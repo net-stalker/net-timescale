@@ -119,7 +119,7 @@ impl<S> ListenHandler<S>
             };
             // TODO: need to receive necessary info using payload
             let notification = NotificationDTO::new(notification.payload()).encode();
-            let envelope = Envelope::new("notification", notification.as_slice()).encode();
+            let envelope = Envelope::new(None, None, "notification", notification.as_slice()).encode();
             sender.send(envelope).await.unwrap();
             count += 1;
         }

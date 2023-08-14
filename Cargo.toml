@@ -6,10 +6,10 @@ members = [
 ]
 
 [workspace.dependencies]
-net-proto-api = { git = "ssh://github.com/net-stalker/net-core", branch = "develop" }
-net-transport = { git = "ssh://github.com/net-stalker/net-core", branch = "develop" }
-net-file = { git = "ssh://github.com/net-stalker/net-core", branch = "develop" }
-net-config = { git = "ssh://github.com/net-stalker/net-config", branch = "develop" }
+net-proto-api = { version = "0.1.0", registry = "net-registry" }
+net-transport = { version = "0.1.0", registry = "net-registry" }
+net-file = { version = "0.1.0", registry = "net-registry" }
+net-config = { version = "0.1.0", registry = "net-registry" }
 
 log = "0.4.17"
 log4rs = "1.2.0"
@@ -19,7 +19,3 @@ directories = "5.0.0"
 config = "0.13.3"
 serde = { version = "1.0.156", features = ["derive"] }
 toml = "0.7.3"
-
-
-[net]
-git-fetch-with-cli = true

@@ -54,8 +54,21 @@ where
             start_date, end_date
         ));
         log::info!("got network graph {:?}", network_graph);
+        let agent_id = match envelope.get_agent_id() {
+            Ok(id) => Some(id),
+            Err(_) => None
+        };
+        let group_id = match envelope.get_group_id() {
+            Ok(id) => Some(id),
+            Err(_) => None
+        };
+        
         let data = network_graph.encode();
-        let data = Envelope::new("network_graph", &data).encode();
+        let data = Envelope::new(
+            group_id,
+            agent_id,
+            "network_graph",
+            &data).encode();
         if graph_request.get_end_date_time() == 0 {
             let mock_connection_id = 90;
             self.is_realtime_handler.send(RealtimeRequestDTO::new(mock_connection_id).encode().as_slice());
