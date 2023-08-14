@@ -55,6 +55,10 @@ jobs:
           touch ~/.cargo/config
           echo "[net]" > ~/.cargo/config
           echo "git-fetch-with-cli = true" >> ~/.cargo/config
+
+      - name: Clippy check
+        run:
+          cargo clippy --all-features -- -D warnings
           
       - name: Build and Test
         env:
