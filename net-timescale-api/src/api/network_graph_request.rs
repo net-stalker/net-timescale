@@ -1,3 +1,4 @@
+use std::path::is_separator;
 use ion_rs;
 use ion_rs::IonWriter;
 use ion_rs::IonReader;
@@ -8,16 +9,18 @@ use net_proto_api::decoder_api::Decoder;
 
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct NetworkGraphRequest {
+pub struct NetworkGraphRequestDTO {
     start_date_time: i64,
     end_date_time: i64,
+    subscribe: bool,
 }
 
-impl NetworkGraphRequest {
-    pub fn new (start_date_time: i64, end_date_time: i64) -> Self {
-        NetworkGraphRequest {
+impl NetworkGraphRequestDTO {
+    pub fn new (start_date_time: i64, end_date_time: i64, subscribe: bool) -> Self {
+        NetworkGraphRequestDTO {
             start_date_time,
             end_date_time,
+            subscribe,
         }
     }
 
@@ -28,9 +31,13 @@ impl NetworkGraphRequest {
     pub fn get_end_date_time (&self) -> i64 {
         self.end_date_time
     }
+
+    pub fn is_subscribe (&self) -> bool {
+        self.subscribe
+    }
 }
 
-impl Encoder for NetworkGraphRequest {
+impl Encoder for NetworkGraphRequestDTO {
     fn encode(&self) -> Vec<u8> {
         let buffer: Vec<u8> = Vec::new();
 
@@ -52,6 +59,9 @@ impl Encoder for NetworkGraphRequest {
         writer.set_field_name("end_date_time");
         writer.write_i64(self.end_date_time).unwrap();
 
+        writer.set_field_name("subscribe");
+        writer.write_bool(self.subscribe).unwrap();
+
         writer.step_out().unwrap();
         writer.flush().unwrap();
 
@@ -59,7 +69,7 @@ impl Encoder for NetworkGraphRequest {
     }
 }
 
-impl Decoder for NetworkGraphRequest {
+impl Decoder for NetworkGraphRequestDTO {
     fn decode(data: &[u8]) -> Self {
 
         let mut binary_user_reader = ion_rs::ReaderBuilder::new().build(data).unwrap();
@@ -72,9 +82,13 @@ impl Decoder for NetworkGraphRequest {
         binary_user_reader.next().unwrap();
         let end_date_time = binary_user_reader.read_i64().unwrap();
 
-        NetworkGraphRequest::new(
+        binary_user_reader.next().unwrap();
+        let subscribe = binary_user_reader.read_bool().unwrap();
+
+        NetworkGraphRequestDTO::new(
             start_date_time,
             end_date_time,
+            subscribe
         )
     }
 }
@@ -90,15 +104,18 @@ mod tests {
     use net_proto_api::decoder_api::Decoder;
     use net_proto_api::encoder_api::Encoder;
 
-    use crate::api::network_graph_request::NetworkGraphRequest;
+    use crate::api::network_graph_request::NetworkGraphRequestDTO;
 
     #[test]
     fn reader_correctly_read_encoded_ng_request() {
         const START_DATE_TIME: i64 = i64::MIN;
         const END_DATE_TIME: i64 = i64::MAX;
-        let network_graph_request = NetworkGraphRequest::new(
+        const SUBSCRIBE: bool = true;
+
+        let network_graph_request = NetworkGraphRequestDTO::new(
             START_DATE_TIME,
             END_DATE_TIME,
+            SUBSCRIBE,
         );
         
         let mut binary_user_reader = ReaderBuilder::new().build(network_graph_request.encode()).unwrap();
@@ -113,16 +130,23 @@ mod tests {
         assert_eq!(StreamItem::Value(IonType::Int), binary_user_reader.next().unwrap());
         assert_eq!("end_date_time", binary_user_reader.field_name().unwrap());
         assert_eq!(END_DATE_TIME,  binary_user_reader.read_i64().unwrap());
+
+        assert_eq!(StreamItem::Value(IonType::Bool), binary_user_reader.next().unwrap());
+        assert_eq!("subscribe", binary_user_reader.field_name().unwrap());
+        assert_eq!(SUBSCRIBE,  binary_user_reader.read_bool().unwrap());
     }
 
     #[test]
     fn endec_ng_request() {
         const START_DATE_TIME: i64 = i64::MIN;
         const END_DATE_TIME: i64 = i64::MAX;
-        let network_graph_request = NetworkGraphRequest::new(
+        const SUBSCRIBE: bool = true;
+
+        let network_graph_request = NetworkGraphRequestDTO::new(
             START_DATE_TIME,
             END_DATE_TIME,
+            SUBSCRIBE,
         );
-        assert_eq!(network_graph_request, NetworkGraphRequest::decode(&network_graph_request.encode()));
+        assert_eq!(network_graph_request, NetworkGraphRequestDTO::decode(&network_graph_request.encode()));
     }
 }
