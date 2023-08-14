@@ -1,4 +1,4 @@
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{TimeZone, Utc};
 use futures::executor::block_on;
 use serde_json::json;
 use sqlx::{Pool, Postgres};
@@ -15,7 +15,7 @@ async fn establish_connection() -> Pool<Postgres> {
 #[cfg(feature = "integration")]
 #[test]
 fn integration_test_insert() {
-    let mut con = block_on(establish_connection());
+    let con = block_on(establish_connection());
     let json_data = json!({
         "test": "test",
     });
@@ -28,7 +28,7 @@ fn integration_test_insert() {
         &binary_json,
     );
     let result = block_on(network_packet::insert_network_packet(
-        &mut con, network_packet_dto.into()
+        &con, network_packet_dto.into()
     )).unwrap();
     assert_eq!(1, result.rows_affected());
     let query = sqlx::query_as::<_, NetworkPacket>("select * from captured_traffic;").fetch_all(&con);

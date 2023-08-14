@@ -159,8 +159,8 @@ mod tests {
         let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ADDR, DST_ADDR);
 
         let network_graph = NetworkGraphDTO::new(
-            &vec![first_graph_node, second_graph_node],
-            &vec![graph_edge],
+            &[first_graph_node, second_graph_node],
+            &[graph_edge],
         );
 
         let mut binary_user_reader = ReaderBuilder::new().build(network_graph.encode()).unwrap();
@@ -220,8 +220,8 @@ mod tests {
         let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ADDR, DST_ADDR);
 
         let network_graph = NetworkGraphDTO::new(
-            &vec![first_graph_node, second_graph_node],
-            &vec![graph_edge],
+            &[first_graph_node, second_graph_node],
+            &[graph_edge],
         );
 
         assert_eq!(network_graph, NetworkGraphDTO::decode(&network_graph.encode()));
