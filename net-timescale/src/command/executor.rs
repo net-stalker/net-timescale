@@ -1,6 +1,5 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use sqlx::{
-    postgres::PgPoolOptions,
     Database,
     Pool
 };

@@ -10,13 +10,14 @@ pub struct NetworkPacket {
     pub dst_addr: String,
     pub binary_data: serde_json::Value,
 }
-impl Into<NetworkPacket> for NetworkPacketDTO {
-    fn into(self) -> NetworkPacket {
+
+impl From<NetworkPacketDTO> for NetworkPacket {
+    fn from(value: NetworkPacketDTO) -> NetworkPacket {
         NetworkPacket {
-            frame_time: Utc.timestamp_nanos(self.get_frame_time()),
-            src_addr: self.get_src_addr().to_string(),
-            dst_addr: self.get_dst_addr().to_string(),
-            binary_data: serde_json::from_slice(self.get_network_packet_data()).unwrap(),
+            frame_time: Utc.timestamp_nanos(value.get_frame_time()),
+            src_addr: value.get_src_addr().to_string(),
+            dst_addr: value.get_dst_addr().to_string(),
+            binary_data: serde_json::from_slice(value.get_network_packet_data()).unwrap(),
         }
     }
 }

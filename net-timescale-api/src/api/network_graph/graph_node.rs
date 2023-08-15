@@ -35,8 +35,13 @@ impl Encoder for GraphNodeDTO {
         let text_writer_builder = ion_rs::TextWriterBuilder::new(TextKind::Compact); 
 
         #[cfg(feature = "ion-binary")]
-        let mut writer = binary_writer_builder.build(buffer).unwrap();
+        #[allow(unused_variables)]
+        #[allow(unused_mut)]
+        let mut writer = binary_writer_builder.build(buffer.clone()).unwrap();
+        
         #[cfg(feature = "ion-text")]
+        #[allow(unused_variables)]
+        #[allow(unused_mut)]
         let mut writer = text_writer_builder.build(buffer).unwrap();
 
         writer.step_in(ion_rs::IonType::Struct).expect("Error while creating an ion struct");

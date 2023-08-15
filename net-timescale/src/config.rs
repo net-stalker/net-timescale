@@ -35,7 +35,6 @@ pub struct Config {
 #[cfg(test)]
 mod tests {
     use std::env;
-    use toml::value::Time;
     use super::*;
 
     #[test]

@@ -1,7 +1,6 @@
 use chrono::{DateTime, Utc};
 use futures::TryStreamExt;
 use sqlx::{
-    Database,
     Pool,
     Postgres
 };
@@ -13,20 +12,19 @@ use net_timescale_api::api::{
         network_graph::NetworkGraphDTO,
     }
 };
-use crate::command::executor::PoolWrapper;
 use crate::repository::address_pair::{AddressPair, self};
 use crate::repository::address_info::{AddressInfo, self};
 
 
-impl Into<GraphNodeDTO> for AddressInfo {
-    fn into(self) -> GraphNodeDTO {
-        GraphNodeDTO::new(&self.addr)
+impl From<AddressInfo> for GraphNodeDTO {
+    fn from(value: AddressInfo) -> GraphNodeDTO {
+        GraphNodeDTO::new(&value.addr)
     }
 }
 
-impl Into<GraphEdgeDTO> for AddressPair {
-    fn into(self) -> GraphEdgeDTO {
-        GraphEdgeDTO::new(&self.src_addr, &self.dst_addr)
+impl From<AddressPair> for GraphEdgeDTO {
+    fn from(value: AddressPair) -> GraphEdgeDTO {
+        GraphEdgeDTO::new(&value.src_addr, &value.dst_addr)
     }
 }
 

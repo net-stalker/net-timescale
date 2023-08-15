@@ -1,7 +1,6 @@
 use chrono::{DateTime, Utc};
 use futures::stream::BoxStream;
-use sqlx::{Database, Error, Pool, Postgres};
-use sqlx::postgres::PgConnection;
+use sqlx::{Error, Pool, Postgres};
 
 #[derive(sqlx::FromRow, Debug)]
 pub struct AddressPair {
@@ -9,11 +8,11 @@ pub struct AddressPair {
     pub dst_addr: String,
 }
 
-pub async fn select_address_pairs_by_date_cut<'e>(
-    con: &'e Pool<Postgres>,
+pub async fn select_address_pairs_by_date_cut(
+    con: &'_ Pool<Postgres>,
     start_date: DateTime<Utc>,
     end_date: DateTime<Utc>
-) -> BoxStream<'e, Result<AddressPair, Error>>
+) -> BoxStream<'_, Result<AddressPair, Error>>
 {
     sqlx::query_as::<_, AddressPair>(
         "

@@ -1,18 +1,15 @@
 use std::collections::HashSet;
-use std::ops::{Deref, DerefMut};
+use std::ops::DerefMut;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use async_std::task::block_on;
-use chrono::{TimeZone, Utc};
 
+use net_transport::dummy_command::DummyCommand;
 use threadpool::ThreadPool;
 use sqlx::{
     Postgres,
     postgres::PgPoolOptions,
     Pool,
-};
-use net_transport::{
-    dummy_command::DummyCommand,
 };
 use net_transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
 use net_transport::polling::zmq::ZmqPoller;
@@ -20,13 +17,6 @@ use net_transport::sockets::Context;
 use net_transport::zmq::builders::publisher::ConnectorZmqPublisherBuilder;
 use net_transport::zmq::builders::subscriber::ConnectorZmqSubscriberBuilder;
 use net_transport::zmq::contexts::dealer::DealerContext;
-use net_proto_api::{
-    decoder_api::Decoder,
-    encoder_api::Encoder,
-    envelope::envelope::Envelope,
-};
-use net_timescale_api::api::network_graph::network_graph;
-use net_timescale_api::api::network_packet::NetworkPacketDTO;
 use net_transport::zmq::contexts::publisher::PublisherContext;
 use net_transport::zmq::contexts::subscriber::SubscriberContext;
 use crate::command::{
@@ -41,9 +31,9 @@ use crate::command::listen_handler::ListenHandler;
 use crate::config::Config;
 use crate::repository::continuous_aggregate;
 
-pub const TIMESCALE_CONSUMER: &'static str = "inproc://timescale/consumer";
-pub const TIMESCALE_PRODUCER: &'static str = "inproc://timescale/producer";
-pub const IS_REALTIME: &'static str = "inproc://timescale/is-realtime";
+pub const TIMESCALE_CONSUMER: &str = "inproc://timescale/consumer";
+pub const TIMESCALE_PRODUCER: &str = "inproc://timescale/producer";
+pub const IS_REALTIME: &str = "inproc://timescale/is-realtime";
 
 pub struct Timescale {
     thread_pool: ThreadPool,
@@ -62,15 +52,14 @@ impl Timescale {
         }
     }
     async fn configure_connection_pool(config: &Config) -> Pool<Postgres> {
-        let pool = PgPoolOptions::new()
+        PgPoolOptions::new()
             .max_connections(config.max_connection_size.size.parse().expect("not a number"))
             .connect(config.connection_url.url.as_str())
             .await
-            .unwrap();
-        pool
+            .unwrap()
     }
 
-    async fn create_continuous_aggregate<'e>(con: &'e Pool<Postgres>) {
+    async fn create_continuous_aggregate(con: &Pool<Postgres>) {
         match continuous_aggregate::create_address_pair_aggregate(con).await {
             Ok(_) => {
                 log::info!("successfully created address pair continuous aggregate");
@@ -135,10 +124,10 @@ impl Timescale {
         let dealer_context_clone = dealer_context.clone();
         let connection_pool_clone = self.connection_pool.clone();
         // TODO: create a wrapper for tenants
-        let mut tenants = Arc::new(Mutex::new(
+        let tenants = Arc::new(Mutex::new(
             Arc::new(async_std::sync::RwLock::new(HashSet::default()))
         ));
-        let mut tenants_clone = tenants.clone();
+        let tenants_clone = tenants.clone();
         self.thread_pool.execute(move || {
             let router = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
@@ -152,26 +141,18 @@ impl Timescale {
                 .with_router(router)
                 .build();
             if let Ok(mut guard) = tenants_clone.lock() {
-                let mut temp = guard.deref_mut();
+                let temp = guard.deref_mut();
                 *temp = listen_handler.get_tenants();
             }
             block_on(listen_handler.start("insert_channel", -1));
         });
 
         std::thread::sleep(Duration::from_secs(1));
-        let dealer_context_clone = dealer_context.clone();
         let sub_context_clone = sub_context.clone();
         let connection_pool_clone = self.connection_pool.clone();
 
         self.thread_pool.execute(move || {
             let executor = PoolWrapper::new(connection_pool_clone).into_inner();
-            let router = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
-                .with_endpoint(TIMESCALE_PRODUCER.to_owned())
-                .with_handler(Arc::new(DummyCommand))
-                .build()
-                .connect()
-                .into_inner();
-
             let network_packet_handler = NetworkPacketHandler::new(executor.clone(),
             "dummy".to_string());
             let network_packet_connector = ConnectorZmqSubscriberBuilder::new(&sub_context_clone)
