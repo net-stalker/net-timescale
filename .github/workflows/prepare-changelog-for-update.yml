@@ -1,16 +1,15 @@
-name: Update CHANGELOG.md
+name: Prepare CHANGELOG.md for update
 
 on:
- repository_dispatch:
-    types: [prepare-changelog]
-
+  push:
+    branches: "[*]"
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  update-changelog:
-    name: update-changelog
+  prepare-changelog:
+    name: prepare-changelog
     
     permissions:
       contents: write
@@ -23,6 +22,12 @@ jobs:
         with:
           token: ${{ secrets.OWNER_PAT }}
 
+      - name: Check if CHANGELOG.md has been changed
+        run: |
+          if [[ $(git diff --name-only ${{ github.event.before }} ${{ github.sha }}) == "CHANGELOG.md" ]]; then
+            echo "ERROR: Only CHANGELOG.md was modified. This is not allowed."
+            exit 1
+          fi
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -42,44 +47,31 @@ jobs:
           echo "https://${{ secrets.OWNER }}:${{ secrets.OWNER_PAT }}@github.com" > ~/.git-credentials
           git config --global user.email "test@netstalker.io"
           git config --global user.name ${{ secrets.OWNER }}
-
-      - name: Get core.py from net-registry-index/scripts
-        env:
-          CORE: https://raw.github.com/net-stalker/net-registry-index/develop/scripts/core.py
-        run: |
-          wget $CORE
-
-      - name: Get version getter from cargo manifest
-        env:
-          VERSION_GETTER: https://raw.github.com/net-stalker/net-registry-index/develop/scripts/get_manifest_version.py
-        run: |
-          wget $VERSION_GETTER
-          chmod +x get_manifest_version.py
-
-      - name: Get date getter
-        env: 
-          DATE_GETTER: https://raw.github.com/net-stalker/net-registry-index/develop/scripts/get_current_date.py
-        run: |
-          wget $DATE_GETTER
-          chmod +x get_current_date.py
-
-      - name: Get changelog update
-        id: changelog-update
-        env:
-          CARGO_MANIFEST_DIR: ${{ github.workspace }}
-        run: |
-          export MANIFEST_VERSION=$(./get-manifest-version.py "$CARGO_MANIFEST_DIR")
-          export CURRENT_DATE=$(./get_current_date.py)
-          export GIT_HASH=$(git rev-parse --short "$GITHUB_SHA")
-          export TAG_AND_DATE=$"## [$MANIFEST_VERSION-$GIT_HASH] - $CURRENT_DATE"
-         
-          echo "CHANGE_LOG=$TAG_AND_DATE" >> "$GITHUB_OUTPUT" 
-
-          echo "${{ github.event.client_payload.message }}"
       
-      - name: Add a new changelog
-        uses: wow-actions/update-file@v1
-        with:
-          path: CHANGELOG.md
-          GITHUB_TOKEN: ${{ secrets.OWNER_PAT }}
-          content: "${{ steps.changelog-update.outputs.CHANGE_LOG }}\n\n${{ github.event.client_payload.message }}"
+      - name: Get script for changelog prepearing
+        env:
+          CHANGELOG_PREPARATOR: https://raw.github.com/net-stalker/net-registry-index/develop/scripts/changelog_preparator.py
+        run: |
+          wget $CHANGELOG_PREPARATOR
+          chmod +x changelog_preparator.py
+
+      # - name: Prepare CHANGELOG.md for a new log
+      #   env:
+      #     CARGO_MANIFEST_DIR: ${{ github.workspace }}
+      #   run: |
+      #     echo "${{ github.event.head_commit.message }}"
+      #     export GIT_MSG="${{ github.event.head_commit.message }}"
+      #     export GIT_HASH=$(git rev-parse --short "$GITHUB_SHA")
+      #     cat CHANGELOG.md
+      #     ./changelog_preparator.py $CARGO_MANIFEST_DIR
+      #     cat CHANGELOG.md
+      #     git add CHANGELOG.md
+      #     git commit -m "$GIT_HASH:$GIT_MSG"
+      #     git push
+
+      # - name: Repository Dispatch
+      #   uses: peter-evans/repository-dispatch@v2
+      #   with:
+      #     token: ${{ secrets.OWNER_PAT }}
+      #     event-type: prepare-changelog
+      #     client-payload: '{"message": "${{ github.event.head_commit.message }}"}'
