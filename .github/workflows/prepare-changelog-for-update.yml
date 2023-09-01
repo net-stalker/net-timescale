@@ -1,15 +1,16 @@
-name: Prepare CHANGELOG.md for update
+name: Update CHANGELOG.md
 
 on:
-  push:
-    branches: "develop"
+ repository_dispatch:
+    types: [prepare-changelog]
+
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  prepare-changelog:
-    name: prepare-changelog
+  update-changelog:
+    name: update-changelog
     
     permissions:
       contents: write
@@ -19,6 +20,8 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.OWNER_PAT }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -26,9 +29,12 @@ jobs:
           python-version: 3.x
 
       - name: Install Python deps
+        env:
+          REQUIREMENTS: https://raw.github.com/net-stalker/net-registry-index/develop/scripts/requirements.txt
         run: |
+          wget $REQUIREMENTS
           python -m pip install --upgrade pip
-          pip install toml
+          pip install -r requirements.txt
 
       - name: Set up GIT credentials
         run: |
@@ -36,33 +42,44 @@ jobs:
           echo "https://${{ secrets.OWNER }}:${{ secrets.OWNER_PAT }}@github.com" > ~/.git-credentials
           git config --global user.email "test@netstalker.io"
           git config --global user.name ${{ secrets.OWNER }}
-      
-      - name: Get script for changelog prepearing
-        env:
-          CHANGELOG_UPDATOR: https://raw.github.com/net-stalker/net-registry-index/develop/scripts/changelog/changelog-updator.py
-        run: |
-          wget $CHANGELOG_UPDATOR
-          chmod +x changelog-updator.py
 
-      - name: Prepare CHANGELOG.md for a new log
+      - name: Get core.py from net-registry-index/scripts
+        env:
+          CORE: https://raw.github.com/net-stalker/net-registry-index/develop/scripts/core.py
+        run: |
+          wget $CORE
+
+      - name: Get version getter from cargo manifest
+        env:
+          VERSION_GETTER: https://raw.github.com/net-stalker/net-registry-index/develop/scripts/get_manifest_version.py
+        run: |
+          wget $VERSION_GETTER
+          chmod +x get_manifest_version.py
+
+      - name: Get date getter
+        env: 
+          DATE_GETTER: https://raw.github.com/net-stalker/net-registry-index/develop/scripts/get_current_date.py
+        run: |
+          wget $DATE_GETTER
+          chmod +x get_current_date.py
+
+      - name: Get changelog update
+        id: changelog-update
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
         run: |
-          echo "${{ github.event.head_commit.message }}"
-          export GIT_MSG="${{ github.event.head_commit.message }}"
-          echo "Before preparation"
-          cat CHANGELOG.md
-          ./changelog-updator.py $CARGO_MANIFEST_DIR
-          cat CHANGELOG.md
-          echo "After preparation"
-          git add CHANGELOG.md
-          git commit -m "$GIT_MSG"
-          git push
+          export MANIFEST_VERSION=$(./get-manifest-version.py "$CARGO_MANIFEST_DIR")
+          export CURRENT_DATE=$(./get_current_date.py)
+          export GIT_HASH=$(git rev-parse --short "$GITHUB_SHA")
+          export TAG_AND_DATE=$"## [$MANIFEST_VERSION-$GIT_HASH] - $CURRENT_DATE"
+         
+          echo "CHANGE_LOG=$TAG_AND_DATE" >> "$GITHUB_OUTPUT" 
 
-      - name: Repository Dispatch
-        uses: peter-evans/repository-dispatch@v2
+          echo "${{ github.event.client_payload.message }}"
+      
+      - name: Add a new changelog
+        uses: wow-actions/update-file@v1
         with:
-          token: ${{ secrets.OWNER_PAT }}
-          event-type: prepare-changelog
-          client-payload: '{"message": "${{ github.event.head_commit.message }}"}'
-
+          path: CHANGELOG.md
+          GITHUB_TOKEN: ${{ secrets.OWNER_PAT }}
+          content: "${{ steps.changelog-update.outputs.CHANGE_LOG }}\n\n${{ github.event.client_payload.message }}"
