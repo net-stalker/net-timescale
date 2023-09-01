@@ -27,7 +27,7 @@ jobs:
 
       - name: Check if CHANGELOG.md has been changed
         run: |
-          if [[ $(git diff --name-only ${{ github.event.before }} ${{ github.sha }}) == "CHANGELOG.md" ]]; then
+          if [[ $(git diff HEAD HEAD~1 --no-patch --exit-code CHANGELOG.md ]]; then
             echo "ERROR: Only CHANGELOG.md was modified. This is not allowed."
             exit 1
           fi
