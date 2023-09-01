@@ -1,6 +1,5 @@
 use chrono::{DateTime, Utc};
 use sqlx::{Error, Pool, Postgres};
-use sqlx::postgres::PgConnection;
 use futures::stream::BoxStream;
 
 
@@ -10,11 +9,11 @@ pub struct AddressInfo {
     // may be expandable in future
 }
 
-pub async fn select_address_info_by_date_cut<'e>(
-    con: &'e Pool<Postgres>,
+pub async fn select_address_info_by_date_cut(
+    con: &'_ Pool<Postgres>,
     start_date: DateTime<Utc>,
     end_date: DateTime<Utc>
-) -> BoxStream<'e, Result<AddressInfo, Error>>
+) -> BoxStream<'_, Result<AddressInfo, Error>>
 {
     // TODO: this query isn't very efficient because we have to do 2 sub-queries.
     sqlx::query_as::<_, AddressInfo>(

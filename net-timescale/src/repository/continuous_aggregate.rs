@@ -1,8 +1,8 @@
-use sqlx::{Acquire, Database, Error, Pool, Postgres};
-use sqlx::postgres::{PgConnection, PgQueryResult};
+use sqlx::{Error, Pool, Postgres};
+use sqlx::postgres::PgQueryResult;
 
 
-pub async fn create_address_pair_aggregate<'e>(con: &'e Pool<Postgres>)
+pub async fn create_address_pair_aggregate(con: &Pool<Postgres>)
     -> Result<PgQueryResult, Error> {
     sqlx::query("
         CREATE MATERIALIZED VIEW address_pair_aggregate
@@ -17,7 +17,7 @@ pub async fn create_address_pair_aggregate<'e>(con: &'e Pool<Postgres>)
         .execute(con)
         .await
 }
-pub async fn add_refresh_policy_for_address_pair_aggregate<'e>(con: &'e Pool<Postgres>)
+pub async fn add_refresh_policy_for_address_pair_aggregate(con: &Pool<Postgres>)
     -> Result<PgQueryResult, Error> {
     sqlx::query(
         "SELECT add_continuous_aggregate_policy(

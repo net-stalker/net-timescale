@@ -2,17 +2,12 @@ use std::{
     collections::HashSet,
     sync::Arc,
 };
-use std::cell::RefCell;
-use async_std::prelude::FutureExt;
 use async_std::task;
 use async_std::sync::RwLock;
 use async_std::task::block_on;
-use sqlx::{Pool, Postgres, postgres::PgListener};
-use net_transport::dummy_command::DummyCommand;
-use net_transport::sockets::{Handler, Receiver, Sender};
-use net_transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
+use sqlx::{Postgres, postgres::PgListener};
+use net_transport::sockets::Sender;
 use net_proto_api::{
-    decoder_api::Decoder,
     encoder_api::Encoder,
     envelope::envelope::Envelope,
 };
@@ -26,7 +21,6 @@ where S: Sender
     pub connections: Arc<RwLock<HashSet<i64>>>,
     pub router: Arc<S>,
 }
-
 // TODO: need to write integration tests
 impl<S> ListenHandler<S>
     where S: Sender
@@ -43,7 +37,7 @@ impl<S> ListenHandler<S>
         }
     }
     pub fn builder() -> ListenHandlerBuilder<S> {
-        ListenHandlerBuilder::<S>::new()
+        ListenHandlerBuilder::<S>::default()
     }
 
     pub async fn add_tenant(&mut self, connection: i64) {
@@ -58,7 +52,7 @@ impl<S> ListenHandler<S>
         self.connections.write().await.remove(&connection)
     }
 
-    pub async fn start(mut self, channel_to_listen: &str, poll_count: i64) {
+    pub async fn start( self, channel_to_listen: &str, poll_count: i64) {
         let mut listener = PgListener::connect_with(
             self.connection_pool.get_connection().await)
             .await.unwrap();
@@ -99,7 +93,7 @@ impl<S> ListenHandler<S>
 
     async fn poll(
         poll_count: i64,
-        connections: Arc<RwLock<HashSet<i64>>>,
+        _connections: Arc<RwLock<HashSet<i64>>>,
         sender: async_channel::Sender<Vec<u8>>,
         mut listener: PgListener,
     ) {
@@ -119,13 +113,25 @@ impl<S> ListenHandler<S>
             };
             // TODO: need to receive necessary info using payload
             let notification = NotificationDTO::new(notification.payload()).encode();
-            let envelope = Envelope::new("notification", notification.as_slice()).encode();
+            let envelope = Envelope::new(None, None, "notification", notification.as_slice()).encode();
             sender.send(envelope).await.unwrap();
             count += 1;
         }
     }
 }
 
+
+impl<S> Default for ListenHandlerBuilder<S>
+where S: Sender
+{
+    fn default() -> Self {
+        Self {
+            connection_pool: None,
+            connections: Arc::new(RwLock::new(HashSet::default())),
+            router: None,
+        }
+    }
+}
 
 pub struct ListenHandlerBuilder<S>
 where S: Sender
@@ -137,18 +143,12 @@ where S: Sender
 
 impl<S> ListenHandlerBuilder<S>
 where S: Sender {
-    pub fn new() -> Self {
-        Self {
-            connection_pool: None,
-            connections: Arc::new(RwLock::new(HashSet::default())),
-            router: None,
-        }
-    }
+
     pub fn with_router(mut self, router: Arc<S>) -> Self {
         self.router = Some(router);
         self
     }
-    pub fn add_tenant(mut self, connection: i64) -> Self {
+    pub fn add_tenant(self, connection: i64) -> Self {
         block_on(self.connections.write()).insert(connection);
         self
     }
@@ -156,7 +156,7 @@ where S: Sender {
         self.connection_pool = Some(connection_pool);
         self
     }
-    pub fn build(mut self) -> ListenHandler<S> {
+    pub fn build(self) -> ListenHandler<S> {
         ListenHandler::new(
             self.connection_pool.unwrap(),
             self.connections.clone(),
