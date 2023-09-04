@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: 3.x
 
-       - name: Install Python deps
+      - name: Install Python deps
         env:
           REQUIREMENTS: https://raw.github.com/net-stalker/net-registry-index/develop/scripts/requirements.txt
         run: |
