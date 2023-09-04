@@ -74,3 +74,4 @@ jobs:
           path: CHANGELOG.md
           GITHUB_TOKEN: ${{ secrets.OWNER_PAT }}
           content: "${{ steps.change-log.outputs.CHANGE_LOG }}\n\n${{ github.event.client_payload.message }}"
+          commit_message: 'CHANGELOG.md update-file action'
