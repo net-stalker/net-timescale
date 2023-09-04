@@ -3,10 +3,7 @@ name: Prepare CHANGELOG.md for update
 on:
   push:
     branches: [ "develop" ]
-  pull_request:
-    branches: [ "*" ]
   
-
 env:
   CARGO_TERM_COLOR: always
 
