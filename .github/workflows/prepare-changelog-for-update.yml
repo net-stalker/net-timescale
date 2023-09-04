@@ -32,14 +32,14 @@ jobs:
         
       - name: List all changed files
         run: |
+          for added_file in ${{ steps.changed-files.outputs.added_files }}; do
+            if [[ "$added_file" == "CHANGELOG.md" ]]; then
+              echo "INFO: CHANGELOG.md was added."
+              exit 0
+            fi
+          done
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             if [[ "$file" == "CHANGELOG.md" && ${{ steps.changed-files.outputs.all_changed_files_count }} != 1 ]]; then
-              for added_file in ${{ steps.changed-files.outputs.added_files }}; do
-                if [[ "$added_file" == "CHANGELOG.md" ]]; then
-                  echo "INFO: CHANGELOG.md was added."
-                  exit 0
-                fi
-              done
               echo "ERROR: CHANGELOG.md was modified. This is not allowed."
               exit 1
             fi
