@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::ops::DerefMut;
 use std::sync::{Arc, Mutex};
+use std::rc::Rc;
 use std::time::Duration;
 use async_std::task::block_on;
 
@@ -88,7 +89,7 @@ impl Timescale {
         self.thread_pool.execute(move || {
             let consumer_db_service = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
                 .with_endpoint(self.config.timescale_endpoint.addr)
-                .with_handler(Arc::new(DummyCommand))
+                .with_handler(Rc::new(DummyCommand))
                 .build()
                 .connect()
                 .into_inner();

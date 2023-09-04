@@ -1,16 +1,15 @@
-use std::sync::Arc;
-
+use std::rc::Rc;
 use net_transport::sockets::{Sender, Receiver, Handler};
 
 pub struct Router<T>
 where T: Sender + Sized
 {
-    network_channel: Arc<T>
+    network_channel: Rc<T>
 }
 impl<T> Router<T>
 where T: Sender + Sized 
 {
-    pub fn new(network_channel: Arc<T>) -> Self {
+    pub fn new(network_channel: Rc<T>) -> Self {
         Router { network_channel }
     } 
 }
