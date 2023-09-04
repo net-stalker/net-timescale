@@ -64,6 +64,7 @@ jobs:
           git switch "${{ steps.branch-name.outputs.current_branch }}"
           cat CHANGELOG.md
           export PREPARATOR_RESULT=$(./changelog_preparator.py $CARGO_MANIFEST_DIR)
+          echo "$PREPARATOR_RESULT"
           if [["$PREPARATOR_RESULT" == "updated"]]; then
             git add CHANGELOG.md
             git commit -m "${{ steps.branch-name.outputs.current_branch }}: prepared CHANGELOG.md"
