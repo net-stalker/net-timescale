@@ -33,10 +33,11 @@ jobs:
       - name: List all changed files
         run: |
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            if [[ "$file" == "CHANGELOG.md" ]]; then
+            if [[ "$file" == "CHANGELOG.md" && ${{ steps.changed-files.outputs.all_changed_files_count }} != "1"]]; then
               echo "ERROR: CHANGELOG.md was modified. This is not allowed."
               exit 1
             fi
+
           done
           
       - name: Set up Python
