@@ -70,6 +70,6 @@ jobs:
             git commit -m "${{ steps.branch-name.outputs.current_branch }}: prepared CHANGELOG.md"
             git push
             echo "CHANGELOG.md has been prepared for updation"
-          else
+          elif [[ "$EXIT_CODE" == "0" ]]; then
             echo "CHANGELOG.md has been already updated previously"
           fi
