@@ -8,7 +8,7 @@ net-proto-api.workspace = true
 net-transport.workspace = true
 net-config.workspace = true
 net-file.workspace = true
-net-timescale-api = { path = "../net-timescale-api" }
+net-timescale-api.workspace = true
 
 
 log.workspace = true
