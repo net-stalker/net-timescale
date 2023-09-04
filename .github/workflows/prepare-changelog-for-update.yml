@@ -1,8 +1,8 @@
 name: Prepare CHANGELOG.md for update
 
 on:
-  push:
-    branches: [ "develop" ]
+  pull_request:
+    branches: [ "*" ]
   
 env:
   CARGO_TERM_COLOR: always
@@ -19,29 +19,11 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.OWNER_PAT }}
-          fetch-depth: 0
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v38
-        
-      - name: List all changed files
-        run: |
-          for added_file in ${{ steps.changed-files.outputs.added_files }}; do
-            if [[ "$added_file" == "CHANGELOG.md" ]]; then
-              echo "INFO: CHANGELOG.md was added."
-              exit 0
-            fi
-          done
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            if [[ "$file" == "CHANGELOG.md" && ${{ steps.changed-files.outputs.all_changed_files_count }} != 1 ]]; then
-              echo "ERROR: CHANGELOG.md was modified. This is not allowed."
-              exit 1
-            fi
-          done
-          
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v7
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -59,7 +41,7 @@ jobs:
         run: |
           git config --global credential.helper store
           echo "https://${{ secrets.OWNER }}:${{ secrets.OWNER_PAT }}@github.com" > ~/.git-credentials
-          git config --global user.email "test@netstalker.io"
+          git config --global user.email ${{ secrets.OWNER_EMAIL }}
           git config --global user.name ${{ secrets.OWNER }}
       
       - name: Get script for changelog prepearing
@@ -69,23 +51,24 @@ jobs:
           wget $CHANGELOG_PREPARATOR
           chmod +x changelog_preparator.py
 
+      - name: Fetch branch for possible commiting
+        run: |
+          git fetch origin "${{ steps.branch-name.outputs.current_branch }}" 
+          git checkout "${{ steps.branch-name.outputs.current_branch }}"
+
       - name: Prepare CHANGELOG.md for a new log
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
         run: |
-          echo "${{ github.event.head_commit.message }}"
-          export GIT_MSG="${{ github.event.head_commit.message }}"
-          export GIT_HASH=$(git rev-parse --short "$GITHUB_SHA")
           cat CHANGELOG.md
-          ./changelog_preparator.py $CARGO_MANIFEST_DIR
-          cat CHANGELOG.md
-          git add CHANGELOG.md
-          git commit -m "$GIT_HASH:$GIT_MSG"
-          git push
-
-      - name: Repository Dispatch
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.OWNER_PAT }}
-          event-type: prepare-changelog
-          client-payload: '{"message": "${{ github.event.head_commit.message }}"}'
+          export PREPARATOR_RESULT=$(./changelog_preparator.py $CARGO_MANIFEST_DIR)
+          echo "$PREPARATOR_RESULT"
+          if [ "$PREPARATOR_RESULT" == "updated" ]; then
+            cat CHANGELOG.md
+            git add CHANGELOG.md
+            git commit -m "${{ steps.branch-name.outputs.current_branch }}: prepared CHANGELOG.md"
+            git push
+            echo "CHANGELOG.md has been prepared for updation"
+          elif [ "$PREPARATOR_RESULT" == "correct" ]; then
+            echo "CHANGELOG.md has been already updated previously"
+          fi
