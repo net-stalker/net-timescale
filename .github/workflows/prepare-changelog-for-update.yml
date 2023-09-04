@@ -61,7 +61,8 @@ jobs:
           echo "${{ github.event.head_commit.message }}"
           export GIT_MSG="${{ github.event.head_commit.message }}"
           export GIT_HASH=$(git rev-parse --short "$GITHUB_SHA")
-          git switch "${{ steps.branch-name.outputs.current_branch }}"
+          git fetch origin "${{ steps.branch-name.outputs.current_branch }}" 
+          git checkout "${{ steps.branch-name.outputs.current_branch }}"
           cat CHANGELOG.md
           export PREPARATOR_RESULT=$(./changelog_preparator.py $CARGO_MANIFEST_DIR)
           echo "$PREPARATOR_RESULT"
