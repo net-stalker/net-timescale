@@ -65,11 +65,12 @@ jobs:
           cat CHANGELOG.md
           export PREPARATOR_RESULT=$(./changelog_preparator.py $CARGO_MANIFEST_DIR)
           echo "$PREPARATOR_RESULT"
-          if [["$PREPARATOR_RESULT" == "updated"]]; then
+          if [ "$PREPARATOR_RESULT" == "updated" ]; then
+            cat CHANGELOG.md
             git add CHANGELOG.md
             git commit -m "${{ steps.branch-name.outputs.current_branch }}: prepared CHANGELOG.md"
             git push
             echo "CHANGELOG.md has been prepared for updation"
-          elif [[ "$PREPARATOR_RESULT" == "correct" ]]; then
+          elif [ "$PREPARATOR_RESULT" == "correct" ]; then
             echo "CHANGELOG.md has been already updated previously"
           fi
