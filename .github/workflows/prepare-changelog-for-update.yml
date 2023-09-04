@@ -63,10 +63,10 @@ jobs:
           export GIT_HASH=$(git rev-parse --short "$GITHUB_SHA")
           git switch "${{ steps.branch-name.outputs.current_branch }}"
           cat CHANGELOG.md
-          export PREPARATOR_RESULT=./changelog_preparator.py $CARGO_MANIFEST_DIR
-          if [[$PREPARATOR_RESULT == 1]]; then
+          export PREPARATOR_RESULT="./changelog_preparator.py $CARGO_MANIFEST_DIR"
+          if [[$PREPARATOR_RESULT == "1"]]; then
             git add CHANGELOG.md
-            git commit -m "${{ steps.branch-name.outputs.current_branch }}:prepared CHANGELOG.md"
+            git commit -m "${{ steps.branch-name.outputs.current_branch }}: prepared CHANGELOG.md"
             git push
             echo "CHANGELOG.md has been prepared for updation"
           else
