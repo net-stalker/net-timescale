@@ -1,8 +1,8 @@
 name: Update CHANGELOG.md
 
 on:
- repository_dispatch:
-    types: [prepare-changelog]
+  push:
+    branches: [ "develop" ]
 
 
 env:
