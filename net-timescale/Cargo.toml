@@ -4,11 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-net-proto-api.workspace = true
-net-transport.workspace = true
-net-config.workspace = true
-net-file.workspace = true
-net-timescale-api.workspace = true
+net-proto-api = { version = "0.1.0", registry = "net-registry" }
+net-transport = { version = "0.1.2-6538ee7", registry = "net-registry" }
+net-file = { version = "0.1.0", registry = "net-registry" }
+net-config = { version = "0.1.0", registry = "net-registry" }
+net-timescale-api = { path = "../net-timescale-api" }
+
 
 
 log.workspace = true
