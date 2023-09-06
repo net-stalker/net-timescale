@@ -63,6 +63,9 @@ impl Encoder for NetworkGraphDTO {
             writer.set_field_name("id");
             writer.write_string(graph_node.get_id()).unwrap();
             
+            writer.set_field_name("agent_id");
+            writer.write_string(graph_node.get_agent_id()).unwrap();
+
             writer.step_out().unwrap();
         }
         writer.step_out().unwrap();
@@ -104,7 +107,9 @@ impl Decoder for NetworkGraphDTO {
             binary_user_reader.next().unwrap();
             let binding = binary_user_reader.read_string().unwrap();
             let id = binding.text();
-            graph_nodes.push(GraphNodeDTO::new(id));
+            let binding = binary_user_reader.read_string().unwrap();
+            let agent_id = binding.text();
+            graph_nodes.push(GraphNodeDTO::new(id, agent_id));
             binary_user_reader.step_out().unwrap();
         }
         binary_user_reader.step_out().unwrap();
@@ -150,9 +155,11 @@ mod tests {
     #[test]
     fn reader_correctly_read_encoded_graph_edge() {
         const FIRST_NODE_ID: &str = "0.0.0.0:0000";
-        let first_graph_node = GraphNodeDTO::new(FIRST_NODE_ID);
+        const FIRST_NODE_AGENT_ID: &str = "some first node agent id";
+        let first_graph_node = GraphNodeDTO::new(FIRST_NODE_ID, FIRST_NODE_AGENT_ID);
         const SECOND_NODE_ID: &str = "0.0.0.0:5656";
-        let second_graph_node = GraphNodeDTO::new(SECOND_NODE_ID);
+        const SECOND_NODE_AGENT_ID: &str = "some second node agent id";
+        let second_graph_node = GraphNodeDTO::new(SECOND_NODE_ID, SECOND_NODE_AGENT_ID);
 
         const SRC_ID: &str = "0.0.0.0:0000";
         const DST_ID: &str = "0.0.0.0:5656";
@@ -178,6 +185,10 @@ mod tests {
         assert_eq!(StreamItem::Value(IonType::String), binary_user_reader.next().unwrap());
         assert_eq!("id", binary_user_reader.field_name().unwrap());
         assert_eq!(FIRST_NODE_ID,  binary_user_reader.read_string().unwrap().text());
+
+        assert_eq!(StreamItem::Value(IonType::String), binary_user_reader.next().unwrap());
+        assert_eq!("agent_id", binary_user_reader.field_name().unwrap());
+        assert_eq!(FIRST_NODE_AGENT_ID,  binary_user_reader.read_string().unwrap().text());
         binary_user_reader.step_out().unwrap();
 
         assert_eq!(StreamItem::Value(IonType::Struct), binary_user_reader.next().unwrap());
@@ -185,6 +196,10 @@ mod tests {
         assert_eq!(StreamItem::Value(IonType::String), binary_user_reader.next().unwrap());
         assert_eq!("id", binary_user_reader.field_name().unwrap());
         assert_eq!(SECOND_NODE_ID,  binary_user_reader.read_string().unwrap().text());
+        
+        assert_eq!(StreamItem::Value(IonType::String), binary_user_reader.next().unwrap());
+        assert_eq!("agent_id", binary_user_reader.field_name().unwrap());
+        assert_eq!(SECOND_NODE_AGENT_ID,  binary_user_reader.read_string().unwrap().text());
         binary_user_reader.step_out().unwrap();
 
         binary_user_reader.step_out().unwrap();
@@ -211,9 +226,11 @@ mod tests {
     #[ignore]
     fn endec_network_graph() {
         const FIRST_NODE_ID: &str = "0.0.0.0:0000";
-        let first_graph_node = GraphNodeDTO::new(FIRST_NODE_ID);
-        const SECOND_NODE_ADDRESS: &str = "0.0.0.0:5656";
-        let second_graph_node = GraphNodeDTO::new(SECOND_NODE_ADDRESS);
+        const FIRST_NODE_AGENT_ID: &str = "some first node agent id"; 
+        let first_graph_node = GraphNodeDTO::new(FIRST_NODE_ID, FIRST_NODE_AGENT_ID);
+        const SECOND_NODE_ID: &str = "0.0.0.0:5656";
+        const SECOND_NODE_AGENT_ID: &str = "some second node agent id";
+        let second_graph_node = GraphNodeDTO::new(SECOND_NODE_ID, SECOND_NODE_AGENT_ID);
 
         const SRC_ID: &str = "0.0.0.0:0000";
         const DST_ID: &str = "0.0.0.0:5656";
