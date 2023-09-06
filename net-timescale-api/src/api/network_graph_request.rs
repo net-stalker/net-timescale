@@ -12,14 +12,16 @@ pub struct NetworkGraphRequestDTO {
     start_date_time: i64,
     end_date_time: i64,
     subscribe: bool,
+    group_id: String,
 }
 
 impl NetworkGraphRequestDTO {
-    pub fn new (start_date_time: i64, end_date_time: i64, subscribe: bool) -> Self {
+    pub fn new (start_date_time: i64, end_date_time: i64, subscribe: bool, group_id: &str) -> Self {
         NetworkGraphRequestDTO {
             start_date_time,
             end_date_time,
             subscribe,
+            group_id: group_id.to_string(),
         }
     }
 
@@ -34,6 +36,11 @@ impl NetworkGraphRequestDTO {
     pub fn is_subscribe (&self) -> bool {
         self.subscribe
     }
+
+    pub fn get_group_id (&self) -> &str {
+        self.group_id.as_str()
+    }
+
 }
 
 impl Encoder for NetworkGraphRequestDTO {
@@ -66,6 +73,9 @@ impl Encoder for NetworkGraphRequestDTO {
         writer.set_field_name("subscribe");
         writer.write_bool(self.subscribe).unwrap();
 
+        writer.set_field_name("group_id");
+        writer.write_string(&self.group_id).unwrap();
+        
         writer.step_out().unwrap();
         writer.flush().unwrap();
 
@@ -89,10 +99,14 @@ impl Decoder for NetworkGraphRequestDTO {
         binary_user_reader.next().unwrap();
         let subscribe = binary_user_reader.read_bool().unwrap();
 
+        binary_user_reader.next().unwrap();
+        let group_id = binary_user_reader.read_str().unwrap();
+
         NetworkGraphRequestDTO::new(
             start_date_time,
             end_date_time,
-            subscribe
+            subscribe,
+            group_id,
         )
     }
 }
@@ -115,11 +129,13 @@ mod tests {
         const START_DATE_TIME: i64 = i64::MIN;
         const END_DATE_TIME: i64 = i64::MAX;
         const SUBSCRIBE: bool = true;
+        const GROUP_ID: &str = "GROUP_ID";
 
         let network_graph_request = NetworkGraphRequestDTO::new(
             START_DATE_TIME,
             END_DATE_TIME,
             SUBSCRIBE,
+            GROUP_ID,
         );
         
         let mut binary_user_reader = ReaderBuilder::new().build(network_graph_request.encode()).unwrap();
@@ -138,6 +154,10 @@ mod tests {
         assert_eq!(StreamItem::Value(IonType::Bool), binary_user_reader.next().unwrap());
         assert_eq!("subscribe", binary_user_reader.field_name().unwrap());
         assert_eq!(SUBSCRIBE,  binary_user_reader.read_bool().unwrap());
+
+        assert_eq!(StreamItem::Value(IonType::String), binary_user_reader.next().unwrap());
+        assert_eq!("group_id", binary_user_reader.field_name().unwrap());
+        assert_eq!(GROUP_ID,  binary_user_reader.read_str().unwrap());
     }
 
     #[test]
@@ -145,11 +165,13 @@ mod tests {
         const START_DATE_TIME: i64 = i64::MIN;
         const END_DATE_TIME: i64 = i64::MAX;
         const SUBSCRIBE: bool = true;
+        const GROUP_ID: &str = "GROUP_ID";
 
         let network_graph_request = NetworkGraphRequestDTO::new(
             START_DATE_TIME,
             END_DATE_TIME,
             SUBSCRIBE,
+            GROUP_ID,
         );
         assert_eq!(network_graph_request, NetworkGraphRequestDTO::decode(&network_graph_request.encode()));
     }
