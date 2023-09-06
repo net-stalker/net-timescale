@@ -60,8 +60,8 @@ impl Encoder for NetworkGraphDTO {
         for graph_node in &self.graph_nodes {
             writer.step_in(ion_rs::IonType::Struct).expect("Error while entering an ion struct");
             
-            writer.set_field_name("address");
-            writer.write_string(graph_node.get_address()).unwrap();
+            writer.set_field_name("id");
+            writer.write_string(graph_node.get_id()).unwrap();
             
             writer.step_out().unwrap();
         }
@@ -72,11 +72,11 @@ impl Encoder for NetworkGraphDTO {
         for graph_edge in &self.graph_edges {
             writer.step_in(ion_rs::IonType::Struct).expect("Error while entering an ion struct");
             
-            writer.set_field_name("src_addr");
-            writer.write_string(graph_edge.get_src_addr()).unwrap();
+            writer.set_field_name("src_id");
+            writer.write_string(graph_edge.get_src_id()).unwrap();
     
-            writer.set_field_name("dst_addr");
-            writer.write_string(graph_edge.get_dst_addr()).unwrap();
+            writer.set_field_name("dst_id");
+            writer.write_string(graph_edge.get_dst_id()).unwrap();
             
             writer.step_out().unwrap();
         }
@@ -103,8 +103,8 @@ impl Decoder for NetworkGraphDTO {
             binary_user_reader.step_in().unwrap();
             binary_user_reader.next().unwrap();
             let binding = binary_user_reader.read_string().unwrap();
-            let address = binding.text();
-            graph_nodes.push(GraphNodeDTO::new(address));
+            let id = binding.text();
+            graph_nodes.push(GraphNodeDTO::new(id));
             binary_user_reader.step_out().unwrap();
         }
         binary_user_reader.step_out().unwrap();
@@ -116,11 +116,11 @@ impl Decoder for NetworkGraphDTO {
             binary_user_reader.step_in().unwrap();
             binary_user_reader.next().unwrap();
             let binding = binary_user_reader.read_string().unwrap();
-            let src_addr = binding.text();
+            let src_id = binding.text();
             binary_user_reader.next().unwrap();
             let binding = binary_user_reader.read_string().unwrap();
-            let dst_addr = binding.text();
-            graph_edges.push(GraphEdgeDTO::new(src_addr, dst_addr));
+            let dst_id = binding.text();
+            graph_edges.push(GraphEdgeDTO::new(src_id, dst_id));
             binary_user_reader.step_out().unwrap();
         }
         binary_user_reader.step_out().unwrap();
@@ -149,14 +149,14 @@ mod tests {
 
     #[test]
     fn reader_correctly_read_encoded_graph_edge() {
-        const FIRST_NODE_ADDRESS: &str = "0.0.0.0:0000";
-        let first_graph_node = GraphNodeDTO::new(FIRST_NODE_ADDRESS);
-        const SECOND_NODE_ADDRESS: &str = "0.0.0.0:5656";
-        let second_graph_node = GraphNodeDTO::new(SECOND_NODE_ADDRESS);
+        const FIRST_NODE_ID: &str = "0.0.0.0:0000";
+        let first_graph_node = GraphNodeDTO::new(FIRST_NODE_ID);
+        const SECOND_NODE_ID: &str = "0.0.0.0:5656";
+        let second_graph_node = GraphNodeDTO::new(SECOND_NODE_ID);
 
-        const SRC_ADDR: &str = "0.0.0.0:0000";
-        const DST_ADDR: &str = "0.0.0.0:5656";
-        let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ADDR, DST_ADDR);
+        const SRC_ID: &str = "0.0.0.0:0000";
+        const DST_ID: &str = "0.0.0.0:5656";
+        let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ID, DST_ID);
 
         let network_graph = NetworkGraphDTO::new(
             &[first_graph_node, second_graph_node],
@@ -176,15 +176,15 @@ mod tests {
         assert_eq!(StreamItem::Value(IonType::Struct), binary_user_reader.next().unwrap());
         binary_user_reader.step_in().unwrap();
         assert_eq!(StreamItem::Value(IonType::String), binary_user_reader.next().unwrap());
-        assert_eq!("address", binary_user_reader.field_name().unwrap());
-        assert_eq!(FIRST_NODE_ADDRESS,  binary_user_reader.read_string().unwrap().text());
+        assert_eq!("id", binary_user_reader.field_name().unwrap());
+        assert_eq!(FIRST_NODE_ID,  binary_user_reader.read_string().unwrap().text());
         binary_user_reader.step_out().unwrap();
 
         assert_eq!(StreamItem::Value(IonType::Struct), binary_user_reader.next().unwrap());
         binary_user_reader.step_in().unwrap();
         assert_eq!(StreamItem::Value(IonType::String), binary_user_reader.next().unwrap());
-        assert_eq!("address", binary_user_reader.field_name().unwrap());
-        assert_eq!(SECOND_NODE_ADDRESS,  binary_user_reader.read_string().unwrap().text());
+        assert_eq!("id", binary_user_reader.field_name().unwrap());
+        assert_eq!(SECOND_NODE_ID,  binary_user_reader.read_string().unwrap().text());
         binary_user_reader.step_out().unwrap();
 
         binary_user_reader.step_out().unwrap();
@@ -197,11 +197,11 @@ mod tests {
         assert_eq!(StreamItem::Value(IonType::Struct), binary_user_reader.next().unwrap());
         binary_user_reader.step_in().unwrap();
         assert_eq!(StreamItem::Value(IonType::String), binary_user_reader.next().unwrap());
-        assert_eq!("src_addr", binary_user_reader.field_name().unwrap());
-        assert_eq!(SRC_ADDR,  binary_user_reader.read_string().unwrap().text());
+        assert_eq!("src_id", binary_user_reader.field_name().unwrap());
+        assert_eq!(SRC_ID,  binary_user_reader.read_string().unwrap().text());
         assert_eq!(StreamItem::Value(IonType::String), binary_user_reader.next().unwrap());
-        assert_eq!("dst_addr", binary_user_reader.field_name().unwrap());
-        assert_eq!(DST_ADDR,  binary_user_reader.read_string().unwrap().text());
+        assert_eq!("dst_id", binary_user_reader.field_name().unwrap());
+        assert_eq!(DST_ID,  binary_user_reader.read_string().unwrap().text());
         binary_user_reader.step_out().unwrap();
         
         binary_user_reader.step_out().unwrap();
@@ -210,14 +210,14 @@ mod tests {
     #[test]
     #[ignore]
     fn endec_network_graph() {
-        const FIRST_NODE_ADDRESS: &str = "0.0.0.0:0000";
-        let first_graph_node = GraphNodeDTO::new(FIRST_NODE_ADDRESS);
+        const FIRST_NODE_ID: &str = "0.0.0.0:0000";
+        let first_graph_node = GraphNodeDTO::new(FIRST_NODE_ID);
         const SECOND_NODE_ADDRESS: &str = "0.0.0.0:5656";
         let second_graph_node = GraphNodeDTO::new(SECOND_NODE_ADDRESS);
 
-        const SRC_ADDR: &str = "0.0.0.0:0000";
-        const DST_ADDR: &str = "0.0.0.0:5656";
-        let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ADDR, DST_ADDR);
+        const SRC_ID: &str = "0.0.0.0:0000";
+        const DST_ID: &str = "0.0.0.0:5656";
+        let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ID, DST_ID);
 
         let network_graph = NetworkGraphDTO::new(
             &[first_graph_node, second_graph_node],

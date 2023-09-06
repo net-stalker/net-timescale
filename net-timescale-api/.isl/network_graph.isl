@@ -4,7 +4,7 @@ type::{
     name: graph_node,
     type: struct,
     fields: {
-        address: string,
+        id: string,
     },
 }
 
@@ -12,8 +12,8 @@ type::{
     name: graph_edge,
     type: struct,
     fields: {
-        src_addr: string,
-        dst_addr: string
+        src_id: string,
+        dst_id: string
     },
 }
 

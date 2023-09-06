@@ -9,24 +9,24 @@ use net_proto_api::decoder_api::Decoder;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct GraphEdgeDTO {
-    src_addr: String,
-    dst_addr: String,
+    src_id: String,
+    dst_id: String,
 }
 
 impl GraphEdgeDTO {
-    pub fn new ( src_addr: &str, dst_addr: &str) -> Self {
+    pub fn new ( src_id: &str, dst_id: &str) -> Self {
         GraphEdgeDTO {
-            src_addr: src_addr.into(), 
-            dst_addr: dst_addr.into(), 
+            src_id: src_id.into(), 
+            dst_id: dst_id.into(), 
         }
     }
 
-    pub fn get_src_addr (&self) -> &str {
-        &self.src_addr
+    pub fn get_src_id (&self) -> &str {
+        &self.src_id
     }
 
-    pub fn get_dst_addr (&self) -> &str {
-        &self.dst_addr
+    pub fn get_dst_id (&self) -> &str {
+        &self.dst_id
     }
 }
 
@@ -51,11 +51,11 @@ impl Encoder for GraphEdgeDTO {
 
         writer.step_in(ion_rs::IonType::Struct).expect("Error while creating an ion struct");
         
-        writer.set_field_name("src_addr");
-        writer.write_string(&self.src_addr).unwrap();
+        writer.set_field_name("src_id");
+        writer.write_string(&self.src_id).unwrap();
 
-        writer.set_field_name("dst_addr");
-        writer.write_string(&self.dst_addr).unwrap();
+        writer.set_field_name("dst_id");
+        writer.write_string(&self.dst_id).unwrap();
 
         writer.step_out().unwrap();
         writer.flush().unwrap();
@@ -73,15 +73,15 @@ impl Decoder for GraphEdgeDTO {
 
         binary_user_reader.next().unwrap();
         let binding = binary_user_reader.read_string().unwrap();
-        let src_addr = binding.text();
+        let src_id = binding.text();
 
         binary_user_reader.next().unwrap();
         let binding = binary_user_reader.read_string().unwrap();
-        let dst_addr = binding.text();
+        let dst_id = binding.text();
 
         GraphEdgeDTO::new(
-            src_addr,
-            dst_addr,
+            src_id,
+            dst_id,
         )
     }
 }
@@ -102,29 +102,29 @@ mod tests {
 
     #[test]
     fn reader_correctly_read_encoded_graph_edge() {
-        const SRC_ADDR: &str = "0.0.0.0:0000";
-        const DST_ADDR: &str = "0.0.0.0:5656";
-        let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ADDR, DST_ADDR);
+        const SRC_ID: &str = "0.0.0.0:0000";
+        const DST_ID: &str = "0.0.0.0:5656";
+        let graph_edge: GraphEdgeDTO = GraphEdgeDTO::new(SRC_ID, DST_ID);
         let mut binary_user_reader = ReaderBuilder::new().build(graph_edge.encode()).unwrap();
 
         assert_eq!(StreamItem::Value(IonType::Struct), binary_user_reader.next().unwrap());
         binary_user_reader.step_in().unwrap();
         
         assert_eq!(StreamItem::Value(IonType::String), binary_user_reader.next().unwrap());
-        assert_eq!("src_addr", binary_user_reader.field_name().unwrap());
-        assert_eq!(SRC_ADDR,  binary_user_reader.read_string().unwrap().text());
+        assert_eq!("src_id", binary_user_reader.field_name().unwrap());
+        assert_eq!(SRC_ID,  binary_user_reader.read_string().unwrap().text());
 
         assert_eq!(StreamItem::Value(IonType::String), binary_user_reader.next().unwrap());
-        assert_eq!("dst_addr", binary_user_reader.field_name().unwrap());
-        assert_eq!(DST_ADDR,  binary_user_reader.read_string().unwrap().text());
+        assert_eq!("dst_id", binary_user_reader.field_name().unwrap());
+        assert_eq!(DST_ID,  binary_user_reader.read_string().unwrap().text());
     }
 
     #[test]
     #[ignore]
     fn endec_graph_edge() {
-        const SRC_ADDR: &str = "0.0.0.0:0000";
-        const DST_ADDR: &str = "0.0.0.0:5656";
-        let graph_edge = GraphEdgeDTO::new(SRC_ADDR, DST_ADDR);
+        const SRC_ID: &str = "0.0.0.0:0000";
+        const DST_ID: &str = "0.0.0.0:5656";
+        let graph_edge = GraphEdgeDTO::new(SRC_ID, DST_ID);
         assert_eq!(graph_edge, GraphEdgeDTO::decode(&graph_edge.encode()));
     }
 }

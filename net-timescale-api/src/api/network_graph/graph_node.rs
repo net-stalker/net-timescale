@@ -9,19 +9,19 @@ use net_proto_api::decoder_api::Decoder;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct GraphNodeDTO {
-    address: String,
+    id: String,
 }
 
 
 impl GraphNodeDTO {
-    pub fn new ( address: &str) -> Self {
+    pub fn new (id: &str) -> Self {
         GraphNodeDTO {
-            address: address.into(),
+            id: id.into(),
         }
     }
 
-    pub fn get_address (&self) -> &str {
-        &self.address
+    pub fn get_id (&self) -> &str {
+        &self.id
     }
 }
 
@@ -46,8 +46,8 @@ impl Encoder for GraphNodeDTO {
 
         writer.step_in(ion_rs::IonType::Struct).expect("Error while creating an ion struct");
         
-        writer.set_field_name("address");
-        writer.write_string(&self.address).unwrap();
+        writer.set_field_name("id");
+        writer.write_string(&self.id).unwrap();
 
         writer.step_out().unwrap();
         writer.flush().unwrap();
@@ -65,10 +65,10 @@ impl Decoder for GraphNodeDTO {
 
         binary_user_reader.next().unwrap();
         let binding = binary_user_reader.read_string().unwrap();
-        let address = binding.text();
+        let id = binding.text();
 
         GraphNodeDTO::new(
-            address,
+            id,
         )
     }
 }
@@ -89,23 +89,23 @@ mod tests {
 
     #[test]
     fn reader_correctly_read_encoded_graph_node() {
-        const ADDRESS: &str = "0.0.0.0:0000";
-        let graph_node = GraphNodeDTO::new(ADDRESS);
+        const ID: &str = "0.0.0.0:0000";
+        let graph_node = GraphNodeDTO::new(ID);
         let mut binary_user_reader = ReaderBuilder::new().build(graph_node.encode()).unwrap();
 
         assert_eq!(StreamItem::Value(IonType::Struct), binary_user_reader.next().unwrap());
         binary_user_reader.step_in().unwrap();
         
         assert_eq!(StreamItem::Value(IonType::String), binary_user_reader.next().unwrap());
-        assert_eq!("address", binary_user_reader.field_name().unwrap());
-        assert_eq!(ADDRESS,  binary_user_reader.read_string().unwrap().text());
+        assert_eq!("id", binary_user_reader.field_name().unwrap());
+        assert_eq!(ID,  binary_user_reader.read_string().unwrap().text());
     }
 
     #[test]
     #[ignore]
     fn endec_graph_node() {
-        const ADDRESS: &str = "0.0.0.0:0000";
-        let graph_node = GraphNodeDTO::new(ADDRESS);
+        const ID: &str = "0.0.0.0:0000";
+        let graph_node = GraphNodeDTO::new(ID);
         assert_eq!(graph_node, GraphNodeDTO::decode(&graph_node.encode()));
     }
 }
