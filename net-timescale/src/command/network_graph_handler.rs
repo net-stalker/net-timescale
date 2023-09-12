@@ -8,7 +8,7 @@ use net_proto_api::encoder_api::Encoder;
 use net_proto_api::envelope::envelope::Envelope;
 use crate::command::executor::PoolWrapper;
 use net_timescale_api::api::network_graph_request::NetworkGraphRequestDTO;
-use crate::internal_api::is_realtime::RealtimeRequestDTO;
+use crate::internal_api::realtime_request::RealtimeRequestDTO;
 use crate::persistence::network_graph;
 
 pub struct NetworkGraphHandler<T, S>
@@ -70,7 +70,9 @@ where
             &data).encode();
         if graph_request.get_end_date_time() == 0 {
             let mock_connection_id = 90;
-            self.is_realtime_handler.send(RealtimeRequestDTO::new(mock_connection_id).encode().as_slice());
+            let realtime_request = RealtimeRequestDTO::new(mock_connection_id).encode();
+            let enveloped_realtime_request = Envelope::new(group_id, agent_id, "realtime_request", &realtime_request); 
+            self.is_realtime_handler.send(&enveloped_realtime_request.encode());
         }
         self.router.send(data.as_slice());
     }

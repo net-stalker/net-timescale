@@ -5,16 +5,39 @@ use sqlx::{
     Postgres
 };
 use net_timescale_api::api::{
-    network_packet::NetworkPacketDTO,
     network_graph::{
         graph_edge::GraphEdgeDTO,
         graph_node::GraphNodeDTO,
         network_graph::NetworkGraphDTO,
-    }
+    }, network_graph_request::NetworkGraphRequestDTO
 };
 use crate::repository::address_pair::{AddressPair, self};
 use crate::repository::address_info::{AddressInfo, self};
 
+#[derive(Clone)]
+pub struct NetworkGraphRequest {
+    start_date_time: i64,
+    end_date_time: i64,
+}
+
+impl NetworkGraphRequest {
+    pub fn get_start_date_time(&self) -> i64 {
+        self.start_date_time
+    }
+
+    pub fn get_end_date_time(&self) -> i64 {
+        self.end_date_time
+    }
+}
+
+impl Into<NetworkGraphRequest> for NetworkGraphRequestDTO {
+    fn into(self) -> NetworkGraphRequest {
+        NetworkGraphRequest {
+            start_date_time: self.get_start_date_time(),
+            end_date_time: self.get_end_date_time(),
+        }
+    }
+}
 
 impl From<AddressInfo> for GraphNodeDTO {
     fn from(value: AddressInfo) -> GraphNodeDTO {
