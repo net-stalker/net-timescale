@@ -5,10 +5,12 @@ CREATE TABLE captured_traffic
 (
     id SERIAL,
     frame_time  TIMESTAMPTZ NOT NULL,
+    group_id   text        NOT NULL,
+    agent_id    text        NOT NULL,
     src_addr    text        NOT null,
     dst_addr    text        NOT null,
     binary_data JSONB       NOT null,
-    PRIMARY KEY (id, frame_time)
+    PRIMARY KEY (frame_time, group_id, agent_id)
 );
 
 --changeset dshcherbatiuk:2

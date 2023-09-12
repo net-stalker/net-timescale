@@ -18,13 +18,13 @@ use crate::repository::address_info::{AddressInfo, self};
 
 impl From<AddressInfo> for GraphNodeDTO {
     fn from(value: AddressInfo) -> GraphNodeDTO {
-        GraphNodeDTO::new(&value.addr)
+        GraphNodeDTO::new(&value.id, &value.aggregator)
     }
 }
 
 impl From<AddressPair> for GraphEdgeDTO {
     fn from(value: AddressPair) -> GraphEdgeDTO {
-        GraphEdgeDTO::new(&value.src_addr, &value.dst_addr)
+        GraphEdgeDTO::new(&value.src_id, &value.dst_id)
     }
 }
 
@@ -47,19 +47,5 @@ pub async fn get_network_graph_by_date_cut(connection: &Pool<Postgres>, date_sta
         nodes_dto.push(address.into());
     }
 
-    NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice())
-}
-
-pub fn convert_network_packet_to_network_graph(network_packet: NetworkPacketDTO) -> NetworkGraphDTO {
-    let edges_dto = vec![
-        GraphEdgeDTO::new(
-            network_packet.get_src_addr(),
-            network_packet.get_dst_addr(),
-        )
-    ];
-    let nodes_dto = vec![
-        GraphNodeDTO::new(network_packet.get_src_addr()),
-        GraphNodeDTO::new(network_packet.get_dst_addr()),
-    ];
     NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice())
 }

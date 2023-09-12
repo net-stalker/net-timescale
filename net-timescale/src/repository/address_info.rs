@@ -5,7 +5,8 @@ use futures::stream::BoxStream;
 
 #[derive(sqlx::FromRow, Debug)]
 pub struct AddressInfo {
-    pub addr: String
+    pub id: String,
+    pub aggregator: String,
     // may be expandable in future
 }
 

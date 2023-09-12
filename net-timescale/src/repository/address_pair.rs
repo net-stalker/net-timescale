@@ -4,8 +4,8 @@ use sqlx::{Error, Pool, Postgres};
 
 #[derive(sqlx::FromRow, Debug)]
 pub struct AddressPair {
-    pub src_addr: String,
-    pub dst_addr: String,
+    pub src_id: String,
+    pub dst_id: String,
 }
 
 pub async fn select_address_pairs_by_date_cut(
