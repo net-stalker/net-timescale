@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-9ba8c24] - 2023-09-04
 
 Feature/cu 8692nj1c6 (#19)
@@ -23,7 +24,6 @@ Feature/cu 8692nj1c6 (#19)
 * feature/CU-8692nj1c6: updated update-changelog.yml
 
 * feature/CU-8692nj1c6: fixed syntax error
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0] - 2023-09-04
 
 ### Added
