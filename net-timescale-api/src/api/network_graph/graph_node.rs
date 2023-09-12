@@ -10,15 +10,15 @@ use net_proto_api::decoder_api::Decoder;
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct GraphNodeDTO {
     id: String,
-    agent_id: String,
+    aggregator: String,
 }
 
 
 impl GraphNodeDTO {
-    pub fn new (id: &str, agent_id: &str) -> Self {
+    pub fn new (id: &str, aggregator: &str) -> Self {
         GraphNodeDTO {
             id: id.into(),
-            agent_id: agent_id.into(),
+            aggregator: aggregator.into(),
         }
     }
 
@@ -26,8 +26,8 @@ impl GraphNodeDTO {
         &self.id
     }
 
-    pub fn get_agent_id (&self) -> &str {
-        &self.agent_id
+    pub fn get_aggregator (&self) -> &str {
+        &self.aggregator
     }
 }
 
@@ -55,8 +55,8 @@ impl Encoder for GraphNodeDTO {
         writer.set_field_name("id");
         writer.write_string(&self.id).unwrap();
 
-        writer.set_field_name("agent_id");
-        writer.write_string(&self.agent_id).unwrap();
+        writer.set_field_name("aggregator");
+        writer.write_string(&self.aggregator).unwrap();
 
         writer.step_out().unwrap();
         writer.flush().unwrap();
@@ -103,9 +103,9 @@ mod tests {
     #[test]
     fn reader_correctly_read_encoded_graph_node() {
         const ID: &str = "0.0.0.0:0000";
-        const AGENT_ID: &str = "some agent id";
+        const AGGREGATOR: &str = "aggregator";
 
-        let graph_node = GraphNodeDTO::new(ID, AGENT_ID);
+        let graph_node = GraphNodeDTO::new(ID, AGGREGATOR);
         let mut binary_user_reader = ReaderBuilder::new().build(graph_node.encode()).unwrap();
 
         assert_eq!(StreamItem::Value(IonType::Struct), binary_user_reader.next().unwrap());
@@ -116,17 +116,17 @@ mod tests {
         assert_eq!(ID,  binary_user_reader.read_string().unwrap().text());
 
         assert_eq!(StreamItem::Value(IonType::String), binary_user_reader.next().unwrap());
-        assert_eq!("agent_id", binary_user_reader.field_name().unwrap());
-        assert_eq!(AGENT_ID,  binary_user_reader.read_string().unwrap().text());
+        assert_eq!("aggregator", binary_user_reader.field_name().unwrap());
+        assert_eq!(AGGREGATOR,  binary_user_reader.read_string().unwrap().text());
     }
 
     #[test]
     #[ignore]
     fn endec_graph_node() {
         const ID: &str = "0.0.0.0:0000";
-        const AGENT_ID: &str = "some agent id";
+        const AGGREGATOR: &str = "aggregator";
 
-        let graph_node = GraphNodeDTO::new(ID, AGENT_ID);
+        let graph_node = GraphNodeDTO::new(ID, AGGREGATOR);
         assert_eq!(graph_node, GraphNodeDTO::decode(&graph_node.encode()));
     }
 }
