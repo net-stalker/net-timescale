@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-ef54243] - 2023-09-12
 
 Feature/cu 8692p3qy6: refactored a graph structures and added aggregator (#22)
@@ -17,7 +18,6 @@ Feature/cu 8692p3qy6: refactored a graph structures and added aggregator (#22)
 ### feature/CU-8692p3qy6: changed agent_id to aggregator
 
 ### feature/CU-8692p3qy6: prepared CHANGELOG.md
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-9ba8c24] - 2023-09-04
 
 Feature/cu 8692nj1c6 (#19)
