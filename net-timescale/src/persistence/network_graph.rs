@@ -1,4 +1,3 @@
-use chrono::{DateTime, Utc};
 use futures::TryStreamExt;
 use net_proto_api::envelope::envelope::Envelope;
 use sqlx::{
@@ -31,11 +30,11 @@ impl NetworkGraphRequest {
     }
 }
 
-impl Into<NetworkGraphRequest> for NetworkGraphRequestDTO {
-    fn into(self) -> NetworkGraphRequest {
+impl From<NetworkGraphRequestDTO> for NetworkGraphRequest {
+    fn from(val: NetworkGraphRequestDTO) -> Self {
         NetworkGraphRequest {
-            start_date_time: self.get_start_date_time(),
-            end_date_time: self.get_end_date_time(),
+            start_date_time: val.get_start_date_time(),
+            end_date_time: val.get_end_date_time(),
         }
     }
 }

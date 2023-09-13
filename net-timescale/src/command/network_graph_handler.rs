@@ -2,7 +2,6 @@ use std::sync::Arc;
 use async_std::task::block_on;
 use net_transport::sockets::{Handler, Receiver, Sender};
 use net_proto_api::decoder_api::Decoder;
-use chrono::{TimeZone, Utc};
 use sqlx::Postgres;
 use net_proto_api::encoder_api::Encoder;
 use net_proto_api::envelope::envelope::Envelope;

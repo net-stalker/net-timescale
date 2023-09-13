@@ -1,7 +1,6 @@
-use capnpc::schema_capnp::field::group;
-use chrono::{DateTime, Utc, TimeZone};
+use chrono::{Utc, TimeZone};
 use net_proto_api::{envelope::envelope::Envelope, decoder_api::Decoder};
-use net_timescale_api::api::network_graph_request::{self, NetworkGraphRequestDTO};
+use net_timescale_api::api::network_graph_request::{NetworkGraphRequestDTO};
 use sqlx::{Error, Pool, Postgres};
 use futures::stream::BoxStream;
 
