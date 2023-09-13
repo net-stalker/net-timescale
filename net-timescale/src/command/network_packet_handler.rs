@@ -23,11 +23,18 @@ impl Handler for NetworkPacketHandler {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
         let envelope = Envelope::decode(data.as_slice());
-        let packet = NetworkPacketDTO::decode(envelope.get_data());
         let pooled_connection = block_on(self.pool.get_connection());
-        match block_on(network_packet::insert_network_packet(pooled_connection, packet.into())) {
+        let mut transaction = match block_on(pooled_connection.begin()) {
+            Ok(tra) => tra,
+            Err(err) => {
+                log::error!("Couldn't start transaction: {}", err);
+                return;
+            }
+        };
+        match block_on(network_packet::insert_network_packet_transaction(&mut transaction, envelope)) {
             Ok(rows_count) => {
                 log::info!("{} rows were affected", rows_count.rows_affected());
+                block_on(transaction.commit()).expect("transaction commit is expected");
             }
             Err(error) => {
                 log::error!("{}", error);
