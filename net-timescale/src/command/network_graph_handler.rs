@@ -45,13 +45,10 @@ where
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
         let envelope = Envelope::decode(&data);
+        let network_graph_request = NetworkGraphRequestDTO::decode(envelope.get_data());
         let pooled_connection = block_on(self.connection_pool.get_connection());
-        let graph_request = NetworkGraphRequestDTO::decode(envelope.get_data());
-        let start_date = Utc.timestamp_millis_opt(graph_request.get_start_date_time()).unwrap();
-        let end_date = Utc.timestamp_millis_opt(graph_request.get_end_date_time()).unwrap();
-        let network_graph = block_on(network_graph::get_network_graph_by_date_cut(pooled_connection,
-            start_date, end_date
-        ));
+        let network_graph = block_on(network_graph::get_network_graph_by_date_cut(pooled_connection, &envelope));
+
         log::info!("got network graph {:?}", network_graph);
         let agent_id = match envelope.get_agent_id() {
             Ok(id) => Some(id),
@@ -68,7 +65,7 @@ where
             agent_id,
             "network_graph",
             &data).encode();
-        if graph_request.get_end_date_time() == 0 {
+        if network_graph_request.get_end_date_time() == 0 {
             let mock_connection_id = 90;
             let realtime_request = RealtimeRequestDTO::new(mock_connection_id).encode();
             let enveloped_realtime_request = Envelope::new(group_id, agent_id, "realtime_request", &realtime_request); 

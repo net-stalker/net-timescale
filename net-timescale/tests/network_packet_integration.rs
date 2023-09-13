@@ -28,7 +28,7 @@ fn integration_test_insert() {
         &binary_json,
     );
     let result = block_on(network_packet::insert_network_packet(
-        &con, network_packet_dto.into()
+        &mut con, Envelope::new(Some("7b9475ee-48fd-471e-a3d0-1c663029c9b6"), Some("5e199f67-4fbd-4ff5-9cda-61bfb95106b6"), "network_packet", &network_packet_dto.encode())
     )).unwrap();
     assert_eq!(1, result.rows_affected());
     let query = sqlx::query_as::<_, NetworkPacket>("select * from captured_traffic;").fetch_all(&con);

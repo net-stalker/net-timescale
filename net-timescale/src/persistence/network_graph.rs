@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use futures::TryStreamExt;
+use net_proto_api::envelope::envelope::Envelope;
 use sqlx::{
     Pool,
     Postgres
@@ -51,13 +52,12 @@ impl From<AddressPair> for GraphEdgeDTO {
     }
 }
 
-pub async fn get_network_graph_by_date_cut(connection: &Pool<Postgres>, date_start: DateTime<Utc>,
-                                     date_end: DateTime<Utc>) -> NetworkGraphDTO {
+pub async fn get_network_graph_by_date_cut(connection: &Pool<Postgres>, envelope: &Envelope) -> NetworkGraphDTO {
     let mut address_pairs = address_pair::select_address_pairs_by_date_cut(
-        connection, date_start, date_end
+        connection, envelope
     ).await;
     let mut addresses = address_info::select_address_info_by_date_cut(
-        connection, date_start, date_end
+        connection, envelope
     ).await;
 
     let mut edges_dto = Vec::default();
