@@ -29,13 +29,13 @@ pub async fn select_address_info_by_date_cut<'a>(
     let end_date = Utc.timestamp_millis_opt(network_graph_request.get_end_date_time()).unwrap();
     sqlx::query_as::<_, AddressInfo>(
         "
-            SELECT group_id, addr
+            SELECT agent_id as aggregator, addr as id
             FROM (
-                SELECT DISTINCT group_id, src_addr AS addr
+                SELECT DISTINCT agent_id, src_addr AS addr
                 FROM address_pair_aggregate
                 WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
                 UNION
-                SELECT DISTINCT group_id, dst_addr as addr
+                SELECT DISTINCT agent_id, dst_addr as addr
                 FROM address_pair_aggregate
                 WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
             ) AS info

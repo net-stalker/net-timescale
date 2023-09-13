@@ -27,7 +27,7 @@ pub async fn select_address_pairs_by_date_cut<'a>(
 
     sqlx::query_as::<_, AddressPair>(
         "
-            SELECT src_addr, dst_addr
+            SELECT src_addr as src_id, dst_addr as dst_id
             FROM address_pair_aggregate
             WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
             GROUP BY src_addr, dst_addr

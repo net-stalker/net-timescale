@@ -9,11 +9,12 @@ pub async fn create_address_pair_aggregate(con: &Pool<Postgres>)
         WITH (timescaledb.continuous) AS
         SELECT
             group_id,
+            agent_id,
             src_addr,
             dst_addr,
             time_bucket('1 minute', frame_time) AS bucket
         FROM captured_traffic
-        GROUP BY bucket, group_id, src_addr, dst_addr;
+        GROUP BY bucket, group_id, agent_id, src_addr, dst_addr;
     ")
         .execute(con)
         .await
