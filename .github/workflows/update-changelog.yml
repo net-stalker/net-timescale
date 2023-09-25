@@ -37,9 +37,9 @@ jobs:
       - name: Set up GIT credentials
         run: |
           git config --global credential.helper store
-          echo "https://${{ secrets.OWNER }}:${{ secrets.OWNER_PAT }}@github.com" > ~/.git-credentials
-          git config --global user.email "test@netstalker.io"
-          git config --global user.name ${{ secrets.OWNER }}
+          echo "https://${{ secrets.BOT_USER_NAME }}:${{ secrets.BOT_PAT }}@github.com" > ~/.git-credentials
+          git config --global user.email ${{ secrets.BOT_EMAIL }}
+          git config --global user.name ${{ secrets.BOT_USER_NAME }}
 
       - name: Get core.py from net-registry-index/scripts
         env:
@@ -77,5 +77,6 @@ jobs:
         uses: wow-actions/update-file@v1
         with:
           path: CHANGELOG.md
-          GITHUB_TOKEN: ${{ secrets.OWNER_PAT }}
+          GITHUB_TOKEN: ${{ secrets.BOT_PAT }}
+          commit_message: "Updated CHANGELOG.md [skip ci]" 
           content: "${{ steps.change-log.outputs.CHANGE_LOG }}\n\n${{ github.event.head_commit.message }}"
