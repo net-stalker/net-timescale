@@ -46,7 +46,7 @@ pub async fn insert_network_packet_transaction(
 ) -> Result<PgQueryResult, Error>
 {
     let group_id = envelope.get_group_id().ok();
-    let agent_id = envelope.get_group_id().ok();
+    let agent_id = envelope.get_agent_id().ok();
     
     let envelope_data = envelope.get_data();
     let network_packet: NetworkPacket = NetworkPacketDTO::decode(envelope_data).into();
