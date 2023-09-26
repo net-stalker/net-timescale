@@ -49,7 +49,7 @@ jobs:
       - name: Set up GIT credentials
         run: |
           git config --global credential.helper store
-          echo "https://${{ secrets.OWNER }}:${{ secrets.OWNER_PAT }}@github.com" > ~/.git-credentials
+          echo "https://${{ secrets.BOT_USER_NAME }}:${{ secrets.BOT_PAT }}@github.com" > ~/.git-credentials
           touch ~/.cargo/config
           echo "[net]" > ~/.cargo/config
           echo "git-fetch-with-cli = true" >> ~/.cargo/config
@@ -110,7 +110,7 @@ jobs:
       - name: Set up GIT credentials
         run: |
           git config --global credential.helper store
-          echo "https://${{ secrets.OWNER }}:${{ secrets.OWNER_PAT }}@github.com" > ~/.git-credentials
+          echo "https://${{ secrets.BOT_USER_NAME }}:${{ secrets.BOT_PAT }}@github.com" > ~/.git-credentials
           touch ~/.cargo/config
           echo "[net]" > ~/.cargo/config
           echo "git-fetch-with-cli = true" >> ~/.cargo/config

@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-c57c14f] - 2023-09-25
+
+feature/CU-8692te2td: updated ci scripts (#24)
+
+* feature/CU-8692te2td: updated ci scripts, changed owner's credentials to the bot's ones
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-ef54243] - 2023-09-12
 
