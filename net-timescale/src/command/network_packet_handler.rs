@@ -1,6 +1,5 @@
 use std::sync::Arc;
 use futures::executor::block_on;
-use net_timescale_api::api::network_packet::NetworkPacketDTO;
 use net_transport::sockets::{Handler, Receiver, Sender};
 use net_proto_api::decoder_api::Decoder;
 use sqlx::Postgres;

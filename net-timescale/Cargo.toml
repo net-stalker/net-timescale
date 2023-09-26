@@ -41,4 +41,4 @@ integration = []
 ion-text = []
 ion-binary = []
 
-default = ["ion-text"]
+default = ["ion-text", "integration"]
