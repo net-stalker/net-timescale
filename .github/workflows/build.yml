@@ -31,15 +31,7 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
-
-      - name: Install cargo check tools
-        run: |
-          cargo install --locked cargo-deny || true
-          cargo install --locked cargo-outdated || true
-          cargo install --locked cargo-udeps || true
-          cargo install --locked cargo-audit || true
-          cargo install --locked cargo-pants || true      
+          restore-keys: ${{ runner.os }}-cargo-  
 
       - name: Update platform
         run: |
@@ -49,7 +41,7 @@ jobs:
       - name: Set up GIT credentials
         run: |
           git config --global credential.helper store
-          echo "https://${{ secrets.OWNER }}:${{ secrets.OWNER_PAT }}@github.com" > ~/.git-credentials
+          echo "https://${{ secrets.BOT_USER_NAME }}:${{ secrets.BOT_PAT }}@github.com" > ~/.git-credentials
           touch ~/.cargo/config
           echo "[net]" > ~/.cargo/config
           echo "git-fetch-with-cli = true" >> ~/.cargo/config
@@ -84,15 +76,7 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
-
-      - name: Install cargo check tools
-        run: |
-          cargo install --locked cargo-deny || true
-          cargo install --locked cargo-outdated || true
-          cargo install --locked cargo-udeps || true
-          cargo install --locked cargo-audit || true
-          cargo install --locked cargo-pants || true      
+          restore-keys: ${{ runner.os }}-cargo- 
 
       - name: Update platform
         run: |
@@ -110,7 +94,7 @@ jobs:
       - name: Set up GIT credentials
         run: |
           git config --global credential.helper store
-          echo "https://${{ secrets.OWNER }}:${{ secrets.OWNER_PAT }}@github.com" > ~/.git-credentials
+          echo "https://${{ secrets.BOT_USER_NAME }}:${{ secrets.BOT_PAT }}@github.com" > ~/.git-credentials
           touch ~/.cargo/config
           echo "[net]" > ~/.cargo/config
           echo "git-fetch-with-cli = true" >> ~/.cargo/config

@@ -2,9 +2,10 @@ use std::collections::HashSet;
 use async_std::sync::Arc;
 use async_std::sync::RwLock;
 use async_std::task::block_on;
+use net_proto_api::envelope::envelope::Envelope;
 use net_transport::sockets::{Handler, Receiver, Sender};
 use net_proto_api::decoder_api::Decoder;
-use crate::internal_api::is_realtime::RealtimeRequestDTO;
+use crate::internal_api::realtime_request::RealtimeRequestDTO;
 
 pub struct IsRealtimeHandler {
     connections: Arc<RwLock<HashSet<i64>>>,
@@ -30,7 +31,8 @@ impl Handler for IsRealtimeHandler {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         log::info!("in is_realtime handler");
         let data = receiver.recv();
-        let real_req = RealtimeRequestDTO::decode(&data);
+        let envelope = Envelope::decode(data.as_slice());
+        let real_req = RealtimeRequestDTO::decode(envelope.get_data());
         let mut connections = block_on(self.connections.write());
         match connections.get(&real_req.get_connection_id()).is_some() {
             true => {

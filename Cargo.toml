@@ -1,8 +1,7 @@
 [workspace]
 
 members = [
-    "net-timescale",
-    "net-timescale-api",
+    "net-timescale"
 ]
 
 [workspace.dependencies]

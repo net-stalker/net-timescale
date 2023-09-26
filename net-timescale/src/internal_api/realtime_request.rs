@@ -82,7 +82,7 @@ mod tests {
     use net_proto_api::decoder_api::Decoder;
     use net_proto_api::encoder_api::Encoder;
 
-    use crate::internal_api::is_realtime::RealtimeRequestDTO;
+    use crate::internal_api::realtime_request::RealtimeRequestDTO;
 
     #[test]
     fn reader_correctly_read_encoded_date_cut() {
