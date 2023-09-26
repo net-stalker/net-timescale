@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-daf7991] - 2023-09-26
+
+Feature/cu 8692q9mcc: added features from net-monitor:1ae67514 (#23)
+
+* feature/CU-8692q9mcc: deteleted net-timescale-api from cargo workspace, added as a dep from net-api/net-timescale-api
+
+* feature/CU-8692q9mcc: updated migrations, updated code to make it compatible with a new net-timesacle-api
+
+* feature/CU-8692q9mcc: started moving net-monitor code to net-timesacle
+
+* feature/CU-8692q9mcc: added all features from net-monitor:1ae67514
+
+* feature/CU-8692q9mcc: fixed wrong insert method
+
+* feature/CU-8692q9mcc: finished importing changes from net-monitor, tested
+
+* feature/CU-8692q9mcc: fixed quering net-agent-id
+
+* feature/CU-8692q9mcc: removed installing cargo check tools from ci
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-c57c14f] - 2023-09-25
 
