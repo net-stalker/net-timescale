@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-49ade13] - 2023-09-28
+
+Feature/cu 8692ngce0: changed `Arc` to `Rc` in `timescale.rs` (#20)
+
+* feature/CU-8692ngce0: started changing Arc to Rc where necessary
+
+* feature/CU-8692ngce0: updated from Arc to rc
+
+* feature/CU-8692ngce0: fixed deps
+
+* feature/CU-8692ngce0: modified net-transport version
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-daf7991] - 2023-09-26
 
