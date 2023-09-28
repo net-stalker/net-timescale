@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::rc::Rc;
 use async_std::task::block_on;
 use net_transport::sockets::{Handler, Receiver, Sender};
 use net_proto_api::decoder_api::Decoder;
@@ -16,8 +17,8 @@ where
     S: Sender + ?Sized,
 {
     connection_pool: Arc<PoolWrapper<Postgres>>,
-    router: Arc<T>,
-    is_realtime_handler: Arc<S>,
+    router: Rc<T>,
+    is_realtime_handler: Rc<S>,
 }
 impl<T, S> NetworkGraphHandler<T, S>
 where
@@ -26,8 +27,8 @@ where
 {
     pub fn new(
         connection_pool: Arc<PoolWrapper<Postgres>>,
-        router: Arc<T>,
-        is_realtime_handler: Arc<S>,
+        router: Rc<T>,
+        is_realtime_handler: Rc<S>,
     ) -> Self {
         NetworkGraphHandler {
             connection_pool,

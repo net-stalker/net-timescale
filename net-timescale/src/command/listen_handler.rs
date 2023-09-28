@@ -1,6 +1,7 @@
 use std::{
     collections::HashSet,
     sync::Arc,
+    rc::Rc,
 };
 use async_std::task;
 use async_std::sync::RwLock;
@@ -19,7 +20,7 @@ where S: Sender
 {
     pub connection_pool: PoolWrapper<Postgres>,
     pub connections: Arc<RwLock<HashSet<i64>>>,
-    pub router: Arc<S>,
+    pub router: Rc<S>,
 }
 // TODO: need to write integration tests
 impl<S> ListenHandler<S>
@@ -28,7 +29,7 @@ impl<S> ListenHandler<S>
     pub fn new(
         connection_pool: PoolWrapper<Postgres>,
         connections: Arc<RwLock<HashSet<i64>>>,
-        router: Arc<S>,
+        router: Rc<S>,
     ) -> Self {
         Self {
             connection_pool,
@@ -138,13 +139,13 @@ where S: Sender
 {
     pub connection_pool: Option<PoolWrapper<Postgres>>,
     pub connections: Arc<RwLock<HashSet<i64>>>,
-    pub router: Option<Arc<S>>,
+    pub router: Option<Rc<S>>,
 }
 
 impl<S> ListenHandlerBuilder<S>
 where S: Sender {
 
-    pub fn with_router(mut self, router: Arc<S>) -> Self {
+    pub fn with_router(mut self, router: Rc<S>) -> Self {
         self.router = Some(router);
         self
     }

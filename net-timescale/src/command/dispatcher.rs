@@ -1,4 +1,5 @@
-use std::sync::Arc;
+use std::rc::Rc;
+
 use net_transport::{
     sockets::{Handler, Receiver, Sender, Pub},
 };
@@ -10,12 +11,12 @@ use net_proto_api::encoder_api::Encoder;
 pub struct CommandDispatcher<T>
 where T: Sender + Pub + ?Sized
 { 
-    consumer: Arc<T>,
+    consumer: Rc<T>,
 }
 impl<T> CommandDispatcher<T>
 where T: Sender + Pub + ?Sized
 {
-    pub fn new(consumer: Arc<T>) -> Self {
+    pub fn new(consumer: Rc<T>) -> Self {
         CommandDispatcher { consumer }
     }
 }

@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::ops::DerefMut;
 use std::sync::{Arc, Mutex};
+use std::rc::Rc;
 use std::time::Duration;
 use async_std::task::block_on;
 
@@ -79,7 +80,7 @@ impl Timescale {
     }
 
     pub async fn run(self) {
-        log::info!("Run component");
+        log::info!("Run component"); 
         let dealer_context = DealerContext::default();
         let pub_context = PublisherContext::default();
         let sub_context = SubscriberContext::new(pub_context.get_context());
@@ -88,7 +89,7 @@ impl Timescale {
         self.thread_pool.execute(move || {
             let consumer_db_service = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
                 .with_endpoint(self.config.timescale_endpoint.addr)
-                .with_handler(Arc::new(DummyCommand))
+                .with_handler(Rc::new(DummyCommand))
                 .build()
                 .connect()
                 .into_inner();
@@ -96,14 +97,14 @@ impl Timescale {
             let router_command = Router::new(consumer_db_service);
             let router = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
-                .with_handler(Arc::new(router_command))
+                .with_handler(Rc::new(router_command))
                 .build()
                 .bind()
                 .into_inner();
 
             let consumer = ConnectorZmqPublisherBuilder::new(&pub_context)
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
-                .with_handler(Arc::new(DummyCommand))
+                .with_handler(Rc::new(DummyCommand))
                 .build()
                 .bind()
                 .into_inner();
@@ -111,7 +112,7 @@ impl Timescale {
             let dispatcher = CommandDispatcher::new(consumer);
             let producer_db_service = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
                 .with_endpoint(self.config.translator_connector.addr)
-                .with_handler(Arc::new(dispatcher))
+                .with_handler(Rc::new(dispatcher))
                 .build()
                 .bind()
                 .into_inner();
@@ -131,7 +132,7 @@ impl Timescale {
         self.thread_pool.execute(move || {
             let router = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
-                .with_handler(Arc::new(DummyCommand))
+                .with_handler(Rc::new(DummyCommand))
                 .build()
                 .connect()
                 .into_inner();
@@ -157,7 +158,7 @@ impl Timescale {
             "dummy".to_string());
             let network_packet_connector = ConnectorZmqSubscriberBuilder::new(&sub_context_clone)
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
-                .with_handler(Arc::new(network_packet_handler))
+                .with_handler(Rc::new(network_packet_handler))
                 // TODO: add these topics to net-timescale-api
                 .with_topic("network_packet".as_bytes().into())
                 .build()
@@ -175,18 +176,18 @@ impl Timescale {
             let executor = PoolWrapper::new(connection_pool).into_inner();
             let router = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
-                .with_handler(Arc::new(DummyCommand))
+                .with_handler(Rc::new(DummyCommand))
                 .build()
                 .connect()
                 .into_inner();
 
             let is_realtime_consumer = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
                 .with_endpoint(IS_REALTIME.to_owned())
-                .with_handler(Arc::new(DummyCommand))
+                .with_handler(Rc::new(DummyCommand))
                 .build()
                 .connect()
                 .into_inner();
-            let network_graph_handler = Arc::new(NetworkGraphHandler::new(
+            let network_graph_handler = Rc::new(NetworkGraphHandler::new(
                 executor.clone(),
                 router.clone(),
                 is_realtime_consumer.clone()
@@ -202,7 +203,7 @@ impl Timescale {
             let is_realtime_handler = IsRealtimeHandler::new(tenants.lock().unwrap().to_owned());
             let is_realtime_connector = ConnectorZmqDealerBuilder::new(&dealer_context)
                 .with_endpoint(IS_REALTIME.to_owned())
-                .with_handler(Arc::new(is_realtime_handler))
+                .with_handler(Rc::new(is_realtime_handler))
                 .build()
                 .bind()
                 .into_inner();
