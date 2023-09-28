@@ -61,7 +61,7 @@ impl Timescale {
     }
 
     async fn create_continuous_aggregate(con: &Pool<Postgres>) {
-        match continuous_aggregate::create_address_pair_aggregate(con).await {
+        match continuous_aggregate::create_data_aggregate(con).await {
             Ok(_) => {
                 log::info!("successfully created address pair continuous aggregate");
             },
@@ -69,7 +69,7 @@ impl Timescale {
                 log::debug!("couldn't create an address pair continuous aggregate: {}", err);
             }
         }
-        match continuous_aggregate::add_refresh_policy_for_address_pair_aggregate(con).await {
+        match continuous_aggregate::add_refresh_policy_for_data_aggregate(con).await {
             Ok(_) => {
                 log::info!("successfully created a refresh policy for address pair continuous aggregate");
             },
