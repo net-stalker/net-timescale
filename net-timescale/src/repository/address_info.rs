@@ -10,7 +10,7 @@ use crate::persistence::network_graph::NetworkGraphRequest;
 #[derive(sqlx::FromRow, Debug)]
 pub struct AddressInfo {
     pub id: String,
-    pub aggregator: String,
+    pub agent_id: String,
     // may be expandable in future
 }
 

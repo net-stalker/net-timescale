@@ -41,7 +41,7 @@ impl From<NetworkGraphRequestDTO> for NetworkGraphRequest {
 
 impl From<AddressInfo> for GraphNodeDTO {
     fn from(value: AddressInfo) -> GraphNodeDTO {
-        GraphNodeDTO::new(&value.id, &value.aggregator)
+        GraphNodeDTO::new(&value.id, &value.agent_id)
     }
 }
 
