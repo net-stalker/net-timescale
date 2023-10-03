@@ -9,7 +9,7 @@ use crate::persistence::network_graph::NetworkGraphRequest;
 
 #[derive(sqlx::FromRow, Debug)]
 pub struct AddressInfo {
-    pub id: String,
+    pub node_id: String,
     pub agent_id: String,
     // may be expandable in future
 }
@@ -19,7 +19,6 @@ pub async fn select_address_info_by_date_cut<'a>(
     envelope: &'a Envelope
 ) -> BoxStream<'a, Result<AddressInfo, Error>>
 {
-    // TODO: this query isn't very efficient because we have to do 2 sub-queries.
     let group_id = envelope.get_group_id().ok();
     let envelope_data = envelope.get_data();
 
@@ -29,17 +28,17 @@ pub async fn select_address_info_by_date_cut<'a>(
     let end_date = Utc.timestamp_millis_opt(network_graph_request.get_end_date_time()).unwrap();
     sqlx::query_as::<_, AddressInfo>(
         "
-            SELECT agent_id as aggregator, addr as id
+            SELECT agent_id, node_id as id
             FROM (
-                SELECT DISTINCT agent_id, src_addr AS addr
-                FROM address_pair_aggregate
+                SELECT DISTINCT agent_id, src_addr AS node_id
+                FROM data_aggregate
                 WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
                 UNION
-                SELECT DISTINCT agent_id, dst_addr as addr
-                FROM address_pair_aggregate
+                SELECT DISTINCT agent_id, dst_addr as node_id
+                FROM data_aggregate
                 WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
             ) AS info
-            ORDER BY addr;
+            ORDER BY node_id;
         "
     )
         .bind(group_id)
