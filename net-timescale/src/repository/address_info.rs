@@ -28,7 +28,7 @@ pub async fn select_address_info_by_date_cut<'a>(
     let end_date = Utc.timestamp_millis_opt(network_graph_request.get_end_date_time()).unwrap();
     sqlx::query_as::<_, AddressInfo>(
         "
-            SELECT agent_id, node_id as id
+            SELECT agent_id, node_id
             FROM (
                 SELECT DISTINCT agent_id, src_addr AS node_id
                 FROM data_aggregate

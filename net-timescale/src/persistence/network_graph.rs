@@ -47,10 +47,12 @@ impl From<AddressInfo> for GraphNodeDTO {
 
 impl From<AddressPair> for GraphEdgeDTO {
     fn from(value: AddressPair) -> GraphEdgeDTO {
-        let communication_types: Vec<String> = value.communication_types
+        let communication_types = value.concatenated_protocols
             .split(':')
-            .map(|ty| ty.to_string())
-            .collect();
+            .map(|protocol| protocol.to_string())
+            .collect::<std::collections::HashSet<_>>()
+            .into_iter()
+            .collect::<Vec<String>>();
         GraphEdgeDTO::new(&value.src_id, &value.dst_id, &communication_types)
     }
 }
