@@ -4,8 +4,6 @@ use net_timescale_api::api::network_graph_request::{NetworkGraphRequestDTO};
 use sqlx::{Error, Pool, Postgres};
 use futures::stream::BoxStream;
 
-use crate::persistence::network_graph::NetworkGraphRequest;
-
 
 #[derive(sqlx::FromRow, Debug)]
 pub struct AddressInfo {
@@ -22,7 +20,7 @@ pub async fn select_address_info_by_date_cut<'a>(
     let group_id = envelope.get_group_id().ok();
     let envelope_data = envelope.get_data();
 
-    let network_graph_request: NetworkGraphRequest = NetworkGraphRequestDTO::decode(envelope_data).into();
+    let network_graph_request = NetworkGraphRequestDTO::decode(envelope_data);
     
     let start_date = Utc.timestamp_millis_opt(network_graph_request.get_start_date_time()).unwrap();
     let end_date = Utc.timestamp_millis_opt(network_graph_request.get_end_date_time()).unwrap();

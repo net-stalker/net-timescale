@@ -11,7 +11,7 @@ async fn establish_connection() -> Pool<Postgres> {
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
-#[cfg(feature = "integration")]
+// #[cfg(feature = "integration")]
 #[test]
 fn integration_test_insert() {
     #[derive(sqlx::FromRow, Debug)]
