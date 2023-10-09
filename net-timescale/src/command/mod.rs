@@ -1,4 +1,4 @@
-pub mod dashboard_handler;
+pub mod dashboard;
 pub mod dispatcher;
 pub mod executor;
 pub mod router;

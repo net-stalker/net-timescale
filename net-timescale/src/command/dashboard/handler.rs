@@ -14,6 +14,7 @@ use net_proto_api::api::API;
 use net_timescale_api::api::dashboard::DashboardDTO;
 use net_timescale_api::api::dashboard_request::DashboardRequestDTO;
 use sqlx::{Acquire, Database, Postgres};
+use crate::command::dashboard::builder::DashboardHandlerBuilder;
 use crate::command::executor::PoolWrapper;
 
 pub struct DashboardHandler<T, C, DB>
@@ -42,6 +43,9 @@ where
             pool,
             chart_constructors,
         }
+    }
+    pub fn builder() -> DashboardHandlerBuilder<T, C, DB> {
+        DashboardHandlerBuilder::default()
     }
 }
 impl<T, C, DB> Handler for DashboardHandler<T, C, DB>
