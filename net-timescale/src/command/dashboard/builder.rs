@@ -2,13 +2,13 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
 use net_proto_api::api::API;
-use net_transport::sockets::{Pub, Sender};
+use net_transport::sockets::Sender;
 use sqlx::Database;
 use crate::command::executor::PoolWrapper;
 
 pub struct DashboardHandlerBuilder<T, C, DB>
 where
-    T: Sender + Pub + ?Sized,
+    T: Sender + ?Sized,
     C: API + ?Sized,
     DB: Database
 {
@@ -19,7 +19,7 @@ where
 
 impl<T, C, DB> Default for DashboardHandlerBuilder<T, C, DB>
 where
-    T: Sender + Pub + ?Sized,
+    T: Sender + ?Sized,
     C: API + ?Sized,
     DB: Database
 {
@@ -34,7 +34,7 @@ where
 
 impl<T, C, DB> DashboardHandlerBuilder<T, C, DB>
 where
-    T: Sender + Pub + ?Sized,
+    T: Sender + ?Sized,
     C: API + ?Sized,
     DB: Database
 {

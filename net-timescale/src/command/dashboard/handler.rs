@@ -19,7 +19,7 @@ use crate::command::executor::PoolWrapper;
 
 pub struct DashboardHandler<T, C, DB>
 where
-    T: Sender + Pub + ?Sized,
+    T: Sender + ?Sized,
     C: API + ?Sized,
     DB: Database
 {
@@ -29,7 +29,7 @@ where
 }
 impl<T, C, DB> DashboardHandler<T, C, DB>
 where
-    T: Sender + Pub + ?Sized,
+    T: Sender + ?Sized,
     C: API + ?Sized,
     DB: Database,
 {
@@ -50,7 +50,7 @@ where
 }
 impl<T, C, DB> Handler for DashboardHandler<T, C, DB>
 where
-    T: Sender + Pub + ?Sized,
+    T: Sender + ?Sized,
     C: API + ?Sized, DB: Database,
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
