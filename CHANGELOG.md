@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-4d90f83] - 2023-09-29
 
 feature/CU-8692u9pjy: updated continuous aggregate (#25)
 
 * feature/CU-8692u9pjy: updated continuous aggregate, added index for binary_data field, updated methods for creating continuous aggregate
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-49ade13] - 2023-09-28
 
 Feature/cu 8692ngce0: changed `Arc` to `Rc` in `timescale.rs` (#20)
