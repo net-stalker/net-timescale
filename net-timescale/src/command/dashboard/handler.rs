@@ -1,3 +1,4 @@
+#![allow(clippy::type_complexity)]
 use std::collections::HashMap;
 
 use std::rc::Rc;
@@ -14,10 +15,9 @@ use net_proto_api::api::API;
 use net_timescale_api::api::dashboard::DashboardDTO;
 use net_timescale_api::api::dashboard_request::DashboardRequestDTO;
 use net_timescale_api::api::network_graph_request::NetworkGraphRequestDTO;
-use sqlx::{Acquire, Database};
+use sqlx::Database;
 use crate::command::dashboard::builder::DashboardHandlerBuilder;
 use crate::command::executor::PoolWrapper;
-
 
 pub struct DashboardHandler<T, C, DB>
 where
