@@ -1,10 +1,10 @@
 use std::collections::HashMap;
-use std::hash::Hash;
+
 use std::rc::Rc;
 use std::sync::Arc;
 use async_std::task::block_on;
 use net_transport::{
-    sockets::{Handler, Receiver, Sender, Pub},
+    sockets::{Handler, Receiver, Sender},
 };
 use net_proto_api::envelope::envelope::Envelope;
 use net_proto_api::decoder_api::Decoder;
@@ -13,9 +13,11 @@ use net_proto_api::typed_api::Typed;
 use net_proto_api::api::API;
 use net_timescale_api::api::dashboard::DashboardDTO;
 use net_timescale_api::api::dashboard_request::DashboardRequestDTO;
-use sqlx::{Acquire, Database, Postgres};
+use net_timescale_api::api::network_graph_request::NetworkGraphRequestDTO;
+use sqlx::{Acquire, Database};
 use crate::command::dashboard::builder::DashboardHandlerBuilder;
 use crate::command::executor::PoolWrapper;
+
 
 pub struct DashboardHandler<T, C, DB>
 where
@@ -74,10 +76,16 @@ where
         let mut transaction = block_on(block_on(self.pool.get_connection()).begin()).unwrap();
         let mut charts = Vec::with_capacity(chart_requests.len());
         chart_requests.iter().for_each(|request| {
-            let chart = self.chart_constructors.get(request.get_type()).unwrap()(&mut transaction, request.get_data());
+            // TODO: think more about network_graph_request
+            let data = if request.get_type() == NetworkGraphRequestDTO::get_data_type() {
+                request.encode()
+            } else {
+                request.get_data().to_owned()
+            };
+            let chart = self.chart_constructors.get(request.get_type()).unwrap()(&mut transaction, data.as_slice());
             charts.push(Envelope::new(
-                group_id.clone(),
-                agent_id.clone(),
+                group_id,
+                agent_id,
                 chart.get_type(),
                 chart.encode().as_slice()));
         });

@@ -4,10 +4,11 @@ use std::sync::{Arc, Mutex};
 use std::rc::Rc;
 use std::time::Duration;
 use async_std::task::block_on;
-use net_proto_api::api::API;
+
 use net_proto_api::typed_api::Typed;
 use net_timescale_api::api::dashboard_request::DashboardRequestDTO;
-use net_timescale_api::api::network_graph::network_graph::NetworkGraphDTO;
+
+use net_timescale_api::api::network_graph_request::NetworkGraphRequestDTO;
 
 use net_transport::dummy_command::DummyCommand;
 use threadpool::ThreadPool;
@@ -29,13 +30,13 @@ use crate::command::{
     executor::PoolWrapper,
     router::Router,
     network_packet_handler::NetworkPacketHandler,
-    network_graph_handler::NetworkGraphHandler,
 };
-use crate::command::dashboard::builder::DashboardHandlerBuilder;
+
 use crate::command::dashboard::handler::DashboardHandler;
-use crate::command::realtime_handler::IsRealtimeHandler;
+
 use crate::command::listen_handler::ListenHandler;
 use crate::config::Config;
+
 use crate::repository::continuous_aggregate;
 
 pub const TIMESCALE_CONSUMER: &str = "inproc://timescale/consumer";
@@ -191,9 +192,11 @@ impl Timescale {
             let dashboard_handler = DashboardHandler::builder()
                 .with_consumer(router)
                 .with_pool(pool)
-                .add_chart_constructor((NetworkGraphDTO::get_data_type(), |transaction, data| -> Rc<dyn API>{
-                    todo!("didn't implemented")
-                }))
+                .add_chart_constructor(
+                    (NetworkGraphRequestDTO::get_data_type(),
+                     crate::persistence::network_graph::get_network_graph_for_dashboard
+                    )
+                )
                 .build();
             let dashboard_connector = ConnectorZmqSubscriberBuilder::new(&sub_context)
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())

@@ -1,9 +1,9 @@
-use chrono::{TimeZone, Utc};
-use futures::executor::block_on;
-use serde_json::json;
+
+
+
 use sqlx::{Pool, Postgres};
-use net_timescale_api::api::network_packet::NetworkPacketDTO;
-use net_timescale::repository::network_packet;
+
+
 
 async fn establish_connection() -> Pool<Postgres> {
     let database_url = "postgres://postgres:PsWDgxZb@localhost".to_owned();

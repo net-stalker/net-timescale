@@ -1,4 +1,8 @@
+use std::rc::Rc;
+use async_std::task::block_on;
 use futures::TryStreamExt;
+use net_proto_api::api::API;
+use net_proto_api::decoder_api::Decoder;
 use net_proto_api::envelope::envelope::Envelope;
 use sqlx::{
     Pool,
@@ -76,4 +80,25 @@ pub async fn get_network_graph_by_date_cut(connection: &Pool<Postgres>, envelope
     }
 
     NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice())
+}
+pub fn get_network_graph_for_dashboard(transaction: &mut sqlx::Transaction<Postgres>, request: &[u8]) -> Rc<dyn API> {
+    let envelope = Envelope::decode(request);
+    let address_pairs = block_on(address_pair::transaction_select_address_pairs_by_date_cut(
+        transaction,
+        &envelope,
+    )).unwrap();
+    let addresses = block_on(address_info::transaction_select_address_info_by_date_cut(
+        transaction,
+        &envelope
+    )).unwrap();
+    let mut edges_dto = Vec::<GraphEdgeDTO>::with_capacity(address_pairs.len());
+    let mut nodes_dto = Vec::<GraphNodeDTO>::with_capacity(addresses.len());
+
+    address_pairs.into_iter().for_each(|pair| {
+        edges_dto.push(pair.into());
+    });
+    addresses.into_iter().for_each(|info| {
+        nodes_dto.push(info.into());
+    });
+    Rc::new(NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice()))
 }
