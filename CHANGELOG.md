@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-39c4be6] - 2023-10-13
+
+feature/CU-8692vg5mr: fixed liquibase error (#28)
+
+* fixed liquibase error
+
+* fixed tests, wrong version of net-timescale-api was used
+
+* fixed crate versions
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-4d90f83] - 2023-09-29
 
