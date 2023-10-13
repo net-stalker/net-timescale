@@ -41,13 +41,19 @@ impl From<NetworkGraphRequestDTO> for NetworkGraphRequest {
 
 impl From<AddressInfo> for GraphNodeDTO {
     fn from(value: AddressInfo) -> GraphNodeDTO {
-        GraphNodeDTO::new(&value.id, &value.aggregator)
+        GraphNodeDTO::new(&value.node_id, &value.agent_id)
     }
 }
 
 impl From<AddressPair> for GraphEdgeDTO {
     fn from(value: AddressPair) -> GraphEdgeDTO {
-        GraphEdgeDTO::new(&value.src_id, &value.dst_id)
+        let communication_types = value.concatenated_protocols
+            .split(':')
+            .map(|protocol| protocol.to_string())
+            .collect::<std::collections::HashSet<_>>()
+            .into_iter()
+            .collect::<Vec<String>>();
+        GraphEdgeDTO::new(&value.src_id, &value.dst_id, &communication_types)
     }
 }
 

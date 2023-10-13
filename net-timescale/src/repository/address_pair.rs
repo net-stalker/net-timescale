@@ -10,6 +10,7 @@ use crate::persistence::network_graph::NetworkGraphRequest;
 pub struct AddressPair {
     pub src_id: String,
     pub dst_id: String,
+    pub concatenated_protocols: String,
 }
 
 pub async fn select_address_pairs_by_date_cut<'a>(
@@ -27,8 +28,8 @@ pub async fn select_address_pairs_by_date_cut<'a>(
 
     sqlx::query_as::<_, AddressPair>(
         "
-            SELECT src_addr as src_id, dst_addr as dst_id
-            FROM address_pair_aggregate
+            SELECT src_addr as src_id, dst_addr as dst_id, STRING_AGG(protocols, ':' ORDER BY protocols) AS concatenated_protocols
+            FROM data_aggregate
             WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
             GROUP BY src_addr, dst_addr
             ORDER BY src_addr, dst_addr;
