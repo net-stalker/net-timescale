@@ -19,6 +19,7 @@ pub async fn select_address_info_by_date_cut<'a>(
     envelope: &'a Envelope
 ) -> BoxStream<'a, Result<AddressInfo, Error>>
 {
+    // TODO: this query isn't very efficient because we have to do 2 sub-queries.
     let group_id = envelope.get_group_id().ok();
     let envelope_data = envelope.get_data();
 

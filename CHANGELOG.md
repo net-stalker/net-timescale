@@ -8,7 +8,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-69f7616] - 2023-10-13
+
+Feature/cu 8692ucf3x: updated graph queries (#26)
+
+* modified getting address pairs and modified mock sqlx::FromRow structures
 <!-- [END AUTO UPDATE] -->
+## [0.1.0-39c4be6] - 2023-10-13
+
+feature/CU-8692vg5mr: fixed liquibase error (#28)
+
+* fixed liquibase error
+
+* fixed tests, wrong version of net-timescale-api was used
+
+* fixed crate versions
 ## [0.1.0-4d90f83] - 2023-09-29
 
 feature/CU-8692u9pjy: updated continuous aggregate (#25)
