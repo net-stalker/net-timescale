@@ -5,11 +5,11 @@ edition = "2021"
 
 [dependencies]
 
-net-proto-api = { version = "=0.1.1-00a5b83", registry = "net-registry" }
+net-proto-api = { version = "=0.1.1-da85a0a", registry = "net-registry" }
 net-transport = { version = "=0.1.2-6538ee7", registry = "net-registry" }
 net-file = { version = "0.1.0", registry = "net-registry" }
 net-config = { version = "0.1.0", registry = "net-registry" }
-net-timescale-api = { version = "=0.1.2-17ea57a", registry = "net-registry" }
+net-timescale-api = { version = "=0.1.2-f3511c4", registry = "net-registry" }
 
 
 log.workspace = true
