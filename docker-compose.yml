@@ -33,8 +33,8 @@ services:
 
   timescaledb-migrations:
     build:
-      context: net-timescale/migrations_liquibase
-    container_name: timescaledb-migrations_liquibase
+      context: net-timescale/migrations
+    container_name: timescaledb-migrations
     environment:
       # https://docs.liquibase.com/parameters/home.html
       - LIQUIBASE_COMMAND_URL=jdbc:postgresql://timescaledb:5432/postgres

@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  timescaledb-for-tests:
+    build:
+      context: ./net-timescale/timescaledb
+    container_name: timescaledb-for-tests
+    hostname: timescaledb-tests
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_PASSWORD=PsWDgxZb
+    networks:
+      - skynet-test
+
+  timescaledb-migrations-for-tests:
+    build:
+      context: net-timescale/migrations
+    container_name: timescaledb-migrations-for-tests
+    environment:
+      # https://docs.liquibase.com/parameters/home.html
+      - LIQUIBASE_COMMAND_URL=jdbc:postgresql://timescaledb-tests:5432/postgres
+      - LIQUIBASE_COMMAND_USERNAME=liquibase
+      - LIQUIBASE_COMMAND_PASSWORD=PsWDgxZb
+      - LIQUIBASE_LOG_LEVEL=INFO
+    depends_on:
+      - timescaledb-for-tests
+    networks:
+      - skynet-test
+
+networks:
+  skynet-test:
+    driver: bridge

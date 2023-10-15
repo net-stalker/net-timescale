@@ -6,7 +6,7 @@ use net_timescale_api::api::network_packet::NetworkPacketDTO;
 use net_timescale::repository::network_packet;
 
 async fn establish_connection() -> Pool<Postgres> {
-    let database_url = "postgres://postgres:PsWDgxZb@localhost".to_owned();
+    let database_url = "postgres://postgres:PsWDgxZb@localhost:5433".to_owned();
     Pool::<Postgres>::connect("postgres://postgres:PsWDgxZb@localhost").await
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
