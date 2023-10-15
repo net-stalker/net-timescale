@@ -20,6 +20,14 @@ pub async fn create_data_aggregate(con: &Pool<Postgres>)
         .execute(con)
         .await
 }
+
+pub async fn drop_data_aggregate(con: &Pool<Postgres>) -> Result<PgQueryResult, Error> {
+    sqlx::query("
+        DROP MATERIALIZED VIEW IF EXISTS data_aggregate;
+    ")
+        .execute(con)
+        .await
+}
 pub async fn add_refresh_policy_for_data_aggregate(con: &Pool<Postgres>)
                                                    -> Result<PgQueryResult, Error> {
     sqlx::query(

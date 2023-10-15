@@ -6,6 +6,9 @@ use net_timescale::repository::network_packet;
 
 mod connection_establishing;
 use connection_establishing::establish_connection;
+mod continuous_aggregate;
+use continuous_aggregate::{create_data_aggregate, drop_data_aggregate};
+
 #[cfg(feature = "integration")]
 #[test]
 fn integration_test_insert() {
@@ -23,6 +26,8 @@ fn integration_test_insert() {
     use net_proto_api::{envelope::envelope::Envelope, encoder_api::Encoder};
 
     let con = block_on(establish_connection());
+    block_on(create_data_aggregate(&con));
+
     let json_data = json!({
         "test": "test",
     });
@@ -56,4 +61,7 @@ fn integration_test_insert() {
     assert_eq!(query_result.src_addr, "src");
     assert_eq!(query_result.dst_addr, "dst");
     assert_eq!(query_result.binary_data, json_data);
+    block_on(transcation.rollback()).unwrap();
+
+    block_on(drop_data_aggregate(&con)).unwrap();
 }
