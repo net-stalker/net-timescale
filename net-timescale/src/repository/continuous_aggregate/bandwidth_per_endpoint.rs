@@ -27,11 +27,7 @@ impl ContinuousAggregate for BandwidthPerEndpointAggregate {
             ",
             Self::get_name()
         );
-
-        sqlx::query(
-            query.as_str()
-        )
-            .bind(Self::get_name())
+        sqlx::query(query.as_str())
             .execute(pool)
             .await
     }

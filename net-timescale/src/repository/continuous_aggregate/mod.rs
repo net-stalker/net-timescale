@@ -11,17 +11,27 @@ pub trait ContinuousAggregate {
         end_offset: Option<&str>,
         schedule_interval: &str
     ) -> Result<PgQueryResult, sqlx::Error> {
-        sqlx::query(
-            "SELECT add_continuous_aggregate_policy(
-	    ? ,
-	    start_offset => NULL ,
-	    end_offset => NULL ,
-	    schedule_interval => INTERVAL ?);"
-        )
-            .bind(Self::get_name())
-            // .bind(start_offset)
-            // .bind(end_offset)
-            .bind(schedule_interval)
+        let start_offset = match start_offset {
+            None => "NULL",
+            Some(interval) => interval
+        };
+        let end_offset = match end_offset {
+            None => "NULL",
+            Some(interval) => interval
+        };
+        let query = format!(
+                "SELECT add_continuous_aggregate_policy(
+                '{}',
+                start_offset => {},
+                end_offset => {},
+                schedule_interval => INTERVAL '{}'
+            );",
+            Self::get_name(),
+            start_offset,
+            end_offset,
+            schedule_interval,
+        );
+        sqlx::query(query.as_str())
             .execute(pool)
             .await
     }
