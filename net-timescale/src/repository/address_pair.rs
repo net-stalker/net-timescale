@@ -1,5 +1,4 @@
 use chrono::{Utc, DateTime};
-use futures::stream::BoxStream;
 use sqlx::{Error, Pool, Postgres, Transaction};
 
 #[derive(sqlx::FromRow, Debug)]

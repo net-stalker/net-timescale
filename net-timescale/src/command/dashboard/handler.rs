@@ -14,7 +14,6 @@ use net_proto_api::typed_api::Typed;
 use net_proto_api::api::API;
 use net_timescale_api::api::dashboard::DashboardDTO;
 use net_timescale_api::api::dashboard_request::DashboardRequestDTO;
-use net_timescale_api::api::network_graph_request::NetworkGraphRequestDTO;
 use sqlx::Database;
 use crate::command::dashboard::builder::DashboardHandlerBuilder;
 use crate::command::executor::PoolWrapper;
@@ -27,7 +26,7 @@ where
 {
     consumer: Rc<T>,
     pool: Arc<PoolWrapper<DB>>,
-    chart_constructors: HashMap<&'static str, fn(&mut sqlx::Transaction<DB>, &[u8]) -> Rc<C>>
+    chart_constructors: HashMap<&'static str, fn(&mut sqlx::Transaction<DB>, &Envelope) -> Result<Rc<C>, String>>,
 }
 impl<T, C, DB> DashboardHandler<T, C, DB>
 where
@@ -38,7 +37,7 @@ where
     pub fn new(
         consumer: Rc<T>,
         pool: Arc<PoolWrapper<DB>>,
-        chart_constructors: HashMap<&'static str, fn(&mut sqlx::Transaction<DB>, &[u8]) -> Rc<C>>
+        chart_constructors: HashMap<&'static str, fn(&mut sqlx::Transaction<DB>, &Envelope) -> Result<Rc<C>, String>>,
     ) -> Self {
         Self {
             consumer,
@@ -58,14 +57,6 @@ where
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
         let envelope = Envelope::decode(&data);
-        let group_id = match envelope.get_group_id() {
-            Ok(id) => Some(id),
-            Err(_) => None
-        };
-        let agent_id = match envelope.get_agent_id() {
-            Ok(id) => Some(id),
-            Err(_) => None
-        };
         if envelope.get_type() != DashboardRequestDTO::get_data_type() {
             log::error!("wrong data type is received in DashboardHandler: {}", envelope.get_type());
             return;
@@ -75,24 +66,26 @@ where
         let chart_requests = dashboard_request.get_chart_requests();
         let mut transaction = block_on(block_on(self.pool.get_connection()).begin()).unwrap();
         let mut charts = Vec::with_capacity(chart_requests.len());
-        chart_requests.iter().for_each(|request| {
-            // TODO: think more about network_graph_request
-            let data = if request.get_type() == NetworkGraphRequestDTO::get_data_type() {
-                request.encode()
-            } else {
-                request.get_data().to_owned()
+        for request in chart_requests.iter() {
+            let chart = match self.chart_constructors.get(request.get_type()).unwrap()(&mut transaction, request) {
+                Ok(chart) => chart,
+                Err(err) => {
+                    log::error!("{err}");
+                    let _ = block_on(transaction.rollback());
+                    return;
+                }
             };
-            let chart = self.chart_constructors.get(request.get_type()).unwrap()(&mut transaction, data.as_slice());
             charts.push(Envelope::new(
-                group_id,
-                agent_id,
+                request.get_group_id().ok(),
+                request.get_agent_id().ok(),
                 chart.get_type(),
                 chart.encode().as_slice()));
-        });
+        }
+        let _ = block_on(transaction.commit());
         let dashboard = DashboardDTO::new(charts.as_slice());
         let enveloped_dashboard = Envelope::new(
-            group_id,
-            agent_id,
+            envelope.get_group_id().ok(),
+            envelope.get_agent_id().ok(),
             dashboard.get_type(),
             dashboard.encode().as_slice()
         );

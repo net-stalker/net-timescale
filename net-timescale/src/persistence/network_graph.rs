@@ -1,12 +1,11 @@
 use std::rc::Rc;
 use async_std::task::block_on;
 use chrono::{DateTime, TimeZone, Utc};
-use futures::TryStreamExt;
 use net_proto_api::api::API;
 use net_proto_api::decoder_api::Decoder;
 use net_proto_api::envelope::envelope::Envelope;
 use net_proto_api::typed_api::Typed;
-use sqlx::{Error, Pool, Postgres, Transaction};
+use sqlx::{Pool, Postgres, Transaction};
 use net_timescale_api::api::{
     network_graph::{
         graph_edge::GraphEdgeDTO,
@@ -14,8 +13,8 @@ use net_timescale_api::api::{
         network_graph::NetworkGraphDTO,
     }, network_graph_request::NetworkGraphRequestDTO
 };
-use crate::repository::address_pair::{AddressPair, self};
-use crate::repository::address_info::{AddressInfo, self};
+use crate::repository::address_pair::AddressPair;
+use crate::repository::address_info::AddressInfo;
 
 
 pub struct NetworkGraph { }
