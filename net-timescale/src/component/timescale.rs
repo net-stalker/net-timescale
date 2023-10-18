@@ -37,6 +37,7 @@ use crate::command::dashboard::handler::DashboardHandler;
 use crate::command::listen_handler::ListenHandler;
 use crate::config::Config;
 use crate::repository::continuous_aggregate::bandwidth_per_endpoint::BandwidthPerEndpointAggregate;
+use crate::repository::continuous_aggregate::ContinuousAggregate;
 use crate::repository::continuous_aggregate::network_graph::NetworkGraphAggregate;
 
 pub const TIMESCALE_CONSUMER: &str = "inproc://timescale/consumer";
