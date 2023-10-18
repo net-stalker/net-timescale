@@ -36,8 +36,8 @@ use crate::command::dashboard::handler::DashboardHandler;
 
 use crate::command::listen_handler::ListenHandler;
 use crate::config::Config;
-
-use crate::repository::continuous_aggregate;
+use crate::repository::continuous_aggregate::bandwidth_per_endpoint::BandwidthPerEndpointAggregate;
+use crate::repository::continuous_aggregate::network_graph::NetworkGraphAggregate;
 
 pub const TIMESCALE_CONSUMER: &str = "inproc://timescale/consumer";
 pub const TIMESCALE_PRODUCER: &str = "inproc://timescale/producer";
@@ -53,7 +53,7 @@ pub struct Timescale {
 impl Timescale {
     pub async fn new(thread_pool: ThreadPool, config: Config) -> Self {
         let connection_pool = Timescale::configure_connection_pool(&config).await;
-        Timescale::create_continuous_aggregate(&connection_pool).await;
+        Timescale::create_continuous_aggregates(&connection_pool).await;
         Self {
             thread_pool,
             connection_pool,
@@ -68,21 +68,38 @@ impl Timescale {
             .unwrap()
     }
 
-    async fn create_continuous_aggregate(con: &Pool<Postgres>) {
-        match continuous_aggregate::create_data_aggregate(con).await {
+    async fn create_continuous_aggregates(con: &Pool<Postgres>) {
+        // TODO: think of refactoring this method using HashMap probably
+        match NetworkGraphAggregate::create(con).await {
             Ok(_) => {
                 log::info!("successfully created address pair continuous aggregate");
             },
             Err(err) => {
-                log::debug!("couldn't create an address pair continuous aggregate: {}", err);
+                log::debug!("couldn't create {}: {}", NetworkGraphAggregate::get_name(), err);
             }
         }
-        match continuous_aggregate::add_refresh_policy_for_data_aggregate(con).await {
+        match NetworkGraphAggregate::add_refresh_policy(con, None, None, "1 minute").await {
             Ok(_) => {
-                log::info!("successfully created a refresh policy for address pair continuous aggregate");
+                log::info!("successfully created {} refresh policy", NetworkGraphAggregate::get_name());
             },
             Err(err) => {
-                log::debug!("couldn't create a refresh policy for address pair continuous aggregate: {}", err);
+                log::debug!("couldn't create {} refresh policy: {}", NetworkGraphAggregate::get_name(), err);
+            }
+        }
+        match BandwidthPerEndpointAggregate::create(con).await {
+            Ok(_) => {
+                log::info!("successfully created {}", BandwidthPerEndpointAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {}: {}", BandwidthPerEndpointAggregate::get_name(), err);
+            }
+        }
+        match BandwidthPerEndpointAggregate::add_refresh_policy(con, None, None, "1 minute").await {
+            Ok(_) => {
+                log::info!("successfully created {} refresh policy", BandwidthPerEndpointAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {} refresh policy: {}", BandwidthPerEndpointAggregate::get_name(), err);
             }
         }
     }
