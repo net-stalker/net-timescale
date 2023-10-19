@@ -31,11 +31,11 @@ pub async fn select_address_info_by_date_cut<'a>(
             SELECT agent_id, node_id
             FROM (
                 SELECT DISTINCT agent_id, src_addr AS node_id
-                FROM data_aggregate
+                FROM network_graph_aggregate
                 WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
                 UNION
                 SELECT DISTINCT agent_id, dst_addr as node_id
-                FROM data_aggregate
+                FROM network_graph_aggregate
                 WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
             ) AS info
             ORDER BY node_id;
