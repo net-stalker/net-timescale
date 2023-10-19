@@ -30,6 +30,7 @@ use crate::command::{
 use crate::command::realtime_handler::IsRealtimeHandler;
 use crate::command::listen_handler::ListenHandler;
 use crate::config::Config;
+use crate::repository::continuous_aggregate::network_bandwith::NetworkBandwidthAggregate;
 use crate::repository::continuous_aggregate::{ContinuousAggregate};
 use crate::repository::continuous_aggregate::bandwidth_per_endpoint::BandwidthPerEndpointAggregate;
 use crate::repository::continuous_aggregate::network_graph::NetworkGraphAggregate;
@@ -95,6 +96,22 @@ impl Timescale {
             },
             Err(err) => {
                 log::debug!("couldn't create {} refresh policy: {}", BandwidthPerEndpointAggregate::get_name(), err);
+            }
+        }
+        match NetworkBandwidthAggregate::create(con).await {
+            Ok(_) => {
+                log::info!("successfully created {}", NetworkBandwidthAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {}: {}", NetworkBandwidthAggregate::get_name(), err);
+            }
+        }
+        match NetworkBandwidthAggregate::add_refresh_policy(con, None, None, "1 minute").await {
+            Ok(_) => {
+                log::info!("successfully created {} refresh policy", NetworkBandwidthAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {} refresh policy: {}", NetworkBandwidthAggregate::get_name(), err);
             }
         }
     }
