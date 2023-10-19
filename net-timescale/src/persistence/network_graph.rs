@@ -51,8 +51,9 @@ impl PersistenceNetworkGraph {
             return Err(format!("wrong request is being received: {}", data.get_type()));
         }
         let ng_request = NetworkGraphRequestDTO::decode(data.get_data());
-        let start_date: DateTime<Utc> = Utc.timestamp_nanos(ng_request.get_start_date_time());
-        let end_date: DateTime<Utc> = Utc.timestamp_nanos(ng_request.get_end_date_time());
+        // TODO: take a look at #8692yt2vj
+        let start_date: DateTime<Utc> = Utc.timestamp_millis_opt(ng_request.get_start_date_time()).unwrap();
+        let end_date: DateTime<Utc> = Utc.timestamp_millis_opt(ng_request.get_end_date_time()).unwrap();
 
         let address_pairs = match AddressPair::select_by_date_cut(
             connection, group_id, start_date, end_date
@@ -89,8 +90,9 @@ impl PersistenceNetworkGraph {
             return Err(format!("wrong request is being received: {}", data.get_type()));
         }
         let ng_request = NetworkGraphRequestDTO::decode(data.get_data());
-        let start_date: DateTime<Utc> = Utc.timestamp_nanos(ng_request.get_start_date_time());
-        let end_date: DateTime<Utc> = Utc.timestamp_nanos(ng_request.get_end_date_time());
+        // TODO: take a look at #8692yt2vj
+        let start_date: DateTime<Utc> = Utc.timestamp_millis_opt(ng_request.get_start_date_time()).unwrap();
+        let end_date: DateTime<Utc> = Utc.timestamp_millis_opt(ng_request.get_end_date_time()).unwrap();
 
         let address_pairs = match AddressPair::transaction_select_by_date_cut(
             transaction, group_id, start_date, end_date
