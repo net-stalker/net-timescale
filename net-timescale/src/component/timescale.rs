@@ -38,7 +38,6 @@ use crate::repository::continuous_aggregate::network_graph::NetworkGraphAggregat
 pub const TIMESCALE_CONSUMER: &str = "inproc://timescale/consumer";
 pub const TIMESCALE_PRODUCER: &str = "inproc://timescale/producer";
 pub const IS_REALTIME: &str = "inproc://timescale/is-realtime";
-pub const DASHBOARD_HANDLER: &str = "inproc://timescale/dashboard-handler";
 
 pub struct Timescale {
     thread_pool: ThreadPool,
