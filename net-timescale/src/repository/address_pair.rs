@@ -9,7 +9,7 @@ pub struct AddressPair {
 }
 const SELECT_BY_DATE_CUT: &str = "
             SELECT src_addr as src_id, dst_addr as dst_id, STRING_AGG(protocols, ':' ORDER BY protocols) AS concatenated_protocols
-            FROM data_aggregate
+            FROM network_graph_aggregate
             WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
             GROUP BY src_addr, dst_addr
             ORDER BY src_addr, dst_addr;
