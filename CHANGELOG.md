@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-2d6cd0b] - 2023-10-19
 
 Feature/cu 8692y0v0u: reorganized creating continuous aggregates (#31)
 
 * feature/CU-8692y0v0u: split data_aggregate to network_graph_aggregate and bandwidth_per_endpoint_aggregate. Added async trait for continuous aggregates creating refresh policies for them.
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-69f7616] - 2023-10-13
 
 Feature/cu 8692ucf3x: updated graph queries (#26)
