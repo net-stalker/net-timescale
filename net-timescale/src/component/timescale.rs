@@ -63,7 +63,8 @@ impl Timescale {
     }
 
     async fn create_continuous_aggregates(con: &Pool<Postgres>) {
-        // TODO: think of refactoring this method using HashMap probably
+        // TODO: refactor this part of code using, for example, continues aggregate manager
+        // to reduce the amount of code here
         match NetworkGraphAggregate::create(con).await {
             Ok(_) => {
                 log::info!("successfully created address pair continuous aggregate");

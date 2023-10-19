@@ -11,6 +11,7 @@ pub trait ContinuousAggregate {
         end_offset: Option<&str>,
         schedule_interval: &str
     ) -> Result<PgQueryResult, sqlx::Error> {
+        // TODO: investigate using binds in sqlx to remove formatting string #8692yh6n4
         let start_offset = match start_offset {
             None => "NULL",
             Some(interval) => interval

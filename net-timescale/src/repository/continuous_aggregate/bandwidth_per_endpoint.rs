@@ -11,6 +11,7 @@ impl ContinuousAggregate for BandwidthPerEndpointAggregate {
     }
 
     async fn create(pool: &Pool<Postgres>) -> Result<PgQueryResult, Error> {
+        // TODO: investigate using binds in sqlx to remove formatting string #8692yh6n4
         let query = format!(
             "
                 CREATE MATERIALIZED VIEW {}
