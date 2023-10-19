@@ -63,6 +63,7 @@ where
         }
 
         let dashboard_request = DashboardRequestDTO::decode(envelope.get_data());
+        log::debug!("dashboard request {:?}", dashboard_request);
         let chart_requests = dashboard_request.get_chart_requests();
         let mut transaction = block_on(block_on(self.pool.get_connection()).begin()).unwrap();
         let mut charts = Vec::with_capacity(chart_requests.len());
@@ -75,6 +76,7 @@ where
                     return;
                 }
             };
+            log::debug!("got chart {}", chart.get_type());
             charts.push(Envelope::new(
                 request.get_group_id().ok(),
                 request.get_agent_id().ok(),

@@ -16,7 +16,7 @@ where
 {
     pool: Option<Arc<PoolWrapper<DB>>>,
     consumer: Option<Rc<T>>,
-    chart_constructor: Option<HashMap<&'static str, fn(&mut sqlx::Transaction<DB>, &Envelope) -> Result<Rc<C>, String>>>,
+    chart_constructor: HashMap<&'static str, fn(&mut sqlx::Transaction<DB>, &Envelope) -> Result<Rc<C>, String>>,
 }
 
 impl<T, C, DB> Default for DashboardHandlerBuilder<T, C, DB>
@@ -29,7 +29,7 @@ where
         Self {
             pool: None,
             consumer: None,
-            chart_constructor: None,
+            chart_constructor: HashMap::default(),
         }
     }
 }
@@ -53,14 +53,14 @@ where
         chart_constructor: (&'static str, fn(&mut sqlx::Transaction<DB>, &Envelope) -> Result<Rc<C>, String>))
         -> Self
     {
-        self.chart_constructor.as_mut().unwrap().insert(chart_constructor.0, chart_constructor.1).unwrap();
+        let _ = self.chart_constructor.insert(chart_constructor.0, chart_constructor.1);
         self
     }
     pub fn build(self) -> super::handler::DashboardHandler<T, C, DB> {
         super::handler::DashboardHandler::new(
             self.consumer.unwrap(),
             self.pool.unwrap(),
-            self.chart_constructor.unwrap(),
+            self.chart_constructor,
         )
     }
 }
