@@ -1,6 +1,4 @@
-#![allow(clippy::type_complexity)]
 use std::collections::HashMap;
-
 use std::rc::Rc;
 use std::sync::Arc;
 use async_std::task::block_on;
@@ -11,48 +9,46 @@ use net_proto_api::envelope::envelope::Envelope;
 use net_proto_api::decoder_api::Decoder;
 use net_proto_api::encoder_api::Encoder;
 use net_proto_api::typed_api::Typed;
-use net_proto_api::api::API;
 use net_timescale_api::api::dashboard::DashboardDTO;
 use net_timescale_api::api::dashboard_request::DashboardRequestDTO;
-use sqlx::Database;
+use sqlx::Postgres;
 use crate::command::dashboard::builder::DashboardHandlerBuilder;
 use crate::command::executor::PoolWrapper;
+use crate::persistence::ChartGenerator;
 
-pub struct DashboardHandler<T, C, DB>
+pub struct DashboardHandler<T, CG>
 where
     T: Sender + ?Sized,
-    C: API + ?Sized,
-    DB: Database
+    CG: ChartGenerator + ?Sized,
 {
     consumer: Rc<T>,
-    pool: Arc<PoolWrapper<DB>>,
-    chart_constructors: HashMap<&'static str, fn(&mut sqlx::Transaction<DB>, &Envelope) -> Result<Rc<C>, String>>,
+    pool: Arc<PoolWrapper<Postgres>>,
+    chart_generators: HashMap<&'static str, Rc<CG>>,
 }
-impl<T, C, DB> DashboardHandler<T, C, DB>
+impl<T, CG> DashboardHandler<T, CG>
 where
     T: Sender + ?Sized,
-    C: API + ?Sized,
-    DB: Database,
+    CG: ChartGenerator + ?Sized,
 {
     pub fn new(
         consumer: Rc<T>,
-        pool: Arc<PoolWrapper<DB>>,
-        chart_constructors: HashMap<&'static str, fn(&mut sqlx::Transaction<DB>, &Envelope) -> Result<Rc<C>, String>>,
+        pool: Arc<PoolWrapper<Postgres>>,
+        chart_generators: HashMap<&'static str, Rc<CG>>,
     ) -> Self {
         Self {
             consumer,
             pool,
-            chart_constructors,
+            chart_generators,
         }
     }
-    pub fn builder() -> DashboardHandlerBuilder<T, C, DB> {
+    pub fn builder() -> DashboardHandlerBuilder<T, CG> {
         DashboardHandlerBuilder::default()
     }
 }
-impl<T, C, DB> Handler for DashboardHandler<T, C, DB>
+impl<T, CG> Handler for DashboardHandler<T, CG>
 where
     T: Sender + ?Sized,
-    C: API + ?Sized, DB: Database,
+    CG: ChartGenerator + ?Sized,
 {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data = receiver.recv();
@@ -68,7 +64,8 @@ where
         let mut transaction = block_on(block_on(self.pool.get_connection()).begin()).unwrap();
         let mut charts = Vec::with_capacity(chart_requests.len());
         for request in chart_requests.iter() {
-            let chart = match self.chart_constructors.get(request.get_type()).unwrap()(&mut transaction, request) {
+            let generator = self.chart_generators.get(request.get_type()).unwrap();
+            let chart = match generator.generate_chart(&mut transaction, request) {
                 Ok(chart) => chart,
                 Err(err) => {
                     log::error!("{err}");

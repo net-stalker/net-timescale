@@ -1,46 +1,41 @@
-#![allow(clippy::type_complexity)]
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
-use net_proto_api::api::API;
-use net_proto_api::envelope::envelope::Envelope;
 use net_transport::sockets::Sender;
-use sqlx::Database;
+use sqlx::Postgres;
 use crate::command::executor::PoolWrapper;
+use crate::persistence::ChartGenerator;
 
-pub struct DashboardHandlerBuilder<T, C, DB>
-where
-    T: Sender + ?Sized,
-    C: API + ?Sized,
-    DB: Database
+pub struct DashboardHandlerBuilder<T, CG>
+    where
+        T: Sender + ?Sized,
+        CG: ChartGenerator + ?Sized,
 {
-    pool: Option<Arc<PoolWrapper<DB>>>,
+    pool: Option<Arc<PoolWrapper<Postgres>>>,
     consumer: Option<Rc<T>>,
-    chart_constructor: HashMap<&'static str, fn(&mut sqlx::Transaction<DB>, &Envelope) -> Result<Rc<C>, String>>,
+    chart_generators: HashMap<&'static str, Rc<CG>>,
 }
 
-impl<T, C, DB> Default for DashboardHandlerBuilder<T, C, DB>
+impl<T, CG> Default for DashboardHandlerBuilder<T, CG>
 where
     T: Sender + ?Sized,
-    C: API + ?Sized,
-    DB: Database
+    CG: ChartGenerator + ?Sized,
 {
     fn default() -> Self {
         Self {
             pool: None,
             consumer: None,
-            chart_constructor: HashMap::default(),
+            chart_generators: HashMap::default(),
         }
     }
 }
 
-impl<T, C, DB> DashboardHandlerBuilder<T, C, DB>
+impl<T, CG> DashboardHandlerBuilder<T, CG>
 where
     T: Sender + ?Sized,
-    C: API + ?Sized,
-    DB: Database
+    CG: ChartGenerator + ?Sized,
 {
-    pub fn with_pool(mut self, pool: Arc<PoolWrapper<DB>>) -> Self {
+    pub fn with_pool(mut self, pool: Arc<PoolWrapper<Postgres>>) -> Self {
         self.pool = Some(pool);
         self
     }
@@ -48,19 +43,19 @@ where
         self.consumer = Some(consumer);
         self
     }
-    pub fn add_chart_constructor(
+    pub fn add_chart_generator(
         mut self,
-        chart_constructor: (&'static str, fn(&mut sqlx::Transaction<DB>, &Envelope) -> Result<Rc<C>, String>))
-        -> Self
+        chart_generator: Rc<CG>
+    ) -> Self
     {
-        let _ = self.chart_constructor.insert(chart_constructor.0, chart_constructor.1);
+        let _ = self.chart_generators.insert(chart_generator.get_requesting_type(), chart_generator);
         self
     }
-    pub fn build(self) -> super::handler::DashboardHandler<T, C, DB> {
+    pub fn build(self) -> super::handler::DashboardHandler<T, CG> {
         super::handler::DashboardHandler::new(
             self.consumer.unwrap(),
             self.pool.unwrap(),
-            self.chart_constructor,
+            self.chart_generators,
         )
     }
 }

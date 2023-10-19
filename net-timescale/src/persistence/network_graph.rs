@@ -16,8 +16,14 @@ use net_timescale_api::api::{
 use crate::repository::address_pair::AddressPair;
 use crate::repository::address_info::AddressInfo;
 
+#[derive(Default, Debug)]
+pub struct PersistenceNetworkGraph { }
 
-pub struct NetworkGraph { }
+impl PersistenceNetworkGraph {
+    pub fn into_inner(self) -> Rc<Self> {
+        Rc::new(self)
+    }
+}
 
 impl From<AddressInfo> for GraphNodeDTO {
     fn from(value: AddressInfo) -> GraphNodeDTO {
@@ -38,7 +44,7 @@ impl From<AddressPair> for GraphEdgeDTO {
 }
 
 // TODO: think about adding a new trait with this methods
-impl NetworkGraph {
+impl PersistenceNetworkGraph {
     pub async fn get_dto(connection: &Pool<Postgres>, data: &Envelope) -> Result<NetworkGraphDTO, String> {
         let group_id = data.get_group_id().ok();
         if data.get_type() != NetworkGraphRequestDTO::get_data_type() {
@@ -114,11 +120,17 @@ impl NetworkGraph {
 }
 
 // TODO: having trait with method transaction_get_dto we can easily derive this method
-impl super::ChartGenerator for NetworkGraph {
-    fn generate_chart(transaction: &mut Transaction<Postgres>, data: &Envelope) -> Result<Rc<dyn API>, String> {
+impl super::ChartGenerator for PersistenceNetworkGraph {
+    fn generate_chart(&self, transaction: &mut Transaction<Postgres>, data: &Envelope)
+        -> Result<Rc<dyn API>, String> where Self: Sized
+    {
         match block_on(Self::transaction_get_dto(transaction, data)) {
             Ok(ng_dto) => Ok(Rc::new(ng_dto)),
             Err(err) => Err(err)
         }
+    }
+    fn get_requesting_type(&self) -> &'static str where Self: Sized {
+        // TODO: this method can also be derived somehow, probably by adding parameters into derive macro
+        NetworkGraphRequestDTO::get_data_type()
     }
 }

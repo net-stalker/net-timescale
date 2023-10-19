@@ -4,12 +4,8 @@ use std::sync::{Arc, Mutex};
 use std::rc::Rc;
 use std::time::Duration;
 use async_std::task::block_on;
-
 use net_proto_api::typed_api::Typed;
 use net_timescale_api::api::dashboard_request::DashboardRequestDTO;
-
-use net_timescale_api::api::network_graph_request::NetworkGraphRequestDTO;
-
 use net_transport::dummy_command::DummyCommand;
 use threadpool::ThreadPool;
 use sqlx::{
@@ -31,13 +27,10 @@ use crate::command::{
     router::Router,
     network_packet_handler::NetworkPacketHandler,
 };
-
 use crate::command::dashboard::handler::DashboardHandler;
-
 use crate::command::listen_handler::ListenHandler;
 use crate::config::Config;
-use crate::persistence::ChartGenerator;
-use crate::persistence::network_graph::NetworkGraph;
+use crate::persistence::network_graph::PersistenceNetworkGraph;
 use crate::repository::continuous_aggregate::bandwidth_per_endpoint::BandwidthPerEndpointAggregate;
 use crate::repository::continuous_aggregate::ContinuousAggregate;
 use crate::repository::continuous_aggregate::network_graph::NetworkGraphAggregate;
@@ -213,9 +206,7 @@ impl Timescale {
             let dashboard_handler = DashboardHandler::builder()
                 .with_consumer(router)
                 .with_pool(pool)
-                .add_chart_constructor(
-                    (NetworkGraphRequestDTO::get_data_type(), NetworkGraph::generate_chart)
-                )
+                .add_chart_generator(PersistenceNetworkGraph::default().into_inner())
                 .build();
             let dashboard_connector = ConnectorZmqSubscriberBuilder::new(&sub_context)
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
