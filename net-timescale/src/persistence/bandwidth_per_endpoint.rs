@@ -2,11 +2,11 @@ use async_std::task::block_on;
 use chrono::{TimeZone, Utc};
 use sqlx::{Error, Postgres, Transaction};
 use net_timescale_api::api::{
-    total_bytes::{
+    bandwidth_per_endpoint::{
         endpoint::EndpointDTO,
-        total_bytes::TotalBytesDTO,
+        bandwidth_per_endpoint::BandwidthPerEndpointDTO,
     },
-    total_bytes_request::TotalBytesRequestDTO,
+    bandwidth_per_endpoint_request::BandwidthPerEndpointDTO,
 };
 use crate::repository::endpoint;
 use crate::repository::endpoint::Endpoint;
