@@ -1,7 +1,5 @@
-use std::rc::Rc;
 use async_std::task::block_on;
 use chrono::{DateTime, TimeZone, Utc};
-use net_proto_api::api::API;
 use net_proto_api::decoder_api::Decoder;
 use net_proto_api::envelope::envelope::Envelope;
 use net_proto_api::typed_api::Typed;
@@ -13,6 +11,7 @@ use net_timescale_api::api::{
     },
     bandwidth_per_endpoint_request::BandwidthPerEndpointRequestDTO,
 };
+use crate::persistence::Persistence;
 use crate::repository::endpoint::Endpoint;
 
 #[derive(Clone, Debug)]
@@ -31,8 +30,14 @@ impl From<PersistenceBandwidthPerEndpoint> for BandwidthPerEndpointDTO {
         )
     }
 }
-impl PersistenceBandwidthPerEndpoint {
-    pub async fn get_dto(connection: &Pool<Postgres>, data: &Envelope) -> Result<BandwidthPerEndpointDTO, String> {
+#[async_trait::async_trait]
+impl Persistence for PersistenceBandwidthPerEndpoint {
+    type DTO = BandwidthPerEndpointDTO;
+    async fn get_dto(
+        &self,
+        connection: &Pool<Postgres>,
+        data: &Envelope
+    ) -> Result<Self::DTO, String> {
         let group_id = data.get_group_id().ok();
         if data.get_type() != BandwidthPerEndpointRequestDTO::get_data_type() {
             return Err(format!("wrong request is being received: {}", data.get_type()));
@@ -51,10 +56,11 @@ impl PersistenceBandwidthPerEndpoint {
         };
         Ok(BandwidthPerEndpointDTO::new(endpoints.as_slice()))
     }
-    pub async fn transaction_get_dto(
+    async fn transaction_get_dto(
+        &self,
         transaction: &mut Transaction<'_, Postgres>,
         data: &Envelope
-    ) -> Result<BandwidthPerEndpointDTO, String> {
+    ) -> Result<Self::DTO, String> {
         let group_id = data.get_group_id().ok();
         if data.get_type() != BandwidthPerEndpointRequestDTO::get_data_type() {
             return Err(format!("wrong request is being received: {}", data.get_type()));
@@ -76,14 +82,6 @@ impl PersistenceBandwidthPerEndpoint {
 }
 // TODO: having trait with method transaction_get_dto we can easily derive this method
 impl super::ChartGenerator for PersistenceBandwidthPerEndpoint {
-    fn generate_chart(&self, transaction: &mut Transaction<Postgres>, data: &Envelope)
-                      -> Result<Rc<dyn API>, String> where Self: Sized
-    {
-        match block_on(Self::transaction_get_dto(transaction, data)) {
-            Ok(ng_dto) => Ok(Rc::new(ng_dto)),
-            Err(err) => Err(err)
-        }
-    }
     fn get_requesting_type(&self) -> &'static str where Self: Sized {
         // TODO: this method can also be derived somehow, probably by adding parameters into derive macro
         BandwidthPerEndpointRequestDTO::get_data_type()
