@@ -30,6 +30,7 @@ use crate::command::{
 use crate::command::dashboard::handler::DashboardHandler;
 use crate::command::listen_handler::ListenHandler;
 use crate::config::Config;
+use crate::persistence::bandwidth_per_endpoint::PersistenceBandwidthPerEndpoint;
 use crate::persistence::network_graph::PersistenceNetworkGraph;
 use crate::repository::continuous_aggregate::bandwidth_per_endpoint::BandwidthPerEndpointAggregate;
 use crate::repository::continuous_aggregate::ContinuousAggregate;
@@ -206,6 +207,7 @@ impl Timescale {
                 .with_consumer(router)
                 .with_pool(pool)
                 .add_chart_generator(PersistenceNetworkGraph::default().into_inner())
+                .add_chart_generator(PersistenceBandwidthPerEndpoint::default().into_inner())
                 .build();
             let dashboard_connector = ConnectorZmqSubscriberBuilder::new(&sub_context)
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
