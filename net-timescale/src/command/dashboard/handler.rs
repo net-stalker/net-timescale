@@ -73,7 +73,7 @@ where
                     return;
                 }
             };
-            log::debug!("got chart {}", chart.get_type());
+            log::debug!("got chart {}: {:?}", chart.get_type(), chart);
             charts.push(Envelope::new(
                 request.get_group_id().ok(),
                 request.get_agent_id().ok(),

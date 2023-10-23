@@ -1,5 +1,4 @@
 use std::rc::Rc;
-use async_std::task::block_on;
 use chrono::{DateTime, TimeZone, Utc};
 use net_proto_api::api::API;
 use net_proto_api::decoder_api::Decoder;
@@ -13,6 +12,7 @@ use net_timescale_api::api::{
         network_graph::NetworkGraphDTO,
     }, network_graph_request::NetworkGraphRequestDTO
 };
+use crate::persistence::{ChartGenerator, Persistence};
 use crate::repository::address_pair::AddressPair;
 use crate::repository::address_info::AddressInfo;
 
@@ -20,7 +20,7 @@ use crate::repository::address_info::AddressInfo;
 pub struct PersistenceNetworkGraph { }
 
 impl PersistenceNetworkGraph {
-    pub fn into_inner(self) -> Rc<Self> {
+    pub fn into_inner(self) -> Rc<dyn ChartGenerator> {
         Rc::new(self)
     }
 }
@@ -43,16 +43,22 @@ impl From<AddressPair> for GraphEdgeDTO {
     }
 }
 
-// TODO: think about adding a new trait with this methods
-impl PersistenceNetworkGraph {
-    pub async fn get_dto(connection: &Pool<Postgres>, data: &Envelope) -> Result<NetworkGraphDTO, String> {
+#[async_trait::async_trait]
+impl Persistence for PersistenceNetworkGraph {
+
+    async fn get_dto(
+        &self,
+        connection: &Pool<Postgres>,
+        data: &Envelope,
+    ) -> Result<Rc<dyn API>, String> {
         let group_id = data.get_group_id().ok();
         if data.get_type() != NetworkGraphRequestDTO::get_data_type() {
             return Err(format!("wrong request is being received: {}", data.get_type()));
         }
         let ng_request = NetworkGraphRequestDTO::decode(data.get_data());
-        let start_date: DateTime<Utc> = Utc.timestamp_nanos(ng_request.get_start_date_time());
-        let end_date: DateTime<Utc> = Utc.timestamp_nanos(ng_request.get_end_date_time());
+        // TODO: take a look at #8692yt2vj
+        let start_date: DateTime<Utc> = Utc.timestamp_millis_opt(ng_request.get_start_date_time()).unwrap();
+        let end_date: DateTime<Utc> = Utc.timestamp_millis_opt(ng_request.get_end_date_time()).unwrap();
 
         let address_pairs = match AddressPair::select_by_date_cut(
             connection, group_id, start_date, end_date
@@ -77,20 +83,22 @@ impl PersistenceNetworkGraph {
             nodes_dto.push(info.into());
         });
 
-        Ok(NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice()))
+        Ok(Rc::new(NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice())))
     }
-    pub async fn transaction_get_dto(
+    async fn transaction_get_dto(
+        &self,
         transaction: &mut Transaction<'_, Postgres>,
         data: &Envelope
-    ) -> Result<NetworkGraphDTO, String>
+    ) -> Result<Rc<dyn API>, String>
     {
         let group_id = data.get_group_id().ok();
         if data.get_type() != NetworkGraphRequestDTO::get_data_type() {
             return Err(format!("wrong request is being received: {}", data.get_type()));
         }
         let ng_request = NetworkGraphRequestDTO::decode(data.get_data());
-        let start_date: DateTime<Utc> = Utc.timestamp_nanos(ng_request.get_start_date_time());
-        let end_date: DateTime<Utc> = Utc.timestamp_nanos(ng_request.get_end_date_time());
+        // TODO: take a look at #8692yt2vj
+        let start_date: DateTime<Utc> = Utc.timestamp_millis_opt(ng_request.get_start_date_time()).unwrap();
+        let end_date: DateTime<Utc> = Utc.timestamp_millis_opt(ng_request.get_end_date_time()).unwrap();
 
         let address_pairs = match AddressPair::transaction_select_by_date_cut(
             transaction, group_id, start_date, end_date
@@ -115,20 +123,12 @@ impl PersistenceNetworkGraph {
             nodes_dto.push(info.into());
         });
 
-        Ok(NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice()))
+        Ok(Rc::new(NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice())))
     }
 }
 
 // TODO: having trait with method transaction_get_dto we can easily derive this method
-impl super::ChartGenerator for PersistenceNetworkGraph {
-    fn generate_chart(&self, transaction: &mut Transaction<Postgres>, data: &Envelope)
-        -> Result<Rc<dyn API>, String> where Self: Sized
-    {
-        match block_on(Self::transaction_get_dto(transaction, data)) {
-            Ok(ng_dto) => Ok(Rc::new(ng_dto)),
-            Err(err) => Err(err)
-        }
-    }
+impl ChartGenerator for PersistenceNetworkGraph {
     fn get_requesting_type(&self) -> &'static str where Self: Sized {
         // TODO: this method can also be derived somehow, probably by adding parameters into derive macro
         NetworkGraphRequestDTO::get_data_type()
