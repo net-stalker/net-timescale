@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use chrono::{DateTime, TimeZone, Utc};
+use net_proto_api::api::API;
 use net_proto_api::decoder_api::Decoder;
 use net_proto_api::envelope::envelope::Envelope;
 use net_proto_api::typed_api::Typed;
@@ -11,7 +12,7 @@ use net_timescale_api::api::{
         network_graph::NetworkGraphDTO,
     }, network_graph_request::NetworkGraphRequestDTO
 };
-use crate::persistence::Persistence;
+use crate::persistence::{ChartGenerator, Persistence};
 use crate::repository::address_pair::AddressPair;
 use crate::repository::address_info::AddressInfo;
 
@@ -19,7 +20,7 @@ use crate::repository::address_info::AddressInfo;
 pub struct PersistenceNetworkGraph { }
 
 impl PersistenceNetworkGraph {
-    pub fn into_inner(self) -> Rc<Self> {
+    pub fn into_inner(self) -> Rc<dyn ChartGenerator> {
         Rc::new(self)
     }
 }
@@ -44,12 +45,12 @@ impl From<AddressPair> for GraphEdgeDTO {
 
 #[async_trait::async_trait]
 impl Persistence for PersistenceNetworkGraph {
-    type DTO = NetworkGraphDTO;
+
     async fn get_dto(
         &self,
         connection: &Pool<Postgres>,
         data: &Envelope,
-    ) -> Result<Self::DTO, String> {
+    ) -> Result<Rc<dyn API>, String> {
         let group_id = data.get_group_id().ok();
         if data.get_type() != NetworkGraphRequestDTO::get_data_type() {
             return Err(format!("wrong request is being received: {}", data.get_type()));
@@ -82,13 +83,13 @@ impl Persistence for PersistenceNetworkGraph {
             nodes_dto.push(info.into());
         });
 
-        Ok(NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice()))
+        Ok(Rc::new(NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice())))
     }
     async fn transaction_get_dto(
         &self,
         transaction: &mut Transaction<'_, Postgres>,
         data: &Envelope
-    ) -> Result<Self::DTO, String>
+    ) -> Result<Rc<dyn API>, String>
     {
         let group_id = data.get_group_id().ok();
         if data.get_type() != NetworkGraphRequestDTO::get_data_type() {
@@ -122,12 +123,12 @@ impl Persistence for PersistenceNetworkGraph {
             nodes_dto.push(info.into());
         });
 
-        Ok(NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice()))
+        Ok(Rc::new(NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice())))
     }
 }
 
 // TODO: having trait with method transaction_get_dto we can easily derive this method
-impl super::ChartGenerator for PersistenceNetworkGraph {
+impl ChartGenerator for PersistenceNetworkGraph {
     fn get_requesting_type(&self) -> &'static str where Self: Sized {
         // TODO: this method can also be derived somehow, probably by adding parameters into derive macro
         NetworkGraphRequestDTO::get_data_type()

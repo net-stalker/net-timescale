@@ -8,28 +8,24 @@ pub mod bandwidth_per_endpoint;
 
 #[async_trait::async_trait]
 pub trait Persistence {
-    type DTO: API + 'static;
     async fn get_dto(
         &self,
         connection: &sqlx::Pool<Postgres>,
         data: &Envelope
-    ) -> Result<Self::DTO, String>;
+    ) -> Result<Rc<dyn API>, String>;
 
     async fn transaction_get_dto(
         &self,
         transaction: &mut Transaction<'_, Postgres>,
         data: &Envelope
-    ) -> Result<Self::DTO, String>;
+    ) -> Result<Rc<dyn API>, String>;
 }
 
 pub trait ChartGenerator: Persistence {
     fn generate_chart(&self, transaction: &mut Transaction<Postgres>, data: &Envelope)
                       -> Result<Rc<dyn API>, String>
     {
-        match block_on(self.transaction_get_dto(transaction, data)) {
-            Ok(dto) => Ok(Rc::new(dto)),
-            Err(err) => Err(err)
-        }
+        block_on(self.transaction_get_dto(transaction, data))
     }
     fn get_requesting_type(&self) -> &'static str;
 }
