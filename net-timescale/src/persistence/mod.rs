@@ -7,13 +7,13 @@ pub mod network_graph;
 
 #[async_trait::async_trait]
 pub trait Persistence {
-    async fn get_dto(
+    async fn get_chart_dto(
         &self,
         connection: &sqlx::Pool<Postgres>,
         data: &Envelope
     ) -> Result<Rc<dyn API>, String>;
 
-    async fn transaction_get_dto(
+    async fn transaction_get_chart_dto(
         &self,
         transaction: &mut Transaction<'_, Postgres>,
         data: &Envelope
@@ -24,7 +24,7 @@ pub trait ChartGenerator: Persistence {
     fn generate_chart(&self, transaction: &mut Transaction<Postgres>, data: &Envelope)
                       -> Result<Rc<dyn API>, String>
     {
-        block_on(self.transaction_get_dto(transaction, data))
+        block_on(self.transaction_get_chart_dto(transaction, data))
     }
     fn get_requesting_type(&self) -> &'static str;
 }
