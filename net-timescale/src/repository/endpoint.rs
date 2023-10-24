@@ -13,14 +13,8 @@ impl From<Endpoint> for EndpointDTO {
     fn from(value: Endpoint) -> Self {
         EndpointDTO::new(
             value.id.as_str(),
-            match value.bytes_received {
-                Some(x) => x,
-                None => 0,
-            },
-            match value.bytes_sent {
-                Some(x) => x,
-                None => 0,
-            },
+            value.bytes_received.unwrap_or(0),
+            value.bytes_sent.unwrap_or(0),
         )
     }
 }
