@@ -20,7 +20,8 @@ use crate::repository::address_info::AddressInfo;
 pub struct PersistenceNetworkGraph { }
 
 impl PersistenceNetworkGraph {
-    pub fn into_inner(self) -> Rc<dyn ChartGenerator> {
+    // TODO: rename `into_inner` to `into_wrapped`
+    pub fn into_wrapped(self) -> Rc<dyn ChartGenerator> {
         Rc::new(self)
     }
 }
@@ -45,8 +46,9 @@ impl From<AddressPair> for GraphEdgeDTO {
 
 #[async_trait::async_trait]
 impl Persistence for PersistenceNetworkGraph {
+    // TODO: use template instead of using Pool and transaction is separate methods
 
-    async fn get_dto(
+    async fn get_chart_dto(
         &self,
         connection: &Pool<Postgres>,
         data: &Envelope,
@@ -85,7 +87,7 @@ impl Persistence for PersistenceNetworkGraph {
 
         Ok(Rc::new(NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice())))
     }
-    async fn transaction_get_dto(
+    async fn transaction_get_chart_dto(
         &self,
         transaction: &mut Transaction<'_, Postgres>,
         data: &Envelope
