@@ -5,16 +5,22 @@ use sqlx::{Error, Pool, Postgres, Transaction};
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct Endpoint {
     id: String,
-    bytes_sent: i64,
-    bytes_received: i64,
+    bytes_sent: Option<i64>,
+    bytes_received: Option<i64>,
 }
 
 impl From<Endpoint> for EndpointDTO {
     fn from(value: Endpoint) -> Self {
         EndpointDTO::new(
             value.id.as_str(),
-            value.bytes_received,
-            value.bytes_sent
+            match value.bytes_received {
+                Some(x) => x,
+                None => 0,
+            },
+            match value.bytes_sent {
+                Some(x) => x,
+                None => 0,
+            },
         )
     }
 }
