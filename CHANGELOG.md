@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-c9c6064] - 2023-10-25
 
 Feature/cu 8692vgg0t: implemented dashboard handler (#27)
 
 * implemented dashboard handler for managing numerous chart requests
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-2d6cd0b] - 2023-10-19
 
 Feature/cu 8692y0v0u: reorganized creating continuous aggregates (#31)
