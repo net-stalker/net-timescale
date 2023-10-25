@@ -4,7 +4,8 @@ use std::sync::{Arc, Mutex};
 use std::rc::Rc;
 use std::time::Duration;
 use async_std::task::block_on;
-
+use net_proto_api::typed_api::Typed;
+use net_timescale_api::api::dashboard_request::DashboardRequestDTO;
 use net_transport::dummy_command::DummyCommand;
 use threadpool::ThreadPool;
 use sqlx::{
@@ -25,13 +26,13 @@ use crate::command::{
     executor::PoolWrapper,
     router::Router,
     network_packet_handler::NetworkPacketHandler,
-    network_graph_handler::NetworkGraphHandler,
 };
-use crate::command::realtime_handler::IsRealtimeHandler;
+use crate::command::dashboard::handler::DashboardHandler;
 use crate::command::listen_handler::ListenHandler;
 use crate::config::Config;
-use crate::repository::continuous_aggregate::{ContinuousAggregate};
+use crate::persistence::network_graph::PersistenceNetworkGraph;
 use crate::repository::continuous_aggregate::bandwidth_per_endpoint::BandwidthPerEndpointAggregate;
+use crate::repository::continuous_aggregate::ContinuousAggregate;
 use crate::repository::continuous_aggregate::network_graph::NetworkGraphAggregate;
 
 pub const TIMESCALE_CONSUMER: &str = "inproc://timescale/consumer";
@@ -193,7 +194,7 @@ impl Timescale {
         let dealer_context_clone = dealer_context.clone();
 
         self.thread_pool.execute(move || {
-            let executor = PoolWrapper::new(connection_pool).into_inner();
+            let pool = PoolWrapper::new(connection_pool).into_inner();
             let router = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
                 .with_endpoint(TIMESCALE_PRODUCER.to_owned())
                 .with_handler(Rc::new(DummyCommand))
@@ -201,35 +202,20 @@ impl Timescale {
                 .connect()
                 .into_inner();
 
-            let is_realtime_consumer = ConnectorZmqDealerBuilder::new(&dealer_context_clone)
-                .with_endpoint(IS_REALTIME.to_owned())
-                .with_handler(Rc::new(DummyCommand))
-                .build()
-                .connect()
-                .into_inner();
-            let network_graph_handler = Rc::new(NetworkGraphHandler::new(
-                executor.clone(),
-                router.clone(),
-                is_realtime_consumer.clone()
-            ));
-            // TODO: check if we can set multiple topics to a single socket
-            let network_graph_connector = ConnectorZmqSubscriberBuilder::new(&sub_context)
+            let dashboard_handler = DashboardHandler::builder()
+                .with_consumer(router)
+                .with_pool(pool)
+                .add_chart_generator(PersistenceNetworkGraph::default().into_wrapped())
+                .build();
+            let dashboard_connector = ConnectorZmqSubscriberBuilder::new(&sub_context)
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
-                .with_handler(network_graph_handler.clone())
-                .with_topic("NG_request".as_bytes().into())
+                .with_topic(DashboardRequestDTO::get_data_type().as_bytes().to_owned())
+                .with_handler(Rc::new(dashboard_handler))
                 .build()
                 .connect()
-                .into_inner();
-            let is_realtime_handler = IsRealtimeHandler::new(tenants.lock().unwrap().to_owned());
-            let is_realtime_connector = ConnectorZmqDealerBuilder::new(&dealer_context)
-                .with_endpoint(IS_REALTIME.to_owned())
-                .with_handler(Rc::new(is_realtime_handler))
-                .build()
-                .bind()
                 .into_inner();
             ZmqPoller::new()
-                .add(network_graph_connector)
-                .add(is_realtime_connector)
+                .add(dashboard_connector)
                 .poll(-1);
         });
     }

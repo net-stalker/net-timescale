@@ -1,9 +1,10 @@
-use futures::TryStreamExt;
+use std::rc::Rc;
+use chrono::{DateTime, TimeZone, Utc};
+use net_proto_api::api::API;
+use net_proto_api::decoder_api::Decoder;
 use net_proto_api::envelope::envelope::Envelope;
-use sqlx::{
-    Pool,
-    Postgres
-};
+use net_proto_api::typed_api::Typed;
+use sqlx::{Pool, Postgres, Transaction};
 use net_timescale_api::api::{
     network_graph::{
         graph_edge::GraphEdgeDTO,
@@ -11,31 +12,17 @@ use net_timescale_api::api::{
         network_graph::NetworkGraphDTO,
     }, network_graph_request::NetworkGraphRequestDTO
 };
-use crate::repository::address_pair::{AddressPair, self};
-use crate::repository::address_info::{AddressInfo, self};
+use crate::persistence::{ChartGenerator, Persistence};
+use crate::repository::address_pair::AddressPair;
+use crate::repository::address_info::AddressInfo;
 
-#[derive(Clone)]
-pub struct NetworkGraphRequest {
-    start_date_time: i64,
-    end_date_time: i64,
-}
+#[derive(Default, Debug)]
+pub struct PersistenceNetworkGraph { }
 
-impl NetworkGraphRequest {
-    pub fn get_start_date_time(&self) -> i64 {
-        self.start_date_time
-    }
-
-    pub fn get_end_date_time(&self) -> i64 {
-        self.end_date_time
-    }
-}
-
-impl From<NetworkGraphRequestDTO> for NetworkGraphRequest {
-    fn from(val: NetworkGraphRequestDTO) -> Self {
-        NetworkGraphRequest {
-            start_date_time: val.get_start_date_time(),
-            end_date_time: val.get_end_date_time(),
-        }
+impl PersistenceNetworkGraph {
+    // TODO: rename `into_inner` to `into_wrapped`
+    pub fn into_wrapped(self) -> Rc<dyn ChartGenerator> {
+        Rc::new(self)
     }
 }
 
@@ -57,23 +44,95 @@ impl From<AddressPair> for GraphEdgeDTO {
     }
 }
 
-pub async fn get_network_graph_by_date_cut(connection: &Pool<Postgres>, envelope: &Envelope) -> NetworkGraphDTO {
-    let mut address_pairs = address_pair::select_address_pairs_by_date_cut(
-        connection, envelope
-    ).await;
-    let mut addresses = address_info::select_address_info_by_date_cut(
-        connection, envelope
-    ).await;
+#[async_trait::async_trait]
+impl Persistence for PersistenceNetworkGraph {
+    // TODO: use template instead of using Pool and transaction is separate methods
 
-    let mut edges_dto = Vec::default();
-    let mut nodes_dto = Vec::default();
+    async fn get_chart_dto(
+        &self,
+        connection: &Pool<Postgres>,
+        data: &Envelope,
+    ) -> Result<Rc<dyn API>, String> {
+        let group_id = data.get_group_id().ok();
+        if data.get_type() != NetworkGraphRequestDTO::get_data_type() {
+            return Err(format!("wrong request is being received: {}", data.get_type()));
+        }
+        let ng_request = NetworkGraphRequestDTO::decode(data.get_data());
+        // TODO: take a look at #8692yt2vj
+        let start_date: DateTime<Utc> = Utc.timestamp_millis_opt(ng_request.get_start_date_time()).unwrap();
+        let end_date: DateTime<Utc> = Utc.timestamp_millis_opt(ng_request.get_end_date_time()).unwrap();
 
-    while let Some(pair) = address_pairs.try_next().await.unwrap() {
-        edges_dto.push(pair.into());
+        let address_pairs = match AddressPair::select_by_date_cut(
+            connection, group_id, start_date, end_date
+        ).await {
+            Ok(pairs) => pairs,
+            Err(err) => return Err(format!("couldn't query address pairs: {}", err)),
+        };
+        let addresses = match AddressInfo::select_by_date_cut(
+            connection, group_id, start_date, end_date
+        ).await {
+            Ok(addresses) => addresses,
+            Err(err) => return Err(format!("couldn't query info about addresses: {}", err)),
+        };
+
+        let mut edges_dto = Vec::<GraphEdgeDTO>::with_capacity(address_pairs.len());
+        let mut nodes_dto = Vec::<GraphNodeDTO>::with_capacity(addresses.len());
+
+        address_pairs.into_iter().for_each(|pair| {
+            edges_dto.push(pair.into());
+        });
+        addresses.into_iter().for_each(|info| {
+            nodes_dto.push(info.into());
+        });
+
+        Ok(Rc::new(NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice())))
     }
-    while let Some(address) = addresses.try_next().await.unwrap() {
-        nodes_dto.push(address.into());
-    }
+    async fn transaction_get_chart_dto(
+        &self,
+        transaction: &mut Transaction<'_, Postgres>,
+        data: &Envelope
+    ) -> Result<Rc<dyn API>, String>
+    {
+        let group_id = data.get_group_id().ok();
+        if data.get_type() != NetworkGraphRequestDTO::get_data_type() {
+            return Err(format!("wrong request is being received: {}", data.get_type()));
+        }
+        let ng_request = NetworkGraphRequestDTO::decode(data.get_data());
+        // TODO: take a look at #8692yt2vj
+        let start_date: DateTime<Utc> = Utc.timestamp_millis_opt(ng_request.get_start_date_time()).unwrap();
+        let end_date: DateTime<Utc> = Utc.timestamp_millis_opt(ng_request.get_end_date_time()).unwrap();
 
-    NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice())
+        let address_pairs = match AddressPair::transaction_select_by_date_cut(
+            transaction, group_id, start_date, end_date
+        ).await {
+            Ok(pairs) => pairs,
+            Err(err) => return Err(format!("couldn't query address pairs: {}", err)),
+        };
+        let addresses = match AddressInfo::transaction_select_by_date_cut(
+            transaction, group_id, start_date, end_date
+        ).await {
+            Ok(addresses) => addresses,
+            Err(err) => return Err(format!("couldn't query info about addresses: {}", err)),
+        };
+
+        let mut edges_dto = Vec::<GraphEdgeDTO>::with_capacity(address_pairs.len());
+        let mut nodes_dto = Vec::<GraphNodeDTO>::with_capacity(addresses.len());
+
+        address_pairs.into_iter().for_each(|pair| {
+            edges_dto.push(pair.into());
+        });
+        addresses.into_iter().for_each(|info| {
+            nodes_dto.push(info.into());
+        });
+
+        Ok(Rc::new(NetworkGraphDTO::new(nodes_dto.as_slice(), edges_dto.as_slice())))
+    }
+}
+
+// TODO: having trait with method transaction_get_dto we can easily derive this method
+impl ChartGenerator for PersistenceNetworkGraph {
+    fn get_requesting_type(&self) -> &'static str where Self: Sized {
+        // TODO: this method can also be derived somehow, probably by adding parameters into derive macro
+        NetworkGraphRequestDTO::get_data_type()
+    }
 }
