@@ -22,7 +22,7 @@ pub struct PersistenceBandwidthPerEndpoint {
 }
 
 impl PersistenceBandwidthPerEndpoint {
-    pub fn into_inner(self) -> Rc<dyn ChartGenerator> {
+    pub fn into_wrapped(self) -> Rc<dyn ChartGenerator> {
         Rc::new(self)
     }
 }
@@ -40,7 +40,7 @@ impl From<PersistenceBandwidthPerEndpoint> for BandwidthPerEndpointDTO {
 }
 #[async_trait::async_trait]
 impl Persistence for PersistenceBandwidthPerEndpoint {
-    async fn get_dto(
+    async fn get_chart_dto(
         &self,
         connection: &Pool<Postgres>,
         data: &Envelope
@@ -63,7 +63,7 @@ impl Persistence for PersistenceBandwidthPerEndpoint {
         };
         Ok(Rc::new(BandwidthPerEndpointDTO::new(endpoints.as_slice())))
     }
-    async fn transaction_get_dto(
+    async fn transaction_get_chart_dto(
         &self,
         transaction: &mut Transaction<'_, Postgres>,
         data: &Envelope
@@ -88,7 +88,7 @@ impl Persistence for PersistenceBandwidthPerEndpoint {
     }
 }
 // TODO: having trait with method transaction_get_dto we can easily derive this method
-impl super::ChartGenerator for PersistenceBandwidthPerEndpoint {
+impl ChartGenerator for PersistenceBandwidthPerEndpoint {
     fn get_requesting_type(&self) -> &'static str where Self: Sized {
         // TODO: this method can also be derived somehow, probably by adding parameters into derive macro
         BandwidthPerEndpointRequestDTO::get_data_type()

@@ -206,8 +206,8 @@ impl Timescale {
             let dashboard_handler = DashboardHandler::builder()
                 .with_consumer(router)
                 .with_pool(pool)
-                .add_chart_generator(PersistenceNetworkGraph::default().into_inner())
-                .add_chart_generator(PersistenceBandwidthPerEndpoint::default().into_inner())
+                .add_chart_generator(PersistenceNetworkGraph::default().into_wrapped())
+                .add_chart_generator(PersistenceBandwidthPerEndpoint::default().into_wrapped())
                 .build();
             let dashboard_connector = ConnectorZmqSubscriberBuilder::new(&sub_context)
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
