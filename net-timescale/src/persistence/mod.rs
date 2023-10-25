@@ -4,6 +4,7 @@ use net_proto_api::envelope::envelope::Envelope;
 use sqlx::{Postgres, Transaction};
 use async_std::task::block_on;
 pub mod network_graph;
+pub mod bandwidth_per_endpoint;
 
 #[async_trait::async_trait]
 pub trait Persistence {

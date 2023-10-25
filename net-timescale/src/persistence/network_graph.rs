@@ -20,7 +20,6 @@ use crate::repository::address_info::AddressInfo;
 pub struct PersistenceNetworkGraph { }
 
 impl PersistenceNetworkGraph {
-    // TODO: rename `into_inner` to `into_wrapped`
     pub fn into_wrapped(self) -> Rc<dyn ChartGenerator> {
         Rc::new(self)
     }
