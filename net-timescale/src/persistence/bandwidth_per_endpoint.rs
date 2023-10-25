@@ -22,7 +22,7 @@ pub struct PersistenceBandwidthPerEndpoint {
 }
 
 impl PersistenceBandwidthPerEndpoint {
-    pub fn into_inner(self) -> Rc<dyn ChartGenerator> {
+    pub fn into_wrapped(self) -> Rc<dyn ChartGenerator> {
         Rc::new(self)
     }
 }
@@ -40,7 +40,7 @@ impl From<PersistenceBandwidthPerEndpoint> for BandwidthPerEndpointDTO {
 }
 #[async_trait::async_trait]
 impl Persistence for PersistenceBandwidthPerEndpoint {
-    async fn get_dto(
+    async fn get_chart_dto(
         &self,
         connection: &Pool<Postgres>,
         data: &Envelope
@@ -63,7 +63,7 @@ impl Persistence for PersistenceBandwidthPerEndpoint {
         };
         Ok(Rc::new(BandwidthPerEndpointDTO::new(endpoints.as_slice())))
     }
-    async fn transaction_get_dto(
+    async fn transaction_get_chart_dto(
         &self,
         transaction: &mut Transaction<'_, Postgres>,
         data: &Envelope
