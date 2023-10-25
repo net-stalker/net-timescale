@@ -19,6 +19,7 @@ Feature/cu 8692y0v0u: reorganized creating continuous aggregates (#31)
 Feature/cu 8692ucf3x: updated graph queries (#26)
 
 * modified getting address pairs and modified mock sqlx::FromRow structures
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-39c4be6] - 2023-10-13
 
 feature/CU-8692vg5mr: fixed liquibase error (#28)
