@@ -1,39 +1,45 @@
+use async_std::task::block_on;
 use std::collections::HashSet;
 use std::ops::DerefMut;
-use std::sync::{Arc, Mutex};
 use std::rc::Rc;
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::time::Duration;
-use async_std::task::block_on;
-use net_proto_api::typed_api::Typed;
-use net_timescale_api::api::dashboard_request::DashboardRequestDTO;
-use net_transport::dummy_command::DummyCommand;
+
 use threadpool::ThreadPool;
-use sqlx::{
-    Postgres,
-    postgres::PgPoolOptions,
-    Pool,
-};
-use net_transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
+
+use sqlx::Pool;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::Postgres;
+
+use net_proto_api::typed_api::Typed;
+
+use net_timescale_api::api::dashboard::dashboard_request::DashboardRequestDTO;
+
+use net_transport::dummy_command::DummyCommand;
 use net_transport::polling::zmq::ZmqPoller;
 use net_transport::sockets::Context;
-use net_transport::zmq::builders::publisher::ConnectorZmqPublisherBuilder;
-use net_transport::zmq::builders::subscriber::ConnectorZmqSubscriberBuilder;
+use net_transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
 use net_transport::zmq::contexts::dealer::DealerContext;
+use net_transport::zmq::builders::publisher::ConnectorZmqPublisherBuilder;
 use net_transport::zmq::contexts::publisher::PublisherContext;
+use net_transport::zmq::builders::subscriber::ConnectorZmqSubscriberBuilder;
 use net_transport::zmq::contexts::subscriber::SubscriberContext;
-use crate::command::{
-    dispatcher::CommandDispatcher,
-    executor::PoolWrapper,
-    router::Router,
-    network_packet_handler::NetworkPacketHandler,
-};
+
 use crate::command::dashboard::handler::DashboardHandler;
+use crate::command::dispatcher::CommandDispatcher;
+use crate::command::executor::PoolWrapper;
 use crate::command::listen_handler::ListenHandler;
+use crate::command::network_packet_handler::NetworkPacketHandler;
+use crate::command::router::Router;
+
 use crate::config::Config;
+
 use crate::persistence::bandwidth_per_endpoint::PersistenceBandwidthPerEndpoint;
 use crate::persistence::network_graph::PersistenceNetworkGraph;
+
 use crate::repository::continuous_aggregate::bandwidth_per_endpoint::BandwidthPerEndpointAggregate;
-use crate::repository::continuous_aggregate::network_bandwith::NetworkBandwidthAggregate;
+use crate::repository::continuous_aggregate::network_bandwidth::NetworkBandwidthAggregate;
 use crate::repository::continuous_aggregate::ContinuousAggregate;
 use crate::repository::continuous_aggregate::network_graph::NetworkGraphAggregate;
 

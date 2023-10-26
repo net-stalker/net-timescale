@@ -40,4 +40,4 @@ pub trait ContinuousAggregate {
 
 pub mod network_graph;
 pub mod bandwidth_per_endpoint;
-pub mod network_bandwith;
+pub mod network_bandwidth;

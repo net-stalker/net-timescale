@@ -1,18 +1,25 @@
 use std::rc::Rc;
-use chrono::{DateTime, TimeZone, Utc};
+
+use chrono::DateTime;
+use chrono::TimeZone;
+use chrono::Utc;
+
 use net_proto_api::api::API;
 use net_proto_api::decoder_api::Decoder;
 use net_proto_api::envelope::envelope::Envelope;
 use net_proto_api::typed_api::Typed;
-use sqlx::{Pool, Postgres, Transaction};
-use net_timescale_api::api::{
-    network_graph::{
-        graph_edge::GraphEdgeDTO,
-        graph_node::GraphNodeDTO,
-        network_graph::NetworkGraphDTO,
-    }, network_graph_request::NetworkGraphRequestDTO
-};
-use crate::persistence::{ChartGenerator, Persistence};
+
+use sqlx::Transaction;
+use sqlx::Postgres;
+use sqlx::Pool;
+
+use net_timescale_api::api::network_graph::graph_edge::GraphEdgeDTO;
+use net_timescale_api::api::network_graph::graph_node::GraphNodeDTO;
+use net_timescale_api::api::network_graph::network_graph::NetworkGraphDTO;
+use net_timescale_api::api::network_graph::network_graph_request::NetworkGraphRequestDTO;
+
+use crate::persistence::ChartGenerator;
+use crate::persistence::Persistence;
 use crate::repository::address_pair::AddressPair;
 use crate::repository::address_info::AddressInfo;
 

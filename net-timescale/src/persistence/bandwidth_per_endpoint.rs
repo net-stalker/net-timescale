@@ -1,19 +1,25 @@
 use std::rc::Rc;
 use async_std::task::block_on;
-use chrono::{DateTime, TimeZone, Utc};
+
+use chrono::Utc;
+use chrono::TimeZone;
+use chrono::DateTime;
+
+use sqlx::Transaction;
+use sqlx::Postgres;
+use sqlx::Pool;
+
 use net_proto_api::api::API;
 use net_proto_api::decoder_api::Decoder;
 use net_proto_api::envelope::envelope::Envelope;
 use net_proto_api::typed_api::Typed;
-use sqlx::{Pool, Postgres, Transaction};
-use net_timescale_api::api::{
-    bandwidth_per_endpoint::{
-        endpoint::EndpointDTO,
-        bandwidth_per_endpoint::BandwidthPerEndpointDTO,
-    },
-    bandwidth_per_endpoint_request::BandwidthPerEndpointRequestDTO,
-};
-use crate::persistence::{ChartGenerator, Persistence};
+
+use net_timescale_api::api::bandwidth_per_endpoint::endpoint::EndpointDTO;
+use net_timescale_api::api::bandwidth_per_endpoint::bandwidth_per_endpoint_request::BandwidthPerEndpointRequestDTO;
+use net_timescale_api::api::bandwidth_per_endpoint::bandwidth_per_endpoint::BandwidthPerEndpointDTO;
+
+use crate::persistence::ChartGenerator;
+use crate::persistence::Persistence;
 use crate::repository::endpoint::Endpoint;
 
 #[derive(Default, Clone, Debug)]
