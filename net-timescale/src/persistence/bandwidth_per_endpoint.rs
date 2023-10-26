@@ -26,6 +26,34 @@ impl PersistenceBandwidthPerEndpoint {
         Rc::new(self)
     }
 }
+use std::rc::Rc;
+use async_std::task::block_on;
+use chrono::{DateTime, TimeZone, Utc};
+use net_proto_api::api::API;
+use net_proto_api::decoder_api::Decoder;
+use net_proto_api::envelope::envelope::Envelope;
+use net_proto_api::typed_api::Typed;
+use sqlx::{Pool, Postgres, Transaction};
+use net_timescale_api::api::{
+    bandwidth_per_endpoint::{
+        endpoint::EndpointDTO,
+        bandwidth_per_endpoint::BandwidthPerEndpointDTO,
+    },
+    bandwidth_per_endpoint_request::BandwidthPerEndpointRequestDTO,
+};
+use crate::persistence::{ChartGenerator, Persistence};
+use crate::repository::endpoint::Endpoint;
+
+#[derive(Default, Clone, Debug)]
+pub struct PersistenceBandwidthPerEndpoint {
+    endpoints: Vec<Endpoint>
+}
+
+impl PersistenceBandwidthPerEndpoint {
+    pub fn into_wrapped(self) -> Rc<dyn ChartGenerator> {
+        Rc::new(self)
+    }
+}
 
 impl From<PersistenceBandwidthPerEndpoint> for BandwidthPerEndpointDTO {
     fn from(value: PersistenceBandwidthPerEndpoint) -> Self {
