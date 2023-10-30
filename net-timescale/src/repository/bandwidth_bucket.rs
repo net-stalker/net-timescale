@@ -10,14 +10,14 @@ use net_timescale_api::api::network_bandwidth::bandwidth_bucket::BandwidthBucket
 
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct BandwidthBucket {
-    bucket_timestamp: DateTime<Utc>,
+    bucket: DateTime<Utc>,
     total_bytes: i64,
 }
 
 impl From<BandwidthBucket> for BandwidthBucketDTO {
     fn from(value: BandwidthBucket) -> Self {
         BandwidthBucketDTO::new(
-            value.bucket_timestamp.timestamp_millis(),
+            value.bucket.timestamp_millis(),
             value.total_bytes
         )
     }
