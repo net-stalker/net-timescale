@@ -20,9 +20,9 @@ impl ContinuousAggregate for NetworkBandwidthAggregate {
                     time_bucket('2 minutes', frame_time) AS bucket,
                     group_id,
                     agent_id,
-                    SUM((binary_data->'l1'->'frame'->>'frame.len')::integer) AS total_bytes
+                    (binary_data->'l1'->'frame'->>'frame.len')::integer AS packet_length
                 FROM captured_traffic
-                GROUP BY bucket, group_id, agent_id;
+                GROUP BY bucket, group_id, agent_id, packet_length;
             ",
             Self::get_name()
         );

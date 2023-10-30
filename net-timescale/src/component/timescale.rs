@@ -91,22 +91,6 @@ impl Timescale {
                 log::debug!("couldn't create {} refresh policy: {}", NetworkGraphAggregate::get_name(), err);
             }
         }
-        match BandwidthPerEndpointAggregate::create(con).await {
-            Ok(_) => {
-                log::info!("successfully created {}", BandwidthPerEndpointAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {}: {}", BandwidthPerEndpointAggregate::get_name(), err);
-            }
-        }
-        match BandwidthPerEndpointAggregate::add_refresh_policy(con, None, None, "1 minute").await {
-            Ok(_) => {
-                log::info!("successfully created {} refresh policy", BandwidthPerEndpointAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {} refresh policy: {}", BandwidthPerEndpointAggregate::get_name(), err);
-            }
-        }
         match NetworkBandwidthAggregate::create(con).await {
             Ok(_) => {
                 log::info!("successfully created {}", NetworkBandwidthAggregate::get_name());
@@ -121,6 +105,22 @@ impl Timescale {
             },
             Err(err) => {
                 log::debug!("couldn't create {} refresh policy: {}", NetworkBandwidthAggregate::get_name(), err);
+            }
+        }
+        match BandwidthPerEndpointAggregate::create(con).await {
+            Ok(_) => {
+                log::info!("successfully created {}", BandwidthPerEndpointAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {}: {}", BandwidthPerEndpointAggregate::get_name(), err);
+            }
+        }
+        match BandwidthPerEndpointAggregate::add_refresh_policy(con, None, None, "1 minute").await {
+            Ok(_) => {
+                log::info!("successfully created {} refresh policy", BandwidthPerEndpointAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {} refresh policy: {}", BandwidthPerEndpointAggregate::get_name(), err);
             }
         }
     }

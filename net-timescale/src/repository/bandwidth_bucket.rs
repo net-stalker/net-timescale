@@ -24,9 +24,11 @@ impl From<BandwidthBucket> for BandwidthBucketDTO {
 }
 
 const SELECT_BY_DATE_CUT: &str = "
-        SELECT *
+        SELECT bucket, SUM(packet_length) as total_bytes
         FROM network_bandwidth_aggregate
-        WHERE group_id = $1 AND bucket >= $2 AND bucket < $3;
+        WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
+        GROUP BY bucket
+        ORDER BY bucket;
 ";
 
 impl BandwidthBucket {
