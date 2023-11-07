@@ -5,7 +5,7 @@ use std::rc::Rc;
 use std::time::Duration;
 use async_std::task::block_on;
 use net_proto_api::typed_api::Typed;
-use net_timescale_api::api::dashboard_request::DashboardRequestDTO;
+use net_timescale_api::api::dashboard::dashboard_request::DashboardRequestDTO;
 use net_transport::dummy_command::DummyCommand;
 use threadpool::ThreadPool;
 use sqlx::{

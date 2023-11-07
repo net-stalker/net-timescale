@@ -10,8 +10,8 @@ use net_timescale_api::api::{
     bandwidth_per_endpoint::{
         endpoint::EndpointDTO,
         bandwidth_per_endpoint::BandwidthPerEndpointDTO,
+        bandwidth_per_endpoint_request::BandwidthPerEndpointRequestDTO,
     },
-    bandwidth_per_endpoint_request::BandwidthPerEndpointRequestDTO,
 };
 use crate::persistence::{ChartGenerator, Persistence};
 use crate::repository::endpoint::Endpoint;

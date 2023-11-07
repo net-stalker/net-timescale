@@ -10,7 +10,8 @@ use net_timescale_api::api::{
         graph_edge::GraphEdgeDTO,
         graph_node::GraphNodeDTO,
         network_graph::NetworkGraphDTO,
-    }, network_graph_request::NetworkGraphRequestDTO
+        network_graph_request::NetworkGraphRequestDTO,
+    },
 };
 use crate::persistence::{ChartGenerator, Persistence};
 use crate::repository::address_pair::AddressPair;
