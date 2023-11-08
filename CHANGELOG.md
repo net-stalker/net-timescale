@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-010ad64] - 2023-11-08
+
+feature/CU-86932w486: updated net-timescale-api version after last refactor (#32)
+
+* updated net-timescale-api version after CU-86930959c
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-06d0177] - 2023-10-25
 
