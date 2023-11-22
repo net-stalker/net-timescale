@@ -1,25 +1,25 @@
-#[cfg(feature = "integration")] 
+#[cfg(feature = "integration")]
 mod tests {
     use async_std::task::block_on;
-    
+
     use chrono::TimeZone;
     use chrono::Utc;
-    
+
     use sqlx::Pool;
     use sqlx::Postgres;
-    
+
     use serde_json::json;
-    
+
     use net_timescale::repository::network_packet;
     use net_timescale_api::api::network_packet::network_packet::NetworkPacketDTO;
-    
-    
+
+
     async fn establish_connection() -> Pool<Postgres> {
         let database_url = "postgres://postgres:PsWDgxZb@localhost".to_owned();
         Pool::<Postgres>::connect("postgres://postgres:PsWDgxZb@localhost").await
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
     }
-    
+
     #[test]
     fn integration_test_insert() {
         #[derive(sqlx::FromRow, Debug)]
@@ -31,10 +31,10 @@ mod tests {
             pub dst_addr: String,
             pub binary_data: serde_json::Value,
         }
-    
+
         use chrono::DateTime;
         use net_proto_api::{envelope::envelope::Envelope, encoder_api::Encoder};
-    
+
         let con = block_on(establish_connection());
         let json_data = json!({
             "test": "test",
