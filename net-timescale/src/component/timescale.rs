@@ -1,38 +1,46 @@
+use async_std::task::block_on;
 use std::collections::HashSet;
 use std::ops::DerefMut;
-use std::sync::{Arc, Mutex};
 use std::rc::Rc;
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::time::Duration;
-use async_std::task::block_on;
-use net_proto_api::typed_api::Typed;
-use net_timescale_api::api::dashboard::dashboard_request::DashboardRequestDTO;
-use net_transport::dummy_command::DummyCommand;
+
 use threadpool::ThreadPool;
-use sqlx::{
-    Postgres,
-    postgres::PgPoolOptions,
-    Pool,
-};
-use net_transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
+
+use sqlx::Pool;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::Postgres;
+
+use net_proto_api::typed_api::Typed;
+
+use net_timescale_api::api::dashboard::dashboard_request::DashboardRequestDTO;
+
+use net_transport::dummy_command::DummyCommand;
 use net_transport::polling::zmq::ZmqPoller;
 use net_transport::sockets::Context;
-use net_transport::zmq::builders::publisher::ConnectorZmqPublisherBuilder;
-use net_transport::zmq::builders::subscriber::ConnectorZmqSubscriberBuilder;
+use net_transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
 use net_transport::zmq::contexts::dealer::DealerContext;
+use net_transport::zmq::builders::publisher::ConnectorZmqPublisherBuilder;
 use net_transport::zmq::contexts::publisher::PublisherContext;
+use net_transport::zmq::builders::subscriber::ConnectorZmqSubscriberBuilder;
 use net_transport::zmq::contexts::subscriber::SubscriberContext;
-use crate::command::{
-    dispatcher::CommandDispatcher,
-    executor::PoolWrapper,
-    router::Router,
-    network_packet_handler::NetworkPacketHandler,
-};
+
 use crate::command::dashboard::handler::DashboardHandler;
+use crate::command::dispatcher::CommandDispatcher;
+use crate::command::executor::PoolWrapper;
 use crate::command::listen_handler::ListenHandler;
+use crate::command::network_packet_handler::NetworkPacketHandler;
+use crate::command::router::Router;
+
 use crate::config::Config;
+
 use crate::persistence::bandwidth_per_endpoint::PersistenceBandwidthPerEndpoint;
+use crate::persistence::network_bandwidth::PersistenceNetworkBandwidth;
 use crate::persistence::network_graph::PersistenceNetworkGraph;
+
 use crate::repository::continuous_aggregate::bandwidth_per_endpoint::BandwidthPerEndpointAggregate;
+use crate::repository::continuous_aggregate::network_bandwidth::NetworkBandwidthAggregate;
 use crate::repository::continuous_aggregate::ContinuousAggregate;
 use crate::repository::continuous_aggregate::network_graph::NetworkGraphAggregate;
 
@@ -81,6 +89,22 @@ impl Timescale {
             },
             Err(err) => {
                 log::debug!("couldn't create {} refresh policy: {}", NetworkGraphAggregate::get_name(), err);
+            }
+        }
+        match NetworkBandwidthAggregate::create(con).await {
+            Ok(_) => {
+                log::info!("successfully created {}", NetworkBandwidthAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {}: {}", NetworkBandwidthAggregate::get_name(), err);
+            }
+        }
+        match NetworkBandwidthAggregate::add_refresh_policy(con, None, None, "1 minute").await {
+            Ok(_) => {
+                log::info!("successfully created {} refresh policy", NetworkBandwidthAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {} refresh policy: {}", NetworkBandwidthAggregate::get_name(), err);
             }
         }
         match BandwidthPerEndpointAggregate::create(con).await {
@@ -208,6 +232,7 @@ impl Timescale {
                 .with_pool(pool)
                 .add_chart_generator(PersistenceNetworkGraph::default().into_wrapped())
                 .add_chart_generator(PersistenceBandwidthPerEndpoint::default().into_wrapped())
+                .add_chart_generator(PersistenceNetworkBandwidth::default().into_wrapped())
                 .build();
             let dashboard_connector = ConnectorZmqSubscriberBuilder::new(&sub_context)
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())

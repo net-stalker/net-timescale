@@ -1,17 +1,22 @@
+use async_std::task::block_on;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
-use async_std::task::block_on;
-use net_transport::{
-    sockets::{Handler, Receiver, Sender},
-};
+
+use sqlx::Postgres;
+
+use net_transport::sockets::Sender;
+use net_transport::sockets::Receiver;
+use net_transport::sockets::Handler;
+
 use net_proto_api::envelope::envelope::Envelope;
 use net_proto_api::decoder_api::Decoder;
 use net_proto_api::encoder_api::Encoder;
 use net_proto_api::typed_api::Typed;
+
 use net_timescale_api::api::dashboard::dashboard::DashboardDTO;
 use net_timescale_api::api::dashboard::dashboard_request::DashboardRequestDTO;
-use sqlx::Postgres;
+
 use crate::command::dashboard::builder::DashboardHandlerBuilder;
 use crate::command::executor::PoolWrapper;
 use crate::persistence::ChartGenerator;
