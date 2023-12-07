@@ -9,15 +9,15 @@ use sqlx::Error;
 use net_timescale_api::api::overview_dashboard_filters::filter_entry::FilterEntryDTO;
 
 #[derive(sqlx::FromRow, Debug, Clone)]
-pub struct OverviewFilters {
+pub struct OverviewFiltersEntry {
     pub endpoint: String,
     pub protocols: Vec<String>,
     pub bytes_rec: i64,
     pub bytes_sent: i64,
 }
 
-impl From<OverviewFilters> for FilterEntryDTO {
-    fn from(value: OverviewFilters) -> Self {
+impl From<OverviewFiltersEntry> for FilterEntryDTO {
+    fn from(value: OverviewFiltersEntry) -> Self {
         FilterEntryDTO::new(
             value.endpoint.as_str(),
             &value.protocols,
@@ -53,13 +53,13 @@ const SELECT_BY_DATE_CUT: &str = "
     ) as rhs on lhs.id = rhs.id;
 ";
 
-impl OverviewFilters {
+impl OverviewFiltersEntry {
     pub async fn select_by_date_cut(
         con: &Pool<Postgres>,
         group_id: Option<&str>,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-    ) -> Result<Vec<OverviewFilters>, Error>
+    ) -> Result<Vec<OverviewFiltersEntry>, Error>
     {
         sqlx::query_as(SELECT_BY_DATE_CUT)
             .bind(group_id)
@@ -73,7 +73,7 @@ impl OverviewFilters {
         group_id: Option<&str>,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-    ) -> Result<Vec<OverviewFilters>, Error>
+    ) -> Result<Vec<OverviewFiltersEntry>, Error>
     {
         sqlx::query_as(SELECT_BY_DATE_CUT)
             .bind(group_id)

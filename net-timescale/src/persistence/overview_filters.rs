@@ -19,11 +19,11 @@ use net_proto_api::typed_api::Typed;
 
 use crate::persistence::ChartGenerator;
 use crate::persistence::Persistence;
-use crate::repository::overview_filters::OverviewFilters;
+use crate::repository::overview_filters_entry::OverviewFiltersEntry;
 
 #[derive(Default, Clone, Debug)]
 pub struct PersistenceOverviewFilters {
-    entries: Vec<OverviewFilters>
+    entries: Vec<OverviewFiltersEntry>
 }
 
 impl PersistenceOverviewFilters {
@@ -58,7 +58,7 @@ impl Persistence for PersistenceOverviewFilters {
         let filters_request = OverviewDashboardFiltersRequestDTO::decode(data.get_data());
         let start_date: DateTime<Utc> = Utc.timestamp_millis_opt(filters_request.get_start_date_time()).unwrap();
         let end_date: DateTime<Utc> = Utc.timestamp_millis_opt(filters_request.get_end_date_time()).unwrap();
-        let filters: Vec<FilterEntryDTO> = match block_on(OverviewFilters::select_by_date_cut(
+        let filters: Vec<FilterEntryDTO> = match block_on(OverviewFiltersEntry::select_by_date_cut(
             connection,
             group_id,
             start_date,
@@ -82,7 +82,7 @@ impl Persistence for PersistenceOverviewFilters {
         let filters_request = OverviewDashboardFiltersRequestDTO::decode(data.get_data());
         let start_date: DateTime<Utc> = Utc.timestamp_millis_opt(filters_request.get_start_date_time()).unwrap();
         let end_date: DateTime<Utc> = Utc.timestamp_millis_opt(filters_request.get_end_date_time()).unwrap();
-        let filters: Vec<FilterEntryDTO> = match block_on(OverviewFilters::transaction_select_by_date_cut(
+        let filters: Vec<FilterEntryDTO> = match block_on(OverviewFiltersEntry::transaction_select_by_date_cut(
             transaction,
             group_id,
             start_date,
