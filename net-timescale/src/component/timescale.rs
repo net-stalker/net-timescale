@@ -39,10 +39,12 @@ use crate::persistence::bandwidth_per_endpoint::PersistenceBandwidthPerEndpoint;
 use crate::persistence::network_bandwidth::PersistenceNetworkBandwidth;
 use crate::persistence::network_graph::PersistenceNetworkGraph;
 
+use crate::persistence::overview_filters::PersistenceOverviewFilters;
 use crate::repository::continuous_aggregate::bandwidth_per_endpoint::BandwidthPerEndpointAggregate;
 use crate::repository::continuous_aggregate::network_bandwidth::NetworkBandwidthAggregate;
 use crate::repository::continuous_aggregate::ContinuousAggregate;
 use crate::repository::continuous_aggregate::network_graph::NetworkGraphAggregate;
+use crate::repository::continuous_aggregate::overview_dashboard_filters::OverviewDashboardFiltersAggregate;
 
 pub const TIMESCALE_CONSUMER: &str = "inproc://timescale/consumer";
 pub const TIMESCALE_PRODUCER: &str = "inproc://timescale/producer";
@@ -121,6 +123,22 @@ impl Timescale {
             },
             Err(err) => {
                 log::debug!("couldn't create {} refresh policy: {}", BandwidthPerEndpointAggregate::get_name(), err);
+            }
+        }
+        match OverviewDashboardFiltersAggregate::create(con).await {
+            Ok(_) => {
+                log::info!("successfully created {}", OverviewDashboardFiltersAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {}: {}", OverviewDashboardFiltersAggregate::get_name(), err);
+            }
+        }
+        match OverviewDashboardFiltersAggregate::add_refresh_policy(con, None, None, "1 minute").await {
+            Ok(_) => {
+                log::info!("successfully created {} refresh policy", OverviewDashboardFiltersAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {} refresh policy: {}", OverviewDashboardFiltersAggregate::get_name(), err);
             }
         }
     }
@@ -233,6 +251,7 @@ impl Timescale {
                 .add_chart_generator(PersistenceNetworkGraph::default().into_wrapped())
                 .add_chart_generator(PersistenceBandwidthPerEndpoint::default().into_wrapped())
                 .add_chart_generator(PersistenceNetworkBandwidth::default().into_wrapped())
+                .add_chart_generator(PersistenceOverviewFilters::default().into_wrapped())
                 .build();
             let dashboard_connector = ConnectorZmqSubscriberBuilder::new(&sub_context)
                 .with_endpoint(TIMESCALE_CONSUMER.to_owned())
