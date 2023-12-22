@@ -47,11 +47,11 @@ mod tests {
             "dst",
             &binary_json,
         );
-        let group_id = Some("some group");
-        let agent_id = Some("some agent");
+        let group_id = "some group";
+        let agent_id = "some agent";
         let mut transcation = block_on(con.begin()).unwrap();
         let result = block_on(network_packet::insert_network_packet_transaction(
-            &mut transcation, Envelope::new(group_id, agent_id, "network_packet", &network_packet_dto.encode())
+            &mut transcation, Envelope::new(Some(group_id), Some(agent_id), "network_packet", &network_packet_dto.encode())
         )).unwrap();
         assert_eq!(1, result.rows_affected());
         let test_query = "
@@ -63,8 +63,8 @@ mod tests {
         assert_eq!(query_result.len(), 1);
         let query_result = query_result.first().unwrap();
         assert_eq!(query_result.frame_time, Utc.timestamp_nanos(timestamp));
-        assert_eq!(query_result.group_id, group_id.unwrap());
-        assert_eq!(query_result.agent_id, agent_id.unwrap());
+        assert_eq!(query_result.group_id, group_id);
+        assert_eq!(query_result.agent_id, agent_id);
         assert_eq!(query_result.src_addr, "src");
         assert_eq!(query_result.src_addr, "src");
         assert_eq!(query_result.dst_addr, "dst");
