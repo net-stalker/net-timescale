@@ -4,17 +4,17 @@ use net_transport::sockets::{Handler, Receiver, Sender};
 use net_proto_api::decoder_api::Decoder;
 use sqlx::Postgres;
 use net_proto_api::envelope::envelope::Envelope;
-use crate::{command::executor::PoolWrapper, repository::network_packet};
+use crate::{command::executor::PoolWrapper, repository::insert};
 
-pub struct NetworkPacketHandler {
+pub struct InsertHandler {
     pool: Arc<PoolWrapper<Postgres>>,
 }
-impl NetworkPacketHandler {
+impl InsertHandler {
     pub fn new(executor: Arc<PoolWrapper<Postgres>>) -> Self {
-        NetworkPacketHandler { pool: executor }
+        InsertHandler { pool: executor }
     }
 }
-impl Handler for NetworkPacketHandler {
+impl Handler for InsertHandler {
     fn handle(&self, receiver: &dyn Receiver, _sender: &dyn Sender) {
         let data: Vec<u8> = receiver.recv();
         let envelope = Envelope::decode(data.as_slice());
@@ -26,7 +26,7 @@ impl Handler for NetworkPacketHandler {
                 return;
             }
         };
-        match block_on(network_packet::insert_network_packet_transaction(&mut transaction, envelope)) {
+        match block_on(insert::insert_network_packet_transaction(&mut transaction, envelope)) {
             Ok(rows_count) => {
                 log::info!("{} rows were affected", rows_count.rows_affected());
                 block_on(transaction.commit()).expect("transaction commit is expected");

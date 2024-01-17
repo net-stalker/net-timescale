@@ -15,12 +15,7 @@ pub struct MaxConnectionSize {
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct TimescaleEndpoint {
-    pub(crate) addr: String,
-}
-
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct TranslatorConnector {
+pub struct HubConnector {
     pub(crate) addr: String,
 }
 
@@ -28,8 +23,7 @@ pub struct TranslatorConnector {
 pub struct Config {
     pub(crate) connection_url: ConnectionUrl,
     pub(crate) max_connection_size: MaxConnectionSize,
-    pub(crate) timescale_endpoint: TimescaleEndpoint,
-    pub(crate) translator_connector: TranslatorConnector,
+    pub(crate) hub_connector: HubConnector,
 }
 
 #[cfg(test)]
@@ -48,8 +42,7 @@ mod tests {
                 "postgres://postgres:PsWDgxZb@localhost/?sslmode=require&sslcert=net-timescale/src/.ssl/client.crt&sslkey=net-timescale/src/.ssl/client.key".to_string()
             },
             max_connection_size: MaxConnectionSize { size: "10".to_string() },
-            timescale_endpoint: TimescaleEndpoint { addr: "tcp://0.0.0.0:5558".to_string() },
-            translator_connector: TranslatorConnector { addr: "tcp://0.0.0.0:5557".to_string() },
+            hub_connector: HubConnector { addr: "tcp://0.0.0.0:5557".to_string() },
         };
 
         assert_eq!(config.unwrap(), expected_config);
@@ -58,8 +51,7 @@ mod tests {
                      "postgres://postgres:PsWDgxZb@localhost/?sslmode=require&sslcert=net-timescale/src/.ssl/client.crt&sslkey=net-timescale/src/.ssl/client.key");
         // TODO: investigate if there a possibility to set intgeer values in set_var
         env::set_var("NET_MAX_CONNECTION_SIZE.SIZE", "10");
-        env::set_var("NET_TIMESCALE_ENDPOINT.ADDR", "tcp://localhost:5558");
-        env::set_var("NET_TRANSLATOR_CONNECTOR.ADDR", "tcp://localhost:5557");
+        env::set_var("NET_HUB_CONNECTOR.ADDR", "tcp://localhost:5557");
 
         let config = Config::builder()
             .with_config_dir(".config".to_string())
@@ -69,8 +61,7 @@ mod tests {
             "postgres://postgres:PsWDgxZb@localhost/?sslmode=require&sslcert=net-timescale/src/.ssl/client.crt&sslkey=net-timescale/src/.ssl/client.key".to_string()
             },
             max_connection_size: MaxConnectionSize { size: "10".to_string() },
-            timescale_endpoint: TimescaleEndpoint { addr: "tcp://localhost:5558".to_string() },
-            translator_connector: TranslatorConnector { addr: "tcp://localhost:5557".to_string() },
+            hub_connector: HubConnector { addr: "tcp://localhost:5557".to_string() },
         };
         assert_eq!(config.unwrap(), expected_config);
     }

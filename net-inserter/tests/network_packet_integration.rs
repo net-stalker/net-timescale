@@ -10,7 +10,7 @@ mod tests {
 
     use serde_json::json;
 
-    use net_timescale::repository::network_packet;
+    use net_inserter::repository::insert;
     use net_timescale_api::api::network_packet::network_packet::NetworkPacketDTO;
 
 
@@ -50,7 +50,7 @@ mod tests {
         let group_id = "some group";
         let agent_id = "some agent";
         let mut transcation = block_on(con.begin()).unwrap();
-        let result = block_on(network_packet::insert_network_packet_transaction(
+        let result = block_on(insert::insert_network_packet_transaction(
             &mut transcation, Envelope::new(Some(group_id), Some(agent_id), "network_packet", &network_packet_dto.encode())
         )).unwrap();
         assert_eq!(1, result.rows_affected());

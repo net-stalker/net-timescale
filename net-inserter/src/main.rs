@@ -1,7 +1,7 @@
 use log::info;
 use threadpool::ThreadPool;
-use net_timescale::component::timescale::Timescale;
-use net_timescale::config::Config;
+use net_inserter::component::inserter::Inserter;
+use net_inserter::config::Config;
 
 #[async_std::main]
 async fn main() {
@@ -11,7 +11,7 @@ async fn main() {
     let config = Config::builder().build().expect("read config error");
     let thread_pool = ThreadPool::with_name("worker".into(), 5);
 
-    Timescale::new(thread_pool.clone(), config).await.run().await;
+    Inserter::new(thread_pool.clone(), config).await.run().await;
 
     thread_pool.join();
 }
