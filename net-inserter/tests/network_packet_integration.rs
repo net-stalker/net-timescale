@@ -15,8 +15,8 @@ mod tests {
 
 
     async fn establish_connection() -> Pool<Postgres> {
-        let database_url = "postgres://postgres:PsWDgxZb@localhost".to_owned();
-        Pool::<Postgres>::connect("postgres://postgres:PsWDgxZb@localhost").await
+        let database_url = "postgres://postgres:PsWDgxZb@localhost:5433";
+        Pool::<Postgres>::connect(database_url).await
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
     }
 
