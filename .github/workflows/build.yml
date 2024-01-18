@@ -100,4 +100,4 @@ jobs:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
         run: |
           cargo test --test "*" --features integration
-          docker-compose down
+          docker-compose -f docker/docker-compose.yml down
