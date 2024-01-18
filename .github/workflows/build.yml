@@ -85,7 +85,7 @@ jobs:
 
       - name: Build and Up timescaleDB
         run: |
-          docker-compose up -d
+          docker-compose -f docker/docker-compose.yml up -d
 
       - name: Set up GIT credentials
         run: |
