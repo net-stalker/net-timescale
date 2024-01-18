@@ -1,5 +1,5 @@
 [connection_url]
-url = "postgres://postgres:PsWDgxZb@localhost:5433/?sslmode=require&sslcert=net-inserter/src/.ssl/client.crt&sslkey=net-inserter/src/.ssl/client.key"
+url = "postgres://postgres:PsWDgxZb@localhost:5433/?sslmode=require&sslcert=docker/.ssl/client.crt&sslkey=docker/.ssl/client.key"
 
 [max_connection_size]
 size = "10"
