@@ -4,16 +4,9 @@ use crate::query::requester::Requester;
 
 use super::manager::QueryManager;
 
+#[derive(Default)]
 pub struct QueryManagerBuilder {
     requesters: HashMap<&'static str, Box<dyn Requester>>
-}
-
-impl Default for QueryManagerBuilder {
-    fn default() -> Self {
-        Self {
-            requesters: HashMap::new()
-        }
-    }
 }
 
 impl QueryManagerBuilder {

@@ -42,11 +42,10 @@ const GRAPH_EDGE_REQUEST_QUERY: &str = "
     ORDER BY src_addr, dst_addr;
 ";
 
+#[derive(Default)]
 pub struct NetworkGraphRequester {}
 
 impl NetworkGraphRequester {
-    pub fn new() -> Self { Self {  } }
-
     pub fn boxed(self) -> Box<Self> {
         Box::new(self)
     }

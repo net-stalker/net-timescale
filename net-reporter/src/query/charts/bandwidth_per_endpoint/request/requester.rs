@@ -42,11 +42,10 @@ const BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY: &str = "
     ) AS rhs ON lhs.id = rhs.id;
 ";
 
+#[derive(Default)]
 pub struct BandwidthPerEndpointRequester {}
 
 impl BandwidthPerEndpointRequester {
-    pub fn new() -> Self { Self {  } }
-
     pub fn boxed(self) -> Box<Self> {
         Box::new(self)
     }

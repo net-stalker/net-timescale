@@ -58,9 +58,9 @@ impl Reporter {
 
     fn build_query_manager() -> QueryManager {
         QueryManager::builder()
-            .add_chart_generator(BandwidthPerEndpointRequester::new().boxed())
-            .add_chart_generator(NetworkBandwidthRequester::new().boxed())
-            .add_chart_generator(NetworkGraphRequester::new().boxed())
+            .add_chart_generator(BandwidthPerEndpointRequester::default().boxed())
+            .add_chart_generator(NetworkBandwidthRequester::default().boxed())
+            .add_chart_generator(NetworkGraphRequester::default().boxed())
             .build()
     }
 

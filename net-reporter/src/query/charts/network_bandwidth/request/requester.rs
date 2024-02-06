@@ -26,11 +26,10 @@ const NETWORK_BANDWIDTH_REQUEST_QUERY: &str = "
     ORDER BY bucket;
 ";
 
+#[derive(Default)]
 pub struct NetworkBandwidthRequester {}
 
 impl NetworkBandwidthRequester {
-    pub fn new() -> Self { Self {  } }
-
     pub fn boxed(self) -> Box<Self> {
         Box::new(self)
     }
