@@ -1,7 +1,8 @@
 [workspace]
 
 members = [
-    "net-timescale"
+    "net-inserter",
+    "net-reporter"
 ]
 
 [workspace.dependencies]

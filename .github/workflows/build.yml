@@ -85,11 +85,7 @@ jobs:
 
       - name: Build and Up timescaleDB
         run: |
-          docker-compose build timescaledb && docker-compose up --detach timescaledb
-
-      - name: Build and Run timescaleDB migrations
-        run: |
-          docker-compose build timescaledb-migrations && docker-compose up timescaledb-migrations
+          docker-compose -f docker/docker-compose.yml up -d
 
       - name: Set up GIT credentials
         run: |
@@ -104,4 +100,4 @@ jobs:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
         run: |
           cargo test --test "*" --features integration
-          docker-compose down
+          docker-compose -f docker/docker-compose.yml down
