@@ -142,7 +142,7 @@ impl Reporter {
             .with_addr(self.config.server_address.address.parse().unwrap())
             .build();
 
-        if let Err(_) = reporter_server_endpoint {
+        if reporter_server_endpoint.is_err() {
             todo!()
         }
         let mut reporter_server_endpoint = reporter_server_endpoint.unwrap();
@@ -175,7 +175,7 @@ impl Reporter {
         connection_pool: Arc<Pool<Postgres>>
     ) {
         let receive_result = client_connection.receive_reliable().await;
-        if let Err(_) = receive_result {
+        if receive_result.is_err() {
             todo!()
         }
         let recieve_result = receive_result.unwrap();
@@ -185,7 +185,7 @@ impl Reporter {
         log::info!("Recieved request from client: {:?}", recieve_enveloped_request);
 
         let response = query_manager.as_ref().handle_request(recieve_enveloped_request, connection_pool).await;
-        if let Err(_) = response {
+        if response.is_err() {
             todo!()
         }
         let response = response.unwrap();
@@ -193,7 +193,7 @@ impl Reporter {
         log::info!("Got response on request: {:?}", response);
 
         let send_result = client_connection.send_all_reliable(&response.encode()).await;
-        if let Err(_) = send_result {
+        if send_result.is_err() {
             todo!()
         }
     }
