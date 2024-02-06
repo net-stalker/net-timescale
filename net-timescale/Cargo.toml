@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 
 net-proto-api = { version = "=0.1.1-da85a0a", registry = "net-registry" }
-net-transport = { version = "=0.1.2-6538ee7", registry = "net-registry" }
+net-transport = { version = "=0.1.1-f6b5826", registry = "net-registry", features = ["zmq"]}
 net-file = { version = "0.1.0", registry = "net-registry" }
 net-config = { version = "0.1.0", registry = "net-registry" }
 net-timescale-api = { version = "=0.1.2-faf3b68", registry = "net-registry" }
