@@ -1,0 +1,34 @@
+[package]
+name = "net-inserter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+net-proto-api = { version = "=0.1.1-5e33a0b", registry = "net-registry" }
+net-transport = { version = "=0.1.2-6538ee7", registry = "net-registry" }
+net-file = { version = "0.1.0", registry = "net-registry" }
+net-config = { version = "0.1.0", registry = "net-registry" }
+net-timescale-api = { version = "=0.1.2-e3d0e88", registry = "net-registry" }
+
+
+log.workspace = true
+log4rs.workspace = true
+threadpool.workspace = true
+
+config.workspace = true
+serde.workspace = true
+toml.workspace = true
+
+
+chrono = { version = "0.4.23", feature = ["clock"] }
+serde_json = "1.0.91"
+serde_yaml = "0.9.21" # uses to parse log4rs config
+sqlx = { version = "0.7.0", features = ["runtime-async-std", "tls-native-tls", "postgres", "chrono"] }
+async-std = { version = "1.12.0", features = ["attributes"] }
+
+[dev-dependencies]
+mockall = "0.11.2"
+
+[features]
+integration = []

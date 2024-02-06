@@ -1,0 +1,8 @@
+[connection_url]
+url = "postgres://postgres:PsWDgxZb@localhost:5433/?sslmode=require&sslcert=docker/.ssl/client.crt&sslkey=docker/.ssl/client.key"
+
+[max_connection_size]
+size = "10"
+
+[hub_connector]    
+addr = "tcp://0.0.0.0:5557"

@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-718629f] - 2023-12-07
 
 Feature/cu 86939c8zv: persistence overview dashboard filters service (#34)
 
 *  added overview dashboard filters persistence and repository modules
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-010ad64] - 2023-11-08
 
 feature/CU-86932w486: updated net-timescale-api version after last refactor (#32)
