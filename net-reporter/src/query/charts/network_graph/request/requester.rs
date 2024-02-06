@@ -62,10 +62,7 @@ impl NetworkGraphRequester {
             .bind(end_date)
             .fetch_all(connection_pool.as_ref())
             .await;
-        if let Err(e) = graph_nodes {
-            return Err(e);
-        }
-        let graph_nodes = graph_nodes.unwrap();
+        let graph_nodes = graph_nodes?;
 
         let graph_edges: Result<Vec<GraphEdgeResponse>, Error> = sqlx::query_as(GRAPH_EDGE_REQUEST_QUERY)
             .bind(group_id)
@@ -73,10 +70,7 @@ impl NetworkGraphRequester {
             .bind(end_date)
             .fetch_all(connection_pool.as_ref())
             .await;
-        if let Err(e) = graph_edges {
-            return Err(e);
-        }
-        let graph_edges = graph_edges.unwrap();
+        let graph_edges = graph_edges?;
 
         Ok((graph_nodes, graph_edges))
     }

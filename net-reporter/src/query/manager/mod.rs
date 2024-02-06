@@ -1,2 +1,2 @@
 pub mod builder;
-pub mod manager;
+pub mod query_manager;

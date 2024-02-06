@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::query::requester::Requester;
 
-use super::manager::QueryManager;
+use super::query_manager::QueryManager;
 
 #[derive(Default)]
 pub struct QueryManagerBuilder {

@@ -20,7 +20,7 @@ use crate::continuous_aggregate::overview_dashboard_filters::OverviewDashboardFi
 use crate::query::charts::bandwidth_per_endpoint::request::requester::BandwidthPerEndpointRequester;
 use crate::query::charts::network_bandwidth::request::requester::NetworkBandwidthRequester;
 use crate::query::charts::network_graph::request::requester::NetworkGraphRequester;
-use crate::query::manager::manager::QueryManager;
+use crate::query::manager::query_manager::QueryManager;
 
 
 pub struct Reporter {

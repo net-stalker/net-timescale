@@ -1,5 +1,3 @@
-#![warn(clippy::module_inception)]
-
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -32,7 +30,7 @@ impl QueryManager {
 
     pub async fn handle_request(&self, enveloped_request: Envelope, connection_pool: Arc<Pool<Postgres>>) -> Result<Envelope, String> {
         let requester = self.requesters.get(enveloped_request.get_type());
-        if let None = requester {
+        if requester.is_none() {
             return Err("error: Tere is no such request available".to_string());
         }
 
