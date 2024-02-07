@@ -15,7 +15,7 @@ use crate::continuous_aggregate::ContinuousAggregate;
 use crate::continuous_aggregate::bandwidth_per_endpoint::BandwidthPerEndpointAggregate;
 use crate::continuous_aggregate::network_bandwidth::NetworkBandwidthAggregate;
 use crate::continuous_aggregate::network_graph::NetworkGraphAggregate;
-use crate::continuous_aggregate::overview_dashboard_filters::OverviewDashboardFiltersAggregate;
+use crate::continuous_aggregate::network_overview_filters::NetworkOverviewFiltersAggregate;
 
 use crate::query::charts::bandwidth_per_endpoint::request::requester::NetworkBandwidthPerEndpointRequester;
 use crate::query::charts::network_bandwidth::request::requester::NetworkBandwidthRequester;
@@ -115,20 +115,20 @@ impl Reporter {
                 log::debug!("couldn't create {} refresh policy: {}", BandwidthPerEndpointAggregate::get_name(), err);
             }
         }
-        match OverviewDashboardFiltersAggregate::create(con).await {
+        match NetworkOverviewFiltersAggregate::create(con).await {
             Ok(_) => {
-                log::info!("successfully created {}", OverviewDashboardFiltersAggregate::get_name());
+                log::info!("successfully created {}", NetworkOverviewFiltersAggregate::get_name());
             },
             Err(err) => {
-                log::debug!("couldn't create {}: {}", OverviewDashboardFiltersAggregate::get_name(), err);
+                log::debug!("couldn't create {}: {}", NetworkOverviewFiltersAggregate::get_name(), err);
             }
         }
-        match OverviewDashboardFiltersAggregate::add_refresh_policy(con, None, None, "1 minute").await {
+        match NetworkOverviewFiltersAggregate::add_refresh_policy(con, None, None, "1 minute").await {
             Ok(_) => {
-                log::info!("successfully created {} refresh policy", OverviewDashboardFiltersAggregate::get_name());
+                log::info!("successfully created {} refresh policy", NetworkOverviewFiltersAggregate::get_name());
             },
             Err(err) => {
-                log::debug!("couldn't create {} refresh policy: {}", OverviewDashboardFiltersAggregate::get_name(), err);
+                log::debug!("couldn't create {} refresh policy: {}", NetworkOverviewFiltersAggregate::get_name(), err);
             }
         }
     }
