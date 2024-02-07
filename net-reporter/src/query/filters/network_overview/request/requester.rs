@@ -22,7 +22,7 @@ const NETWORK_OVERVIEW_FILTERS_QUERY: &str = "
         select
             COALESCE(lhs.id, rhs.id) as endpoint,
             ARRAY_REMOVE(ARRAY(SELECT DISTINCT unnest(string_to_array(COALESCE(lhs.concatenated_protocols, '') || ':' || COALESCE(rhs.concatenated_protocols, ''), ':'))), '') AS protocols,
-            COALESCE(lhs.total_bytes, rhs.total_bytes, 0) as total_bytes
+            GREATEST(lhs.total_bytes, rhs.total_bytes, 0) as total_bytes
         from
             (
                 select
