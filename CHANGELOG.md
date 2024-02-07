@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-5d2c8ae] - 2024-02-06
 
 Feature/NS-19/async-net-timescale (#36)
@@ -15,7 +16,6 @@ Feature/NS-19/async-net-timescale (#36)
 * Refactor net-timescale, it is net-inserter now, move everything related to data querying into new net-reporter component (module)
 
 * Move everything related to docker into `docker` directory, automated running timescaledb and timescaledb migrations
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-718629f] - 2023-12-07
 
 Feature/cu 86939c8zv: persistence overview dashboard filters service (#34)
