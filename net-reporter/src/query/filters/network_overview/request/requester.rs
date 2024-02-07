@@ -1,6 +1,10 @@
 use std::sync::Arc;
 
+use net_core_api::decoder_api::Decoder;
+use net_core_api::encoder_api::Encoder;
 use net_core_api::envelope::envelope::Envelope;
+use net_core_api::typed_api::Typed;
+use net_reporter_api::api::network_overview_dashboard_filters::network_overview_dashbord_filters::NetworkOverviewDashboardFiltersDTO;
 use sqlx::types::chrono::DateTime;
 use sqlx::types::chrono::TimeZone;
 use sqlx::types::chrono::Utc;
@@ -10,8 +14,8 @@ use sqlx::Postgres;
 
 use net_reporter_api::api::network_overview_dashboard_filters::network_overview_dashboard_filters_request::NetworkOverviewDashboardFiltersRequestDTO;
 
-use crate::query::charts::network_bandwidth::response::network_bandwidth::NetworkBandwidthResponse;
-use crate::query::charts::network_bandwidth::response::bandwidth_bucket::BandwidthBucketResponse;
+use crate::query::filters::network_overview::response::filter_entry::FilterEntryResponse;
+use crate::query::filters::network_overview::response::network_overview_filters::NetworkOverviewFiltersResponse;
 use crate::query::requester::Requester;
 
 const NETWORK_OVERVIEW_FILTERS_QUERY: &str = "define postgres query here";
@@ -29,7 +33,7 @@ impl NetworkOverviewFiltersRequester {
         group_id: Option<&str>,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-    ) -> Result<Vec<BandwidthBucketResponse>, Error> {
+    ) -> Result<Vec<FilterEntryResponse>, Error> {
         sqlx::query_as(NETWORK_OVERVIEW_FILTERS_QUERY)
             .bind(group_id)
             .bind(start_date)
@@ -68,20 +72,20 @@ impl Requester for NetworkOverviewFiltersRequester {
         }
         let executed_query_response = executed_query_response.unwrap();
 
-        let response: NetworkBandwidthResponse = executed_query_response.into();
+        let response: NetworkOverviewFiltersResponse = executed_query_response.into();
         log::info!("Got response on request: {:?}", response);
 
-        let dto_response: NetworkBandwidthDTO = response.into();
+        let dto_response: NetworkOverviewDashboardFiltersDTO = response.into();
 
         Ok(Envelope::new(
             request_group_id,
             request_agent_id,
-            NetworkBandwidthDTO::get_data_type(),
+            NetworkOverviewDashboardFiltersDTO::get_data_type(),
             &dto_response.encode()
         ))
     }
     
     fn get_requesting_type(&self) -> &'static str {
-        NetworkBandwidthRequestDTO::get_data_type()
+        NetworkOverviewDashboardFiltersRequestDTO::get_data_type()
     }
 }
