@@ -1,4 +1,4 @@
-use net_timescale_api::api::network_graph::graph_edge::GraphEdgeDTO;
+use net_reporter_api::api::network_graph::graph_edge::GraphEdgeDTO;
 
 #[derive(sqlx::FromRow, Clone, Debug)]
 pub struct GraphEdgeResponse {

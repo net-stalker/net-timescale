@@ -1,4 +1,4 @@
-use net_timescale_api::api::network_graph::graph_node::GraphNodeDTO;
+use net_reporter_api::api::network_graph::graph_node::GraphNodeDTO;
 
 
 #[derive(sqlx::FromRow, Clone, Debug)]

@@ -1,6 +1,6 @@
-use net_timescale_api::api::network_graph::graph_edge::GraphEdgeDTO;
-use net_timescale_api::api::network_graph::graph_node::GraphNodeDTO;
-use net_timescale_api::api::network_graph::network_graph::NetworkGraphDTO;
+use net_reporter_api::api::network_graph::graph_edge::GraphEdgeDTO;
+use net_reporter_api::api::network_graph::graph_node::GraphNodeDTO;
+use net_reporter_api::api::network_graph::network_graph::NetworkGraphDTO;
 
 use super::graph_node::GraphNodeResponse;
 use super::graph_edge::GraphEdgeResponse;

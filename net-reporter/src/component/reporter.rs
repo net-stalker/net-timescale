@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use net_proto_api::decoder_api::Decoder;
-use net_proto_api::encoder_api::Encoder;
-use net_proto_api::envelope::envelope::Envelope;
+use net_core_api::decoder_api::Decoder;
+use net_core_api::encoder_api::Encoder;
+use net_core_api::envelope::envelope::Envelope;
 use net_transport::quinn::connection::QuicConnection;
 use net_transport::quinn::server::builder::ServerQuicEndpointBuilder;
 use sqlx::Pool;
@@ -17,7 +17,7 @@ use crate::continuous_aggregate::network_bandwidth::NetworkBandwidthAggregate;
 use crate::continuous_aggregate::network_graph::NetworkGraphAggregate;
 use crate::continuous_aggregate::overview_dashboard_filters::OverviewDashboardFiltersAggregate;
 
-use crate::query::charts::bandwidth_per_endpoint::request::requester::BandwidthPerEndpointRequester;
+use crate::query::charts::bandwidth_per_endpoint::request::requester::NetworkBandwidthPerEndpointRequester;
 use crate::query::charts::network_bandwidth::request::requester::NetworkBandwidthRequester;
 use crate::query::charts::network_graph::request::requester::NetworkGraphRequester;
 use crate::query::manager::query_manager::QueryManager;
@@ -58,7 +58,7 @@ impl Reporter {
 
     fn build_query_manager() -> QueryManager {
         QueryManager::builder()
-            .add_chart_generator(BandwidthPerEndpointRequester::default().boxed())
+            .add_chart_generator(NetworkBandwidthPerEndpointRequester::default().boxed())
             .add_chart_generator(NetworkBandwidthRequester::default().boxed())
             .add_chart_generator(NetworkGraphRequester::default().boxed())
             .build()
