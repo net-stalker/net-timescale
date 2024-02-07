@@ -1,9 +1,9 @@
 use std::sync::Arc;
 use async_std::task::block_on;
 use net_transport::sockets::{Handler, Receiver, Sender};
-use net_proto_api::decoder_api::Decoder;
 use sqlx::Postgres;
-use net_proto_api::envelope::envelope::Envelope;
+use net_core_api::decoder_api::Decoder;
+use net_core_api::envelope::envelope::Envelope;
 use crate::{command::executor::PoolWrapper, repository::insert};
 
 pub struct InsertHandler {

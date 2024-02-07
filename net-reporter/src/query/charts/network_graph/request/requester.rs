@@ -7,13 +7,13 @@ use sqlx::Error;
 use sqlx::Pool;
 use sqlx::Postgres;
 
-use net_proto_api::envelope::envelope::Envelope;
-use net_proto_api::encoder_api::Encoder;
-use net_proto_api::decoder_api::Decoder;
-use net_proto_api::typed_api::Typed;
+use net_core_api::envelope::envelope::Envelope;
+use net_core_api::encoder_api::Encoder;
+use net_core_api::decoder_api::Decoder;
+use net_core_api::typed_api::Typed;
 
-use net_timescale_api::api::network_graph::network_graph::NetworkGraphDTO;
-use net_timescale_api::api::network_graph::network_graph_request::NetworkGraphRequestDTO;
+use net_reporter_api::api::network_graph::network_graph::NetworkGraphDTO;
+use net_reporter_api::api::network_graph::network_graph_request::NetworkGraphRequestDTO;
 
 use crate::query::charts::network_graph::response::graph_edge::GraphEdgeResponse;
 use crate::query::charts::network_graph::response::graph_node::GraphNodeResponse;
