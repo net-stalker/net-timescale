@@ -20,7 +20,8 @@ use crate::continuous_aggregate::network_overview_filters::NetworkOverviewFilter
 use crate::query::charts::bandwidth_per_endpoint::request::requester::NetworkBandwidthPerEndpointRequester;
 use crate::query::charts::network_bandwidth::request::requester::NetworkBandwidthRequester;
 use crate::query::charts::network_graph::request::requester::NetworkGraphRequester;
-use crate::query::manager::query_manager::QueryManager;
+use crate::query::filters::network_overview::request::requester::NetworkOverviewFiltersRequester;
+use crate::query::manager::query_manager::QueryManager; 
 
 
 pub struct Reporter {
@@ -61,6 +62,7 @@ impl Reporter {
             .add_chart_generator(NetworkBandwidthPerEndpointRequester::default().boxed())
             .add_chart_generator(NetworkBandwidthRequester::default().boxed())
             .add_chart_generator(NetworkGraphRequester::default().boxed())
+            .add_chart_generator(NetworkOverviewFiltersRequester::default().boxed())
             .build()
     }
 

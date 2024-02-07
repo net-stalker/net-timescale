@@ -18,7 +18,30 @@ use crate::query::filters::network_overview::response::filter_entry::FilterEntry
 use crate::query::filters::network_overview::response::network_overview_filters::NetworkOverviewFiltersResponse;
 use crate::query::requester::Requester;
 
-const NETWORK_OVERVIEW_FILTERS_QUERY: &str = "define postgres query here";
+const NETWORK_OVERVIEW_FILTERS_QUERY: &str = "
+        select
+            COALESCE(lhs.id, rhs.id) as endpoint,
+            ARRAY_REMOVE(ARRAY(SELECT DISTINCT unnest(string_to_array(COALESCE(lhs.concatenated_protocols, '') || ':' || COALESCE(rhs.concatenated_protocols, ''), ':'))), '') AS protocols,
+            COALESCE(lhs.total_bytes, rhs.total_bytes, 0) as total_bytes
+        from
+            (
+                select
+                    src_addr as id,
+                    SUM(packet_length) as total_bytes,
+                    STRING_AGG(protocols, ':' ORDER BY protocols) AS concatenated_protocols
+                from network_overview_filters
+                where group_id = $1 AND bucket >= $2 AND bucket < $3
+                group by src_addr
+            ) as lhs full outer join (
+                select
+                    dst_addr as id,
+                    SUM(packet_length) as total_bytes,
+                    STRING_AGG(protocols, ':' ORDER BY protocols) AS concatenated_protocols
+                from network_overview_filters
+                where group_id = $1 AND bucket >= $2 AND bucket < $3
+                group by dst_addr
+            ) as rhs on lhs.id = rhs.id;
+";
 
 #[derive(Default)]
 pub struct NetworkOverviewFiltersRequester {}
