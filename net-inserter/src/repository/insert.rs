@@ -1,9 +1,9 @@
 use chrono::{DateTime, TimeZone, Utc};
-use net_proto_api::decoder_api::Decoder;
-use net_proto_api::envelope::envelope::Envelope;
 use sqlx::{Error, Pool, Postgres};
 use sqlx::postgres::PgQueryResult;
-use net_timescale_api::api::network_packet::network_packet::NetworkPacketDTO;
+use net_core_api::decoder_api::Decoder;
+use net_core_api::envelope::envelope::Envelope;
+use net_inserter_api::api::network_packet::network_packet::NetworkPacketDTO;
 
 #[derive(sqlx::FromRow, Debug)]
 pub struct NetworkPacket {
