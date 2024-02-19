@@ -19,6 +19,14 @@ use crate::query::charts::network_bandwidth::response::network_bandwidth::Networ
 use crate::query::charts::network_bandwidth::response::bandwidth_bucket::BandwidthBucketResponse;
 use crate::query::requester::Requester;
 
+const INCLUDE_PROTOCOLS_QUERY: &str = "
+    protocols LIKE ANY (SELECT '%' || unnest(string_to_array('tcp,tls', ',')) || '%')
+";
+
+const EXCLUDE_PROTOCOLS_QUERY: &str = "
+    protocols NOT LIKE ANY (SELECT '%' || unnest(string_to_array('tcp,tls', ',')) || '%')
+";
+
 const NETWORK_BANDWIDTH_REQUEST_QUERY: &str = "
     SELECT bucket, SUM(packet_length) as total_bytes
     FROM network_bandwidth_aggregate
