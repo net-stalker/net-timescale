@@ -1,5 +1,5 @@
-use net_timescale_api::api::network_bandwidth::bandwidth_bucket::BandwidthBucketDTO;
-use net_timescale_api::api::network_bandwidth::network_bandwidth::NetworkBandwidthDTO;
+use net_reporter_api::api::network_bandwidth::bandwidth_bucket::BandwidthBucketDTO;
+use net_reporter_api::api::network_bandwidth::network_bandwidth::NetworkBandwidthDTO;
 
 use super::bandwidth_bucket::BandwidthBucketResponse;
 

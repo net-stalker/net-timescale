@@ -1,4 +1,5 @@
-use net_timescale_api::api::bandwidth_per_endpoint::endpoint::EndpointDTO;
+use net_reporter_api::api::network_bandwidth_per_endpoint::endpoint::EndpointDTO;
+
 
 #[derive(sqlx::FromRow, Clone, Debug)]
 pub struct EndpointResponse {

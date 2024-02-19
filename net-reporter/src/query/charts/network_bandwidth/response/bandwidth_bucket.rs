@@ -1,7 +1,7 @@
 use sqlx::types::chrono::DateTime;
 use sqlx::types::chrono::Utc;
 
-use net_timescale_api::api::network_bandwidth::bandwidth_bucket::BandwidthBucketDTO;
+use net_reporter_api::api::network_bandwidth::bandwidth_bucket::BandwidthBucketDTO;
 
 #[derive(sqlx::FromRow, Clone, Debug)]
 pub struct BandwidthBucketResponse {

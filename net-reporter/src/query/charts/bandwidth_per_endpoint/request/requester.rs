@@ -7,19 +7,19 @@ use sqlx::Error;
 use sqlx::Pool;
 use sqlx::Postgres;
 
-use net_proto_api::envelope::envelope::Envelope;
-use net_proto_api::typed_api::Typed;
-use net_proto_api::decoder_api::Decoder;
-use net_proto_api::encoder_api::Encoder;
+use net_core_api::envelope::envelope::Envelope;
+use net_core_api::typed_api::Typed;
+use net_core_api::decoder_api::Decoder;
+use net_core_api::encoder_api::Encoder;
 
-use net_timescale_api::api::bandwidth_per_endpoint::bandwidth_per_endpoint::BandwidthPerEndpointDTO;
-use net_timescale_api::api::bandwidth_per_endpoint::bandwidth_per_endpoint_request::BandwidthPerEndpointRequestDTO;
+use net_reporter_api::api::network_bandwidth_per_endpoint::network_bandwidth_per_endpoint::NetworkBandwidthPerEndpointDTO;
+use net_reporter_api::api::network_bandwidth_per_endpoint::network_bandwidth_per_endpoint_request::NetworkBandwidthPerEndpointRequestDTO;
 
-use crate::query::charts::bandwidth_per_endpoint::response::bandwidth_per_endpoint::BandwidthPerEndpointResponse;
+use crate::query::charts::bandwidth_per_endpoint::response::network_bandwidth_per_endpoint::NetworkBandwidthPerEndpointResponse;
 use crate::query::charts::bandwidth_per_endpoint::response::endpoint::EndpointResponse;
 use crate::query::requester::Requester;
 
-const BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY: &str = "
+const NETWORK_BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY: &str = "
     SELECT
     COALESCE(lhs.id, rhs.id) AS id,
     lhs.bytes_sent AS bytes_sent,
@@ -43,9 +43,9 @@ const BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY: &str = "
 ";
 
 #[derive(Default)]
-pub struct BandwidthPerEndpointRequester {}
+pub struct NetworkBandwidthPerEndpointRequester {}
 
-impl BandwidthPerEndpointRequester {
+impl NetworkBandwidthPerEndpointRequester {
     pub fn boxed(self) -> Box<Self> {
         Box::new(self)
     }
@@ -56,7 +56,7 @@ impl BandwidthPerEndpointRequester {
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
     ) -> Result<Vec<EndpointResponse>, Error> {
-        sqlx::query_as(BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY)
+        sqlx::query_as(NETWORK_BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY)
             .bind(group_id)
             .bind(start_date)
             .bind(end_date)
@@ -66,7 +66,7 @@ impl BandwidthPerEndpointRequester {
 }
 
 #[async_trait::async_trait]
-impl Requester for BandwidthPerEndpointRequester {
+impl Requester for NetworkBandwidthPerEndpointRequester {
     async fn request(
         &self,
         connection_pool: Arc<Pool<Postgres>>,
@@ -78,7 +78,7 @@ impl Requester for BandwidthPerEndpointRequester {
         if enveloped_request.get_type() != self.get_requesting_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()));
         }
-        let request = BandwidthPerEndpointRequestDTO::decode(enveloped_request.get_data());
+        let request = NetworkBandwidthPerEndpointRequestDTO::decode(enveloped_request.get_data());
         let request_start_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_start_date_time()).unwrap();
         let request_end_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_end_date_time()).unwrap();
 
@@ -94,20 +94,20 @@ impl Requester for BandwidthPerEndpointRequester {
         }
         let executed_query_response = executed_query_response.unwrap();
 
-        let response: BandwidthPerEndpointResponse = executed_query_response.into();
+        let response: NetworkBandwidthPerEndpointResponse = executed_query_response.into();
         log::info!("Got response on request: {:?}", response);
 
-        let dto_response: BandwidthPerEndpointDTO = response.into();
+        let dto_response: NetworkBandwidthPerEndpointDTO = response.into();
 
         Ok(Envelope::new(
             request_group_id,
             request_agent_id,
-            BandwidthPerEndpointDTO::get_data_type(),
+            NetworkBandwidthPerEndpointDTO::get_data_type(),
             &dto_response.encode()
         ))
     }
     
     fn get_requesting_type(&self) -> &'static str {
-        BandwidthPerEndpointRequestDTO::get_data_type()
+        NetworkBandwidthPerEndpointRequestDTO::get_data_type()
     }
 }

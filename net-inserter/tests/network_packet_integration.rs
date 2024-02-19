@@ -11,7 +11,7 @@ mod tests {
     use serde_json::json;
 
     use net_inserter::repository::insert;
-    use net_timescale_api::api::network_packet::network_packet::NetworkPacketDTO;
+    use net_inserter_api::api::network_packet::network_packet::NetworkPacketDTO;
 
 
     async fn establish_connection() -> Pool<Postgres> {
@@ -33,7 +33,7 @@ mod tests {
         }
 
         use chrono::DateTime;
-        use net_proto_api::{envelope::envelope::Envelope, encoder_api::Encoder};
+        use net_core_api::{envelope::envelope::Envelope, encoder_api::Encoder};
 
         let con = block_on(establish_connection());
         let json_data = json!({

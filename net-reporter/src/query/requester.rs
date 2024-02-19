@@ -3,7 +3,7 @@ use std::sync::Arc;
 use sqlx::Pool;
 use sqlx::Postgres;
 
-use net_proto_api::envelope::envelope::Envelope;
+use net_core_api::envelope::envelope::Envelope;
 
 #[async_trait::async_trait]
 pub trait Requester: Sync + Send {
