@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-fcd678a] - 2024-02-19
+
+Ns 97/update deps to cratesio: removed deps from net-registry and added from crates.io (#37)
+
+* updated deps in net-reporter
+
+* updated deps in net-inserter
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-33a0c58] - 2024-02-19
 
