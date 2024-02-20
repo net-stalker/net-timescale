@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-33a0c58] - 2024-02-19
 
 Ns 96/module for network overview filters (#38)
@@ -17,7 +18,6 @@ Ns 96/module for network overview filters (#38)
 * added query, added filters to report manager
 
 * updated sql query for network overview filters. Changed `COALESCE(lhs.total_bytes, rhs.total_bytes, 0) as total_bytes` to `GREATEST(lhs.total_bytes, rhs.total_bytes, 0) as total_bytes`
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-5d2c8ae] - 2024-02-06
 
 Feature/NS-19/async-net-timescale (#36)
