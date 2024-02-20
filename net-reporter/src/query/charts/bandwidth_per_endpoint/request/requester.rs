@@ -22,20 +22,23 @@ use crate::query::requester::Requester;
 const NETWORK_BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY: &str = "
     SELECT
     COALESCE(lhs.id, rhs.id) AS id,
-    lhs.bytes_sent AS bytes_sent,
-    rhs.bytes_received AS bytes_received
+    COALESCE(lhs.bytes_sent, 0) AS bytes_sent,
+    COALESCE(rhs.bytes_received, 0) AS bytes_received,
+    ARRAY(select distinct unnest(array_cat(lhs.protocols, rhs.protocols))) as protocols
     FROM
     (
         SELECT
             src_addr AS id,
-            SUM(packet_length) AS bytes_sent
+            SUM(packet_length) AS bytes_sent,
+            ARRAY(SELECT DISTINCT unnest(string_to_array(string_agg(protocols, ':'), ':'))) AS protocols
         FROM bandwidth_per_endpoint_aggregate
         WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
         GROUP BY src_addr
     ) AS lhs full outer join (
         SELECT
             dst_addr AS id,
-            SUM(packet_length) AS bytes_received
+            SUM(packet_length) AS bytes_received,
+            ARRAY(SELECT DISTINCT unnest(string_to_array(string_agg(protocols, ':'), ':'))) AS protocols
         FROM bandwidth_per_endpoint_aggregate
         WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
         GROUP BY dst_addr
