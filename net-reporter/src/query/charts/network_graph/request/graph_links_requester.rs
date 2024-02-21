@@ -44,7 +44,7 @@ const SET_LOWER_BYTES_BOUND: &str = "
 ";
 
 const SET_UPPER_BYTES_BOUND: &str = "
-    AND SUM(packet_length) >= $7
+    AND SUM(packet_length) < $7
 ";
 
 #[derive(Default)]
