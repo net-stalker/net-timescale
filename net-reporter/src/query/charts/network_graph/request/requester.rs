@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use net_reporter_api::api::network_graph::network_graph_filters::NetworkGraphFiltersDTO;
 use sqlx::types::chrono::DateTime;
 use sqlx::types::chrono::TimeZone;
 use sqlx::types::chrono::Utc;
@@ -20,27 +21,8 @@ use crate::query::charts::network_graph::response::graph_node::GraphNodeResponse
 use crate::query::charts::network_graph::response::network_graph::NetworkGraphResponse;
 use crate::query::requester::Requester;
 
-const GRAPH_NODE_REQUEST_QUERY: &str = "
-    SELECT agent_id, node_id
-    FROM (
-        SELECT DISTINCT agent_id, src_addr AS node_id
-        FROM network_graph_aggregate
-        WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
-        UNION
-        SELECT DISTINCT agent_id, dst_addr as node_id
-        FROM network_graph_aggregate
-        WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
-    ) AS info
-    ORDER BY node_id;
-";
+use super::graph_links_requester::GraphLinksRequester;
 
-const GRAPH_EDGE_REQUEST_QUERY: &str = "
-    SELECT src_addr as src_id, dst_addr as dst_id, STRING_AGG(protocols, ':' ORDER BY protocols) AS concatenated_protocols
-    FROM network_graph_aggregate
-    WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
-    GROUP BY src_addr, dst_addr
-    ORDER BY src_addr, dst_addr;
-";
 
 #[derive(Default)]
 pub struct NetworkGraphRequester {}
@@ -50,29 +32,46 @@ impl NetworkGraphRequester {
         Box::new(self)
     }
 
+    async fn get_nodes_from_edges(graph_edges: &[GraphEdgeResponse]) -> Vec<GraphNodeResponse> {
+        let mut nodes: Vec<GraphNodeResponse> = Vec::new();
+        let mut nodes_map: std::collections::HashMap<&str, i64> = std::collections::HashMap::new();
+        for edge in graph_edges {
+            let value = edge.value;
+
+            let src_value = nodes_map.entry(edge.src_id.as_str()).or_insert(0);
+            *src_value += value;
+
+            nodes_map.entry(edge.dst_id.as_str()).or_insert(0);
+        }
+
+        for (node_id, value) in nodes_map {
+            nodes.push(GraphNodeResponse {
+                node_id: node_id.to_string(),
+                value,
+            });
+        }
+
+        nodes
+    }
+
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
         group_id: Option<&str>,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
+        filters: &NetworkGraphFiltersDTO,
     ) -> Result<(Vec<GraphNodeResponse>, Vec<GraphEdgeResponse>), Error> {
-        let graph_nodes: Result<Vec<GraphNodeResponse>, Error> = sqlx::query_as(GRAPH_NODE_REQUEST_QUERY)
-            .bind(group_id)
-            .bind(start_date)
-            .bind(end_date)
-            .fetch_all(connection_pool.as_ref())
-            .await;
-        let graph_nodes = graph_nodes?;
+        let graph_links = GraphLinksRequester::execute_query(
+            connection_pool.clone(),
+            group_id,
+            start_date,
+            end_date,
+            filters
+        ).await?;
+        // TODO: need to process graph edges to receive nodes
+        let graph_nodes = Self::get_nodes_from_edges(&graph_links).await;
 
-        let graph_edges: Result<Vec<GraphEdgeResponse>, Error> = sqlx::query_as(GRAPH_EDGE_REQUEST_QUERY)
-            .bind(group_id)
-            .bind(start_date)
-            .bind(end_date)
-            .fetch_all(connection_pool.as_ref())
-            .await;
-        let graph_edges = graph_edges?;
-
-        Ok((graph_nodes, graph_edges))
+        Ok((graph_nodes, graph_links))
     }
 }
 
@@ -92,12 +91,14 @@ impl Requester for NetworkGraphRequester {
         let request = NetworkGraphRequestDTO::decode(enveloped_request.get_data());
         let request_start_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_start_date_time()).unwrap();
         let request_end_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_end_date_time()).unwrap();
+        let filters: &NetworkGraphFiltersDTO = request.get_filters();
 
         let executed_query_response = Self::execute_query(
             connection_pool,
             request_group_id,
             request_start_date,
-            request_end_date
+            request_end_date,
+            filters,
         ).await;
 
         if let Err(e) = executed_query_response {
