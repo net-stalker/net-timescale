@@ -34,22 +34,13 @@ impl NetworkGraphRequester {
 
     async fn get_nodes_from_edges(graph_edges: &[GraphEdgeResponse]) -> Vec<GraphNodeResponse> {
         let mut nodes: Vec<GraphNodeResponse> = Vec::new();
-        let mut nodes_map: std::collections::HashMap<&str, i64> = std::collections::HashMap::new();
+        let mut nodes_map: std::collections::HashSet<&str> = std::collections::HashSet::new();
         for edge in graph_edges {
-            let value = edge.value;
-
-            let src_value = nodes_map.entry(edge.src_id.as_str()).or_insert(0);
-            *src_value += value;
-
-            nodes_map.entry(edge.dst_id.as_str()).or_insert(0);
+            nodes_map.insert(&edge.src_id);
+            nodes_map.insert(&edge.dst_id);
         }
 
-        for (node_id, value) in nodes_map {
-            nodes.push(GraphNodeResponse {
-                node_id: node_id.to_string(),
-                value,
-            });
-        }
+        nodes_map.into_iter().for_each(|node_id| nodes.push(GraphNodeResponse { node_id: node_id.to_string() }));
 
         nodes
     }
@@ -68,7 +59,6 @@ impl NetworkGraphRequester {
             end_date,
             filters
         ).await?;
-        // TODO: need to process graph edges to receive nodes
         let graph_nodes = Self::get_nodes_from_edges(&graph_links).await;
 
         Ok((graph_nodes, graph_links))

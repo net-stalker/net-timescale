@@ -9,7 +9,6 @@ pub struct GraphEdgeResponse {
 
 impl From<GraphEdgeResponse> for GraphEdgeDTO {
     fn from(value: GraphEdgeResponse) -> Self {
-        todo!("update GraphEdgeDTO");
         GraphEdgeDTO::new(
             &value.src_id,
             &value.dst_id,
