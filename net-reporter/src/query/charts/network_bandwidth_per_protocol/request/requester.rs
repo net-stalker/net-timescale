@@ -21,26 +21,12 @@ use crate::query::charts::network_bandwidth_per_protocol::response::protocol::Pr
 use crate::query::requester::Requester;
 
 const NETWORK_BANDWIDTH_PER_PROTOCOL_REQUEST_QUERY: &str = "
-    SELECT
-    COALESCE(lhs.id, rhs.id) AS id,
-    lhs.bytes_sent AS bytes_sent,
-    rhs.bytes_received AS bytes_received
-    FROM
-    (
-        SELECT
-            src_addr AS id,
-            SUM(packet_length) AS bytes_sent
-        FROM bandwidth_per_endpoint_aggregate
-        WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
-        GROUP BY src_addr
-    ) AS lhs full outer join (
-        SELECT
-            dst_addr AS id,
-            SUM(packet_length) AS bytes_received
-        FROM bandwidth_per_endpoint_aggregate
-        WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
-        GROUP BY dst_addr
-    ) AS rhs ON lhs.id = rhs.id;
+    SELECT SUM(packet_length) AS total_bytes, separated_protocols AS protocol_name
+    FROM (
+        SELECT packet_length, UNNEST(STRING_TO_ARRAY(protocols, ':')) AS separated_protocols
+        FROM bandwidth_per_protocol_aggregate
+    ) AS unnested_protocols
+    GROUP BY protocol;
 ";
 
 #[derive(Default)]
