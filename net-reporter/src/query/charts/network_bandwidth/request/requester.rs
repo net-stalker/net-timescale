@@ -20,17 +20,14 @@ use crate::query::charts::network_bandwidth::response::network_bandwidth::Networ
 use crate::query::charts::network_bandwidth::response::bandwidth_bucket::BandwidthBucketResponse;
 use crate::query::requester::Requester;
 
-// TODO: need to change string_to_array('tls', ',') to a variable
 const EXCLUDE_PROTOCOLS_FILTER_QUERY: &str = "
     AND not (string_to_array(protocols, ':') && {})
 ";
 
-// TODO: need to change string_to_array('quic,tls', ',') to a variable
 const INCLUDE_PROTOCOLS_FILTER_QUERY: &str = "
     AND (string_to_array(protocols, ':') @> {})
 ";
 
-// TODO: testing
 const INCLUDE_ENDPOINT_FILTER_QUERY: &str = "
     AND (src_addr IN (SELECT unnest({})) OR dst_addr IN (SELECT unnest({})))
 ";
