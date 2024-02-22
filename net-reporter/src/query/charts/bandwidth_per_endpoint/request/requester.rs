@@ -22,27 +22,27 @@ use crate::query::requester::Requester;
 
 
 const EXCLUDE_PROTOCOLS_FILTER_QUERY: &str = "
-    AND not (ARRAY(select distinct unnest(array_cat(lhs.protocols, rhs.protocols))) && $4)
+    AND not (ARRAY(SELECT DISTINCT unnest(string_to_array(protocols, ':'))) && {})
 ";
 
 const INCLUDE_PROTOCOLS_FILTER_QUERY: &str = "
-    AND (ARRAY(select distinct unnest(array_cat(lhs.protocols, rhs.protocols))) @> $4)
+    AND ARRAY(SELECT DISTINCT unnest(string_to_array(protocols, ':'))) @> {}
 ";
 
 const INCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (COALESCE(lhs.id, rhs.id) IN (SELECT unnest($5)))
+    AND (COALESCE(lhs.id, rhs.id) IN (SELECT unnest({})))
 ";
 
 const EXCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (COALESCE(lhs.id, rhs.id) NOT IN (SELECT unnest($5)))
+    AND (COALESCE(lhs.id, rhs.id) NOT IN (SELECT unnest({})))
 ";
 
 const SET_LOWER_BYTES_BOUND: &str = "
-    AND LEAST(COALESCE(lhs.bytes_sent, 0), COALESCE(rhs.bytes_received, 0)) >= $6
+    AND LEAST(COALESCE(lhs.bytes_sent, 0), COALESCE(rhs.bytes_received, 0)) >= {}
 ";
 
 const SET_UPPER_BYTES_BOUND: &str = "
-    AND GREATEST(COALESCE(lhs.bytes_sent, 0), COALESCE(rhs.bytes_received, 0)) < $7
+    AND GREATEST(COALESCE(lhs.bytes_sent, 0), COALESCE(rhs.bytes_received, 0)) < {}
 ";
 
 const NETWORK_BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY: &str = "
@@ -54,23 +54,28 @@ const NETWORK_BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY: &str = "
     (
         SELECT
             src_addr AS id,
-            SUM(packet_length) AS bytes_sent,
-            ARRAY(SELECT DISTINCT unnest(string_to_array(string_agg(protocols, ':'), ':'))) AS protocols
+            SUM(packet_length) AS bytes_sent
         FROM bandwidth_per_endpoint_aggregate
-        WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
+        WHERE 
+            group_id = $1
+            AND bucket >= $2
+            AND bucket < $3
+            {}
         GROUP BY src_addr
     ) AS lhs full outer join (
         SELECT
             dst_addr AS id,
-            SUM(packet_length) AS bytes_received,
-            ARRAY(SELECT DISTINCT unnest(string_to_array(string_agg(protocols, ':'), ':'))) AS protocols
+            SUM(packet_length) AS bytes_received
         FROM bandwidth_per_endpoint_aggregate
-        WHERE group_id = $1 AND bucket >= $2 AND bucket < $3
+        WHERE 
+            group_id = $1
+            AND bucket >= $2 
+            AND bucket < $3
+            {}
         GROUP BY dst_addr
     ) AS rhs ON lhs.id = rhs.id
     WHERE
         1 = 1
-        {} 
         {}
         {}
         {}
@@ -85,6 +90,57 @@ impl NetworkBandwidthPerEndpointRequester {
         Box::new(self)
     }
 
+    async fn get_query_based_on_requested_filters(filters: &NetworkBandwidthPerEndpointFiltersDTO) -> String {
+        let mut placeholder_value = 4;
+        let mut request_query = NETWORK_BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY.to_owned();
+
+        match filters.is_include_protocols_mode() {
+            Some(true) => {
+                let protocols_query = INCLUDE_PROTOCOLS_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
+                placeholder_value += 1;
+                request_query = request_query.replacen("{}", protocols_query.as_str(), 2);
+            },
+            Some(false) => {
+                let protocols_query = EXCLUDE_PROTOCOLS_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
+                placeholder_value += 1;
+                request_query = request_query.replacen("{}", protocols_query.as_str(), 2);
+            },
+            None => request_query = request_query.replacen("{}", "", 2)
+        }
+
+        match filters.is_include_endpoints_mode() {
+            Some(true) => {
+                let endpoints_query = INCLUDE_ENDPOINT_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
+                placeholder_value += 1;
+                request_query = request_query.replacen("{}", endpoints_query.as_str(), 1);
+            },
+            Some(false) => { 
+                let endpoints_query = EXCLUDE_ENDPOINT_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
+                placeholder_value += 1;
+                request_query = request_query.replacen("{}", endpoints_query.as_str(), 1) 
+            },
+            None => request_query = request_query.replacen("{}", "", 1)
+        };
+
+        match filters.get_bytes_lower_bound() {
+            Some(_) => {
+                let lower_bytes_query = SET_LOWER_BYTES_BOUND.to_string().replace("{}", format!("${}", placeholder_value).as_str());
+                placeholder_value += 1;
+                request_query = request_query.replacen("{}", lower_bytes_query.as_str(), 1)
+            },
+            None => request_query = request_query.replacen("{}", "", 1)
+        };
+
+        match filters.get_bytes_upper_bound() {
+            Some(_) => {
+                let upper_bytes_query = SET_UPPER_BYTES_BOUND.to_string().replace("{}", format!("${}", placeholder_value).as_str());
+                request_query = request_query.replacen("{}", upper_bytes_query.as_str(), 1)
+            },
+            None => request_query = request_query.replacen("{}", "", 1)
+        };
+        request_query
+    }
+
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
         group_id: Option<&str>,
@@ -92,29 +148,14 @@ impl NetworkBandwidthPerEndpointRequester {
         end_date: DateTime<Utc>,
         filters: &NetworkBandwidthPerEndpointFiltersDTO,
     ) -> Result<Vec<EndpointResponse>, Error> {
-        let mut request_query = NETWORK_BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY.to_owned();
+        let request_query = Self::get_query_based_on_requested_filters(filters).await;
 
-        match filters.is_include_protocols_mode() {
-            Some(true) => request_query = request_query.replacen("{}", INCLUDE_PROTOCOLS_FILTER_QUERY, 1),
-            Some(false) => request_query = request_query.replacen("{}", EXCLUDE_PROTOCOLS_FILTER_QUERY, 1),
-            None => request_query = request_query.replacen("{}", "", 1)
-        }
+        log::debug!("Request query: {}", request_query);
+        log::debug!("Group id: {:?}", group_id);
+        log::debug!("Start date: {}", start_date);
+        log::debug!("End date: {}", end_date);
+        log::debug!("Filters: {:?}", filters);
 
-        match filters.is_include_endpoints_mode() {
-            Some(true) => request_query = request_query.replacen("{}", INCLUDE_ENDPOINT_FILTER_QUERY, 1),
-            Some(false) => request_query = request_query.replacen("{}", EXCLUDE_ENDPOINT_FILTER_QUERY, 1),
-            None => request_query = request_query.replacen("{}", "", 1)
-        };
-
-        match filters.get_bytes_lower_bound() {
-            Some(_) => request_query = request_query.replacen("{}", SET_LOWER_BYTES_BOUND, 1),
-            None => request_query = request_query.replacen("{}", "", 1)
-        };
-
-        match filters.get_bytes_upper_bound() {
-            Some(_) => request_query = request_query.replacen("{}", SET_UPPER_BYTES_BOUND, 1),
-            None => request_query = request_query.replacen("{}", "", 1)
-        };
 
         let mut sqlx_query = sqlx::query_as(request_query.as_str())
             .bind(group_id)
