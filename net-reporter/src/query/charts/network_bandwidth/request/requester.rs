@@ -22,20 +22,21 @@ use crate::query::requester::Requester;
 
 // TODO: need to change string_to_array('tls', ',') to a variable
 const EXCLUDE_PROTOCOLS_FILTER_QUERY: &str = "
-    AND not (string_to_array(protocols, ':') && $4)
+    AND not (string_to_array(protocols, ':') && {})
 ";
 
 // TODO: need to change string_to_array('quic,tls', ',') to a variable
 const INCLUDE_PROTOCOLS_FILTER_QUERY: &str = "
-    AND (string_to_array(protocols, ':') @> $4)
+    AND (string_to_array(protocols, ':') @> {})
 ";
 
+// TODO: testing
 const INCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (src_addr IN (SELECT unnest($5)) OR dst_addr IN (SELECT unnest($5)))
+    AND (src_addr IN (SELECT unnest({})) OR dst_addr IN (SELECT unnest({})))
 ";
 
 const EXCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (src_addr NOT IN (SELECT unnest($5)) AND dst_addr NOT IN (SELECT unnest($5)))
+    AND (src_addr NOT IN (SELECT unnest({})) AND dst_addr NOT IN (SELECT unnest({})))
 ";
 
 const NETWORK_BANDWIDTH_REQUEST_QUERY: &str = "
@@ -59,6 +60,39 @@ impl NetworkBandwidthRequester {
         Box::new(self)
     }
 
+    async fn get_query_based_on_requested_filters(filters: &NetworkBandwidthFiltersDTO) -> String {
+        let mut placeholder_value = 4;
+        let mut request_query = NETWORK_BANDWIDTH_REQUEST_QUERY.to_string();
+
+        match filters.is_include_protocols_mode() {
+            Some(true) => {
+                let protocol_filter_query = INCLUDE_PROTOCOLS_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
+                placeholder_value += 1;
+                request_query = request_query.replacen("{}", protocol_filter_query.as_str(), 1)
+            },    
+            Some(false) => {
+                let protocol_filter_query = EXCLUDE_PROTOCOLS_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
+                placeholder_value += 1;
+                request_query = request_query.replacen("{}", protocol_filter_query.as_str(), 1)
+            },
+            None => request_query = request_query.replacen("{}", "", 1)
+        };
+
+        match filters.is_include_endpoints_mode() {
+            Some(true) => {
+                let endpoint_filter_query = INCLUDE_ENDPOINT_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
+                request_query = request_query.replacen("{}", endpoint_filter_query.as_str(), 1)
+            },
+            Some(false) => {
+                let endpoint_filter_query = EXCLUDE_ENDPOINT_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
+                request_query = request_query.replacen("{}", endpoint_filter_query.as_str(), 1)
+            },
+            None => request_query = request_query.replacen("{}", "", 1)
+        };
+
+        request_query
+    }
+
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
         group_id: Option<&str>,
@@ -66,23 +100,13 @@ impl NetworkBandwidthRequester {
         end_date: DateTime<Utc>,
         filters: &NetworkBandwidthFiltersDTO,
     ) -> Result<Vec<BandwidthBucketResponse>, Error> {
-        let mut request_query = NETWORK_BANDWIDTH_REQUEST_QUERY.to_string();
-        match filters.is_include_protocols_mode() {
-            Some(true) => request_query = request_query.replacen("{}", INCLUDE_PROTOCOLS_FILTER_QUERY, 1),
-            Some(false) => request_query = request_query.replacen("{}", EXCLUDE_PROTOCOLS_FILTER_QUERY, 1),
-            None => request_query = request_query.replacen("{}", "", 1)
-        };
-
-        match filters.is_include_endpoints_mode() {
-            Some(true) => request_query = request_query.replacen("{}", INCLUDE_ENDPOINT_FILTER_QUERY, 1),
-            Some(false) => request_query = request_query.replacen("{}", EXCLUDE_ENDPOINT_FILTER_QUERY, 1),
-            None => request_query = request_query.replacen("{}", "", 1)
-        };
+        let request_query = Self::get_query_based_on_requested_filters(filters).await;
 
         let mut sqlx_query = sqlx::query_as(&request_query)
             .bind(group_id)
             .bind(start_date)
             .bind(end_date);
+
         sqlx_query = match filters.is_include_protocols_mode() {
             Some(_) => sqlx_query.bind(filters.get_protocols()),
             None => sqlx_query,
