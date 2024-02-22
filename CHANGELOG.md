@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
 <!-- [END AUTO UPDATE] -->
+## [0.1.0-fcd678a] - 2024-02-19
+
+Ns 97/update deps to cratesio: removed deps from net-registry and added from crates.io (#37)
+
+* updated deps in net-reporter
+
+* updated deps in net-inserter
 ## [0.1.0-33a0c58] - 2024-02-19
 
 Ns 96/module for network overview filters (#38)
@@ -55,7 +62,6 @@ Feature/cu 8692y0v0u: reorganized creating continuous aggregates (#31)
 Feature/cu 8692ucf3x: updated graph queries (#26)
 
 * modified getting address pairs and modified mock sqlx::FromRow structures
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-39c4be6] - 2023-10-13
 
 feature/CU-8692vg5mr: fixed liquibase error (#28)
