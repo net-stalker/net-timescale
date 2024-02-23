@@ -6,7 +6,7 @@ use sqlx::{types::chrono::{DateTime, Utc}, Error, Pool, Postgres};
 use crate::query::charts::network_graph::response::graph_edge::GraphEdgeResponse;
 
 
-const GRAPH_NODE_REQUEST_QUERY: &str = "
+const GRAPH_LINKS_REQUEST_QUERY: &str = "
     SELECT src_addr as src_id, dst_addr as dst_id, SUM(packet_length) as value
     FROM network_graph_aggregate
     WHERE 
@@ -57,7 +57,7 @@ impl GraphLinksRequester {
 
     async fn get_query_based_on_requested_filters(filters: &NetworkGraphFiltersDTO) -> String {
         let mut placeholder_value = 4;
-        let mut request_query = GRAPH_NODE_REQUEST_QUERY.to_owned();
+        let mut request_query = GRAPH_LINKS_REQUEST_QUERY.to_owned();
 
         match filters.is_include_protocols_mode() {
             Some(true) => {
