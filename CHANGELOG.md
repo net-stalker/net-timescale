@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-285a0dd] - 2024-02-23
+
+Ns 103/add filters into chart queries: filters for network bandwidth (#39)
+
+* updated network bandwidth query by adding filters options
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-fcd678a] - 2024-02-19
 
