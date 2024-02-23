@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-44eb3cc] - 2024-02-23
 
 Ns 106/add filter options to bpe query: filters for network bandwidth per endpoint (#40)
@@ -15,7 +16,6 @@ Ns 106/add filter options to bpe query: filters for network bandwidth per endpoi
 * updated bpe query by adding filters info and updated ca
 
 * updated query by adding filters
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-285a0dd] - 2024-02-23
 
 Ns 103/add filters into chart queries: filters for network bandwidth (#39)

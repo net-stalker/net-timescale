@@ -4,7 +4,7 @@ use net_reporter_api::api::network_graph::graph_edge::GraphEdgeDTO;
 pub struct GraphEdgeResponse {
     pub src_id: String,
     pub dst_id: String,
-    pub concatenated_protocols: String,
+    pub value: i64,
 }
 
 impl From<GraphEdgeResponse> for GraphEdgeDTO {
@@ -12,13 +12,7 @@ impl From<GraphEdgeResponse> for GraphEdgeDTO {
         GraphEdgeDTO::new(
             &value.src_id,
             &value.dst_id,
-            value.concatenated_protocols
-                .split(':')
-                .map(|protocol| protocol.to_string())
-                .collect::<std::collections::HashSet<_>>()
-                .into_iter()
-                .collect::<Vec<String>>()
-                .as_slice()
+            value.value,
         )
     }
 }
