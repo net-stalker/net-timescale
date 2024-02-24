@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
 <!-- [END AUTO UPDATE] -->
+## [0.1.0-51656f6] - 2024-02-23
+
+Ns 107/add filters to ng query: added filters for network graph request (#41)
+
+* added filters, updated queries, now we have only one query for links
+## [0.1.0-44eb3cc] - 2024-02-23
+
+Ns 106/add filter options to bpe query: filters for network bandwidth per endpoint (#40)
+
+* updated bpe query by adding filters info and updated ca
+
+* updated query by adding filters
+## [0.1.0-285a0dd] - 2024-02-23
+
+Ns 103/add filters into chart queries: filters for network bandwidth (#39)
+
+* updated network bandwidth query by adding filters options
 ## [0.1.0-fcd678a] - 2024-02-19
 
 Ns 97/update deps to cratesio: removed deps from net-registry and added from crates.io (#37)
