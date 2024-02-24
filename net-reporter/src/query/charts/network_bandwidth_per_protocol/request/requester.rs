@@ -23,10 +23,14 @@ use crate::query::requester::Requester;
 const NETWORK_BANDWIDTH_PER_PROTOCOL_REQUEST_QUERY: &str = "
     SELECT SUM(packet_length) AS total_bytes, separated_protocols AS protocol_name
     FROM (
-        SELECT packet_length, UNNEST(STRING_TO_ARRAY(protocols, ':')) AS separated_protocols
+        SELECT *, UNNEST(STRING_TO_ARRAY(protocols, ':')) AS separated_protocols
         FROM bandwidth_per_protocol_aggregate
     ) AS unnested_protocols
-    GROUP BY protocol;
+    WHERE
+        group_id = $1
+        AND bucket >= $2
+        AND bucket < $3
+    GROUP BY separated_protocols;
 ";
 
 #[derive(Default)]
