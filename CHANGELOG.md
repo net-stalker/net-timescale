@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
 <!-- [END AUTO UPDATE] -->
+## [0.1.0-51656f6] - 2024-02-23
+
+Ns 107/add filters to ng query: added filters for network graph request (#41)
+
+* added filters, updated queries, now we have only one query for links
 ## [0.1.0-44eb3cc] - 2024-02-23
 
 Ns 106/add filter options to bpe query: filters for network bandwidth per endpoint (#40)
