@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-04310c7] - 2024-02-26
+
+Ns 108/add filters to nbpp query: added filters for network bandwidth per protocol (#43)
+
+* added filters into query for nbpp
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-8f77890] - 2024-02-24
 
