@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-8f77890] - 2024-02-24
 
 NS-84/network-bandwidth-per-protocol (#42)
@@ -19,7 +20,6 @@ NS-84/network-bandwidth-per-protocol (#42)
 * Add requester
 
 * Added placeholders for bpp query and updated ca due to filters requirements
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-51656f6] - 2024-02-23
 
 Ns 107/add filters to ng query: added filters for network graph request (#41)
