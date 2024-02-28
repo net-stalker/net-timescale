@@ -48,9 +48,11 @@ const NETWORK_BANDWIDTH_PER_PROTOCOL_REQUEST_QUERY: &str = "
         AND bucket >= $2
         AND bucket < $3
         {}
+    GROUP BY separated_protocols
+    HAVING
+        1 = 1
         {}
-        {}
-    GROUP BY separated_protocols;
+        {};
 ";
 
 #[derive(Default)]
