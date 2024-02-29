@@ -5,10 +5,10 @@ edition = "2021"
 
 [dependencies]
 
-net-core-api = "0.1.0"
+net-core-api = "0.2.0"
 net-transport = { version = "0.1.0", features = ["zmq"] }
 net-file = "0.1.0"
-net-inserter-api = "0.1.2"
+net-inserter-api = "0.1.3"
 net-config = { version = "0.1.0", registry = "net-registry" }
 
 
