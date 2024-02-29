@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use net_token_verifier::fusion_auth::jwt_token::Jwt;
 use sqlx::types::chrono::DateTime;
 use sqlx::types::chrono::TimeZone;
 use sqlx::types::chrono::Utc;
@@ -138,9 +139,9 @@ impl Requester for NetworkBandwidthPerProtocolRequester {
     async fn request(
         &self,
         connection_pool: Arc<Pool<Postgres>>,
-        enveloped_request: Envelope
+        enveloped_request: Envelope,
+        jwt: Jwt,
     ) -> Result<Envelope, String> {
-        let request_group_id = enveloped_request.get_group_id().ok();
         let request_agent_id = enveloped_request.get_agent_id().ok();
 
         if enveloped_request.get_type() != self.get_requesting_type() {
@@ -153,7 +154,7 @@ impl Requester for NetworkBandwidthPerProtocolRequester {
 
         let executed_query_response = Self::execute_query(
             connection_pool,
-            request_group_id,
+            Some(jwt.get_tenant_id()),
             request_start_date,
             request_end_date,
             request_filters,
@@ -170,7 +171,7 @@ impl Requester for NetworkBandwidthPerProtocolRequester {
         let dto_response: NetworkBandwidthPerProtocolDTO = response.into();
 
         Ok(Envelope::new(
-            request_group_id,
+            enveloped_request.get_jwt_token().ok(),
             request_agent_id,
             NetworkBandwidthPerEndpointDTO::get_data_type(),
             &dto_response.encode()
