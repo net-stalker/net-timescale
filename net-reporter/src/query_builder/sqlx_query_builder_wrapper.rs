@@ -18,20 +18,15 @@ impl<'a, Response> SqlxQueryBuilderWrapper<'a, Response>
         }
     }
 
-    pub fn add_param<Param: for<'b> Encode<'b, Postgres> + sqlx::Type<Postgres>>(mut self, value: &'a Param) -> Self
-    where
-        &'a Param: Send,
-    {
+    pub fn add_param<Param: for<'b> Encode<'b, Postgres> + sqlx::Type<Postgres> + Send + 'a>(mut self, value: Param) -> Self {
         self.query = self.query.bind(value);
         self
     }
 
-    pub fn add_option_param<Param: for<'b> Encode<'b, Postgres> + sqlx::Type<Postgres>>(
+    pub fn add_option_param<Param: for<'b> Encode<'b, Postgres> + sqlx::Type<Postgres> + Send + 'a>(
         mut self,
-        value: Option<&'a Param>,
+        value: Option<Param>,
     ) -> Self 
-    where 
-        &'a Param: Send,
     {
         if let Some(value) = value {
             self.query = self.query.bind(value);
