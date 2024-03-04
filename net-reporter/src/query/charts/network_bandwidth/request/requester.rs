@@ -20,6 +20,8 @@ use net_reporter_api::api::network_bandwidth::network_bandwidth_filters::Network
 use crate::query::charts::network_bandwidth::response::network_bandwidth::NetworkBandwidthResponse;
 use crate::query::charts::network_bandwidth::response::bandwidth_bucket::BandwidthBucketResponse;
 use crate::query::requester::Requester;
+use crate::query_builder::query_builder::QueryBuilder;
+use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
 
 const EXCLUDE_PROTOCOLS_FILTER_QUERY: &str = "
     AND not (string_to_array(protocols, ':') && {})
@@ -58,63 +60,27 @@ impl NetworkBandwidthRequester {
         Box::new(self)
     }
 
-    async fn get_query_based_on_requested_filters(filters: &NetworkBandwidthFiltersDTO) -> String {
-        let mut placeholder_value = 4;
-        let mut request_query = NETWORK_BANDWIDTH_REQUEST_QUERY.to_string();
-
-        match filters.is_include_protocols_mode() {
-            Some(true) => {
-                let protocol_filter_query = INCLUDE_PROTOCOLS_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
-                placeholder_value += 1;
-                request_query = request_query.replacen("{}", protocol_filter_query.as_str(), 1)
-            },    
-            Some(false) => {
-                let protocol_filter_query = EXCLUDE_PROTOCOLS_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
-                placeholder_value += 1;
-                request_query = request_query.replacen("{}", protocol_filter_query.as_str(), 1)
-            },
-            None => request_query = request_query.replacen("{}", "", 1)
-        };
-
-        match filters.is_include_endpoints_mode() {
-            Some(true) => {
-                let endpoint_filter_query = INCLUDE_ENDPOINT_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
-                request_query = request_query.replacen("{}", endpoint_filter_query.as_str(), 1)
-            },
-            Some(false) => {
-                let endpoint_filter_query = EXCLUDE_ENDPOINT_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
-                request_query = request_query.replacen("{}", endpoint_filter_query.as_str(), 1)
-            },
-            None => request_query = request_query.replacen("{}", "", 1)
-        };
-
-        request_query
-    }
-
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
+        query_string: &str,
         group_id: Option<&str>,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         filters: &NetworkBandwidthFiltersDTO,
     ) -> Result<Vec<BandwidthBucketResponse>, Error> {
-        let request_query = Self::get_query_based_on_requested_filters(filters).await;
-
-        let mut sqlx_query = sqlx::query_as(&request_query)
-            .bind(group_id)
-            .bind(start_date)
-            .bind(end_date);
-
-        sqlx_query = match filters.is_include_protocols_mode() {
-            Some(_) => sqlx_query.bind(filters.get_protocols()),
-            None => sqlx_query,
-        };
-        sqlx_query = match filters.is_include_endpoints_mode() {
-            Some(_) => sqlx_query.bind(filters.get_endpoints()),
-            None => sqlx_query,
-        };
-
-        sqlx_query.fetch_all(connection_pool.as_ref()).await
+        SqlxQueryBuilderWrapper::<BandwidthBucketResponse>::new(query_string)
+            .add_option_param(group_id.map_or(None, |x| Some(x.to_string())))
+            .add_param(start_date)
+            .add_param(end_date)
+            .add_option_param(match filters.is_include_protocols_mode() {
+                Some(_) => Some(filters.get_protocols().to_vec()),
+                None => None
+            })
+            .add_option_param(match filters.is_include_endpoints_mode() {
+                Some(_) => Some(filters.get_endpoints().to_vec()),
+                None => None
+            })
+            .execute_query(connection_pool).await
     }
 }
 
@@ -136,8 +102,14 @@ impl Requester for NetworkBandwidthRequester {
         let request_end_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_end_date_time()).unwrap();
         let filters = request.get_filters();
 
+        let query = QueryBuilder::new(NETWORK_BANDWIDTH_REQUEST_QUERY, 4)
+            .add_dynamic_filter(filters.is_include_protocols_mode(), 1, INCLUDE_PROTOCOLS_FILTER_QUERY, EXCLUDE_PROTOCOLS_FILTER_QUERY)
+            .add_dynamic_filter(filters.is_include_endpoints_mode(), 1, INCLUDE_ENDPOINT_FILTER_QUERY, EXCLUDE_ENDPOINT_FILTER_QUERY)
+            .build_query();
+
         let executed_query_response = Self::execute_query(
             connection_pool,
+            query.as_str(),
             Some(jwt.get_tenant_id()),
             request_start_date,
             request_end_date,
