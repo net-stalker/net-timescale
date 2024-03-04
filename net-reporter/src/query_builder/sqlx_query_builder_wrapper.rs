@@ -2,18 +2,18 @@ use std::sync::Arc;
 
 use sqlx::{postgres::{PgArguments, PgRow}, query::QueryAs, Encode, FromRow, Pool, Postgres};
 
-pub struct QueryBuilder<'a, Response>
+pub struct SqlxQueryBuilderWrapper<'a, Response>
     where Response: for <'r> FromRow<'r, PgRow> + Send + Unpin
 {
     pub query: QueryAs<'a, Postgres, Response, PgArguments>,
 }
 
-impl<'a, Response> QueryBuilder<'a, Response>
+impl<'a, Response> SqlxQueryBuilderWrapper<'a, Response>
     where Response: for <'r> FromRow<'r, PgRow> + Send + Unpin
 {
     pub fn new(initial_query: &'a str) -> Self {
         let query = sqlx::query_as(initial_query); 
-        QueryBuilder {
+        SqlxQueryBuilderWrapper {
             query,
         }
     }
