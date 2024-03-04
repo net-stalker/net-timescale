@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use net_reporter_api::api::network_graph::network_graph_filters::NetworkGraphFiltersDTO;
+use net_token_verifier::fusion_auth::jwt_token::Jwt;
 use sqlx::types::chrono::DateTime;
 use sqlx::types::chrono::TimeZone;
 use sqlx::types::chrono::Utc;
@@ -70,9 +71,9 @@ impl Requester for NetworkGraphRequester {
     async fn request(
         &self,
         connection_pool: Arc<Pool<Postgres>>,
-        enveloped_request: Envelope
+        enveloped_request: Envelope,
+        jwt: Jwt,
     ) -> Result<Envelope, String> {
-        let request_group_id = enveloped_request.get_group_id().ok();
         let request_agent_id = enveloped_request.get_agent_id().ok();
 
         if enveloped_request.get_type() != self.get_requesting_type() {
@@ -85,7 +86,7 @@ impl Requester for NetworkGraphRequester {
 
         let executed_query_response = Self::execute_query(
             connection_pool,
-            request_group_id,
+            Some(jwt.get_tenant_id()),
             request_start_date,
             request_end_date,
             filters,
@@ -102,7 +103,7 @@ impl Requester for NetworkGraphRequester {
         let dto_response: NetworkGraphDTO = response.into();
 
         Ok(Envelope::new(
-            request_group_id,
+            enveloped_request.get_jwt_token().ok(),
             request_agent_id,
             NetworkGraphDTO::get_data_type(),
             &dto_response.encode()

@@ -1,11 +1,14 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use net_token_verifier::fusion_auth::fusion_auth_verifier;
+use net_token_verifier::verifier::Verifier;
 use sqlx::Pool;
 use sqlx::Postgres;
 
 use net_core_api::envelope::envelope::Envelope;
 
+use crate::config::Config;
 use crate::query::requester::Requester;
 
 use super::builder::QueryManagerBuilder;
@@ -28,15 +31,27 @@ impl QueryManager {
         QueryManagerBuilder::default()
     }
 
-    pub async fn handle_request(&self, enveloped_request: Envelope, connection_pool: Arc<Pool<Postgres>>) -> Result<Envelope, String> {
+    pub async fn handle_request(&self, config: &Config, enveloped_request: Envelope, connection_pool: Arc<Pool<Postgres>>) -> Result<Envelope, String> {
         let requester = self.requesters.get(enveloped_request.get_type());
         if requester.is_none() {
             return Err("error: Tere is no such request available".to_string());
         }
+        if enveloped_request.get_jwt_token().is_err() {
+            return Err("error: jwt token is required".to_string());
+        }
+        let jwt = fusion_auth_verifier::FusionAuthVerifier::new(
+            &config.fusion_auth_server_addres.addr,
+            Some(config.fusion_auth_api_key.key.clone()))
+            .verify_token(enveloped_request.get_jwt_token().unwrap()).await;
+
+        let jwt = match jwt {
+            Ok(jwt) => jwt,
+            Err(e) => return Err(format!("error: {:?}", e))
+        };
 
         let requester = requester.unwrap().as_ref();
 
-        requester.request(connection_pool, enveloped_request).await
+        requester.request(connection_pool, enveloped_request, jwt).await
     }
 }
 
