@@ -102,17 +102,11 @@ impl NetworkBandwidthPerEndpointRequester {
         filters: &NetworkBandwidthPerEndpointFiltersDTO,
     ) -> Result<Vec<EndpointResponse>, Error> {
         SqlxQueryBuilderWrapper::<EndpointResponse>::new(query_string)
-            .add_option_param(group_id.map_or(None, |x| Some(x.to_string())))
+            .add_option_param(group_id.map(|x| Some(x.to_string())))
             .add_param(start_date)
             .add_param(end_date)
-            .add_option_param(match filters.is_include_protocols_mode() {
-                Some(_) => Some(filters.get_protocols().to_vec()),
-                None => None
-            })
-            .add_option_param(match filters.is_include_endpoints_mode() {
-                Some(_) => Some(filters.get_endpoints().to_vec()),
-                None => None
-            })
+            .add_option_param(filters.is_include_protocols_mode().map(|_| filters.get_protocols().to_vec()))
+            .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
             .add_option_param(filters.get_bytes_lower_bound())
             .add_option_param(filters.get_bytes_upper_bound())
             .execute_query(connection_pool).await

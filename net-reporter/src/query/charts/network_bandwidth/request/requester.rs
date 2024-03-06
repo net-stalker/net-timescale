@@ -69,17 +69,11 @@ impl NetworkBandwidthRequester {
         filters: &NetworkBandwidthFiltersDTO,
     ) -> Result<Vec<BandwidthBucketResponse>, Error> {
         SqlxQueryBuilderWrapper::<BandwidthBucketResponse>::new(query_string)
-            .add_option_param(group_id.map_or(None, |x| Some(x.to_string())))
+            .add_option_param(group_id.map(|group_id| group_id.to_string()))
             .add_param(start_date)
             .add_param(end_date)
-            .add_option_param(match filters.is_include_protocols_mode() {
-                Some(_) => Some(filters.get_protocols().to_vec()),
-                None => None
-            })
-            .add_option_param(match filters.is_include_endpoints_mode() {
-                Some(_) => Some(filters.get_endpoints().to_vec()),
-                None => None
-            })
+            .add_option_param(filters.is_include_protocols_mode().map(|_| filters.get_protocols().to_vec()))
+            .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
             .execute_query(connection_pool).await
     }
 }

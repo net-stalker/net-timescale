@@ -12,7 +12,7 @@ impl QueryBuilder {
     }
 
     pub fn add_static_filter<Value>(mut self, option_filter: Option<Value>, filter: &str, to_replace: usize) -> Self {
-        if let Some(_) = option_filter {
+        if option_filter.is_some() {
             let filter = filter.replace("{}", format!("${}", self.option_counter).as_str());
             self.option_counter += 1;
             self.query = self.query.replacen("{}", filter.as_str(), to_replace);
