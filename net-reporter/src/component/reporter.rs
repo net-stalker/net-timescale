@@ -28,7 +28,6 @@ use crate::query::manager::query_manager::QueryManager;
 
 pub struct Reporter {
     config: Config,
-
     connection_pool: Arc<Pool<Postgres>>,
     query_manager: Arc<QueryManager>,
 }
@@ -177,8 +176,10 @@ impl Reporter {
                     log::info!("Client is successfully connected");
                     let handling_query_manager = self.query_manager.clone();
                     let handling_connection_pool = self.connection_pool.clone();
+                    let config = self.config.clone();
                     tokio::spawn(async move {
                         Reporter::handle_client_connection(
+                            config,
                             client_connection,
                             handling_query_manager,
                             handling_connection_pool
@@ -191,6 +192,7 @@ impl Reporter {
     }
 
     async fn handle_client_connection(
+        config: Config,
         mut client_connection: QuicConnection,
         query_manager: Arc<QueryManager>,
         connection_pool: Arc<Pool<Postgres>>
@@ -205,7 +207,7 @@ impl Reporter {
 
         log::info!("Recieved request from client: {:?}", recieve_enveloped_request);
 
-        let response = query_manager.as_ref().handle_request(recieve_enveloped_request, connection_pool).await;
+        let response = query_manager.as_ref().handle_request(&config, recieve_enveloped_request, connection_pool).await;
         if response.is_err() {
             todo!()
         }
