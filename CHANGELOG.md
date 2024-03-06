@@ -8,12 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-0b04ec4] - 2024-03-06
 
 NS-116/add-token-verification: added token verification using net-token-verifier (#45)
 
 * added token verification using net-token-verifier
-<!-- [END AUTO UPDATE] -->
+
 ## [0.1.0-6c5a81f] - 2024-02-28
 
 NS-114/testing-and-fixing-errors: `bug fiixing` (#44)

@@ -21,6 +21,8 @@ use net_reporter_api::api::network_bandwidth_per_protocol::network_bandwidth_per
 use crate::query::charts::network_bandwidth_per_protocol::response::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolResponse;
 use crate::query::charts::network_bandwidth_per_protocol::response::protocol::ProtocolResponse;
 use crate::query::requester::Requester;
+use crate::query_builder::query_builder::QueryBuilder;
+use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
 
 const INCLUDE_ENDPOINT_FILTER_QUERY: &str = "
     AND (src_addr IN (SELECT unnest({})) OR dst_addr IN (SELECT unnest({})))
@@ -64,73 +66,22 @@ impl NetworkBandwidthPerProtocolRequester {
         Box::new(self)
     }
 
-    async fn get_query_based_on_requested_filters(filters: &NetworkBandwidthPerProtocolFiltersDTO) -> String {
-        let mut placeholder_value = 4;
-        let mut request_query = NETWORK_BANDWIDTH_PER_PROTOCOL_REQUEST_QUERY.to_owned();
-
-        match filters.is_include_endpoints_mode() {
-            Some(true) => {
-                let endpoints_query = INCLUDE_ENDPOINT_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
-                placeholder_value += 1;
-                request_query = request_query.replacen("{}", endpoints_query.as_str(), 1);
-            },
-            Some(false) => { 
-                let endpoints_query = EXCLUDE_ENDPOINT_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
-                placeholder_value += 1;
-                request_query = request_query.replacen("{}", endpoints_query.as_str(), 1) 
-            },
-            None => request_query = request_query.replacen("{}", "", 1)
-        };
-
-        match filters.get_bytes_lower_bound() {
-            Some(_) => {
-                let lower_bytes_query = SET_LOWER_BYTES_BOUND.to_string().replace("{}", format!("${}", placeholder_value).as_str());
-                placeholder_value += 1;
-                request_query = request_query.replacen("{}", lower_bytes_query.as_str(), 1)
-            },
-            None => request_query = request_query.replacen("{}", "", 1)
-        };
-
-        match filters.get_bytes_upper_bound() {
-            Some(_) => {
-                let upper_bytes_query = SET_UPPER_BYTES_BOUND.to_string().replace("{}", format!("${}", placeholder_value).as_str());
-                request_query = request_query.replacen("{}", upper_bytes_query.as_str(), 1)
-            },
-            None => request_query = request_query.replacen("{}", "", 1)
-        };
-        request_query
-    }
-
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
+        query_string: &str,
         group_id: Option<&str>,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         filters: &NetworkBandwidthPerProtocolFiltersDTO,
     ) -> Result<Vec<ProtocolResponse>, Error> {
-        let request_query = Self::get_query_based_on_requested_filters(filters).await;
-
-        let mut sqlx_query = sqlx::query_as(request_query.as_str())
-            .bind(group_id)
-            .bind(start_date)
-            .bind(end_date);
-        
-        sqlx_query = match filters.is_include_endpoints_mode() {
-            Some(_) => sqlx_query.bind(filters.get_endpoints()),
-            None => sqlx_query,
-        };
-
-        sqlx_query = match filters.get_bytes_lower_bound() {
-            Some(lower_bound) => sqlx_query.bind(lower_bound),
-            None => sqlx_query,
-        };
-
-        sqlx_query = match filters.get_bytes_upper_bound() {
-            Some(upper_bound) => sqlx_query.bind(upper_bound),
-            None => sqlx_query,
-        };
-
-        sqlx_query.fetch_all(connection_pool.as_ref()).await
+        SqlxQueryBuilderWrapper::<ProtocolResponse>::new(query_string)
+            .add_option_param(group_id.map(|group_id| group_id.to_string()))
+            .add_param(start_date)
+            .add_param(end_date)
+            .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
+            .add_option_param(filters.get_bytes_lower_bound())
+            .add_option_param(filters.get_bytes_upper_bound())
+            .execute_query(connection_pool).await
     }
 }
 
@@ -152,8 +103,15 @@ impl Requester for NetworkBandwidthPerProtocolRequester {
         let request_end_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_end_date_time()).unwrap();
         let request_filters = request.get_filters();
 
+        let query = QueryBuilder::new(NETWORK_BANDWIDTH_PER_PROTOCOL_REQUEST_QUERY, 4)
+            .add_dynamic_filter(request_filters.is_include_endpoints_mode(), 1, INCLUDE_ENDPOINT_FILTER_QUERY, EXCLUDE_ENDPOINT_FILTER_QUERY)
+            .add_static_filter(request_filters.get_bytes_lower_bound(), SET_LOWER_BYTES_BOUND, 1)
+            .add_static_filter(request_filters.get_bytes_upper_bound(), SET_UPPER_BYTES_BOUND, 1)
+            .build_query();
+
         let executed_query_response = Self::execute_query(
             connection_pool,
+            query.as_str(),
             Some(jwt.get_tenant_id()),
             request_start_date,
             request_end_date,

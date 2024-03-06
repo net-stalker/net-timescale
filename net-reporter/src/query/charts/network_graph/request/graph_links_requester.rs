@@ -3,7 +3,7 @@ use std::sync::Arc;
 use net_reporter_api::api::network_graph::network_graph_filters::NetworkGraphFiltersDTO;
 use sqlx::{types::chrono::{DateTime, Utc}, Error, Pool, Postgres};
 
-use crate::query::charts::network_graph::response::graph_edge::GraphEdgeResponse;
+use crate::{query::charts::network_graph::response::graph_edge::GraphEdgeResponse, query_builder::{query_builder::QueryBuilder, sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper}};
 
 
 const GRAPH_LINKS_REQUEST_QUERY: &str = "
@@ -55,57 +55,6 @@ impl GraphLinksRequester {
         Box::new(self)
     }
 
-    async fn get_query_based_on_requested_filters(filters: &NetworkGraphFiltersDTO) -> String {
-        let mut placeholder_value = 4;
-        let mut request_query = GRAPH_LINKS_REQUEST_QUERY.to_owned();
-
-        match filters.is_include_protocols_mode() {
-            Some(true) => {
-                let protocols_query = INCLUDE_PROTOCOLS_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
-                placeholder_value += 1;
-                request_query = request_query.replacen("{}", protocols_query.as_str(), 1);
-            },
-            Some(false) => {
-                let protocols_query = EXCLUDE_PROTOCOLS_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
-                placeholder_value += 1;
-                request_query = request_query.replacen("{}", protocols_query.as_str(), 1);
-            },
-            None => request_query = request_query.replacen("{}", "", 1)
-        }
-
-        match filters.is_include_endpoints_mode() {
-            Some(true) => {
-                let endpoints_query = INCLUDE_ENDPOINT_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
-                placeholder_value += 1;
-                request_query = request_query.replacen("{}", endpoints_query.as_str(), 1);
-            },
-            Some(false) => { 
-                let endpoints_query = EXCLUDE_ENDPOINT_FILTER_QUERY.to_string().replace("{}", format!("${}", placeholder_value).as_str());
-                placeholder_value += 1;
-                request_query = request_query.replacen("{}", endpoints_query.as_str(), 1) 
-            },
-            None => request_query = request_query.replacen("{}", "", 1)
-        };
-
-        match filters.get_bytes_lower_bound() {
-            Some(_) => {
-                let lower_bytes_query = SET_LOWER_BYTES_BOUND.to_string().replace("{}", format!("${}", placeholder_value).as_str());
-                placeholder_value += 1;
-                request_query = request_query.replacen("{}", lower_bytes_query.as_str(), 1)
-            },
-            None => request_query = request_query.replacen("{}", "", 1)
-        };
-
-        match filters.get_bytes_upper_bound() {
-            Some(_) => {
-                let upper_bytes_query = SET_UPPER_BYTES_BOUND.to_string().replace("{}", format!("${}", placeholder_value).as_str());
-                request_query = request_query.replacen("{}", upper_bytes_query.as_str(), 1)
-            },
-            None => request_query = request_query.replacen("{}", "", 1)
-        };
-        request_query
-    }
-
     pub async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
         group_id: Option<&str>,
@@ -113,34 +62,21 @@ impl GraphLinksRequester {
         end_date: DateTime<Utc>,
         filters: &NetworkGraphFiltersDTO,
     ) -> Result<Vec<GraphEdgeResponse>, Error> {
-        let request_query = Self::get_query_based_on_requested_filters(filters).await;
+        let query_string = QueryBuilder::new(GRAPH_LINKS_REQUEST_QUERY, 4)
+            .add_dynamic_filter(filters.is_include_protocols_mode(), 1, INCLUDE_PROTOCOLS_FILTER_QUERY, EXCLUDE_PROTOCOLS_FILTER_QUERY)
+            .add_dynamic_filter(filters.is_include_endpoints_mode(), 1, INCLUDE_ENDPOINT_FILTER_QUERY, EXCLUDE_ENDPOINT_FILTER_QUERY)
+            .add_static_filter(filters.get_bytes_lower_bound(), SET_LOWER_BYTES_BOUND, 1)
+            .add_static_filter(filters.get_bytes_upper_bound(), SET_UPPER_BYTES_BOUND, 1)
+            .build_query();
 
-        let mut sqlx_query = sqlx::query_as(request_query.as_str())
-            .bind(group_id)
-            .bind(start_date)
-            .bind(end_date);
-
-        sqlx_query = match filters.is_include_protocols_mode() {
-            Some(_) => sqlx_query.bind(filters.get_protocols()),
-            None => sqlx_query,
-        };
-
-        sqlx_query = match filters.is_include_endpoints_mode() {
-            Some(_) => sqlx_query.bind(filters.get_endpoints()),
-            None => sqlx_query,
-        };
-
-        sqlx_query = match filters.get_bytes_lower_bound() {
-            Some(lower_bound) => sqlx_query.bind(lower_bound),
-            None => sqlx_query,
-        };
-
-        sqlx_query = match filters.get_bytes_upper_bound() {
-            Some(upper_bound) => sqlx_query.bind(upper_bound),
-            None => sqlx_query,
-        };
-
-        sqlx_query.fetch_all(connection_pool.as_ref())
-            .await
+        SqlxQueryBuilderWrapper::<GraphEdgeResponse>::new(query_string.as_str())
+            .add_option_param(group_id.map(|group_id| group_id.to_string()))
+            .add_param(start_date)
+            .add_param(end_date)
+            .add_option_param(filters.is_include_protocols_mode().map(|_| filters.get_protocols().to_vec()))
+            .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
+            .add_option_param(filters.get_bytes_lower_bound())
+            .add_option_param(filters.get_bytes_upper_bound())
+            .execute_query(connection_pool).await
     }
 }
