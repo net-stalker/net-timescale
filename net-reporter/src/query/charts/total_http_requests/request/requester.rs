@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use net_reporter_api::api::total_http_requests::request_total_http_requests::RequestTotalHttpRequestsDTO;
+use net_reporter_api::api::total_http_requests::total_http_requests::TotalHttpRequestsDTO;
 use net_reporter_api::api::total_http_requests::total_http_requests_filters::TotalHttpRequestsFiltersDTO;
 use net_token_verifier::fusion_auth::jwt_token::Jwt;
 use sqlx::types::chrono::DateTime;
@@ -15,11 +16,8 @@ use net_core_api::encoder_api::Encoder;
 use net_core_api::envelope::envelope::Envelope;
 use net_core_api::typed_api::Typed;
 
-use net_reporter_api::api::network_bandwidth::network_bandwidth::NetworkBandwidthDTO;
-use net_reporter_api::api::network_bandwidth::network_bandwidth_request::NetworkBandwidthRequestDTO;
-
-use crate::query::charts::network_bandwidth::response::network_bandwidth::NetworkBandwidthResponse;
-use crate::query::charts::network_bandwidth::response::bandwidth_bucket::BandwidthBucketResponse;
+use crate::query::charts::total_http_requests::response::http_requests_bucket::HttpRequestsBucketResponse;
+use crate::query::charts::total_http_requests::response::total_http_requests::TotalHttpRequestsResponse;
 use crate::query::requester::Requester;
 use crate::query_builder::query_builder::QueryBuilder;
 use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
@@ -81,8 +79,8 @@ impl TotalHttpRequestsRequester {
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         filters: &TotalHttpRequestsFiltersDTO,
-    ) -> Result<Vec<BandwidthBucketResponse>, Error> {
-        SqlxQueryBuilderWrapper::<BandwidthBucketResponse>::new(query_string)
+    ) -> Result<Vec<HttpRequestsBucketResponse>, Error> {
+        SqlxQueryBuilderWrapper::<HttpRequestsBucketResponse>::new(query_string)
             .add_option_param(group_id.map(|group_id| group_id.to_string()))
             .add_param(start_date)
             .add_param(end_date)
@@ -133,20 +131,20 @@ impl Requester for TotalHttpRequestsRequester {
         }
         let executed_query_response = executed_query_response.unwrap();
 
-        let response: NetworkBandwidthResponse = executed_query_response.into();
+        let response: TotalHttpRequestsResponse = executed_query_response.into();
         log::info!("Got response on request: {:?}", response);
 
-        let dto_response: NetworkBandwidthDTO = response.into();
+        let dto_response: TotalHttpRequestsDTO = response.into();
 
         Ok(Envelope::new(
             enveloped_request.get_jwt_token().ok(),
             request_agent_id,
-            NetworkBandwidthDTO::get_data_type(),
+            TotalHttpRequestsDTO::get_data_type(),
             &dto_response.encode()
         ))
     }
     
     fn get_requesting_type(&self) -> &'static str {
-        NetworkBandwidthRequestDTO::get_data_type()
+        RequestTotalHttpRequestsDTO::get_data_type()
     }
 }
