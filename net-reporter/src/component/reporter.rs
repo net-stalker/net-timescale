@@ -209,6 +209,7 @@ impl Reporter {
 
         let response = query_manager.as_ref().handle_request(&config, recieve_enveloped_request, connection_pool).await;
         if response.is_err() {
+            log::error!("Error: {:?}", response.err());
             todo!()
         }
         let response = response.unwrap();
