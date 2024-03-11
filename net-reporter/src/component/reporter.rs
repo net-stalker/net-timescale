@@ -19,6 +19,7 @@ use crate::continuous_aggregate::network_graph::NetworkGraphAggregate;
 use crate::continuous_aggregate::network_overview_filters::NetworkOverviewFiltersAggregate;
 
 use crate::query::charts::bandwidth_per_endpoint::request::requester::NetworkBandwidthPerEndpointRequester;
+use crate::query::charts::http_responses::request::requester::HttpResponsesRequester;
 use crate::query::charts::network_bandwidth::request::requester::NetworkBandwidthRequester;
 use crate::query::charts::network_bandwidth_per_protocol::request::requester::NetworkBandwidthPerProtocolRequester;
 use crate::query::charts::network_graph::request::requester::NetworkGraphRequester;
@@ -65,6 +66,7 @@ impl Reporter {
             .add_chart_generator(NetworkBandwidthRequester::default().boxed())
             .add_chart_generator(NetworkGraphRequester::default().boxed())
             .add_chart_generator(NetworkOverviewFiltersRequester::default().boxed())
+            .add_chart_generator(HttpResponsesRequester::default().boxed())
             .build()
     }
 
