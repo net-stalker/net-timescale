@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use log4rs::filter;
 use net_reporter_api::api::http_responses::http_responses::HttpResponsesDTO;
 use net_reporter_api::api::http_responses::http_responses_filters::HttpResponsesFiltersDTO;
 use net_token_verifier::fusion_auth::jwt_token::Jwt;
