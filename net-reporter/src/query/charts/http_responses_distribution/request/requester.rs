@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use net_reporter_api::api::http_responses_dist::http_responses_dist::HttpResponsesDistDTO;
-use net_reporter_api::api::http_responses_dist::http_responses_dist_request::HttpResponsesDistRequestDTO;
-use net_reporter_api::api::http_responses_dist::http_responses_filters::HttpResponsesDistFiltersDTO;
+use net_reporter_api::api::http_responses_distribution::http_responses_distribution::HttpResponsesDistributionDTO;
+use net_reporter_api::api::http_responses_distribution::http_responses_distribution_request::HttpResponsesDistributionRequestDTO;
+use net_reporter_api::api::http_responses_distribution::http_responses_disribution_filters::HttpResponsesDistributionFiltersDTO;
 use net_token_verifier::fusion_auth::jwt_token::Jwt;
 use sqlx::types::chrono::DateTime;
 use sqlx::types::chrono::TimeZone;
@@ -16,10 +16,8 @@ use net_core_api::typed_api::Typed;
 use net_core_api::decoder_api::Decoder;
 use net_core_api::encoder_api::Encoder;
 
-use net_reporter_api::api::network_bandwidth_per_endpoint::network_bandwidth_per_endpoint::NetworkBandwidthPerEndpointDTO;
-
-use crate::query::charts::http_responses_dist::response::http_responses_dist::HttpResponsesDistResponse;
-use crate::query::charts::http_responses_dist::response::http_responses_dist_bucket::HttpResponsesDistBucketResponse;
+use crate::query::charts::http_responses_distribution::response::http_responses_distribution::HttpResponsesDistributionResponse;
+use crate::query::charts::http_responses_distribution::response::http_responses_distribution_bucket::HttpResponsesDistributionBucketResponse;
 
 use crate::query::requester::Requester;
 use crate::query_builder::query_builder::QueryBuilder;
@@ -42,8 +40,8 @@ const SET_UPPER_BYTES_BOUND: &str = "
 ";
 
 const HTTP_RESPONSES_DIST_REQUEST_QUERY: &str = "
-    SELECT bucket, (http->>'http.response.code')::INTEGER AS response_code, COUNT(*) AS amount
-    FROM http_responses_dist, jsonb_path_query(http_part, '$.*') AS http
+    SELECT bucket, (http->>'http.response.code')::INTEGER AS response_code, COUNT(http_part) AS amount
+    FROM http_responses_distribution_aggregate, jsonb_path_query(http_part, '$.*') AS http
     WHERE
         group_id = $1
         AND bucket >= $2
@@ -60,9 +58,9 @@ const HTTP_RESPONSES_DIST_REQUEST_QUERY: &str = "
 ";
 
 #[derive(Default)]
-pub struct HttpResponsesDistRequester {}
+pub struct HttpResponsesDistributionRequester {}
 
-impl HttpResponsesDistRequester {
+impl HttpResponsesDistributionRequester {
     pub fn boxed(self) -> Box<Self> {
         Box::new(self)
     }
@@ -73,9 +71,9 @@ impl HttpResponsesDistRequester {
         group_id: Option<&str>,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        filters: &HttpResponsesDistFiltersDTO,
-    ) -> Result<Vec<HttpResponsesDistBucketResponse>, Error> {
-        SqlxQueryBuilderWrapper::<HttpResponsesDistBucketResponse>::new(query_string)
+        filters: &HttpResponsesDistributionFiltersDTO,
+    ) -> Result<Vec<HttpResponsesDistributionBucketResponse>, Error> {
+        SqlxQueryBuilderWrapper::<HttpResponsesDistributionBucketResponse>::new(query_string)
             .add_option_param(group_id.map(|group_id| group_id.to_string()))
             .add_param(start_date)
             .add_param(end_date)
@@ -87,7 +85,7 @@ impl HttpResponsesDistRequester {
 }
 
 #[async_trait::async_trait]
-impl Requester for HttpResponsesDistRequester {
+impl Requester for HttpResponsesDistributionRequester {
     async fn request(
         &self,
         connection_pool: Arc<Pool<Postgres>>,
@@ -99,7 +97,7 @@ impl Requester for HttpResponsesDistRequester {
         if enveloped_request.get_type() != self.get_requesting_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()));
         }
-        let request = HttpResponsesDistRequestDTO::decode(enveloped_request.get_data());
+        let request = HttpResponsesDistributionRequestDTO::decode(enveloped_request.get_data());
         let request_start_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_start_date_time()).unwrap();
         let request_end_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_end_date_time()).unwrap();
         let request_filters = request.get_filters();
@@ -124,20 +122,20 @@ impl Requester for HttpResponsesDistRequester {
         }
         let executed_query_response = executed_query_response.unwrap();
 
-        let response: HttpResponsesDistResponse = executed_query_response.into();
+        let response: HttpResponsesDistributionResponse = executed_query_response.into();
         log::info!("Got response on request: {:?}", response);
 
-        let dto_response: HttpResponsesDistDTO = response.into();
+        let dto_response: HttpResponsesDistributionDTO = response.into();
 
         Ok(Envelope::new(
             enveloped_request.get_jwt_token().ok(),
             request_agent_id,
-            NetworkBandwidthPerEndpointDTO::get_data_type(),
+            HttpResponsesDistributionDTO::get_data_type(),
             &dto_response.encode()
         ))
     }
     
     fn get_requesting_type(&self) -> &'static str {
-        HttpResponsesDistRequestDTO::get_data_type()
+        HttpResponsesDistributionRequestDTO::get_data_type()
     }
 }
