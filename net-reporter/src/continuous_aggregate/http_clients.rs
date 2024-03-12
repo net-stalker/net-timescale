@@ -1,13 +1,11 @@
 use sqlx::{Error, Pool, Postgres};
 use sqlx::postgres::PgQueryResult;
-
 use super::ContinuousAggregate;
 
-pub struct NetworkGraphAggregate {}
-
-const CA_NAME: &str = "network_graph_aggregate";
+pub struct HttpClientsAggregate {}
+const CA_NAME: &str = "http_clients_aggregate";
 #[async_trait::async_trait]
-impl ContinuousAggregate for NetworkGraphAggregate {
+impl ContinuousAggregate for HttpClientsAggregate {
     fn get_name() -> &'static str {
         CA_NAME
     }
@@ -24,15 +22,17 @@ impl ContinuousAggregate for NetworkGraphAggregate {
                     agent_id,
                     src_addr,
                     dst_addr,
-                    (binary_data->'l1'->'frame'->>'frame.len')::integer AS packet_length,
-                    binary_data->'l1'->'frame'->>'frame.protocols' as protocols
+                    (binary_data->'l1'->'frame'->>'frame.len')::integer as packet_length,
+                    binary_data->'l5'->'http' as http_part
                 FROM captured_traffic
-                GROUP BY bucket, group_id, agent_id, src_addr, dst_addr, packet_length, protocols;
+                where
+                    binary_data->'l5'->'http' is not null
+                    and (binary_data->'l5'->'http'->>'http.request')::bool
+                GROUP BY bucket, group_id, agent_id, src_addr, dst_addr, packet_length, binary_data;
             ",
             Self::get_name()
         );
         sqlx::query(query.as_str())
-            .bind(Self::get_name())
             .execute(pool)
             .await
     }

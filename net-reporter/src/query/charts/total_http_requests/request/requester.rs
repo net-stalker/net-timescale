@@ -1,5 +1,8 @@
 use std::sync::Arc;
 
+use net_reporter_api::api::total_http_requests::request_total_http_requests::RequestTotalHttpRequestsDTO;
+use net_reporter_api::api::total_http_requests::total_http_requests::TotalHttpRequestsDTO;
+use net_reporter_api::api::total_http_requests::total_http_requests_filters::TotalHttpRequestsFiltersDTO;
 use net_token_verifier::fusion_auth::jwt_token::Jwt;
 use sqlx::types::chrono::DateTime;
 use sqlx::types::chrono::TimeZone;
@@ -8,17 +11,13 @@ use sqlx::Error;
 use sqlx::Pool;
 use sqlx::Postgres;
 
-use net_core_api::envelope::envelope::Envelope;
-use net_core_api::typed_api::Typed;
 use net_core_api::decoder_api::Decoder;
 use net_core_api::encoder_api::Encoder;
+use net_core_api::envelope::envelope::Envelope;
+use net_core_api::typed_api::Typed;
 
-use net_reporter_api::api::network_bandwidth_per_protocol::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolDTO;
-use net_reporter_api::api::network_bandwidth_per_protocol::network_bandwidth_per_protocol_request::NetworkBandwidthPerProtocolRequestDTO;
-use net_reporter_api::api::network_bandwidth_per_protocol::network_bandwidth_per_protocol_filters::NetworkBandwidthPerProtocolFiltersDTO;
-
-use crate::query::charts::network_bandwidth_per_protocol::response::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolResponse;
-use crate::query::charts::network_bandwidth_per_protocol::response::protocol::ProtocolResponse;
+use crate::query::charts::total_http_requests::response::total_http_requests_bucket::TotalHttpRequestsBucketResponse;
+use crate::query::charts::total_http_requests::response::total_http_requests::TotalHttpRequestsResponse;
 use crate::query::requester::Requester;
 use crate::query_builder::query_builder::QueryBuilder;
 use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
@@ -31,6 +30,14 @@ const EXCLUDE_ENDPOINT_FILTER_QUERY: &str = "
     AND (src_addr NOT IN (SELECT unnest({})) AND dst_addr NOT IN (SELECT unnest({})))
 ";
 
+const EXCLUDE_HTTP_METHODS_FILTER_QUERY: &str = "
+    AND not (array_agg(http->>'http.request.method') && {})
+";
+
+const INCLUDE_HTTP_METHODS_FILTER_QUERY: &str = "
+    AND (array_agg(http->>'http.request.method') @> {})
+";
+
 const SET_LOWER_BYTES_BOUND: &str = "
     AND SUM(packet_length) >= {}
 ";
@@ -39,28 +46,28 @@ const SET_UPPER_BYTES_BOUND: &str = "
     AND SUM(packet_length) < {}
 ";
 
-const NETWORK_BANDWIDTH_PER_PROTOCOL_REQUEST_QUERY: &str = "
-    SELECT SUM(packet_length) AS total_bytes, separated_protocols AS protocol_name
-    FROM (
-        SELECT *, UNNEST(STRING_TO_ARRAY(protocols, ':')) AS separated_protocols
-        FROM bandwidth_per_protocol_aggregate
-    ) AS unnested_protocols
+const TOTAL_HTTP_REQUESTS_REQUEST_QUERY: &str = "
+    SELECT bucket, COUNT(src_addr) as total_http_requests_aggregate
+    FROM total_http_requests, jsonb_path_query(http_part, '$.*') as http
     WHERE
         group_id = $1
         AND bucket >= $2
         AND bucket < $3
+        AND http->'http.request.method' is not null
         {}
-    GROUP BY separated_protocols
-    HAVING
+    GROUP BY bucket
+    having
         1 = 1
         {}
-        {};
+        {}
+        {}
+    ORDER BY bucket;
 ";
 
 #[derive(Default)]
-pub struct NetworkBandwidthPerProtocolRequester {}
+pub struct TotalHttpRequestsRequester {}
 
-impl NetworkBandwidthPerProtocolRequester {
+impl TotalHttpRequestsRequester {
     pub fn boxed(self) -> Box<Self> {
         Box::new(self)
     }
@@ -71,13 +78,14 @@ impl NetworkBandwidthPerProtocolRequester {
         group_id: Option<&str>,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        filters: &NetworkBandwidthPerProtocolFiltersDTO,
-    ) -> Result<Vec<ProtocolResponse>, Error> {
-        SqlxQueryBuilderWrapper::<ProtocolResponse>::new(query_string)
+        filters: &TotalHttpRequestsFiltersDTO,
+    ) -> Result<Vec<TotalHttpRequestsBucketResponse>, Error> {
+        SqlxQueryBuilderWrapper::<TotalHttpRequestsBucketResponse>::new(query_string)
             .add_option_param(group_id.map(|group_id| group_id.to_string()))
             .add_param(start_date)
             .add_param(end_date)
             .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
+            .add_option_param(filters.is_include_http_methods_mode().map(|_| filters.get_http_methods().to_vec()))
             .add_option_param(filters.get_bytes_lower_bound())
             .add_option_param(filters.get_bytes_upper_bound())
             .execute_query(connection_pool).await
@@ -85,7 +93,7 @@ impl NetworkBandwidthPerProtocolRequester {
 }
 
 #[async_trait::async_trait]
-impl Requester for NetworkBandwidthPerProtocolRequester {
+impl Requester for TotalHttpRequestsRequester {
     async fn request(
         &self,
         connection_pool: Arc<Pool<Postgres>>,
@@ -97,15 +105,16 @@ impl Requester for NetworkBandwidthPerProtocolRequester {
         if enveloped_request.get_type() != self.get_requesting_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()));
         }
-        let request = NetworkBandwidthPerProtocolRequestDTO::decode(enveloped_request.get_data());
+        let request = RequestTotalHttpRequestsDTO::decode(enveloped_request.get_data());
         let request_start_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_start_date_time()).unwrap();
         let request_end_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_end_date_time()).unwrap();
-        let request_filters = request.get_filters();
+        let filters = request.get_filters();
 
-        let query = QueryBuilder::new(NETWORK_BANDWIDTH_PER_PROTOCOL_REQUEST_QUERY, 4)
-            .add_dynamic_filter(request_filters.is_include_endpoints_mode(), 1, INCLUDE_ENDPOINT_FILTER_QUERY, EXCLUDE_ENDPOINT_FILTER_QUERY)
-            .add_static_filter(request_filters.get_bytes_lower_bound(), SET_LOWER_BYTES_BOUND, 1)
-            .add_static_filter(request_filters.get_bytes_upper_bound(), SET_UPPER_BYTES_BOUND, 1)
+        let query = QueryBuilder::new(TOTAL_HTTP_REQUESTS_REQUEST_QUERY, 4)
+            .add_dynamic_filter(filters.is_include_endpoints_mode(), 1, INCLUDE_ENDPOINT_FILTER_QUERY, EXCLUDE_ENDPOINT_FILTER_QUERY)
+            .add_dynamic_filter(filters.is_include_http_methods_mode(), 1, INCLUDE_HTTP_METHODS_FILTER_QUERY, EXCLUDE_HTTP_METHODS_FILTER_QUERY)
+            .add_static_filter(filters.get_bytes_lower_bound(), SET_LOWER_BYTES_BOUND, 1)
+            .add_static_filter(filters.get_bytes_upper_bound(), SET_UPPER_BYTES_BOUND, 1)
             .build_query();
 
         let executed_query_response = Self::execute_query(
@@ -114,7 +123,7 @@ impl Requester for NetworkBandwidthPerProtocolRequester {
             Some(jwt.get_tenant_id()),
             request_start_date,
             request_end_date,
-            request_filters,
+            filters,
         ).await;
 
         if let Err(e) = executed_query_response {
@@ -122,20 +131,20 @@ impl Requester for NetworkBandwidthPerProtocolRequester {
         }
         let executed_query_response = executed_query_response.unwrap();
 
-        let response: NetworkBandwidthPerProtocolResponse = executed_query_response.into();
+        let response: TotalHttpRequestsResponse = executed_query_response.into();
         log::info!("Got response on request: {:?}", response);
 
-        let dto_response: NetworkBandwidthPerProtocolDTO = response.into();
+        let dto_response: TotalHttpRequestsDTO = response.into();
 
         Ok(Envelope::new(
             enveloped_request.get_jwt_token().ok(),
             request_agent_id,
-            NetworkBandwidthPerProtocolDTO::get_data_type(),
+            TotalHttpRequestsDTO::get_data_type(),
             &dto_response.encode()
         ))
     }
     
     fn get_requesting_type(&self) -> &'static str {
-        NetworkBandwidthPerProtocolRequestDTO::get_data_type()
+        RequestTotalHttpRequestsDTO::get_data_type()
     }
 }
