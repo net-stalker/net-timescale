@@ -12,6 +12,7 @@ use sqlx::Postgres;
 use crate::config::Config;
 
 use crate::continuous_aggregate::http_request_methods_distribution::HttpRequestMethodsDistributionAggregate;
+use crate::continuous_aggregate::http_responses::HttpResponsesAggregate;
 use crate::continuous_aggregate::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolAggregate;
 use crate::continuous_aggregate::total_http_requests::TotalHttpRequestsAggregate;
 use crate::continuous_aggregate::ContinuousAggregate;
@@ -189,6 +190,22 @@ impl Reporter {
             },
             Err(err) => {
                 log::debug!("couldn't create {} refresh policy: {}", HttpRequestMethodsDistributionAggregate::get_name(), err);
+            }
+        }
+        match HttpResponsesAggregate::create(con).await {
+            Ok(_) => {
+                log::info!("successfully created {}", HttpResponsesAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {}: {}", HttpResponsesAggregate::get_name(), err);
+            }
+        }
+        match HttpResponsesAggregate::add_refresh_policy(con, None, None, "1 minute").await {
+            Ok(_) => {
+                log::info!("successfully created {} refresh policy", HttpResponsesAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {} refresh policy: {}", HttpResponsesAggregate::get_name(), err);
             }
         }
     }

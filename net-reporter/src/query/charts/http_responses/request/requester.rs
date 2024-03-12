@@ -48,8 +48,13 @@ const SET_UPPER_BYTES_BOUND: &str = "
 ";
 
 const HTTP_RESPONSES_REQUEST_QUERY: &str = "
-    SELECT (http_part->>'http.date')::timestamptz AS date, src_addr AS client, dst_addr AS server, (http->>'http.response.code')::int8 AS response_code
-    FROM http_responses, jsonb_path_query(http_part, '$.*') AS http
+    SELECT
+        (http_part->>'http.date')::timestamptz AS http_date,
+        packet_date::timestamptz as packate_date,
+        src_addr AS client,
+        dst_addr AS server,
+        (http->>'http.response.code')::int8 AS response_code
+    FROM http_responses_aggregate, jsonb_path_query(http_part, '$.*') AS http
     WHERE
         group_id = $1
         AND bucket >= $2

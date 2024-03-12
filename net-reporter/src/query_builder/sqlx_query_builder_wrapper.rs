@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use sqlx::{postgres::{PgArguments, PgRow}, query::QueryAs, Encode, Execute, FromRow, Pool, Postgres};
+use sqlx::{postgres::{PgArguments, PgRow}, query::QueryAs, Encode, FromRow, Pool, Postgres};
 
 pub struct SqlxQueryBuilderWrapper<'a, Response>
     where Response: for <'r> FromRow<'r, PgRow> + Send + Unpin
@@ -37,7 +37,6 @@ impl<'a, Response> SqlxQueryBuilderWrapper<'a, Response>
         self,
         connection_pool: Arc<Pool<Postgres>>,
      ) -> Result<Vec<Response>, sqlx::Error> {
-        log::info!("Executing query: {}", self.query.sql());
         self.query.fetch_all(connection_pool.as_ref()).await
     }
 }
