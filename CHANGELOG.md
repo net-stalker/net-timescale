@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
 <!-- [END AUTO UPDATE] -->
+## [0.1.0-f5de7d6] - 2024-03-12
+
+Ns 205/query for http request methods dist (#48)
+
+* implemented query for http request methods dist
+## [0.1.0-14902f6] - 2024-03-12
+
+NS-162/query-for-total-http-requests-chart: implemented queries (#47)
+
+* implemented queries for total http requests chart
+## [0.1.0-57c713c] - 2024-03-12
+
+Fixed wrong creation of ca for network graph (#49)
+
+* fixed wrong creation of ca for network graph
 ## [0.1.0-9b46e63] - 2024-03-06
 
 Query builder: removed boilerplate code from requester modules in net-reporter (#46)

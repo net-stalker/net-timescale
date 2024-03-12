@@ -11,7 +11,9 @@ use sqlx::Postgres;
 
 use crate::config::Config;
 
+use crate::continuous_aggregate::http_request_methods_distribution::HttpRequestMethodsDistributionAggregate;
 use crate::continuous_aggregate::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolAggregate;
+use crate::continuous_aggregate::total_http_requests::TotalHttpRequestsAggregate;
 use crate::continuous_aggregate::ContinuousAggregate;
 use crate::continuous_aggregate::bandwidth_per_endpoint::BandwidthPerEndpointAggregate;
 use crate::continuous_aggregate::network_bandwidth::NetworkBandwidthAggregate;
@@ -19,10 +21,12 @@ use crate::continuous_aggregate::network_graph::NetworkGraphAggregate;
 use crate::continuous_aggregate::network_overview_filters::NetworkOverviewFiltersAggregate;
 
 use crate::query::charts::bandwidth_per_endpoint::request::requester::NetworkBandwidthPerEndpointRequester;
+use crate::query::charts::http_request_methods_distribution::request::requester::HttpRequestMethodsDistributionRequester;
 use crate::query::charts::http_responses::request::requester::HttpResponsesRequester;
 use crate::query::charts::network_bandwidth::request::requester::NetworkBandwidthRequester;
 use crate::query::charts::network_bandwidth_per_protocol::request::requester::NetworkBandwidthPerProtocolRequester;
 use crate::query::charts::network_graph::request::requester::NetworkGraphRequester;
+use crate::query::charts::total_http_requests::request::requester::TotalHttpRequestsRequester;
 use crate::query::filters::network_overview::request::requester::NetworkOverviewFiltersRequester;
 use crate::query::manager::query_manager::QueryManager; 
 
@@ -66,6 +70,8 @@ impl Reporter {
             .add_chart_generator(NetworkBandwidthRequester::default().boxed())
             .add_chart_generator(NetworkGraphRequester::default().boxed())
             .add_chart_generator(NetworkOverviewFiltersRequester::default().boxed())
+            .add_chart_generator(TotalHttpRequestsRequester::default().boxed())
+            .add_chart_generator(HttpRequestMethodsDistributionRequester::default().boxed())
             .add_chart_generator(HttpResponsesRequester::default().boxed())
             .build()
     }
@@ -153,6 +159,38 @@ impl Reporter {
                 log::debug!("couldn't create {} refresh policy: {}", NetworkBandwidthPerProtocolAggregate::get_name(), err);
             }
         }
+        match TotalHttpRequestsAggregate::create(con).await {
+            Ok(_) => {
+                log::info!("successfully created {}", TotalHttpRequestsAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {}: {}", TotalHttpRequestsAggregate::get_name(), err);
+            }
+        }
+        match TotalHttpRequestsAggregate::add_refresh_policy(con, None, None, "1 minute").await {
+            Ok(_) => {
+                log::info!("successfully created {}", TotalHttpRequestsAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {}: {}", TotalHttpRequestsAggregate::get_name(), err);
+            }
+        }
+        match HttpRequestMethodsDistributionAggregate::create(con).await {
+            Ok(_) => {
+                log::info!("successfully created {}", HttpRequestMethodsDistributionAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {}: {}", HttpRequestMethodsDistributionAggregate::get_name(), err);
+            }
+        }
+        match HttpRequestMethodsDistributionAggregate::add_refresh_policy(con, None, None, "1 minute").await {
+            Ok(_) => {
+                log::info!("successfully created {} refresh policy", HttpRequestMethodsDistributionAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {} refresh policy: {}", HttpRequestMethodsDistributionAggregate::get_name(), err);
+            }
+        }
     }
 
     pub async fn run(self) {
@@ -211,6 +249,7 @@ impl Reporter {
 
         let response = query_manager.as_ref().handle_request(&config, recieve_enveloped_request, connection_pool).await;
         if response.is_err() {
+            log::error!("Error: {:?}", response.err());
             todo!()
         }
         let response = response.unwrap();
