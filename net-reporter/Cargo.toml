@@ -7,8 +7,7 @@ edition = "2021"
 
 [dependencies]
 net-core-api = "0.2.0"
-# net-reporter-api = "0.3.1"
-net-reporter-api = { git = "https://github.com/net-stalker/net-api", branch = "NS-203/dto-for-request-methods-dist-chart" }
+net-reporter-api = "0.4.4"
 net-token-verifier = "0.1.0"
 net-transport = { version = "0.1.0", features = ["quinn"] }
 net-file = { version = "0.1.0", registry = "net-registry" }

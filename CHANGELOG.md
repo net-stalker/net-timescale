@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-14902f6] - 2024-03-12
+
+NS-162/query-for-total-http-requests-chart: implemented queries (#47)
+
+* implemented queries for total http requests chart
+<!-- [END AUTO UPDATE] -->
+## [0.1.0-57c713c] - 2024-03-12
+
+Fixed wrong creation of ca for network graph (#49)
+
+* fixed wrong creation of ca for network graph
 ## [0.1.0-9b46e63] - 2024-03-06
 
 Query builder: removed boilerplate code from requester modules in net-reporter (#46)
@@ -17,7 +28,6 @@ Query builder: removed boilerplate code from requester modules in net-reporter (
 * added query builder for filling placeholder in the template query
 
 * removed boilerplate code
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-0b04ec4] - 2024-03-06
 
 NS-116/add-token-verification: added token verification using net-token-verifier (#45)
