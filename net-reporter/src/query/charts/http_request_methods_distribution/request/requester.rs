@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use net_reporter_api::api::http_request_methods_dist::http_request_methods_dist::HttpRequestMethodsDistDTO;
-use net_reporter_api::api::http_request_methods_dist::http_request_methods_dist_request::HttpRequestMethodsRequestDTO;
-use net_reporter_api::api::http_request_methods_dist::http_request_methods_filters::HttpRequestMethodsFiltersDTO;
+use net_reporter_api::api::http_request_methods_distribution::http_request_methods_distribution::HttpRequestMethodsDistributionDTO;
+use net_reporter_api::api::http_request_methods_distribution::http_request_methods_distribution_request::HttpRequestMethodsDistributionRequestDTO;
+use net_reporter_api::api::http_request_methods_distribution::http_request_methods_distribution_filters::HttpRequestMethodsDisributionFiltersDTO;
 use net_token_verifier::fusion_auth::jwt_token::Jwt;
 use sqlx::types::chrono::DateTime;
 use sqlx::types::chrono::TimeZone;
@@ -17,8 +17,8 @@ use net_core_api::envelope::envelope::Envelope;
 use net_core_api::typed_api::Typed;
 
 
-use crate::query::charts::http_request_methods_dist::response::http_request::HttpRequestResponse;
-use crate::query::charts::http_request_methods_dist::response::http_request_methods_dist::HttpRequestMethodsDistResponse;
+use crate::query::charts::http_request_methods_distribution::response::http_request::HttpRequestMethodResponse;
+use crate::query::charts::http_request_methods_distribution::response::http_request_methods_distribution::HttpRequestMethodsDistributionResponse;
 use crate::query::requester::Requester;
 use crate::query_builder::query_builder::QueryBuilder;
 use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
@@ -56,9 +56,9 @@ const HTTP_REQUEST_METHODS_QUERY: &str = "
 ";
 
 #[derive(Default)]
-pub struct HttpRequestMethodsDistRequester {}
+pub struct HttpRequestMethodsDistributionRequester {}
 
-impl HttpRequestMethodsDistRequester {
+impl HttpRequestMethodsDistributionRequester {
     pub fn boxed(self) -> Box<Self> {
         Box::new(self)
     }
@@ -69,9 +69,9 @@ impl HttpRequestMethodsDistRequester {
         group_id: Option<&str>,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        filters: &HttpRequestMethodsFiltersDTO,
-    ) -> Result<Vec<HttpRequestResponse>, Error> {
-        SqlxQueryBuilderWrapper::<HttpRequestResponse>::new(query_string)
+        filters: &HttpRequestMethodsDisributionFiltersDTO,
+    ) -> Result<Vec<HttpRequestMethodResponse>, Error> {
+        SqlxQueryBuilderWrapper::<HttpRequestMethodResponse>::new(query_string)
             .add_option_param(group_id.map(|group_id| group_id.to_string()))
             .add_param(start_date)
             .add_param(end_date)
@@ -83,7 +83,7 @@ impl HttpRequestMethodsDistRequester {
 }
 
 #[async_trait::async_trait]
-impl Requester for HttpRequestMethodsDistRequester {
+impl Requester for HttpRequestMethodsDistributionRequester {
     async fn request(
         &self,
         connection_pool: Arc<Pool<Postgres>>,
@@ -95,7 +95,7 @@ impl Requester for HttpRequestMethodsDistRequester {
         if enveloped_request.get_type() != self.get_requesting_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()));
         }
-        let request = HttpRequestMethodsRequestDTO::decode(enveloped_request.get_data());
+        let request = HttpRequestMethodsDistributionRequestDTO::decode(enveloped_request.get_data());
         let request_start_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_start_date_time()).unwrap();
         let request_end_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_end_date_time()).unwrap();
         let filters = request.get_filters();
@@ -120,20 +120,20 @@ impl Requester for HttpRequestMethodsDistRequester {
         }
         let executed_query_response = executed_query_response.unwrap();
 
-        let response: HttpRequestMethodsDistResponse = executed_query_response.into();
+        let response: HttpRequestMethodsDistributionResponse = executed_query_response.into();
         log::info!("Got response on request: {:?}", response);
 
-        let dto_response: HttpRequestMethodsDistDTO = response.into();
+        let dto_response: HttpRequestMethodsDistributionDTO = response.into();
 
         Ok(Envelope::new(
             enveloped_request.get_jwt_token().ok(),
             request_agent_id,
-            HttpRequestMethodsDistDTO::get_data_type(),
+            HttpRequestMethodsDistributionDTO::get_data_type(),
             &dto_response.encode()
         ))
     }
     
     fn get_requesting_type(&self) -> &'static str {
-        HttpRequestMethodsRequestDTO::get_data_type()
+        HttpRequestMethodsDistributionRequestDTO::get_data_type()
     }
 }
