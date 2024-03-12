@@ -52,7 +52,7 @@ const HTTP_CLIENTS_REQUEST_QUERY: &str = "
     SELECT
         src_addr AS endpoint,
         http_part->>'http.user_agent' AS user_agent,
-        COUNT(*) AS requests
+        COUNT(http_part) AS requests
     FROM http_clients_aggregate, jsonb_path_query(http_part, '$.*') AS http
     WHERE
         1 = 1
@@ -86,9 +86,6 @@ impl HttpClientsRequester {
         end_date: DateTime<Utc>,
         filters: &HttpClientsFiltersDTO,
     ) -> Result<Vec<HttpClientResponse>, Error> {
-        log::info!("Query Parameters: {:?}", group_id);
-        log::info!("Query Parameters: {}", start_date);
-        log::info!("Query Parameters: {}", end_date);
         SqlxQueryBuilderWrapper::<HttpClientResponse>::new(query_string)
             .add_option_param(group_id.map(|group_id| group_id.to_string()))
             .add_param(start_date)
