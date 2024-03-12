@@ -13,7 +13,6 @@ use net_core_api::typed_api::Typed;
 use net_core_api::decoder_api::Decoder;
 use net_core_api::encoder_api::Encoder;
 
-use net_reporter_api::api::network_bandwidth_per_endpoint::network_bandwidth_per_endpoint::NetworkBandwidthPerEndpointDTO;
 use net_reporter_api::api::network_bandwidth_per_protocol::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolDTO;
 use net_reporter_api::api::network_bandwidth_per_protocol::network_bandwidth_per_protocol_request::NetworkBandwidthPerProtocolRequestDTO;
 use net_reporter_api::api::network_bandwidth_per_protocol::network_bandwidth_per_protocol_filters::NetworkBandwidthPerProtocolFiltersDTO;
@@ -131,7 +130,7 @@ impl Requester for NetworkBandwidthPerProtocolRequester {
         Ok(Envelope::new(
             enveloped_request.get_jwt_token().ok(),
             request_agent_id,
-            NetworkBandwidthPerEndpointDTO::get_data_type(),
+            NetworkBandwidthPerProtocolDTO::get_data_type(),
             &dto_response.encode()
         ))
     }
