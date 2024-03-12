@@ -13,6 +13,7 @@ use crate::config::Config;
 
 use crate::continuous_aggregate::http_request_methods_distribution::HttpRequestMethodsDistributionAggregate;
 use crate::continuous_aggregate::http_responses::HttpResponsesAggregate;
+use crate::continuous_aggregate::http_clients::HttpClientsAggregate;
 use crate::continuous_aggregate::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolAggregate;
 use crate::continuous_aggregate::total_http_requests::TotalHttpRequestsAggregate;
 use crate::continuous_aggregate::ContinuousAggregate;
@@ -24,6 +25,7 @@ use crate::continuous_aggregate::network_overview_filters::NetworkOverviewFilter
 use crate::query::charts::bandwidth_per_endpoint::request::requester::NetworkBandwidthPerEndpointRequester;
 use crate::query::charts::http_request_methods_distribution::request::requester::HttpRequestMethodsDistributionRequester;
 use crate::query::charts::http_responses::request::requester::HttpResponsesRequester;
+use crate::query::charts::http_clients::request::requester::HttpClientsRequester;
 use crate::query::charts::network_bandwidth::request::requester::NetworkBandwidthRequester;
 use crate::query::charts::network_bandwidth_per_protocol::request::requester::NetworkBandwidthPerProtocolRequester;
 use crate::query::charts::network_graph::request::requester::NetworkGraphRequester;
@@ -74,6 +76,7 @@ impl Reporter {
             .add_chart_generator(TotalHttpRequestsRequester::default().boxed())
             .add_chart_generator(HttpRequestMethodsDistributionRequester::default().boxed())
             .add_chart_generator(HttpResponsesRequester::default().boxed())
+            .add_chart_generator(HttpClientsRequester::default().boxed())
             .build()
     }
 
@@ -206,6 +209,22 @@ impl Reporter {
             },
             Err(err) => {
                 log::debug!("couldn't create {} refresh policy: {}", HttpResponsesAggregate::get_name(), err);
+            }
+        }
+        match HttpClientsAggregate::create(con).await {
+            Ok(_) => {
+                log::info!("successfully created {}", HttpClientsAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {}: {}", HttpClientsAggregate::get_name(), err);
+            }
+        }
+        match HttpClientsAggregate::add_refresh_policy(con, None, None, "1 minute").await {
+            Ok(_) => {
+                log::info!("successfully created {} refresh policy", HttpClientsAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {} refresh policy: {}", HttpClientsAggregate::get_name(), err);
             }
         }
     }
