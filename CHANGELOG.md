@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-64bc43c] - 2024-03-12
 
 NS-174/query-http-clients-table: implemented query for http client chart (#52)
 
 * implemented query for http client chart
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-53ecf2b] - 2024-03-12
 
 NS-178/query-for-http-responses: implemented query for http responses (#51)
