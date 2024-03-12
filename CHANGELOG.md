@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-57c713c] - 2024-03-12
 
 Fixed wrong creation of ca for network graph (#49)
 
 * fixed wrong creation of ca for network graph
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-9b46e63] - 2024-03-06
 
 Query builder: removed boilerplate code from requester modules in net-reporter (#46)

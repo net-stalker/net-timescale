@@ -12,6 +12,7 @@ use sqlx::Postgres;
 use crate::config::Config;
 
 use crate::continuous_aggregate::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolAggregate;
+use crate::continuous_aggregate::total_http_requests::TotalHttpRequestsAggregate;
 use crate::continuous_aggregate::ContinuousAggregate;
 use crate::continuous_aggregate::bandwidth_per_endpoint::BandwidthPerEndpointAggregate;
 use crate::continuous_aggregate::network_bandwidth::NetworkBandwidthAggregate;
@@ -22,6 +23,7 @@ use crate::query::charts::bandwidth_per_endpoint::request::requester::NetworkBan
 use crate::query::charts::network_bandwidth::request::requester::NetworkBandwidthRequester;
 use crate::query::charts::network_bandwidth_per_protocol::request::requester::NetworkBandwidthPerProtocolRequester;
 use crate::query::charts::network_graph::request::requester::NetworkGraphRequester;
+use crate::query::charts::total_http_requests::request::requester::TotalHttpRequestsRequester;
 use crate::query::filters::network_overview::request::requester::NetworkOverviewFiltersRequester;
 use crate::query::manager::query_manager::QueryManager; 
 
@@ -65,6 +67,7 @@ impl Reporter {
             .add_chart_generator(NetworkBandwidthRequester::default().boxed())
             .add_chart_generator(NetworkGraphRequester::default().boxed())
             .add_chart_generator(NetworkOverviewFiltersRequester::default().boxed())
+            .add_chart_generator(TotalHttpRequestsRequester::default().boxed())
             .build()
     }
 
@@ -149,6 +152,22 @@ impl Reporter {
             },
             Err(err) => {
                 log::debug!("couldn't create {} refresh policy: {}", NetworkBandwidthPerProtocolAggregate::get_name(), err);
+            }
+        }
+        match TotalHttpRequestsAggregate::create(con).await {
+            Ok(_) => {
+                log::info!("successfully created {}", TotalHttpRequestsAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {}: {}", TotalHttpRequestsAggregate::get_name(), err);
+            }
+        }
+        match TotalHttpRequestsAggregate::add_refresh_policy(con, None, None, "1 minute").await {
+            Ok(_) => {
+                log::info!("successfully created {}", TotalHttpRequestsAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {}: {}", TotalHttpRequestsAggregate::get_name(), err);
             }
         }
     }
