@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-f5de7d6] - 2024-03-12
 
 Ns 205/query for http request methods dist (#48)
 
 * implemented query for http request methods dist
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-14902f6] - 2024-03-12
 
 NS-162/query-for-total-http-requests-chart: implemented queries (#47)
