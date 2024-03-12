@@ -16,7 +16,7 @@ use net_core_api::encoder_api::Encoder;
 use net_core_api::envelope::envelope::Envelope;
 use net_core_api::typed_api::Typed;
 
-use crate::query::charts::total_http_requests::response::http_requests_bucket::HttpRequestsBucketResponse;
+use crate::query::charts::total_http_requests::response::total_http_requests_bucket::TotalHttpRequestsBucketResponse;
 use crate::query::charts::total_http_requests::response::total_http_requests::TotalHttpRequestsResponse;
 use crate::query::requester::Requester;
 use crate::query_builder::query_builder::QueryBuilder;
@@ -47,7 +47,7 @@ const SET_UPPER_BYTES_BOUND: &str = "
 ";
 
 const TOTAL_HTTP_REQUESTS_REQUEST_QUERY: &str = "
-    SELECT bucket, COUNT(src_addr) as total_requests
+    SELECT bucket, COUNT(src_addr) as total_http_requests_aggregate
     FROM total_http_requests, jsonb_path_query(http_part, '$.*') as http
     WHERE
         group_id = $1
@@ -79,8 +79,8 @@ impl TotalHttpRequestsRequester {
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         filters: &TotalHttpRequestsFiltersDTO,
-    ) -> Result<Vec<HttpRequestsBucketResponse>, Error> {
-        SqlxQueryBuilderWrapper::<HttpRequestsBucketResponse>::new(query_string)
+    ) -> Result<Vec<TotalHttpRequestsBucketResponse>, Error> {
+        SqlxQueryBuilderWrapper::<TotalHttpRequestsBucketResponse>::new(query_string)
             .add_option_param(group_id.map(|group_id| group_id.to_string()))
             .add_param(start_date)
             .add_param(end_date)

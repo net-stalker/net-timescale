@@ -1,29 +1,29 @@
 use net_reporter_api::api::total_http_requests::http_requests_bucket::HttpRequestsBucketDTO;
 use net_reporter_api::api::total_http_requests::total_http_requests::TotalHttpRequestsDTO;
 
-use super::http_requests_bucket::HttpRequestsBucketResponse;
+use super::total_http_requests_bucket::TotalHttpRequestsBucketResponse;
 
 #[derive(Default, Clone, Debug)]
 pub struct TotalHttpRequestsResponse {
-    http_requests_buckets: Vec<HttpRequestsBucketResponse>
+    total_http_requests_buckets: Vec<TotalHttpRequestsBucketResponse>
 }
 
 impl From<TotalHttpRequestsResponse> for TotalHttpRequestsDTO {
     fn from(value: TotalHttpRequestsResponse) -> Self {
         TotalHttpRequestsDTO::new(
-            value.http_requests_buckets
+            value.total_http_requests_buckets
                 .into_iter()
-                .map(| bandwidth_bucket | bandwidth_bucket.into())
+                .map(|total_http_request_bucket | total_http_request_bucket.into())
                 .collect::<Vec<HttpRequestsBucketDTO>>()
                 .as_slice()
         )
     }
 }
 
-impl From<Vec<HttpRequestsBucketResponse>> for TotalHttpRequestsResponse {
-    fn from(value: Vec<HttpRequestsBucketResponse>) -> Self {
+impl From<Vec<TotalHttpRequestsBucketResponse>> for TotalHttpRequestsResponse {
+    fn from(value: Vec<TotalHttpRequestsBucketResponse>) -> Self {
         TotalHttpRequestsResponse {
-            http_requests_buckets: value
+            total_http_requests_buckets: value
         }
     }
 }

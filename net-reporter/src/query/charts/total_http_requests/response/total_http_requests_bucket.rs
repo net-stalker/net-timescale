@@ -4,13 +4,13 @@ use sqlx::types::chrono::DateTime;
 use sqlx::types::chrono::Utc;
 
 #[derive(sqlx::FromRow, Clone, Debug)]
-pub struct HttpRequestsBucketResponse {
+pub struct TotalHttpRequestsBucketResponse {
     bucket: DateTime<Utc>,
     total_requests: i64,
 }
 
-impl From<HttpRequestsBucketResponse> for HttpRequestsBucketDTO {
-    fn from(value: HttpRequestsBucketResponse) -> Self {
+impl From<TotalHttpRequestsBucketResponse> for HttpRequestsBucketDTO {
+    fn from(value: TotalHttpRequestsBucketResponse) -> Self {
         HttpRequestsBucketDTO::new(
             value.bucket.timestamp_millis(),
             value.total_requests

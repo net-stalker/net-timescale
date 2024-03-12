@@ -5,3 +5,5 @@
 .idea/
 
 Cargo.lock
+
+.vscode/

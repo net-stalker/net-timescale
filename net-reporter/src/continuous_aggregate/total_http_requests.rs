@@ -3,7 +3,7 @@ use sqlx::postgres::PgQueryResult;
 use super::ContinuousAggregate;
 
 pub struct TotalHttpRequestsAggregate {}
-const CA_NAME: &str = "total_http_requests";
+const CA_NAME: &str = "total_http_requests_aggregate";
 #[async_trait::async_trait]
 impl ContinuousAggregate for TotalHttpRequestsAggregate {
     fn get_name() -> &'static str {
