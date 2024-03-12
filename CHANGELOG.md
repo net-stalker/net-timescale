@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-53ecf2b] - 2024-03-12
+
+NS-178/query-for-http-responses: implemented query for http responses (#51)
+
+* implemented query for http responses
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-f5de7d6] - 2024-03-12
 
