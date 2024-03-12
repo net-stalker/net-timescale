@@ -2,10 +2,10 @@ use sqlx::{Error, Pool, Postgres};
 use sqlx::postgres::PgQueryResult;
 use super::ContinuousAggregate;
 
-pub struct HttpRequestMethodsDistAggregate {}
-const CA_NAME: &str = "http_request_methods_dist";
+pub struct HttpRequestMethodsDistributionAggregate {}
+const CA_NAME: &str = "http_request_methods_distribution_aggregate";
 #[async_trait::async_trait]
-impl ContinuousAggregate for HttpRequestMethodsDistAggregate {
+impl ContinuousAggregate for HttpRequestMethodsDistributionAggregate {
     fn get_name() -> &'static str {
         CA_NAME
     }

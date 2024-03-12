@@ -11,7 +11,7 @@ use sqlx::Postgres;
 
 use crate::config::Config;
 
-use crate::continuous_aggregate::http_request_methods_dist::HttpRequestMethodsDistAggregate;
+use crate::continuous_aggregate::http_request_methods_distribution::HttpRequestMethodsDistributionAggregate;
 use crate::continuous_aggregate::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolAggregate;
 use crate::continuous_aggregate::total_http_requests::TotalHttpRequestsAggregate;
 use crate::continuous_aggregate::ContinuousAggregate;
@@ -173,20 +173,20 @@ impl Reporter {
                 log::debug!("couldn't create {}: {}", TotalHttpRequestsAggregate::get_name(), err);
             }
         }
-        match HttpRequestMethodsDistAggregate::create(con).await {
+        match HttpRequestMethodsDistributionAggregate::create(con).await {
             Ok(_) => {
-                log::info!("successfully created {}", HttpRequestMethodsDistAggregate::get_name());
+                log::info!("successfully created {}", HttpRequestMethodsDistributionAggregate::get_name());
             },
             Err(err) => {
-                log::debug!("couldn't create {}: {}", HttpRequestMethodsDistAggregate::get_name(), err);
+                log::debug!("couldn't create {}: {}", HttpRequestMethodsDistributionAggregate::get_name(), err);
             }
         }
-        match HttpRequestMethodsDistAggregate::add_refresh_policy(con, None, None, "1 minute").await {
+        match HttpRequestMethodsDistributionAggregate::add_refresh_policy(con, None, None, "1 minute").await {
             Ok(_) => {
-                log::info!("successfully created {} refresh policy", HttpRequestMethodsDistAggregate::get_name());
+                log::info!("successfully created {} refresh policy", HttpRequestMethodsDistributionAggregate::get_name());
             },
             Err(err) => {
-                log::debug!("couldn't create {} refresh policy: {}", HttpRequestMethodsDistAggregate::get_name(), err);
+                log::debug!("couldn't create {} refresh policy: {}", HttpRequestMethodsDistributionAggregate::get_name(), err);
             }
         }
     }

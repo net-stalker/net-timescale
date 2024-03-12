@@ -40,8 +40,8 @@ const SET_UPPER_BYTES_BOUND: &str = "
 ";
 
 const HTTP_REQUEST_METHODS_QUERY: &str = "
-    SELECT http->>'http.request.method' m, COUNT(*)
-    FROM http_request_methods_dist, jsonb_path_query(http_part, '$.*') AS http
+    SELECT http->>'http.request.method' m, COUNT(src_addr)
+    FROM http_request_methods_distribution_aggregate, jsonb_path_query(http_part, '$.*') AS http
     WHERE
         group_id = $1
         AND bucket >= $2
