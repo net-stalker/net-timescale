@@ -11,6 +11,7 @@ use sqlx::Postgres;
 
 use crate::config::Config;
 
+use crate::continuous_aggregate::http_overview_filters::HttpOverviewFiltersAggregate;
 use crate::continuous_aggregate::http_request_methods_distribution::HttpRequestMethodsDistributionAggregate;
 use crate::continuous_aggregate::http_responses::HttpResponsesAggregate;
 use crate::continuous_aggregate::http_clients::HttpClientsAggregate;
@@ -32,6 +33,7 @@ use crate::query::charts::network_bandwidth::request::requester::NetworkBandwidt
 use crate::query::charts::network_bandwidth_per_protocol::request::requester::NetworkBandwidthPerProtocolRequester;
 use crate::query::charts::network_graph::request::requester::NetworkGraphRequester;
 use crate::query::charts::total_http_requests::request::requester::TotalHttpRequestsRequester;
+use crate::query::filters::http_overview::request::requester::HttpOverviewFiltersRequester;
 use crate::query::filters::network_overview::request::requester::NetworkOverviewFiltersRequester;
 use crate::query::manager::query_manager::QueryManager; 
 
@@ -80,6 +82,7 @@ impl Reporter {
             .add_chart_generator(HttpResponsesRequester::default().boxed())
             .add_chart_generator(HttpClientsRequester::default().boxed())
             .add_chart_generator(HttpResponsesDistributionRequester::default().boxed())
+            .add_chart_generator(HttpOverviewFiltersRequester::default().boxed())
             .build()
     }
 
@@ -244,6 +247,22 @@ impl Reporter {
             },
             Err(err) => {
                 log::debug!("couldn't create {} refresh policy: {}", HttpResponsesDistributionAggregate::get_name(), err);
+            }
+        }
+        match HttpOverviewFiltersAggregate::create(con).await {
+            Ok(_) => {
+                log::info!("successfully created {}", HttpOverviewFiltersAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {}: {}", HttpOverviewFiltersAggregate::get_name(), err);
+            }
+        }
+        match HttpOverviewFiltersAggregate::add_refresh_policy(con, None, None, "1 minute").await {
+            Ok(_) => {
+                log::info!("successfully created {} refresh policy", HttpOverviewFiltersAggregate::get_name());
+            },
+            Err(err) => {
+                log::debug!("couldn't create {} refresh policy: {}", HttpOverviewFiltersAggregate::get_name(), err);
             }
         }
     }
