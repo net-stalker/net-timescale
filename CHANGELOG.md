@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-71a15cc] - 2024-03-12
 
 NS-170/responses-dist-chart: added query for responses dist chart (#50)
 
 * added query for responses dist chart
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-64bc43c] - 2024-03-12
 
 NS-174/query-http-clients-table: implemented query for http client chart (#52)
