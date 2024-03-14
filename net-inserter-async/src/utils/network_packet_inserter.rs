@@ -6,7 +6,7 @@ use sqlx::postgres::PgQueryResult;
 use net_inserter_api::api::network_packet::network_packet::NetworkPacketDTO;
 
 const INSERT_NP_QUERY: &str =
-    "INSERT INTO CAPTURED_TRAFFIC (frame_time, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4)";
+    "INSERT INTO CAPTURED_TRAFFIC (frame_time, group_id, agent_id, src_addr, dst_addr, binary_data) VALUES ($1, $2, $3, $4, $5, $6)";
 
 pub async fn insert_network_packet_transaction(
     transaction: &mut sqlx::Transaction<'_, Postgres>,
@@ -21,6 +21,8 @@ pub async fn insert_network_packet_transaction(
             "Failed to decode network packet data".to_string()
         ))))
     };
+    // let binary_data: ByteArray<'_> = network_packet.get_network_packet_data().into();
+
     sqlx::query(INSERT_NP_QUERY)
         .bind(Utc.timestamp_nanos(network_packet.get_frame_time()))
         .bind(tenant_id)

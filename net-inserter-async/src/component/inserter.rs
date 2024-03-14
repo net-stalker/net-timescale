@@ -50,7 +50,6 @@ impl Inserter {
         // request: Envelope,
         config: Config,
     ) {
-
         let request = match client_connection.receive_reliable().await {
             Ok(receive) => Envelope::decode(&receive),
             Err(_) => {
@@ -89,12 +88,18 @@ impl Inserter {
             todo!();
         }
 
-        let network_packet = decoder::Decoder::decode(data_packet::DataPacketDTO::decode(request.get_data())).await;
+        let network_packet = match decoder::Decoder::decode(data_packet::DataPacketDTO::decode(request.get_data())).await {
+            Ok(network_packet) => network_packet,
+            Err(e) => {
+                log::error!("{}", e);
+                todo!();
+            },
+        };
         let mut transaction = pool.begin().await.unwrap();
         // TODO: later on it will be nice to open a stream of network packets and insert them in a batch
         match network_packet_inserter::insert_network_packet_transaction(&mut transaction, tenant_id, agent_id, &network_packet).await {
             Ok(_) => log::info!("Successfully inserted network packet"),
-            Err(_) => log::error!("Error: Failed to insert network packet"),
+            Err(e) => log::error!("Error: {}", e),
         }
         transaction.commit().await.unwrap();
     }
