@@ -2,6 +2,7 @@
 
 members = [
     "net-inserter",
+    "net-inserter-async",
     "net-reporter"
 ]
 
