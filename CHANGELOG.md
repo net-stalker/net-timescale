@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
 <!-- [END AUTO UPDATE] -->
+## [0.1.0-f8ba486] - 2024-03-15
+
+Ns 181/query for http filters (#54)
+
+* NS-181/query-for-http-filters: implemented query for http overview filters
+## [0.1.0-5fcd18b] - 2024-03-15
+
+hot-fix: fixed queries: queries hot fix. Founds errors during testing (#53)
+
+* fixed queries
 ## [0.1.0-71a15cc] - 2024-03-12
 
 NS-170/responses-dist-chart: added query for responses dist chart (#50)

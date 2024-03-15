@@ -40,7 +40,7 @@ const SET_UPPER_BYTES_BOUND: &str = "
 ";
 
 const HTTP_REQUEST_METHODS_QUERY: &str = "
-    SELECT http->>'http.request.method' m, COUNT(src_addr)
+    SELECT http->>'http.request.method' as name, COUNT(src_addr) as amount
     FROM http_request_methods_distribution_aggregate, jsonb_path_query(http_part, '$.*') AS http
     WHERE
         group_id = $1
@@ -48,7 +48,7 @@ const HTTP_REQUEST_METHODS_QUERY: &str = "
         AND bucket < $3
         AND http->'http.request.method' IS NOT NULL
         {}
-    GROUP BY m
+    GROUP BY name
     HAVING
         1 = 1
         {}

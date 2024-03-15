@@ -40,7 +40,7 @@ const SET_UPPER_BYTES_BOUND: &str = "
 ";
 
 const HTTP_RESPONSES_DIST_REQUEST_QUERY: &str = "
-    SELECT bucket, (http->>'http.response.code')::INTEGER AS response_code, COUNT(http_part) AS amount
+    SELECT bucket, (http->>'http.response.code')::int8 AS response_code, COUNT(http_part) AS amount
     FROM http_responses_distribution_aggregate, jsonb_path_query(http_part, '$.*') AS http
     WHERE
         group_id = $1
