@@ -4,14 +4,14 @@ use sqlx::{types::chrono::{DateTime, Utc}, Error, Pool, Postgres};
 use crate::query::filters::http_overview::response::http_response_code_response::HttpResponseCodeResponse;
 
 const HTTP_RESPONSE_CODES_REQUEST_QUERY: &str = "
-    select DISTINCT http->>'http.request.method' as http_request_method
+    select DISTINCT (http->>'http.response.code')::int8 as http_response_code
     from http_filters_aggregate, jsonb_path_query(http_part, '$.*') as http
     where
         group_id = $1
         AND bucket >= $2
-        AND bucket < $3 
-        AND http->'http.request.method' is not null
-    order by http_request_method
+        AND bucket < $3
+        AND http->'http.response.code' is not null
+    order by http_response_code;
 ";
 
 #[derive(Default)]
