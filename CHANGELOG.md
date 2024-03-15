@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-f8ba486] - 2024-03-15
+
+Ns 181/query for http filters (#54)
+
+* NS-181/query-for-http-filters: implemented query for http overview filters
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-5fcd18b] - 2024-03-15
 
