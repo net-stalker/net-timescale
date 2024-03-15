@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-2bfa588] - 2024-03-15
+
+Ns 187/net inserter async (#55)
+
+* NS-187/net-inserter-async: add net-inserter-async
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-f8ba486] - 2024-03-15
 
