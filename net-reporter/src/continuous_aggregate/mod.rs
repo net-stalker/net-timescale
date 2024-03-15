@@ -41,6 +41,7 @@ pub trait ContinuousAggregate {
 pub mod network_graph;
 pub mod bandwidth_per_endpoint;
 pub mod http_clients;
+pub mod http_overview_filters;
 pub mod http_request_methods_distribution;
 pub mod http_responses_distribution;
 pub mod http_responses;
