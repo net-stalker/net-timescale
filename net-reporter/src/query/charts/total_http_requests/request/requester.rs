@@ -47,8 +47,8 @@ const SET_UPPER_BYTES_BOUND: &str = "
 ";
 
 const TOTAL_HTTP_REQUESTS_REQUEST_QUERY: &str = "
-    SELECT bucket, COUNT(src_addr) as total_http_requests_aggregate
-    FROM total_http_requests, jsonb_path_query(http_part, '$.*') as http
+    SELECT bucket, COUNT(src_addr) as total_requests
+    FROM total_http_requests_aggregate, jsonb_path_query(http_part, '$.*') as http
     WHERE
         group_id = $1
         AND bucket >= $2

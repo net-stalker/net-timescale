@@ -50,7 +50,7 @@ const SET_UPPER_BYTES_BOUND: &str = "
 const HTTP_RESPONSES_REQUEST_QUERY: &str = "
     SELECT
         (http_part->>'http.date')::timestamptz AS http_date,
-        packet_date::timestamptz as packate_date,
+        packet_date::timestamptz as packet_date,
         src_addr AS client,
         dst_addr AS server,
         (http->>'http.response.code')::int8 AS response_code
