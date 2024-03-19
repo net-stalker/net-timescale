@@ -1,10 +1,10 @@
 use net_inserter_api::api::network_packet::network_packet::NetworkPacketDTO;
 
-use net_core::capture::translator::pcap_translator::PcapTranslator;
-use net_core::capture::translator::translator::Translator;
+use net_file::translator::pcap_translator::PcapTranslator;
+use net_file::translator::translator::Translator;
 
-use net_core::jsons::json_parser::JsonParser;
-use net_core::jsons::json_pcap_parser::JsonPcapParser;
+use net_file::jsons::json_parser::JsonParser;
+use net_file::jsons::json_pcap_parser::JsonPcapParser;
 pub struct Decoder {}
 
 impl Decoder {
