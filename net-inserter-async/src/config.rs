@@ -4,6 +4,9 @@ use serde::{Deserialize, Serialize};
 use toml::to_string;
 use net_config::NetConfig;
 
+#[allow(unused_imports)]
+use std::env;
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct ConnectionUrl {
     pub(crate) url: String,
