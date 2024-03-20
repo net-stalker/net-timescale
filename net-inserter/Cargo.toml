@@ -34,5 +34,3 @@ net-migrator = { path = "../net-migrator" }
 [features]
 integration = []
 
-default = ["integration"]
-
