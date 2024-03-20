@@ -1,16 +1,27 @@
 version: '3.8'
 
 services:
-  timescaledb:
+  # timescaledb:
+  #   build:
+  #     context: timescaledb
+  #   hostname: timescaledb
+  #   ports:
+  #     - "5433:5432"
+  #   environment:
+  #     - POSTGRES_PASSWORD=PsWDgxZb
+  #   networks:
+  #     - net-net
+  
+  net-reporter:
     build:
-      context: timescaledb
-    hostname: timescaledb
-    ports:
-      - "5433:5432"
-    environment:
-      - POSTGRES_PASSWORD=PsWDgxZb
+      context: ../
+      dockerfile: net-reporter/Dockerfile
+    hostname: net-reporter
     networks:
-      - skynet
+      - net-net
+    # depends_on:
+    #   - timescaledb
+
 networks:
-  skynet:
+  net-net:
     driver: bridge
