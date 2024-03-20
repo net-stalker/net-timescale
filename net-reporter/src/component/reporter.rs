@@ -282,7 +282,7 @@ impl Reporter {
 
         log::info!("Creating server endpoint for net-reporter..."); 
         let reporter_server_endpoint = ServerQuicEndpointBuilder::default()
-            .with_addr(self.config.server_address.address.parse().unwrap())
+            .with_addr(self.config.server.host_name.parse().unwrap())
             .build();
 
         if reporter_server_endpoint.is_err() {

@@ -1,0 +1,17 @@
+[connection_url]
+# todo: update url to add sertificates via code, not in the url string
+url = "postgres://postgres:PsWDgxZb@localhost:5433/?sslmode=require&sslcert=docker/.ssl/client.crt&sslkey=docker/.ssl/client.key"
+
+[max_connection_size]
+size = "10"
+
+[server_data]
+host_name = "net-reporter"
+port = "5454"
+# address = "127.0.0.1:5454"
+
+[fusion_auth_server_addres]
+addr = "http://localhost:9011"
+
+[fusion_auth_api_key]
+key = "gw_awXW6h11DZ7ncwyim23-wQ76IAsM947L5p9Wb7yYOR0Erh_yQKCD4"
