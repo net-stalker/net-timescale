@@ -26,4 +26,4 @@ RUN cargo build --package net-reporter --release --target=x86_64-unknown-linux-m
 # Final stage
 FROM scratch
 COPY --from=builder /net-timescale/target/x86_64-unknown-linux-musl/release/net-reporter /
-ENTRYPOINT ["/net-inserter-async"]
+ENTRYPOINT ["/net-reporter"]
