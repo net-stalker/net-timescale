@@ -1,6 +1,3 @@
---liquibase formatted sql
-
---changeset dshcherbatiuk:1
 CREATE TABLE captured_traffic
 (
     id SERIAL,
@@ -13,11 +10,10 @@ CREATE TABLE captured_traffic
     PRIMARY KEY (frame_time, group_id, agent_id)
 );
 
---changeset dshcherbatiuk:2
 CREATE INDEX ON captured_traffic (src_addr, frame_time DESC);
 
---changeset dshcherbatiuk:3
 CREATE INDEX ON captured_traffic (dst_addr, frame_time DESC);
 
---changeset dshcherbatiuk:4
+CREATE INDEX binary_data_index ON captured_traffic USING gin(binary_data);
+
 SELECT create_hypertable('captured_traffic', 'frame_time');
