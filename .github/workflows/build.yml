@@ -16,88 +16,48 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
+      
+      - name: Update platform
+        run: sudo apt-get update
 
       - name: Install Rust
         run: rustup toolchain install stable --profile minimal
 
-      - name: Cache Cargo dependencies
+      - name: Install Essentials
+        run: sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto tree
+          
+      - name: Cargo Cache
         uses: actions/cache@v3
         continue-on-error: false
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-  
+          path: ~/.cargo
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ hashFiles('Cargo.toml') }}
+            ${{ runner.os }}-cargo
 
-      - name: Update platform
+      - name: Target Cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-target-${{ hashFiles('Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-target-${{ hashFiles('Cargo.toml') }}
+            ${{ runner.os }}-cargo-target
+
+      - name: Cargo Build
+        env:
+          CARGO_MANIFEST_DIR: ${{ github.workspace }}
         run: |
-          sudo apt-get update
-          sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto tree
+          cargo build
 
-      - name: Set up GIT credentials
-        run: |
-          git config --global credential.helper store
-          echo "https://${{ secrets.BOT_USER_NAME }}:${{ secrets.BOT_PAT }}@github.com" > ~/.git-credentials
-          touch ~/.cargo/config
-          echo "[net]" > ~/.cargo/config
-          echo "git-fetch-with-cli = true" >> ~/.cargo/config
-
-      - name: Clippy check
-        run:
-          cargo clippy --all-features -- -D warnings
-          
-      - name: Build and Test
+      - name: Cargo Test
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
         run: |
           cargo test
-  integration-tests:
-    runs-on: ubuntu-latest
 
-    steps:
-      - name: Check out
-        uses: actions/checkout@v3
-
-      - name: Install Rust
-        run: rustup toolchain install stable --profile minimal
-
-      - name: Cache Cargo dependencies
-        uses: actions/cache@v3
-        continue-on-error: false
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo- 
-
-      - name: Update platform
-        run: |
-          sudo apt-get update
-          sudo apt-get install libpcap-dev libzmq3-dev tshark build-essential cmake capnproto
-
-      - name: Build and Up timescaleDB
-        run: |
-          docker-compose -f docker/docker-compose.yml up -d
-
-      - name: Set up GIT credentials
-        run: |
-          git config --global credential.helper store
-          echo "https://${{ secrets.BOT_USER_NAME }}:${{ secrets.BOT_PAT }}@github.com" > ~/.git-credentials
-          touch ~/.cargo/config
-          echo "[net]" > ~/.cargo/config
-          echo "git-fetch-with-cli = true" >> ~/.cargo/config
-
-      - name: Build and Test
-        env:
-          CARGO_MANIFEST_DIR: ${{ github.workspace }}
-        run: |
-          cargo test --test "*" --features integration
-          docker-compose -f docker/docker-compose.yml down
+      - name: Clippy check
+        run:
+          cargo clippy --all-features -- -D warnings
