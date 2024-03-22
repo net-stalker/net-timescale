@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
 <!-- [END AUTO UPDATE] -->
+## [0.1.0-4a1a0f2] - 2024-03-22
+
+NS-221/add-sqlx-migrations (#57)
+
+* added net-migrator, added migration run to each service
+## [0.1.0-edb736c] - 2024-03-20
+
+NS-192/write-docker-files-inserter-and-reporter: implemented docker images (#56)
+
+* implemented docker images
 ## [0.1.0-2bfa588] - 2024-03-15
 
 Ns 187/net inserter async (#55)

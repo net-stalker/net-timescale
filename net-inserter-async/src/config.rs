@@ -10,6 +10,9 @@ use std::env;
 
 use net_config::NetConfig;
 
+#[allow(unused_imports)]
+use std::env;
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Server {
     pub host_name: String,
