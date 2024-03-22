@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-4a1a0f2] - 2024-03-22
+
+NS-221/add-sqlx-migrations (#57)
+
+* added net-migrator, added migration run to each service
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-edb736c] - 2024-03-20
 
