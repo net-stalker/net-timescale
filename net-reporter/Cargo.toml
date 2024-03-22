@@ -11,8 +11,7 @@ net-reporter-api = "0.4.5"
 net-token-verifier = "0.1.0"
 net-transport = { version = "0.1.0", features = ["quinn"] }
 net-file = "0.1.1"
-# net-config = "0.1.0"
-net-config = { git = "https://github.com/net-stalker/net-config", branch = "NS-223/update-net-config" }
+net-config = "0.1.1"
 openssl = { version = "0.10.64", features = ["vendored"] }
 sqlx = { version = "0.7.0", features = ["runtime-async-std", "tls-native-tls", "postgres", "chrono"] }
 async-trait = "0.1.74"

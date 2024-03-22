@@ -29,7 +29,7 @@ services:
       - net-net
     depends_on:
       - timescaledb
-  
+
   # uncomment to run net-gateway. Correct the path to the context if you need
   # net-gateway:
   #   build:
