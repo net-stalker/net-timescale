@@ -16,7 +16,6 @@ use crate::config::Config;
 use crate::utils::decoder;
 use crate::utils::network_packet_inserter;
 
-
 pub struct Inserter {
     config: Config,
     connection_pool: Arc<Pool<Postgres>>,
@@ -106,6 +105,14 @@ impl Inserter {
 
     pub async fn run(self) {
         log::info!("Run component"); 
+
+        log::info!("Run db migrations");
+        let migrations_result = net_migrator::migrator::run_migrations(&self.connection_pool, "./migrations").await;
+        if migrations_result.is_err() {
+            log::error!("Error, failed to run migrations: {}", migrations_result.err().unwrap());
+            todo!();
+        }
+        log::info!("Successfully ran db migrations");
 
         log::info!("Creating server endpoint for net-reporter..."); 
         let reporter_server_endpoint = ServerQuicEndpointBuilder::default()
