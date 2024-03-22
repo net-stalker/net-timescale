@@ -29,6 +29,8 @@ async-std = { version = "1.12.0", features = ["attributes"] }
 
 [dev-dependencies]
 mockall = "0.11.2"
+net-migrator = { path = "../net-migrator" }
 
 [features]
 integration = []
+

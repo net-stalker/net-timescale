@@ -36,6 +36,16 @@ mod tests {
         use net_core_api::{envelope::envelope::Envelope, encoder_api::Encoder};
 
         let con = block_on(establish_connection());
+
+        log::info!("Run db migrations");
+        let migrations_result = block_on(
+            net_migrator::migrator::run_migrations(&con, "../migrations")
+        );
+        if migrations_result.is_err() {
+            log::error!("Error, failed to run migrations: {}", migrations_result.err().unwrap());
+            todo!();
+        }
+        log::info!("Successfully ran db migrations");
         let json_data = json!({
             "test": "test",
         });
