@@ -46,12 +46,18 @@ jobs:
           echo "[net]" > ~/.cargo/config
           echo "git-fetch-with-cli = true" >> ~/.cargo/config
 
-      - name: Clippy check
-        run:
-          cargo clippy --all-features -- -D warnings
-          
-      - name: Build and Test
+      - name: Cargo Build
+        env:
+          CARGO_MANIFEST_DIR: ${{ github.workspace }}
+        run: |
+          cargo build
+
+      - name: Cargo Test
         env:
           CARGO_MANIFEST_DIR: ${{ github.workspace }}
         run: |
           cargo test
+
+      - name: Clippy check
+        run:
+          cargo clippy --all-features -- -D warnings
