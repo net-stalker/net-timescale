@@ -1,12 +1,44 @@
+use std::net::IpAddr;
+use std::path::Path;
+
 use net_inserter_async::config::Config;
 use net_inserter_async::component::inserter::Inserter;
+use tokio::fs;
+
+
+async fn get_addr_for_host(config: &Config) -> String {
+    let host_name = config.server.host_name.as_str();
+    let hosts_file = Path::new("/etc/hosts");
+    let contents = fs::read_to_string(hosts_file).await.expect("Failed to read /etc/hosts");
+
+    for line in contents.lines() {
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() >= 2 {
+            if let Ok(ip_addr) = parts[0].parse::<IpAddr>() {
+                if parts[1] == host_name {
+                    return format!("{}:{}", ip_addr.to_string(), config.server.port);
+                }
+            }
+        }
+    }
+    panic!("Failed to find ip address for host name: {}", host_name);
+}
 
 #[tokio::main]
 async fn main() {
     init_log();
     log::info!("Run module");
-    
-    let config = Config::builder().build().expect("read config error");
+    let config = if cfg!(debug_assertions) {
+        println!("Running in debug mode");
+        Config::builder().build().expect("read config error")
+    } else {
+        println!("Running in release mode");
+        let config_path = std::env::var("CONFIG_PATH").unwrap();
+        let mut config = Config::new(&config_path).build().expect("read config error");
+        config.server.addr = get_addr_for_host(&config).await;
+        config
+    };
+    log::debug!("server ip adddress: {:?}", config.server.addr);
 
     let inserter_component = Inserter::new(config).await;
     
@@ -20,15 +52,3 @@ fn init_log() {
     let config = serde_yaml::from_str(config_str).unwrap();
     log4rs::init_raw_config(config).unwrap();
 }
-
-
-/*
-   Basically what do I need to have from migrator?
-   I need it to run migrations at the start of any service
-   What do I need to run migrations?
-   I need it to have a connection to the database
-   I need it to have a list of migrations
-   Do I need to create a new crate especially for this? - probably yes
-   Do I need to add it to net-core? - no, Don't think so because I don't really need to push it to crates.io
-   Of course it needs to run such migrations before starting the service net-isnerter-async ot net-reporter
-*/

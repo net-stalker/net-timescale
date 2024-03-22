@@ -11,14 +11,10 @@ use std::env;
 use net_config::NetConfig;
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct ServerAddress {
-    pub address: String,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Server {
     pub host_name: String,
-    pub port: u16,
+    pub port: String,
+    pub addr: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -43,7 +39,6 @@ pub struct FusionAuthApiKey {
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, NetConfig)]
 pub struct Config {
-    // pub(crate) server_address: ServerAddress,
     pub server: Server,
     pub connection_url: ConnectionUrl,
     pub max_connection_size: MaxConnectionSize,

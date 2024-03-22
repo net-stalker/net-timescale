@@ -20,10 +20,15 @@ WORKDIR /net-timescale
 # Copy the Rust source code
 COPY . .
 
+# RUN cd .. && ls -a
+
 # Build the application
 RUN cargo build --package net-reporter --release --target=x86_64-unknown-linux-musl
 
 # Final stage
-FROM scratch
+FROM debian:latest
 COPY --from=builder /net-timescale/target/x86_64-unknown-linux-musl/release/net-reporter /
+COPY --from=builder /net-timescale/net-reporter/config.toml /
+COPY --from=builder /net-timescale/migrations /migrations
+ENV CONFIG_PATH=/
 ENTRYPOINT ["/net-reporter"]

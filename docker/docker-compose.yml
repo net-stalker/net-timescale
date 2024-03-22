@@ -1,16 +1,14 @@
 version: '3.8'
 
 services:
-  # timescaledb:
-  #   build:
-  #     context: timescaledb
-  #   hostname: timescaledb
-  #   ports:
-  #     - "5433:5432"
-  #   environment:
-  #     - POSTGRES_PASSWORD=PsWDgxZb
-  #   networks:
-  #     - net-net
+  timescaledb:
+    build:
+      context: timescaledb
+    hostname: timescaledb
+    environment:
+      - POSTGRES_PASSWORD=PsWDgxZb
+    networks:
+      - net-net
   
   net-reporter:
     build:
@@ -19,8 +17,32 @@ services:
     hostname: net-reporter
     networks:
       - net-net
-    # depends_on:
-    #   - timescaledb
+    depends_on:
+      - timescaledb
+
+  net-inserter:
+    build:
+      context: ../
+      dockerfile: net-inserter-async/Dockerfile
+    hostname: net-inserter
+    networks:
+      - net-net
+    depends_on:
+      - timescaledb
+  
+  # uncomment to run net-gateway. Correct the path to the context if you need
+  # net-gateway:
+  #   build:
+  #     context: ../../net-gateway
+  #     dockerfile: Dockerfile
+  #   hostname: net-gateway
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - net-net
+  #   depends_on:
+  #     - net-reporter
+  #     - net-inserter
 
 networks:
   net-net:

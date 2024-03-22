@@ -1,11 +1,13 @@
 [connection_url]
-url = "postgres://postgres:PsWDgxZb@localhost:5433/?sslmode=require&sslcert=docker/.ssl/client.crt&sslkey=docker/.ssl/client.key"
+url = "postgres://postgres:PsWDgxZb@localhost:5433"
 
 [max_connection_size]
 size = "10"
 
-[server_address]
-address = "127.0.0.1:5454"
+[server]
+host_name = "net-reporter"
+port = "5454"
+addr = "127.0.0.1:5454"
 
 [fusion_auth_server_addres]
 addr = "http://localhost:9011"

@@ -1,14 +1,13 @@
 [connection_url]
-
 url = "postgres://postgres:PsWDgxZb@timescaledb:5432"
 
 [max_connection_size]
 size = "10"
 
 [server]
-# net-reporter is expected
+# net-inserter is expected
 host_name = ""
-# 5454 is expected
+# 5455 is expected
 port = ""
 addr = ""
 

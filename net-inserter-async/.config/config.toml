@@ -1,10 +1,13 @@
+# 
 [connection_url]
-url = "postgres://postgres:PsWDgxZb@localhost:5433/?sslmode=require&sslcert=docker/.ssl/client.crt&sslkey=docker/.ssl/client.key"
+url = "postgres://postgres:PsWDgxZb@localhost:5433"
 
 [max_connection_size]
 size = "10"
 
-[server_address]
+[server]
+host_name = "net-inserter"
+port = "5455"
 addr = "127.0.0.1:5455"
 
 [fusion_auth_server_addres]
