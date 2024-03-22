@@ -16,7 +16,7 @@ async fn get_addr_for_host(config: &Config) -> String {
         if parts.len() >= 2 {
             if let Ok(ip_addr) = parts[0].parse::<IpAddr>() {
                 if parts[1] == host_name {
-                    return format!("{}:{}", ip_addr.to_string(), config.server.port);
+                    return format!("{}:{}", ip_addr, config.server.port);
                 }
             }
         }
