@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-c11f4cd] - 2024-03-25
+
+Experimental ns 202 (#60)
+
+* found the way to get ip address of docker container in private network
+
+* updated docker files, updated docker compose, found out how to work with docker networks
+
+* deleted push-prerelase.yml
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-6315421] - 2024-03-25
 
