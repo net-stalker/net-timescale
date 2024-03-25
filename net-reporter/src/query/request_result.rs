@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use net_core_api::api::envelope::envelope::Envelope;
 use net_core_api::core::encoder_api::Encoder;
 use net_core_api::core::typed_api::Typed;
@@ -65,5 +67,14 @@ impl From<RequestResult> for ResultDTO {
             value.description.as_deref(),
             value.response
         )
+    }
+}
+
+impl From<Result<Envelope, Box<dyn Error + Sync + Send>>> for RequestResult {
+    fn from(value: Result<Envelope, Box<dyn Error + Sync + Send>>) -> Self {
+        match value {
+            Ok(envelope) => Self::ok(None, Some(envelope)),
+            Err(error) => Self::error(Some(error.to_string())),
+        }
     }
 }

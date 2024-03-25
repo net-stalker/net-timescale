@@ -68,7 +68,7 @@ impl NetworkGraphRequester {
 
 #[async_trait::async_trait]
 impl Requester for NetworkGraphRequester {
-    async fn request(
+    async fn request_envelped_chart(
         &self,
         connection_pool: Arc<Pool<Postgres>>,
         enveloped_request: Envelope,
