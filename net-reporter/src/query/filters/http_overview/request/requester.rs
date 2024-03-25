@@ -73,11 +73,11 @@ impl Requester for HttpOverviewFiltersRequester {
         connection_pool: Arc<Pool<Postgres>>,
         enveloped_request: Envelope,
         jwt: Jwt,
-    ) -> Result<Envelope, String> {
+    ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
         let request_agent_id = enveloped_request.get_agent_id().ok();
 
         if enveloped_request.get_type() != self.get_requesting_type() {
-            return Err(format!("wrong request is being received: {}", enveloped_request.get_type()));
+            return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
         }
         let request = HttpOverviewDashboardFiltersRequestDTO::decode(enveloped_request.get_data());
         let request_start_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_start_date_time()).unwrap();
@@ -88,13 +88,9 @@ impl Requester for HttpOverviewFiltersRequester {
             Some(jwt.get_tenant_id()),
             request_start_date,
             request_end_date,
-        ).await;
+        ).await?;
 
-        if let Err(e) = executed_query_response {
-            return Err(format!("error: {:?}", e));
-        }
-        let response = executed_query_response.unwrap();
-
+        let response: HttpOverviewFiltersResponse = executed_query_response.into();
         log::info!("Got response on request: {:?}", response);
 
         let dto_response: HttpOverviewDashboardFiltersDTO = response.into();
