@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-358411f] - 2024-03-22
 
 Ns 210/api update (#59)
@@ -15,7 +16,6 @@ Ns 210/api update (#59)
 * NS-209/api-update: Update lib versions and imports in net-inserter
 
 * NS-209/api-update: Update lib versions and imports in net-inserter-async
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-4a1a0f2] - 2024-03-22
 
 NS-221/add-sqlx-migrations (#57)

@@ -4,7 +4,7 @@ use net_token_verifier::fusion_auth::jwt_token::Jwt;
 use sqlx::Pool;
 use sqlx::Postgres;
 
-use net_core_api::envelope::envelope::Envelope;
+use net_core_api::api::envelope::envelope::Envelope;
 
 #[async_trait::async_trait]
 pub trait Requester: Sync + Send {

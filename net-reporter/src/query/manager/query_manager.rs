@@ -6,7 +6,7 @@ use net_token_verifier::verifier::Verifier;
 use sqlx::Pool;
 use sqlx::Postgres;
 
-use net_core_api::envelope::envelope::Envelope;
+use net_core_api::api::envelope::envelope::Envelope;
 
 use crate::config::Config;
 use crate::query::requester::Requester;
