@@ -57,21 +57,21 @@ impl Inserter {
             Ok(receive) => Envelope::decode(&receive),
             Err(_) => {
                 log::error!("Error: Failed to receive request");
-                todo!();
+                return;
             },
         };
         let jwt_token = match request.get_jwt_token() {
             Ok(token) => token,
             Err(_) => {
                 log::error!("Error: JWT token is not found in request");
-                todo!();
+                return;
             },
         };
         let agent_id = match request.get_agent_id() {
             Ok(agent_id) => agent_id,
             Err(_) => {
                 log::error!("Error: Agent ID is not found in request");
-                todo!();
+                return;
             },
         };
 
@@ -82,23 +82,30 @@ impl Inserter {
                 .verify_token(jwt_token).await;
             if jwt.is_err() {
                 log::error!("Error: JWT token is not valid");
-                todo!();
+                return;
             }
-            jwt.unwrap().get_tenant_id().to_string()
+            jwt.unwrap().get_tenant_id().map(|s| s.to_string())
         } else {
-            config.verify_token.default_token.clone()
+            Some(config.verify_token.default_token)
         };
+
+        if tenant_id.is_none() {
+            log::error!("Error: Tenant ID is not found in JWT token");
+            return;
+        }
+
+        let tenant_id = tenant_id.unwrap();
 
         if request.get_type() != data_packet::DataPacketDTO::get_data_type() {
             log::error!("Error: Request type is not DataPacketDTO");
-            todo!();
+            return;
         }
 
         let network_packet = match decoder::Decoder::decode(data_packet::DataPacketDTO::decode(request.get_data())).await {
             Ok(network_packet) => network_packet,
             Err(e) => {
                 log::error!("{}", e);
-                todo!();
+                return;
             },
         };
         let mut transaction = pool.begin().await.unwrap();
