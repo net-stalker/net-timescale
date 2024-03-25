@@ -44,6 +44,10 @@ impl RequestResult {
         RequestResult::error(description).into_envelope()
     }
 
+    pub fn enveloped_ok(description: Option<String>, response: Option<Envelope>) -> Envelope {
+        RequestResult::ok(description, response).into_envelope()
+    }
+
     fn into_envelope(self) -> Envelope {
         Envelope::new(
             None,
