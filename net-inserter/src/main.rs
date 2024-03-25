@@ -1,22 +1,30 @@
-use log::info;
-use threadpool::ThreadPool;
-use net_inserter::component::inserter::Inserter;
 use net_inserter::config::Config;
+use net_inserter::component::inserter::Inserter;
 
-#[async_std::main]
+#[tokio::main]
 async fn main() {
     init_log();
-    info!("Run module");
+    log::info!("Run module");
+    let config = if cfg!(debug_assertions) {
+        println!("Running in debug mode");
+        Config::builder().build().expect("read config error")
+    } else {
+        println!("Running in release mode");
+        let config_path = std::env::var("CONFIG_PATH").unwrap();
+        let mut config = Config::new(&config_path).build().expect("read config error");
+        config.server.addr = format!("{}:{}", core::get_addr_for_host(&config.server.host_name).await, &config.server.port);
+        config
+    };
+    log::debug!("server ip adddress: {:?}", config.server.addr);
 
-    let config = Config::builder().build().expect("read config error");
-    let thread_pool = ThreadPool::with_name("worker".into(), 5);
-
-    Inserter::new(thread_pool.clone(), config).await.run().await;
-
-    thread_pool.join();
+    let inserter_component = Inserter::new(config).await;
+    
+    log::info!("Created component");
+    
+    inserter_component.run().await;
 }
 
-fn init_log() {
+fn init_log() {     
     let config_str = include_str!("log4rs.yml");
     let config = serde_yaml::from_str(config_str).unwrap();
     log4rs::init_raw_config(config).unwrap();

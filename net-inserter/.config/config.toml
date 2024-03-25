@@ -1,8 +1,17 @@
+# 
 [connection_url]
-url = "postgres://postgres:PsWDgxZb@localhost:5433/?sslmode=require&sslcert=docker/.ssl/client.crt&sslkey=docker/.ssl/client.key"
+url = "postgres://postgres:PsWDgxZb@localhost:5433"
 
 [max_connection_size]
 size = "10"
 
-[hub_connector]    
-addr = "tcp://0.0.0.0:5557"
+[server]
+host_name = "net-inserter"
+port = "5455"
+addr = "127.0.0.1:5455"
+
+[fusion_auth_server_addres]
+addr = "http://localhost:9011"
+
+[fusion_auth_api_key]
+key = "gw_awXW6h11DZ7ncwyim23-wQ76IAsM947L5p9Wb7yYOR0Erh_yQKCD4"
