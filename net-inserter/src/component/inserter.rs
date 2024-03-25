@@ -27,7 +27,7 @@ pub struct Inserter {
 
 impl Inserter {
     pub async fn new(
-        config: Config
+        config: Config,
     ) -> Self {
         let connection_pool = Arc::new(
             Inserter::configure_connection_pool(&config).await
@@ -74,17 +74,20 @@ impl Inserter {
                 todo!();
             },
         };
-        let jwt = fusion_auth_verifier::FusionAuthVerifier::new(
-            &config.fusion_auth_server_addres.addr,
-            Some(config.fusion_auth_api_key.key.clone()))
-            .verify_token(jwt_token).await;
-        if jwt.is_err() {
-            log::error!("Error: JWT token is not valid");
-            todo!();
-        }
-        let jwt = jwt.unwrap();
 
-        let tenant_id = jwt.get_tenant_id();
+        let tenant_id = if config.verify_token.token {
+            let jwt = fusion_auth_verifier::FusionAuthVerifier::new(
+                &config.fusion_auth_server_addres.addr,
+                Some(config.fusion_auth_api_key.key.clone()))
+                .verify_token(jwt_token).await;
+            if jwt.is_err() {
+                log::error!("Error: JWT token is not valid");
+                todo!();
+            }
+            jwt.unwrap().get_tenant_id().to_string()
+        } else {
+            "default_tenant_id".to_string()
+        };
 
         if request.get_type() != data_packet::DataPacketDTO::get_data_type() {
             log::error!("Error: Request type is not DataPacketDTO");
@@ -100,7 +103,7 @@ impl Inserter {
         };
         let mut transaction = pool.begin().await.unwrap();
         // TODO: later on it will be nice to open a stream of network packets and insert them in a batch
-        match network_packet_inserter::insert_network_packet_transaction(&mut transaction, tenant_id, agent_id, &network_packet).await {
+        match network_packet_inserter::insert_network_packet_transaction(&mut transaction, &tenant_id, agent_id, &network_packet).await {
             Ok(_) => log::info!("Successfully inserted network packet"),
             Err(e) => log::error!("Error: {}", e),
         }

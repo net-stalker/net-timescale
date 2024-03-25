@@ -1,4 +1,6 @@
-# 
+[verify_token]
+verify = false
+
 [connection_url]
 url = "postgres://postgres:PsWDgxZb@localhost:5433"
 

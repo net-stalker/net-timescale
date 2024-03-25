@@ -15,10 +15,9 @@ async fn main() {
         config.server.addr = format!("{}:{}", core::get_addr_for_host(&config.server.host_name).await, &config.server.port);
         config
     };
-    log::debug!("server ip adddress: {:?}", config.server.addr);
 
     let inserter_component = Inserter::new(config).await;
-    
+
     log::info!("Created component");
     
     inserter_component.run().await;
