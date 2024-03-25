@@ -85,7 +85,7 @@ impl Requester for HttpOverviewFiltersRequester {
 
         let executed_query_response = Self::execute_queries(
             connection_pool,
-            Some(jwt.get_tenant_id()),
+            jwt.get_tenant_id(),
             request_start_date,
             request_end_date,
         ).await;

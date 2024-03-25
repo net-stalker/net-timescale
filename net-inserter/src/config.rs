@@ -13,6 +13,7 @@ use net_config::NetConfig;
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct VerifyToken {
     pub token: bool,
+    pub default_token: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]

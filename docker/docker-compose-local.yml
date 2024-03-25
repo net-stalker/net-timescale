@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  timescaledb:
+    build:
+      context: timescaledb
+    hostname: timescaledb
+    ports:
+      - 5433:5432
+    environment:
+      - POSTGRES_PASSWORD=PsWDgxZb
+    networks:
+      - net-net
+
+networks:
+  net-net:
+    driver: bridge
+    name: net-net

@@ -12,7 +12,7 @@ async fn main() {
         println!("Running in release mode");
         let config_path = std::env::var("CONFIG_PATH").unwrap();
         let mut config = Config::new(&config_path).build().expect("read config error");
-        config.server.addr = format!("{}:{}", core::get_addr_for_host(&config.server.host_name).await, &config.server.port);
+        config.server.addr = format!("{}:{}", net_core::get_addr_for_host(&config.server.host_name).await, &config.server.port);
         config
     };
 

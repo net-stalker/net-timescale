@@ -1,6 +1,7 @@
 [workspace]
 
-members = [ "core",
+members = [ 
+    "net-core",
     "net-inserter",
     "net-migrator",
     "net-reporter"

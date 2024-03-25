@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 net-core-api = "0.4.0"
 net-reporter-api = "0.5.1"
-net-token-verifier = "0.1.0"
+net-token-verifier = "0.2.0"
 net-transport = { version = "0.1.1", features = ["quinn"] }
 net-file = "0.1.1"
 net-config = "0.1.1"
@@ -18,6 +18,7 @@ async-trait = "0.1.74"
 serde_yaml = "0.9.21" # uses to parse log4rs config
 tokio = { version = "1.28.1", features = ["full"] }
 net-migrator = { path = "../net-migrator" }
+net-core = { path = "../net-core" }
 
 log.workspace = true
 log4rs.workspace = true

@@ -86,7 +86,7 @@ impl Inserter {
             }
             jwt.unwrap().get_tenant_id().to_string()
         } else {
-            "default_tenant_id".to_string()
+            config.verify_token.default_token.clone()
         };
 
         if request.get_type() != data_packet::DataPacketDTO::get_data_type() {

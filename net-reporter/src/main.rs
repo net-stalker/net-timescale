@@ -1,27 +1,5 @@
-use std::net::IpAddr;
-use std::path::Path;
-
 use net_reporter::config::Config;
 use net_reporter::component::reporter::Reporter;
-use tokio::fs;
-
-async fn get_addr_for_host(config: &Config) -> String {
-    let host_name = config.server.host_name.as_str();
-    let hosts_file = Path::new("/etc/hosts");
-    let contents = fs::read_to_string(hosts_file).await.expect("Failed to read /etc/hosts");
-
-    for line in contents.lines() {
-        let parts: Vec<&str> = line.split_whitespace().collect();
-        if parts.len() >= 2 {
-            if let Ok(ip_addr) = parts[0].parse::<IpAddr>() {
-                if parts[1] == host_name {
-                    return format!("{}:{}", ip_addr, config.server.port);
-                }
-            }
-        }
-    }
-    panic!("Failed to find ip address for host name: {}", host_name);
-}
 
 #[tokio::main]
 async fn main() {
@@ -35,7 +13,7 @@ async fn main() {
         let config_path = std::env::var("CONFIG_PATH").unwrap();
         let mut config = Config::new(&config_path).build().expect("read config error");
         // update ip address, now we can just bind everything as before
-        config.server.addr = get_addr_for_host(&config).await;
+        config.server.addr = format!("{}:{}", net_core::get_addr_for_host(&config.server.host_name).await, config.server.port);
         config
     };
     log::debug!("server ip adddress: {:?}", config.server.addr);
