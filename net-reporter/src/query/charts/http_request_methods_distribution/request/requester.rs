@@ -11,10 +11,10 @@ use sqlx::Error;
 use sqlx::Pool;
 use sqlx::Postgres;
 
-use net_core_api::decoder_api::Decoder;
-use net_core_api::encoder_api::Encoder;
-use net_core_api::envelope::envelope::Envelope;
-use net_core_api::typed_api::Typed;
+use net_core_api::api::envelope::envelope::Envelope;
+use net_core_api::core::decoder_api::Decoder;
+use net_core_api::core::encoder_api::Encoder;
+use net_core_api::core::typed_api::Typed;
 
 
 use crate::query::charts::http_request_methods_distribution::response::http_request::HttpRequestMethodResponse;

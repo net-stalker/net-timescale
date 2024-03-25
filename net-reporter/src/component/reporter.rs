@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use net_core_api::decoder_api::Decoder;
-use net_core_api::encoder_api::Encoder;
-use net_core_api::envelope::envelope::Envelope;
+use net_core_api::core::decoder_api::Decoder;
+use net_core_api::core::encoder_api::Encoder;
+use net_core_api::api::envelope::envelope::Envelope;
 use net_transport::quinn::connection::QuicConnection;
 use net_transport::quinn::server::builder::ServerQuicEndpointBuilder;
 use sqlx::Pool;
