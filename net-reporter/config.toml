@@ -1,0 +1,19 @@
+[connection_url]
+
+url = "postgres://postgres:PsWDgxZb@timescaledb:5432"
+
+[max_connection_size]
+size = "10"
+
+[server]
+# net-reporter is expected
+host_name = ""
+# 5454 is expected
+port = ""
+addr = ""
+
+[fusion_auth_server_addres]
+addr = ""
+
+[fusion_auth_api_key]
+key = ""

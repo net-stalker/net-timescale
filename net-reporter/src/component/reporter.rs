@@ -281,10 +281,10 @@ impl Reporter {
         Reporter::create_continuous_aggregates(&self.connection_pool).await;
 
         log::info!("Creating server endpoint for net-reporter..."); 
+        
         let reporter_server_endpoint = ServerQuicEndpointBuilder::default()
-            .with_addr(self.config.server_address.address.parse().unwrap())
+            .with_addr(self.config.server.addr.parse().unwrap())
             .build();
-
         if reporter_server_endpoint.is_err() {
             todo!()
         }
