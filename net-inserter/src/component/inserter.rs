@@ -1,33 +1,44 @@
-use std::rc::Rc;
-use threadpool::ThreadPool;
+use std::sync::Arc;
+
 use sqlx::Pool;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::Postgres;
-use net_transport::polling::zmq::ZmqPoller;
-use net_transport::zmq::builders::dealer::ConnectorZmqDealerBuilder;
-use net_transport::zmq::contexts::dealer::DealerContext;
-use crate::command::executor::PoolWrapper;
-use crate::command::insert_handler::InsertHandler;
+
+use net_agent_api::api::data_packet;
+
+use net_core_api::api::envelope::envelope::Envelope;
+use net_core_api::core::decoder_api::Decoder;
+use net_core_api::core::typed_api::Typed;
+
+use net_token_verifier::fusion_auth::fusion_auth_verifier;
+use net_token_verifier::verifier::Verifier;
+
+use net_transport::quinn::connection::QuicConnection;
+use net_transport::quinn::server::builder::ServerQuicEndpointBuilder;
+
 use crate::config::Config;
+use crate::utils::decoder;
+use crate::utils::network_packet_inserter;
 
 pub struct Inserter {
-    thread_pool: ThreadPool,
-    connection_pool: Pool<Postgres>,
-    #[allow(dead_code)]
     config: Config,
+    connection_pool: Arc<Pool<Postgres>>,
 }
 
 impl Inserter {
-    pub async fn new(thread_pool: ThreadPool, config: Config) -> Self {
-        let connection_pool = Inserter::configure_connection_pool(&config).await;
+    pub async fn new(
+        config: Config,
+    ) -> Self {
+        let connection_pool = Arc::new(
+            Inserter::configure_connection_pool(&config).await
+        );
+
         Self {
-            thread_pool,
             connection_pool,
-            config
+            config,
         }
     }
 
-    // TODO: move to builder
     async fn configure_connection_pool(config: &Config) -> Pool<Postgres> {
         PgPoolOptions::new()
             .max_connections(config.max_connection_size.size.parse().expect("not a number"))
@@ -36,25 +47,116 @@ impl Inserter {
             .unwrap()
     }
 
+    pub async fn handle_insert_request(
+        pool: Arc<Pool<Postgres>>,
+        mut client_connection: QuicConnection,
+        // request: Envelope,
+        config: Config,
+    ) {
+        let request = match client_connection.receive_reliable().await {
+            Ok(receive) => Envelope::decode(&receive),
+            Err(_) => {
+                log::error!("Error: Failed to receive request");
+                return;
+            },
+        };
+        let jwt_token = match request.get_jwt_token() {
+            Ok(token) => token,
+            Err(_) => {
+                log::error!("Error: JWT token is not found in request");
+                return;
+            },
+        };
+        let agent_id = match request.get_agent_id() {
+            Ok(agent_id) => agent_id,
+            Err(_) => {
+                log::error!("Error: Agent ID is not found in request");
+                return;
+            },
+        };
+
+        let tenant_id = if config.verify_token.token {
+            let jwt = fusion_auth_verifier::FusionAuthVerifier::new(
+                &config.fusion_auth_server_addres.addr,
+                Some(config.fusion_auth_api_key.key.clone()))
+                .verify_token(jwt_token).await;
+            if jwt.is_err() {
+                log::error!("Error: JWT token is not valid");
+                return;
+            }
+            jwt.unwrap().get_tenant_id().map(|s| s.to_string())
+        } else {
+            Some(config.verify_token.default_token)
+        };
+
+        if tenant_id.is_none() {
+            log::error!("Error: Tenant ID is not found in JWT token");
+            return;
+        }
+
+        let tenant_id = tenant_id.unwrap();
+
+        if request.get_type() != data_packet::DataPacketDTO::get_data_type() {
+            log::error!("Error: Request type is not DataPacketDTO");
+            return;
+        }
+
+        let network_packet = match decoder::Decoder::decode(data_packet::DataPacketDTO::decode(request.get_data())).await {
+            Ok(network_packet) => network_packet,
+            Err(e) => {
+                log::error!("{}", e);
+                return;
+            },
+        };
+        let mut transaction = pool.begin().await.unwrap();
+        // TODO: later on it will be nice to open a stream of network packets and insert them in a batch
+        match network_packet_inserter::insert_network_packet_transaction(&mut transaction, &tenant_id, agent_id, &network_packet).await {
+            Ok(_) => log::info!("Successfully inserted network packet"),
+            Err(e) => log::error!("Error: {}", e),
+        }
+        transaction.commit().await.unwrap();
+    }
+
     pub async fn run(self) {
         log::info!("Run component"); 
-        let dealer_context = DealerContext::default();
 
-        self.thread_pool.execute(move || {
-            let network_packet_handler = InsertHandler::new(
-                PoolWrapper::new(self.connection_pool).into_inner()
-            );
+        log::info!("Run db migrations");
+        let migrations_result = net_migrator::migrator::run_migrations(&self.connection_pool, "./migrations").await;
+        if migrations_result.is_err() {
+            log::error!("Error, failed to run migrations: {}", migrations_result.err().unwrap());
+            todo!();
+        }
+        log::info!("Successfully ran db migrations");
 
-            let network_packet_connector = ConnectorZmqDealerBuilder::new(&dealer_context)
-                .with_endpoint(self.config.hub_connector.addr)
-                .with_handler(Rc::new(network_packet_handler))
-                .build()
-                .connect()
-                .into_inner();
+        log::info!("Creating server endpoint for net-reporter..."); 
+        let reporter_server_endpoint = ServerQuicEndpointBuilder::default()
+            .with_addr(self.config.server.addr.parse().unwrap())
+            .build();
 
-            ZmqPoller::new()
-                .add(network_packet_connector)
-                .poll(-1);
-        });
+        if reporter_server_endpoint.is_err() {
+            todo!()
+        }
+        let mut reporter_server_endpoint = reporter_server_endpoint.unwrap();
+        log::info!("Successfully created server endpoint for net-reporter");
+
+        loop {
+            log::info!("Waiting on client connection...");
+            let client_connection_result = reporter_server_endpoint.accept_client_connection().await;
+            match client_connection_result {
+                Ok(client_connection) => {
+                    log::info!("Client is successfully connected");
+                    let handling_connection_pool = self.connection_pool.clone();
+                    let config = self.config.clone();
+                    tokio::spawn(async move {
+                        Inserter::handle_insert_request(
+                            handling_connection_pool,
+                            client_connection,
+                            config,
+                        ).await
+                    });
+                },
+                Err(_) => todo!(),
+            }
+        }
     }
 }
