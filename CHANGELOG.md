@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-d37e286] - 2024-03-26
+
+Add debug without token verify (#61)
+
+* removed net-inserter, renamed net-inserter-async into net-intersert, added core crate for functions which are used in both net-reporter and net-inserter
+
+* updated config by adding bool flag to verify token or not
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-c11f4cd] - 2024-03-25
 
