@@ -75,7 +75,7 @@ impl Inserter {
             },
         };
 
-        let tenant_id = if config.verify_token.token {
+        let tenant_id = if config.verify_token.verify {
             let jwt = fusion_auth_verifier::FusionAuthVerifier::new(
                 &config.fusion_auth_server_addres.addr,
                 Some(config.fusion_auth_api_key.key.clone()))

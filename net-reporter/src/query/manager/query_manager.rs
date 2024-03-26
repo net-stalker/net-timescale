@@ -46,7 +46,7 @@ impl QueryManager {
         if enveloped_request.get_jwt_token().is_err() {
             return Err("error: jwt token is required".into());
         }
-        let jwt = if config.verify_token.token {
+        let jwt = if config.verify_token.verify {
             let jwt = fusion_auth_verifier::FusionAuthVerifier::new(
                 &config.fusion_auth_server_addres.addr,
                 Some(config.fusion_auth_api_key.key.clone()))

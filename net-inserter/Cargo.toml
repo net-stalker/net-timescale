@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-
 net-core-api = "0.4.0"
 net-transport = { version = "0.1.1", features = ["quinn"] }
 net-file = "0.1.1"
@@ -29,7 +28,7 @@ sqlx = { version = "0.7.0", features = ["runtime-async-std", "tls-native-tls", "
 tokio = { version = "1.28.1", features = ["full"] }
 openssl = { version = "0.10.64", features = ["vendored"] }
 net-migrator = { path = "../net-migrator" }
-net-core = { path = "../net-core" }
+host-core = { path = "../host-core" }
 
 [dev-dependencies]
 mockall = "0.11.2"
