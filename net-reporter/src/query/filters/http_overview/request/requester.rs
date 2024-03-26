@@ -90,7 +90,7 @@ impl Requester for HttpOverviewFiltersRequester {
             request_end_date,
         ).await?;
 
-        let response: HttpOverviewFiltersResponse = executed_query_response.into();
+        let response: HttpOverviewFiltersResponse = executed_query_response;
         log::info!("Got response on request: {:?}", response);
 
         let dto_response: HttpOverviewDashboardFiltersDTO = response.into();
