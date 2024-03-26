@@ -1,3 +1,6 @@
+[verify_token]
+verify = true
+
 [connection_url]
 url = "postgres://postgres:PsWDgxZb@timescaledb:5432"
 

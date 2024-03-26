@@ -23,7 +23,7 @@ services:
   net-inserter:
     build:
       context: ../
-      dockerfile: net-inserter-async/Dockerfile
+      dockerfile: net-inserter/Dockerfile
     hostname: net-inserter
     networks:
       - net-net

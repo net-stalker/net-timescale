@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use net_token_verifier::fusion_auth::fusion_auth_verifier;
+use net_token_verifier::fusion_auth::jwt_token::JwtBuilder;
 use net_token_verifier::verifier::Verifier;
 use sqlx::Pool;
 use sqlx::Postgres;
@@ -39,14 +40,19 @@ impl QueryManager {
         if enveloped_request.get_jwt_token().is_err() {
             return Err("error: jwt token is required".to_string());
         }
-        let jwt = fusion_auth_verifier::FusionAuthVerifier::new(
-            &config.fusion_auth_server_addres.addr,
-            Some(config.fusion_auth_api_key.key.clone()))
-            .verify_token(enveloped_request.get_jwt_token().unwrap()).await;
-
-        let jwt = match jwt {
-            Ok(jwt) => jwt,
-            Err(e) => return Err(format!("error: {:?}", e))
+        let jwt = if config.verify_token.token {
+            let jwt = fusion_auth_verifier::FusionAuthVerifier::new(
+                &config.fusion_auth_server_addres.addr,
+                Some(config.fusion_auth_api_key.key.clone()))
+                .verify_token(enveloped_request.get_jwt_token().unwrap()).await;
+            match jwt {
+                Ok(jwt) => jwt,
+                Err(e) => return Err(format!("error: {:?}", e))
+            }
+        } else {
+            JwtBuilder::default()
+                .with_tenant_id(config.verify_token.default_token.clone())
+                .build()
         };
 
         let requester = requester.unwrap().as_ref();
