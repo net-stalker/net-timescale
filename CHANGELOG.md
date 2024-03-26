@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-b15b9e4] - 2024-03-26
 
 Add debug without token verify (#62)
@@ -19,7 +20,6 @@ Add debug without token verify (#62)
 * updated all the config files
 
 * fixed DockerFile for net-inserter
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-d37e286] - 2024-03-26
 
 Add debug without token verify (#61)

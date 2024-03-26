@@ -1,19 +1,20 @@
+use std::error::Error;
 use std::sync::Arc;
 
-use net_token_verifier::fusion_auth::jwt_token::Jwt;
 use sqlx::Pool;
 use sqlx::Postgres;
 
 use net_core_api::api::envelope::envelope::Envelope;
+use net_token_verifier::fusion_auth::jwt_token::Jwt;
 
 #[async_trait::async_trait]
 pub trait Requester: Sync + Send {
-    async fn request(
+    async fn request_enveloped_chart(
         &self,
         connection_pool: Arc<Pool<Postgres>>,
         data: Envelope,
         jwt: Jwt,
-    ) -> Result<Envelope, String>;
+    ) -> Result<Envelope, Box<dyn Error + Send + Sync>>;
     
     fn get_requesting_type(&self) -> &'static str;
 }

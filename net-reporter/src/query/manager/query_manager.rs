@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::error::Error;
 use std::sync::Arc;
 
 use net_token_verifier::fusion_auth::fusion_auth_verifier;
@@ -32,13 +33,18 @@ impl QueryManager {
         QueryManagerBuilder::default()
     }
 
-    pub async fn handle_request(&self, config: &Config, enveloped_request: Envelope, connection_pool: Arc<Pool<Postgres>>) -> Result<Envelope, String> {
+    pub async fn handle_request(
+        &self,
+        config: &Config,
+        enveloped_request: Envelope,
+        connection_pool: Arc<Pool<Postgres>>
+    ) -> Result<Envelope, Box<dyn Error + Send + Sync>> {
         let requester = self.requesters.get(enveloped_request.get_type());
         if requester.is_none() {
-            return Err("error: Tere is no such request available".to_string());
+            return Err("Error: Tere is no such request available".into());
         }
         if enveloped_request.get_jwt_token().is_err() {
-            return Err("error: jwt token is required".to_string());
+            return Err("error: jwt token is required".into());
         }
         let jwt = if config.verify_token.verify {
             let jwt = fusion_auth_verifier::FusionAuthVerifier::new(
@@ -47,7 +53,7 @@ impl QueryManager {
                 .verify_token(enveloped_request.get_jwt_token().unwrap()).await;
             match jwt {
                 Ok(jwt) => jwt,
-                Err(e) => return Err(format!("error: {:?}", e))
+                Err(e) => return Err(format!("error: {:?}", e).into())
             }
         } else {
             JwtBuilder::default()
@@ -57,7 +63,7 @@ impl QueryManager {
 
         let requester = requester.unwrap().as_ref();
 
-        requester.request(connection_pool, enveloped_request, jwt).await
+        requester.request_enveloped_chart(connection_pool, enveloped_request, jwt).await
     }
 }
 

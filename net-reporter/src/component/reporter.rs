@@ -1,8 +1,10 @@
 use std::sync::Arc;
 
+use net_core_api::api::result::result::ResultDTO;
 use net_core_api::core::decoder_api::Decoder;
 use net_core_api::core::encoder_api::Encoder;
 use net_core_api::api::envelope::envelope::Envelope;
+use net_core_api::core::typed_api::Typed;
 use net_transport::quinn::connection::QuicConnection;
 use net_transport::quinn::server::builder::ServerQuicEndpointBuilder;
 use sqlx::Pool;
@@ -35,7 +37,8 @@ use crate::query::charts::network_graph::request::requester::NetworkGraphRequest
 use crate::query::charts::total_http_requests::request::requester::TotalHttpRequestsRequester;
 use crate::query::filters::http_overview::request::requester::HttpOverviewFiltersRequester;
 use crate::query::filters::network_overview::request::requester::NetworkOverviewFiltersRequester;
-use crate::query::manager::query_manager::QueryManager; 
+use crate::query::manager::query_manager::QueryManager;
+use crate::query::request_result::RequestResult; 
 
 
 pub struct Reporter {
@@ -314,6 +317,7 @@ impl Reporter {
         }
     }
 
+    //TODO: Write error handling for receiving and sending result errors.
     async fn handle_client_connection(
         config: Config,
         mut client_connection: QuicConnection,
@@ -330,16 +334,19 @@ impl Reporter {
 
         log::info!("Recieved request from client: {:?}", recieve_enveloped_request);
 
-        let response = query_manager.as_ref().handle_request(&config, recieve_enveloped_request, connection_pool).await;
-        if response.is_err() {
-            log::error!("Error: {:?}", response.err());
-            todo!()
-        }
-        let response = response.unwrap();
+        let request_result = query_manager.as_ref().handle_request(&config, recieve_enveloped_request, connection_pool).await;
+        log::info!("Got response on request: {:?}", request_result);
 
-        log::info!("Got response on request: {:?}", response);
+        let request_result: RequestResult = request_result.into();
+        let request_result_dto: ResultDTO = request_result.into();
+        let envelope_to_send = Envelope::new(
+            None,
+            None,
+            ResultDTO::get_data_type(),
+            &request_result_dto.encode()
+        );
 
-        let send_result = client_connection.send_all_reliable(&response.encode()).await;
+        let send_result = client_connection.send_all_reliable(&envelope_to_send.encode()).await;
         if send_result.is_err() {
             todo!()
         }
