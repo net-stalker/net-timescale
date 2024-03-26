@@ -21,12 +21,12 @@ WORKDIR /net-timescale
 COPY . .
 
 # Build the application
-RUN cargo build --package net-inserter-async --release --target=x86_64-unknown-linux-musl
+RUN cargo build --package net-inserter --release --target=x86_64-unknown-linux-musl
 
 # Final stage
 FROM debian:latest
-COPY --from=builder /net-timescale/target/x86_64-unknown-linux-musl/release/net-inserter-async /
-COPY --from=builder /net-timescale/net-inserter-async/config.toml /
+COPY --from=builder /net-timescale/target/x86_64-unknown-linux-musl/release/net-inserter /
+COPY --from=builder /net-timescale/net-inserter/config.toml /
 COPY --from=builder /net-timescale/migrations /migrations
 ENV CONFIG_PATH=/
-ENTRYPOINT ["/net-inserter-async"]
+ENTRYPOINT ["/net-inserter"]
