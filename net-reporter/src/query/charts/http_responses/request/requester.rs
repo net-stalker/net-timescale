@@ -99,7 +99,7 @@ impl HttpResponsesRequester {
 
 #[async_trait::async_trait]
 impl Requester for HttpResponsesRequester {
-    async fn request_envelped_chart(
+    async fn request_enveloped_chart(
         &self,
         connection_pool: Arc<Pool<Postgres>>,
         enveloped_request: Envelope,

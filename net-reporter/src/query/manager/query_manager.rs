@@ -63,7 +63,7 @@ impl QueryManager {
 
         let requester = requester.unwrap().as_ref();
 
-        requester.request_envelped_chart(connection_pool, enveloped_request, jwt).await
+        requester.request_enveloped_chart(connection_pool, enveloped_request, jwt).await
     }
 }
 
