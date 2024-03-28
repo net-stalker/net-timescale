@@ -100,16 +100,16 @@ impl HttpClientsRequester {
 
 #[async_trait::async_trait]
 impl Requester for HttpClientsRequester {
-    async fn request(
+    async fn request_enveloped_chart(
         &self,
         connection_pool: Arc<Pool<Postgres>>,
         enveloped_request: Envelope,
         jwt: Jwt,
-    ) -> Result<Envelope, String> {
+    ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
         let request_agent_id = enveloped_request.get_agent_id().ok();
 
         if enveloped_request.get_type() != self.get_requesting_type() {
-            return Err(format!("wrong request is being received: {}", enveloped_request.get_type()));
+            return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
         }
         let request = HttpClientsRequestDTO::decode(enveloped_request.get_data());
         let request_start_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_start_date_time()).unwrap();
@@ -130,12 +130,7 @@ impl Requester for HttpClientsRequester {
             request_start_date,
             request_end_date,
             filters,
-        ).await;
-
-        if let Err(e) = executed_query_response {
-            return Err(format!("error: {:?}", e));
-        }
-        let executed_query_response = executed_query_response.unwrap();
+        ).await?;
 
         let response: HttpClientsResponse = executed_query_response.into();
         log::info!("Got response on request: {:?}", response);

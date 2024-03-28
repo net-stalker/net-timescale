@@ -1,5 +1,4 @@
-use std::fmt::Debug;
-use std::fmt::Formatter;
+use std::fmt::{Debug, Formatter};
 
 use serde::Deserialize;
 use serde::Serialize;
@@ -12,7 +11,7 @@ use net_config::NetConfig;
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct VerifyToken {
-    pub token: bool,
+    pub verify: bool,
     pub default_token: String,
 }
 

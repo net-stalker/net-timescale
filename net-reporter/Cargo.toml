@@ -18,7 +18,7 @@ async-trait = "0.1.74"
 serde_yaml = "0.9.21" # uses to parse log4rs config
 tokio = { version = "1.28.1", features = ["full"] }
 net-migrator = { path = "../net-migrator" }
-net-core = { path = "../net-core" }
+host-core = { path = "../host-core" }
 
 log.workspace = true
 log4rs.workspace = true

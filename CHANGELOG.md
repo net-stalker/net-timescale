@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
 <!-- [END AUTO UPDATE] -->
+## [0.1.0-418f0c6] - 2024-03-26
+
+Ns 226/implement resultdto as request results (#63)
+
+* NS-226/implement-resultdto-as-request-results: Change return Result Error types
+
+* NS-226/implement-resultdto-as-request-results: Add RequestResult
+
+* NS-226/implement-resultdto-as-request-results: Add request result wrapping in ResultDTO for sending
+## [0.1.0-b15b9e4] - 2024-03-26
+
+Add debug without token verify (#62)
+
+* removed net-inserter, renamed net-inserter-async into net-inserter
+
+* updated config by adding bool flag to verify token or not
+
+* updated all the config files
+
+* fixed DockerFile for net-inserter
 ## [0.1.0-d37e286] - 2024-03-26
 
 Add debug without token verify (#61)
