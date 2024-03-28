@@ -7,3 +7,9 @@
 Cargo.lock
 
 .vscode/
+
+# Ignore all config.toml files
+*/config.toml
+
+# Except the one in the .cargo directory
+!.cargo/config.toml
