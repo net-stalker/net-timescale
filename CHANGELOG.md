@@ -8,12 +8,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-a536cf5] - 2024-04-01
+
+fix-net-inserter-DockerFile (#66)
+
+* added lpcap installation
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-c3e5407] - 2024-03-28
 
 some-repo-updated: updated updated .gitignore, deleted config.toml fi… (#64)
 
 * updated updated .gitignore, deleted config.toml files in crates root
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-418f0c6] - 2024-03-26
 
 Ns 226/implement resultdto as request results (#63)
