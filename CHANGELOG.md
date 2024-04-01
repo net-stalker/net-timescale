@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-a536cf5] - 2024-04-01
+
+fix-net-inserter-DockerFile (#66)
+
+* added lpcap installation
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-c3e5407] - 2024-03-28
 
