@@ -22,7 +22,8 @@ RUN tar -xzf libpcap-1.10.4.tar.gz
 RUN cd libpcap-1.10.4 \
     && CC=x86_64-linux-gnu-gcc ac_cv_linux_vers=2 ./configure --host=x86_64-linux-gnu --with-pcap=linux \
     && make \
-    && make install
+    && make install \
+    && echo "Completed"
 
 # Create a new directory for the application
 WORKDIR /net-timescale
