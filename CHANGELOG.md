@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-447d996] - 2024-04-01
+
+NS-240/master-push-action: added github action for stage.yml (#65)
+
+* added github action for stage.yml
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-550c54d] - 2024-04-01
 
