@@ -21,4 +21,4 @@ jobs:
     - name: Rerun docker-compose
       run: |
         cd /mnt/netstalker-back
-        docker-compose up --build -d net-reporter net-inserter
+        docker-compose up --build -d
