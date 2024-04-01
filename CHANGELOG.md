@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-a213034] - 2024-04-01
+
+Fix net inserter docker file (#68)
+
+* removed cross compile due to unfixable pcap error
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-447d996] - 2024-04-01
 
