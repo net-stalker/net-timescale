@@ -31,18 +31,18 @@ services:
       - timescaledb
 
   # uncomment to run net-gateway. Correct the path to the context if you need
-  # net-gateway:
-  #   build:
-  #     context: ../../net-gateway
-  #     dockerfile: Dockerfile
-  #   hostname: net-gateway
-  #   ports:
-  #     - "8080:8080"
-  #   networks:
-  #     - net-net
-  #   depends_on:
-  #     - net-reporter
-  #     - net-inserter
+  net-gateway:
+    build:
+      context: ../../net-gateway
+      dockerfile: Dockerfile
+    hostname: net-gateway
+    ports:
+      - "8080:8080"
+    networks:
+      - net-net
+    depends_on:
+      - net-reporter
+      - net-inserter
 
 networks:
   net-net:

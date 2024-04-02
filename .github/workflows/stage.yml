@@ -22,3 +22,6 @@ jobs:
       run: |
         cd /mnt/netstalker-back
         docker-compose up --build -d
+    - name: Clear docker builder cache
+      run: |
+        docker builder prune -a -f
