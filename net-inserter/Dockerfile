@@ -7,8 +7,7 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     libzmq3-dev \
     libpcap-dev \
-    wget \
-    && rm -rf /var/lib/apt/lists/*
+    wget && rm -rf /var/lib/apt/lists/*
 
 # Install Rust
 RUN wget https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init && \
@@ -29,6 +28,9 @@ RUN cargo build --package net-inserter --release
 
 # Final stage
 FROM debian:bullseye-slim
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y tshark
+
 COPY --from=builder /net-timescale/target/release/net-inserter /
 COPY --from=builder /net-timescale/net-inserter/config.toml /
 COPY --from=builder /net-timescale/migrations /migrations
