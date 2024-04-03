@@ -5,7 +5,7 @@ CREATE TABLE Networks
     TenantId            TEXT NOT NULL,
     NetworkColor        INT,
 
-    PRIMARY KEY (NetworkID)
+    PRIMARY KEY (NetworkID),
     
     UNIQUE (NetworkName, TenantId)
 );
@@ -19,7 +19,7 @@ CREATE TABLE Traffic
     RawPcapFileAddress  TEXT NOT NULL,
     ParsedData          JSONB NOT NULL,
 
-    PRIMARY KEY (PcapID)
+    PRIMARY KEY (PcapID),
 
     FOREIGN KEY (NetworkID) REFERENCES Networks(NetworkID)
 );
