@@ -48,8 +48,8 @@ impl Inserter {
     }
 
     pub async fn handle_insert_request(
-        pool: Arc<Pool<Postgres>>,
         mut client_connection: QuicConnection,
+        connection_pool: Arc<Pool<Postgres>>,
         // request: Envelope,
         config: Config,
     ) {
@@ -64,13 +64,6 @@ impl Inserter {
             Ok(token) => token,
             Err(_) => {
                 log::error!("Error: JWT token is not found in request");
-                return;
-            },
-        };
-        let agent_id = match request.get_agent_id() {
-            Ok(agent_id) => agent_id,
-            Err(_) => {
-                log::error!("Error: Agent ID is not found in request");
                 return;
             },
         };
@@ -108,9 +101,9 @@ impl Inserter {
                 return;
             },
         };
-        let mut transaction = pool.begin().await.unwrap();
+        let mut transaction = connection_pool.begin().await.unwrap();
         // TODO: later on it will be nice to open a stream of network packets and insert them in a batch
-        match network_packet_inserter::insert_network_packet_transaction(&mut transaction, &tenant_id, agent_id, &network_packet).await {
+        match network_packet_inserter::insert_network_packet_transaction(&mut transaction, &tenant_id, &network_packet).await {
             Ok(_) => log::info!("Successfully inserted network packet"),
             Err(e) => log::error!("Error: {}", e),
         }
@@ -120,13 +113,13 @@ impl Inserter {
     pub async fn run(self) {
         log::info!("Run component"); 
 
-        log::info!("Run db migrations");
-        let migrations_result = net_migrator::migrator::run_migrations(&self.connection_pool, "./migrations").await;
-        if migrations_result.is_err() {
-            log::error!("Error, failed to run migrations: {}", migrations_result.err().unwrap());
-            todo!();
-        }
-        log::info!("Successfully ran db migrations");
+        // log::info!("Run db migrations");
+        // let migrations_result = net_migrator::migrator::run_migrations(&self.connection_pool, "./migrations").await;
+        // if migrations_result.is_err() {
+        //     log::error!("Error, failed to run migrations: {}", migrations_result.err().unwrap());
+        //     todo!();
+        // }
+        // log::info!("Successfully ran db migrations");
 
         log::info!("Creating server endpoint for net-reporter..."); 
         let reporter_server_endpoint = ServerQuicEndpointBuilder::default()
@@ -149,8 +142,8 @@ impl Inserter {
                     let config = self.config.clone();
                     tokio::spawn(async move {
                         Inserter::handle_insert_request(
-                            handling_connection_pool,
                             client_connection,
+                            handling_connection_pool,
                             config,
                         ).await
                     });
