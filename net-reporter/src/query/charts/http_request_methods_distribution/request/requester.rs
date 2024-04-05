@@ -1,9 +1,5 @@
 use std::sync::Arc;
 
-use net_reporter_api::api::http_request_methods_distribution::http_request_methods_distribution::HttpRequestMethodsDistributionDTO;
-use net_reporter_api::api::http_request_methods_distribution::http_request_methods_distribution_request::HttpRequestMethodsDistributionRequestDTO;
-use net_reporter_api::api::http_request_methods_distribution::http_request_methods_distribution_filters::HttpRequestMethodsDisributionFiltersDTO;
-use net_token_verifier::fusion_auth::jwt_token::Jwt;
 use sqlx::types::chrono::DateTime;
 use sqlx::types::chrono::TimeZone;
 use sqlx::types::chrono::Utc;
@@ -16,6 +12,9 @@ use net_core_api::core::decoder_api::Decoder;
 use net_core_api::core::encoder_api::Encoder;
 use net_core_api::core::typed_api::Typed;
 
+use net_reporter_api::api::http_request_methods_distribution::http_request_methods_distribution::HttpRequestMethodsDistributionDTO;
+use net_reporter_api::api::http_request_methods_distribution::http_request_methods_distribution_request::HttpRequestMethodsDistributionRequestDTO;
+use net_reporter_api::api::http_request_methods_distribution::http_request_methods_distribution_filters::HttpRequestMethodsDisributionFiltersDTO;
 
 use crate::query::charts::http_request_methods_distribution::response::http_request::HttpRequestMethodResponse;
 use crate::query::charts::http_request_methods_distribution::response::http_request_methods_distribution::HttpRequestMethodsDistributionResponse;
@@ -66,13 +65,13 @@ impl HttpRequestMethodsDistributionRequester {
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
         query_string: &str,
-        group_id: Option<&str>,
+        group_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         filters: &HttpRequestMethodsDisributionFiltersDTO,
     ) -> Result<Vec<HttpRequestMethodResponse>, Error> {
         SqlxQueryBuilderWrapper::<HttpRequestMethodResponse>::new(query_string)
-            .add_option_param(group_id.map(|group_id| group_id.to_string()))
+            .add_param(group_id)
             .add_param(start_date)
             .add_param(end_date)
             .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
@@ -88,9 +87,8 @@ impl Requester for HttpRequestMethodsDistributionRequester {
         &self,
         connection_pool: Arc<Pool<Postgres>>,
         enveloped_request: Envelope,
-        jwt: Jwt,
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
-        let request_agent_id = enveloped_request.get_agent_id().ok();
+        let group_id = enveloped_request.get_tenant_id();
 
         if enveloped_request.get_type() != self.get_requesting_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
@@ -109,7 +107,7 @@ impl Requester for HttpRequestMethodsDistributionRequester {
         let executed_query_response = Self::execute_query(
             connection_pool,
             query.as_str(),
-            jwt.get_tenant_id(),
+            group_id,
             request_start_date,
             request_end_date,
             filters,
@@ -121,8 +119,7 @@ impl Requester for HttpRequestMethodsDistributionRequester {
         let dto_response: HttpRequestMethodsDistributionDTO = response.into();
 
         Ok(Envelope::new(
-            enveloped_request.get_jwt_token().ok(),
-            request_agent_id,
+            group_id,
             HttpRequestMethodsDistributionDTO::get_data_type(),
             &dto_response.encode()
         ))

@@ -26,7 +26,7 @@ use crate::continuous_aggregate::network_bandwidth::NetworkBandwidthAggregate;
 use crate::continuous_aggregate::network_graph::NetworkGraphAggregate;
 use crate::continuous_aggregate::network_overview_filters::NetworkOverviewFiltersAggregate;
 
-use crate::query::charts::bandwidth_per_endpoint::request::requester::NetworkBandwidthPerEndpointRequester;
+use crate::query::charts::network_bandwidth_per_endpoint::request::requester::NetworkBandwidthPerEndpointRequester;
 use crate::query::charts::http_request_methods_distribution::request::requester::HttpRequestMethodsDistributionRequester;
 use crate::query::charts::http_responses::request::requester::HttpResponsesRequester;
 use crate::query::charts::http_clients::request::requester::HttpClientsRequester;
@@ -302,10 +302,8 @@ impl Reporter {
                     log::info!("Client is successfully connected");
                     let handling_query_manager = self.query_manager.clone();
                     let handling_connection_pool = self.connection_pool.clone();
-                    let config = self.config.clone();
                     tokio::spawn(async move {
                         Reporter::handle_client_connection(
-                            config,
                             client_connection,
                             handling_query_manager,
                             handling_connection_pool
@@ -319,7 +317,6 @@ impl Reporter {
 
     //TODO: Write error handling for receiving and sending result errors.
     async fn handle_client_connection(
-        config: Config,
         mut client_connection: QuicConnection,
         query_manager: Arc<QueryManager>,
         connection_pool: Arc<Pool<Postgres>>
@@ -330,18 +327,19 @@ impl Reporter {
         }
         let recieve_result = receive_result.unwrap();
 
-        let recieve_enveloped_request = Envelope::decode(&recieve_result);
+        let enveloped_request = Envelope::decode(&recieve_result);
 
-        log::info!("Recieved request from client: {:?}", recieve_enveloped_request);
+        let tenant_id = enveloped_request.get_tenant_id().to_owned();
 
-        let request_result = query_manager.as_ref().handle_request(&config, recieve_enveloped_request, connection_pool).await;
+        log::info!("Recieved request from client: {:?}", enveloped_request);
+
+        let request_result = query_manager.as_ref().handle_request(enveloped_request, connection_pool).await;
         log::info!("Got response on request: {:?}", request_result);
 
         let request_result: RequestResult = request_result.into();
         let request_result_dto: ResultDTO = request_result.into();
         let envelope_to_send = Envelope::new(
-            None,
-            None,
+            &tenant_id,
             ResultDTO::get_data_type(),
             &request_result_dto.encode()
         );
