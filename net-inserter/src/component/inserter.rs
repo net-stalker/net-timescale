@@ -71,11 +71,18 @@ impl Inserter {
             },
         };
         let mut transaction = pool.begin().await.unwrap();
+        
         // TODO: later on it will be nice to open a stream of network packets and insert them in a batch
-        match network_packet_inserter::insert_network_packet_transaction(&mut transaction, &tenant_id, "MOCK_AGENT_ID", &network_packet).await {
+        match network_packet_inserter::insert_network_packet_transaction(
+            &mut transaction, 
+            tenant_id, 
+            "MOCK_AGENT_ID", 
+            &network_packet
+        ).await {
             Ok(_) => log::info!("Successfully inserted network packet"),
             Err(e) => log::error!("Error: {}", e),
         }
+        
         transaction.commit().await.unwrap();
     }
 
