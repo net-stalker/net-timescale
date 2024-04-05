@@ -26,7 +26,7 @@ use crate::continuous_aggregate::network_bandwidth::NetworkBandwidthAggregate;
 use crate::continuous_aggregate::network_graph::NetworkGraphAggregate;
 use crate::continuous_aggregate::network_overview_filters::NetworkOverviewFiltersAggregate;
 
-use crate::query::charts::bandwidth_per_endpoint::request::requester::NetworkBandwidthPerEndpointRequester;
+use crate::query::charts::network_bandwidth_per_endpoint::request::requester::NetworkBandwidthPerEndpointRequester;
 use crate::query::charts::http_request_methods_distribution::request::requester::HttpRequestMethodsDistributionRequester;
 use crate::query::charts::http_responses::request::requester::HttpResponsesRequester;
 use crate::query::charts::http_clients::request::requester::HttpClientsRequester;
