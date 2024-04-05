@@ -11,7 +11,7 @@ pub trait Requester: Sync + Send {
     async fn request_enveloped_chart(
         &self,
         connection_pool: Arc<Pool<Postgres>>,
-        data: Envelope,
+        enveloped_request: Envelope,
     ) -> Result<Envelope, Box<dyn Error + Send + Sync>>;
     
     fn get_requesting_type(&self) -> &'static str;
