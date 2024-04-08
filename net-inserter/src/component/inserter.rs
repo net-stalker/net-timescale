@@ -49,6 +49,7 @@ impl Inserter {
     }
 
     pub async fn handle_insert_request(
+        config: Arc<Config>,
         pool: Arc<Pool<Postgres>>,
         mut client_connection: QuicConnection
     ) {
@@ -70,7 +71,7 @@ impl Inserter {
         let data_packet_to_insert = DataPacketDTO::decode(enveloped_request.get_data());
 
         let data_packet_save_result = Self::save_data_packet_into(
-            "MOCK_FILE_PATH",
+            &config.pcaps.directory_to_save,
             "MOCK_FILE_NAME",
             data_packet_to_insert.clone()
         );
@@ -114,7 +115,9 @@ impl Inserter {
     }
 
     pub async fn run(self) {
-        log::info!("Run component"); 
+        log::info!("Run component");
+
+        let config = Arc::new(self.config);
 
         // log::info!("Run db migrations");
         // let migrations_result = net_migrator::migrator::run_migrations(&self.pool, "./migrations").await;
@@ -126,7 +129,7 @@ impl Inserter {
 
         log::info!("Creating server endpoint for net-reporter..."); 
         let reporter_server_endpoint = ServerQuicEndpointBuilder::default()
-            .with_addr(self.config.server.addr.parse().unwrap())
+            .with_addr(config.server.addr.parse().unwrap())
             .build();
 
         if reporter_server_endpoint.is_err() {
@@ -141,9 +144,11 @@ impl Inserter {
             match client_connection_result {
                 Ok(client_connection) => {
                     log::info!("Client is successfully connected");
+                    let config_clone = config.clone();
                     let handling_connection_pool = self.connection_pool.clone();
                     tokio::spawn(async move {
                         Inserter::handle_insert_request(
+                            config_clone,
                             handling_connection_pool,
                             client_connection,
                         ).await

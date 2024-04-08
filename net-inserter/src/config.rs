@@ -10,8 +10,8 @@ use std::env;
 use net_config::NetConfig;
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct PcapDirectory {
-    pub pcap_directory: String,
+pub struct Pcaps {
+    pub directory_to_save: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -48,5 +48,5 @@ pub struct Config {
     pub max_connection_size: MaxConnectionSize,
     pub fusion_auth_server_addres: FusionAuthServerAddres,
     pub fusion_auth_api_key: FusionAuthApiKey,
-    pub pcap_directory: PcapDirectory,
+    pub pcaps: Pcaps,
 }
