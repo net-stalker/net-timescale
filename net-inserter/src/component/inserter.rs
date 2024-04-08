@@ -1,3 +1,7 @@
+use std::error::Error;
+use std::fs::File;
+use std::io::Write;
+use std::os::unix::fs::PermissionsExt;
 use std::sync::Arc;
 
 use sqlx::Pool;
@@ -79,6 +83,21 @@ impl Inserter {
         }
         
         transaction.commit().await.unwrap();
+    }
+
+    pub fn save_pcap_into(
+        folder_path: String,
+        file_name: String,
+        data: &[u8],
+    ) -> Result<usize, Box<dyn Error + Send + Sync>>{
+        let mut file = File::create(format!("{}/{}", folder_path, file_name))?;
+
+        // Set permissions to wr for owner and read for others
+        let metadata = file.metadata()?;
+        let mut permissions = metadata.permissions();
+        permissions.set_mode(0o644);
+        
+        Ok(file.write(data)?)
     }
 
     pub async fn run(self) {
