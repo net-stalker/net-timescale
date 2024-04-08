@@ -1,3 +1,6 @@
+[raw_pcaps]
+pcap_directory = ""
+
 [connection_url]
 url = "postgres://postgres:PsWDgxZb@localhost:5433"
 
