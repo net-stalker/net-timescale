@@ -1,11 +1,5 @@
 use std::sync::Arc;
 
-use net_core_api::api::envelope::envelope::Envelope;
-use net_core_api::core::decoder_api::Decoder;
-use net_core_api::core::encoder_api::Encoder;
-use net_core_api::core::typed_api::Typed;
-use net_reporter_api::api::network_overview_dashboard_filters::network_overview_dashbord_filters::NetworkOverviewDashboardFiltersDTO;
-use net_token_verifier::fusion_auth::jwt_token::Jwt;
 use sqlx::types::chrono::DateTime;
 use sqlx::types::chrono::TimeZone;
 use sqlx::types::chrono::Utc;
@@ -13,6 +7,12 @@ use sqlx::Error;
 use sqlx::Pool;
 use sqlx::Postgres;
 
+use net_core_api::api::envelope::envelope::Envelope;
+use net_core_api::core::decoder_api::Decoder;
+use net_core_api::core::encoder_api::Encoder;
+use net_core_api::core::typed_api::Typed;
+
+use net_reporter_api::api::network_overview_dashboard_filters::network_overview_dashbord_filters::NetworkOverviewDashboardFiltersDTO;
 use net_reporter_api::api::network_overview_dashboard_filters::network_overview_dashboard_filters_request::NetworkOverviewDashboardFiltersRequestDTO;
 
 use crate::query::filters::network_overview::response::filter_entry::FilterEntryResponse;
@@ -54,7 +54,7 @@ impl NetworkOverviewFiltersRequester {
 
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
-        group_id: Option<&str>,
+        group_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
     ) -> Result<Vec<FilterEntryResponse>, Error> {
@@ -73,9 +73,8 @@ impl Requester for NetworkOverviewFiltersRequester {
         &self,
         connection_pool: Arc<Pool<Postgres>>,
         enveloped_request: Envelope,
-        jwt: Jwt,
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
-        let request_agent_id = enveloped_request.get_agent_id().ok();
+        let tenant_id = enveloped_request.get_tenant_id();
 
         if enveloped_request.get_type() != self.get_requesting_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
@@ -86,7 +85,7 @@ impl Requester for NetworkOverviewFiltersRequester {
 
         let executed_query_response = Self::execute_query(
             connection_pool,
-            jwt.get_tenant_id(),
+            tenant_id,
             request_start_date,
             request_end_date
         ).await?;
@@ -97,8 +96,7 @@ impl Requester for NetworkOverviewFiltersRequester {
         let dto_response: NetworkOverviewDashboardFiltersDTO = response.into();
 
         Ok(Envelope::new(
-            enveloped_request.get_jwt_token().ok(),
-            request_agent_id,
+            tenant_id,
             NetworkOverviewDashboardFiltersDTO::get_data_type(),
             &dto_response.encode()
         ))

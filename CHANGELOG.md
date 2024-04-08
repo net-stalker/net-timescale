@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-1765049] - 2024-04-02
 
 fix-dockerfile-net-inserter: added tshark installation into docker image (#70)
 
 * added tshark installation into docker image
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-a213034] - 2024-04-01
 
 Fix net inserter docker file (#68)

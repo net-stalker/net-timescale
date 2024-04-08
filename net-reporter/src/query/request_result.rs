@@ -42,18 +42,27 @@ impl RequestResult {
         )
     }
 
-    pub fn enveloped_error(description: Option<String>) -> Envelope {
-        RequestResult::error(description).into_envelope()
+    pub fn enveloped_dto_error(
+        description: Option<String>,
+        tenant_id: &str
+    ) -> Envelope {
+        RequestResult::error(description).into_enveloped_dto_result(tenant_id)
     }
 
-    pub fn enveloped_ok(description: Option<String>, response: Option<Envelope>) -> Envelope {
-        RequestResult::ok(description, response).into_envelope()
+    pub fn enveloped_dto_ok(
+        description: Option<String>,
+        response: Option<Envelope>,
+        tenant_id: &str
+    ) -> Envelope {
+        RequestResult::ok(description, response).into_enveloped_dto_result(tenant_id)
     }
 
-    fn into_envelope(self) -> Envelope {
+    fn into_enveloped_dto_result(
+        self,
+        tenant_id: &str
+    ) -> Envelope {
         Envelope::new(
-            None,
-            None,
+            tenant_id,
             ResultDTO::get_data_type(),
             &<RequestResult as Into<ResultDTO>>::into(self).encode()
         )
