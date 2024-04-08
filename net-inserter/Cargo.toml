@@ -7,7 +7,7 @@ edition = "2021"
 net-core-api = "0.5.0"
 net-transport = { version = "0.1.1", features = ["quinn"] }
 net-file = "0.1.1"
-net-agent-api = "0.1.5"
+net-agent-api = "0.1.6"
 net-inserter-api = "0.1.5"
 net-config = "0.1.1"
 net-token-verifier = "0.2.0"

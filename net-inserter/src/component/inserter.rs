@@ -67,7 +67,18 @@ impl Inserter {
             return;
         }
 
-        let network_packet = match decoder::Decoder::decode(DataPacketDTO::decode(enveloped_request.get_data())).await {
+        let data_packet_to_insert = DataPacketDTO::decode(enveloped_request.get_data());
+
+        let data_packet_save_result = Self::save_data_packet_into(
+            "MOCK_FILE_PATH",
+            "MOCK_FILE_NAME",
+            data_packet_to_insert.clone()
+        );
+        if let Err(e) = data_packet_save_result {
+            log::error!("Error: {e}");
+        }
+
+        let network_packet = match decoder::Decoder::decode(data_packet_to_insert).await {
             Ok(network_packet) => network_packet,
             Err(e) => {
                 log::error!("{}", e);
@@ -86,8 +97,8 @@ impl Inserter {
     }
 
     pub fn save_data_packet_into(
-        folder_path: String,
-        file_name: String,
+        folder_path: &str,
+        file_name: &str,
         data_packet: DataPacketDTO,
     ) -> Result<usize, Box<dyn Error + Send + Sync>>{
         let mut file = File::create(format!("{}/{}", folder_path, file_name))?;
@@ -96,7 +107,7 @@ impl Inserter {
         let metadata = file.metadata()?;
         let mut permissions = metadata.permissions();
         permissions.set_mode(0o644);
-        
+
         let data = data_packet.get_data();
 
         Ok(file.write(data)?)
