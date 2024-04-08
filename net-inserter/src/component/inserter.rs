@@ -85,10 +85,10 @@ impl Inserter {
         transaction.commit().await.unwrap();
     }
 
-    pub fn save_pcap_into(
+    pub fn save_data_packet_into(
         folder_path: String,
         file_name: String,
-        data: &[u8],
+        data_packet: DataPacketDTO,
     ) -> Result<usize, Box<dyn Error + Send + Sync>>{
         let mut file = File::create(format!("{}/{}", folder_path, file_name))?;
 
@@ -97,6 +97,8 @@ impl Inserter {
         let mut permissions = metadata.permissions();
         permissions.set_mode(0o644);
         
+        let data = data_packet.get_data();
+
         Ok(file.write(data)?)
     }
 
