@@ -11,12 +11,6 @@ use std::env;
 use net_config::NetConfig;
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct VerifyToken {
-    pub verify: bool,
-    pub default_token: String,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Server {
     pub host_name: String,
     pub port: String,
@@ -45,7 +39,6 @@ pub struct FusionAuthApiKey {
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, NetConfig)]
 pub struct Config {
-    pub verify_token: VerifyToken,
     pub server: Server,
     pub connection_url: ConnectionUrl,
     pub max_connection_size: MaxConnectionSize,
