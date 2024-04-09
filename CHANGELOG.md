@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-2e0ff1d] - 2024-04-09
+
+Ns 258/update net core library version (#71)
+
+* NS-260/update-net-inserter: Update libs and remove unused and obsolete code.
+
+* NS-259/update-net-reporter: Update libs and remove unused and obsolete code.
+
+* NS-259/update-net-reporter: Change RequestResult. For now it is a wrap around RequestResultDTO. Nothing more. It is a bit strange though.
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-1765049] - 2024-04-02
 
