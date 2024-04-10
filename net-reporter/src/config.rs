@@ -27,21 +27,9 @@ pub struct MaxConnectionSize {
     pub size: String,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct FusionAuthServerAddres {
-    pub addr: String,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct FusionAuthApiKey {
-    pub key: String,
-}
-
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, NetConfig)]
 pub struct Config {
     pub server: Server,
     pub connection_url: ConnectionUrl,
     pub max_connection_size: MaxConnectionSize,
-    pub fusion_auth_server_addres: FusionAuthServerAddres,
-    pub fusion_auth_api_key: FusionAuthApiKey,
 }
