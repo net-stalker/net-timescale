@@ -24,7 +24,7 @@ impl HttpRequestMethodsRequester {
 
     pub async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
-        group_id: Option<&str>,
+        group_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
     ) -> Result<Vec<HttpRequestMethodResponse>, Error> {

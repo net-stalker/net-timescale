@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use net_token_verifier::fusion_auth::jwt_token::Jwt;
 use sqlx::types::chrono::DateTime;
 use sqlx::types::chrono::TimeZone;
 use sqlx::types::chrono::Utc;
@@ -68,13 +67,13 @@ impl NetworkBandwidthPerProtocolRequester {
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
         query_string: &str,
-        group_id: Option<&str>,
+        group_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         filters: &NetworkBandwidthPerProtocolFiltersDTO,
     ) -> Result<Vec<ProtocolResponse>, Error> {
         SqlxQueryBuilderWrapper::<ProtocolResponse>::new(query_string)
-            .add_option_param(group_id.map(|group_id| group_id.to_string()))
+            .add_param(group_id)
             .add_param(start_date)
             .add_param(end_date)
             .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
@@ -90,9 +89,8 @@ impl Requester for NetworkBandwidthPerProtocolRequester {
         &self,
         connection_pool: Arc<Pool<Postgres>>,
         enveloped_request: Envelope,
-        jwt: Jwt,
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
-        let request_agent_id = enveloped_request.get_agent_id().ok();
+        let group_id = enveloped_request.get_tenant_id();
 
         if enveloped_request.get_type() != self.get_requesting_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
@@ -111,7 +109,7 @@ impl Requester for NetworkBandwidthPerProtocolRequester {
         let executed_query_response = Self::execute_query(
             connection_pool,
             query.as_str(),
-            jwt.get_tenant_id(),
+            group_id,
             request_start_date,
             request_end_date,
             request_filters,
@@ -123,8 +121,7 @@ impl Requester for NetworkBandwidthPerProtocolRequester {
         let dto_response: NetworkBandwidthPerProtocolDTO = response.into();
 
         Ok(Envelope::new(
-            enveloped_request.get_jwt_token().ok(),
-            request_agent_id,
+            group_id,
             NetworkBandwidthPerProtocolDTO::get_data_type(),
             &dto_response.encode()
         ))

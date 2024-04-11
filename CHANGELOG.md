@@ -8,12 +8,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-838c14e] - 2024-04-10
+
+Ns 272/remove obsolete config code (#72)
+
+* NS-272/remove-obsolete-config-code: Remove obsolete code from net-inserter and net-reporter config
+<!-- [END AUTO UPDATE] -->
+## [0.1.0-2e0ff1d] - 2024-04-09
+
+Ns 258/update net core library version (#71)
+
+* NS-260/update-net-inserter: Update libs and remove unused and obsolete code.
+
+* NS-259/update-net-reporter: Update libs and remove unused and obsolete code.
+
+* NS-259/update-net-reporter: Change RequestResult. For now it is a wrap around RequestResultDTO. Nothing more. It is a bit strange though.
 ## [0.1.0-1765049] - 2024-04-02
 
 fix-dockerfile-net-inserter: added tshark installation into docker image (#70)
 
 * added tshark installation into docker image
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-a213034] - 2024-04-01
 
 Fix net inserter docker file (#68)

@@ -57,7 +57,7 @@ impl GraphLinksRequester {
 
     pub async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
-        group_id: Option<&str>,
+        group_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         filters: &NetworkGraphFiltersDTO,
@@ -70,7 +70,7 @@ impl GraphLinksRequester {
             .build_query();
 
         SqlxQueryBuilderWrapper::<GraphEdgeResponse>::new(query_string.as_str())
-            .add_option_param(group_id.map(|group_id| group_id.to_string()))
+            .add_param(group_id)
             .add_param(start_date)
             .add_param(end_date)
             .add_option_param(filters.is_include_protocols_mode().map(|_| filters.get_protocols().to_vec()))
