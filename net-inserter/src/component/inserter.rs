@@ -94,7 +94,7 @@ impl Inserter {
         // TODO: later on it will be nice to open a stream of network packets and insert them in a batch
         let insert_result = network_packet_inserter::insert_network_packet_transaction(
             &mut transaction,
-            &tenant_id,
+            tenant_id,
             &pcap_file_path,
             &network_packet
         ).await;
