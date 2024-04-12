@@ -1,11 +1,14 @@
-use sqlx::{Error, Pool, Postgres};
+use sqlx::Postgres;
+use sqlx::Pool;
+use sqlx::Error;
 use sqlx::postgres::PgQueryResult;
+
 use super::ContinuousAggregate;
 
-pub struct BandwidthPerEndpointAggregate {}
-const CA_NAME: &str = "bandwidth_per_endpoint_aggregate";
+pub struct HttpResponsesAggregate {}
+const CA_NAME: &str = "http_responses_aggregate";
 #[async_trait::async_trait]
-impl ContinuousAggregate for BandwidthPerEndpointAggregate {
+impl ContinuousAggregate for HttpResponsesAggregate {
     fn get_name() -> &'static str {
         CA_NAME
     }
@@ -17,15 +20,19 @@ impl ContinuousAggregate for BandwidthPerEndpointAggregate {
                 CREATE MATERIALIZED VIEW {}
                 WITH (timescaledb.continuous) AS
                 SELECT
-                    time_bucket('1 hour', frame_time) AS bucket,
+                    time_bucket('2 minutes', frame_time) AS bucket,
                     tenant_id,
                     agent_id,
                     src_addr,
                     dst_addr,
                     (binary_data->'l1'->'frame'->>'frame.len')::integer as packet_length,
-                    binary_data->'l1'->'frame'->>'frame.protocols' as protocols
+                    binary_data->'l1'->'frame'->>'frame.time' as packet_date,
+                    binary_data->'l5'->'http' as http_part
                 FROM captured_traffic
-                GROUP BY bucket, tenant_id, agent_id, src_addr, dst_addr, packet_length, protocols;
+                where
+                    binary_data->'l5'->'http' is not null
+                    and (binary_data->'l5'->'http'->>'http.response')::bool
+                GROUP BY bucket, tenant_id, agent_id, src_addr, dst_addr, packet_length, packet_date, binary_data
             ",
             Self::get_name()
         );

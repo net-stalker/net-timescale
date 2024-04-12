@@ -1,11 +1,10 @@
 use sqlx::{Error, Pool, Postgres};
 use sqlx::postgres::PgQueryResult;
-use super::ContinuousAggregate;
 
-pub struct HttpResponsesAggregate {}
-const CA_NAME: &str = "http_responses_aggregate";
+pub struct HttpClientsAggregate {}
+const CA_NAME: &str = "http_clients_aggregate";
 #[async_trait::async_trait]
-impl ContinuousAggregate for HttpResponsesAggregate {
+impl ContinuousAggregate for HttpClientsAggregate {
     fn get_name() -> &'static str {
         CA_NAME
     }
@@ -17,19 +16,18 @@ impl ContinuousAggregate for HttpResponsesAggregate {
                 CREATE MATERIALIZED VIEW {}
                 WITH (timescaledb.continuous) AS
                 SELECT
-                    time_bucket('2 minutes', frame_time) AS bucket,
+                    time_bucket('1 hour', frame_time) AS bucket,
                     tenant_id,
                     agent_id,
                     src_addr,
                     dst_addr,
                     (binary_data->'l1'->'frame'->>'frame.len')::integer as packet_length,
-                    binary_data->'l1'->'frame'->>'frame.time' as packet_date,
                     binary_data->'l5'->'http' as http_part
                 FROM captured_traffic
                 where
                     binary_data->'l5'->'http' is not null
-                    and (binary_data->'l5'->'http'->>'http.response')::bool
-                GROUP BY bucket, tenant_id, agent_id, src_addr, dst_addr, packet_length, packet_date, binary_data
+                    and (binary_data->'l5'->'http'->>'http.request')::bool
+                GROUP BY bucket, tenant_id, agent_id, src_addr, dst_addr, packet_length, binary_data;
             ",
             Self::get_name()
         );
