@@ -29,6 +29,7 @@ tokio = { version = "1.28.1", features = ["full"] }
 openssl = { version = "0.10.64", features = ["vendored"] }
 net-migrator = { path = "../net-migrator" }
 host-core = { path = "../host-core" }
+uuid = {version = "1.8.0", features = ["v7", "fast-rng",]} # Version 7 UUIDs using a Unix timestamp.
 
 [dev-dependencies]
 mockall = "0.11.2"

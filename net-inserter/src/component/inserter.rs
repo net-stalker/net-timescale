@@ -16,6 +16,7 @@ use net_core_api::core::decoder_api::Decoder;
 
 use net_transport::quinn::connection::QuicConnection;
 use net_transport::quinn::server::builder::ServerQuicEndpointBuilder;
+use uuid::Uuid;
 
 use crate::config::Config;
 use crate::utils::decoder;
@@ -60,9 +61,6 @@ impl Inserter {
                 return;
             },
         };
-
-        let tenant_id = enveloped_request.get_tenant_id();
-
         if enveloped_request.get_type() != DataPacketDTO::get_data_type() {
             log::error!("Error: Request type is not DataPacketDTO");
             return;
@@ -70,9 +68,13 @@ impl Inserter {
 
         let data_packet_to_insert = DataPacketDTO::decode(enveloped_request.get_data());
 
+        let tenant_id = enveloped_request.get_tenant_id();
+        
+        let pcap_file_name = Uuid::now_v7().to_string();
+
         let data_packet_save_result = Self::save_data_packet_into(
             &config.pcaps.directory_to_save,
-            "MOCK_FILE_NAME",
+            &pcap_file_name,
             data_packet_to_insert.clone()
         );
         if let Err(e) = data_packet_save_result {
@@ -98,11 +100,11 @@ impl Inserter {
     }
 
     pub fn save_data_packet_into(
-        folder_path: &str,
+        directory: &str,
         file_name: &str,
         data_packet: DataPacketDTO,
     ) -> Result<usize, Box<dyn Error + Send + Sync>>{
-        let mut file = File::create(format!("{}/{}", folder_path, file_name))?;
+        let mut file = File::create(format!("{}/{}", directory, file_name))?;
 
         // Set permissions to wr for owner and read for others
         let metadata = file.metadata()?;
