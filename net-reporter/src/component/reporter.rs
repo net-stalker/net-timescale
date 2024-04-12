@@ -13,13 +13,15 @@ use sqlx::Postgres;
 
 use crate::config::Config;
 
-use crate::materialized_view::http_overview_filters::HttpOverviewFiltersAggregate;
-use crate::materialized_view::http_request_methods_distribution::HttpRequestMethodsDistributionAggregate;
-use crate::materialized_view::http_responses::HttpResponsesAggregate;
-use crate::materialized_view::http_clients::HttpClientsAggregate;
-use crate::materialized_view::http_responses_distribution::HttpResponsesDistributionAggregate;
+use crate::materialized_view::MaterializedView;
+
+use crate::materialized_view::http_overview_filters::HttpOverviewFiltersMaterializedView;
+use crate::materialized_view::http_request_methods_distribution::HttpRequestMethodsDistributionMaterializedView;
+use crate::materialized_view::http_responses::HttpResponsesMaterializedView;
+use crate::materialized_view::http_clients::HttpClientsMaterialiazedView;
+use crate::materialized_view::http_responses_distribution::HttpResponsesDistributionMaterializedView;
 use crate::materialized_view::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolMaterializedView;
-use crate::materialized_view::total_http_requests::TotalHttpRequestsAggregate;
+use crate::materialized_view::total_http_requests::TotalHttpRequestsMaterializedView;
 use crate::materialized_view::network_bandwidth_per_endpoint::NetworkBandwidthPerEndpointMaterializedView;
 use crate::materialized_view::network_bandwidth::NetworkBandwidthMaterializedView;
 use crate::materialized_view::network_graph::NetworkGraphMaterializedView;
@@ -72,6 +74,99 @@ impl Reporter {
             .unwrap()
     }
 
+    async fn create_materialized_view(connection_pool: &Pool<Postgres>) {
+        // TODO: refactor this part of code using, for example, continues aggregate manager
+        // to reduce the amount of code here
+        match HttpOverviewFiltersMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match HttpRequestMethodsDistributionMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match HttpResponsesMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match HttpClientsMaterialiazedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match HttpResponsesDistributionMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match NetworkBandwidthPerProtocolMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match TotalHttpRequestsMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match NetworkBandwidthPerEndpointMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match NetworkBandwidthMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match NetworkGraphMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match NetworkOverviewFiltersMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+    }
+
     fn build_query_manager() -> QueryManager {
         QueryManager::builder()
             .add_chart_generator(NetworkBandwidthPerEndpointRequester::default().boxed())
@@ -99,7 +194,7 @@ impl Reporter {
         }
         log::info!("Successfully ran db migrations");
 
-        Reporter::create_continuous_aggregates(&self.connection_pool).await;
+        Reporter::create_materialized_view(&self.connection_pool).await;
 
         log::info!("Creating server endpoint for net-reporter..."); 
         

@@ -1,39 +1,26 @@
-use sqlx::{Error, Pool, Postgres};
-use sqlx::postgres::PgQueryResult;
-use super::ContinuousAggregate;
+use super::MaterializedView;
 
-pub struct TotalHttpRequestsAggregate {}
-const CA_NAME: &str = "total_http_requests_aggregate";
+const CREATE_MATERIALIZED_VIEW_QUERY: &str = "
+CREATE MATERIALIZED VIEW IF NOT EXISTS Total_Http_Requests_Materialized_View
+AS
+SELECT
+    Parsed_Data ->'l1'->'frame'->>'frame.time' AS Frametime,
+    Tenant_ID,
+    Network_ID,
+    Parsed_Data->'l3'->'ip'->>'ip.src' AS Src_IP,
+    Parsed_Data->'l3'->'ip'->>'ip.dst' AS Dst_IP,
+    Parsed_Data->'l1'->'frame'->>'frame.len' AS Packet_Length,
+    Parsed_Data->'l5'->'http' AS Http_Part
+FROM Traffic
+WHERE
+    Parsed_Data->'l5'->'http' IS NOT NULL
+    AND (Parsed_Data->'l5'->'http'->>'http.request')::BOOL
+GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Http_Part;
+";
+
+pub struct TotalHttpRequestsMaterializedView {}
+
 #[async_trait::async_trait]
-impl ContinuousAggregate for TotalHttpRequestsAggregate {
-    fn get_name() -> &'static str {
-        CA_NAME
-    }
-
-    async fn create(pool: &Pool<Postgres>) -> Result<PgQueryResult, Error> {
-        // TODO: investigate using binds in sqlx to remove formatting string #8692yh6n4
-        let query = format!(
-            "
-                CREATE MATERIALIZED VIEW {}
-                WITH (timescaledb.continuous) AS
-                SELECT
-                    time_bucket('2 minutes', frame_time) AS bucket,
-                    tenant_id,
-                    agent_id,
-                    src_addr,
-                    dst_addr,
-                    (binary_data->'l1'->'frame'->>'frame.len')::integer as packet_length,
-                    binary_data->'l5'->'http' as http_part
-                FROM captured_traffic
-                where
-                    binary_data->'l5'->'http' is not null
-                    and (binary_data->'l5'->'http'->>'http.request')::bool
-                GROUP BY bucket, tenant_id, agent_id, src_addr, dst_addr, packet_length, binary_data;
-            ",
-            Self::get_name()
-        );
-        sqlx::query(query.as_str())
-            .execute(pool)
-            .await
-    }
+impl MaterializedView for TotalHttpRequestsMaterializedView {
+    const CREATE_MATERIALIZED_VIEW_QUERY: &'static str = CREATE_MATERIALIZED_VIEW_QUERY;
 }

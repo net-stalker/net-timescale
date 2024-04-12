@@ -1,8 +1,7 @@
 use super::MaterializedView;
 
-const MATERIALIZED_VIEW_NAME: &str = "Network_Overview_Filters_Materialized_View";
-const CREATE_MATERIALIZED_VIEW_QUERY: &str = &format!("
-CREATE MATERIALIZED VIEW IF NOT EXISTS {}
+const CREATE_MATERIALIZED_VIEW_QUERY: &str = "
+CREATE MATERIALIZED VIEW IF NOT EXISTS Network_Overview_Filters_Materialized_View
 AS
 SELECT
     Parsed_Data ->'l1'->'frame'->>'frame.time' AS Frametime,
@@ -13,12 +12,12 @@ SELECT
     Parsed_Data->'l1'->'frame'->>'frame.len' as Packet_Length,
     Parsed_Data->'l1'->'frame'->>'frame.protocols' as Protocols
 FROM Traffic
-GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Protocols;",
-MATERIALIZED_VIEW_NAME);
+GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Protocols;
+";
 
 pub struct NetworkOverviewFiltersMaterializedView {}
 
 #[async_trait::async_trait]
 impl MaterializedView for NetworkOverviewFiltersMaterializedView {
-    const CREATE_MATERIALIZED_VIEW_QUERY: String = CREATE_MATERIALIZED_VIEW_QUERY.to_owned();
+    const CREATE_MATERIALIZED_VIEW_QUERY: &'static str = CREATE_MATERIALIZED_VIEW_QUERY;
 }

@@ -1,5 +1,3 @@
-pub mod manager;
-
 pub mod http_clients;
 pub mod http_overview_filters;
 pub mod http_request_methods_distribution;
@@ -22,13 +20,12 @@ use sqlx::postgres::PgQueryResult;
 
 #[async_trait::async_trait]
 pub trait MaterializedView {
-    const CREATE_MATERIALIZED_VIEW_QUERY: String;
+    const CREATE_MATERIALIZED_VIEW_QUERY: &'static str;
 
     async fn create(
-        &self,
         pool: &Pool<Postgres>
     ) -> Result<PgQueryResult, Error> {
-        sqlx::query(&self.CREATE_MATERIALIZED_VIEW_QUERY)
+        sqlx::query(Self::CREATE_MATERIALIZED_VIEW_QUERY)
             .execute(pool)
             .await
     }
