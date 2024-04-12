@@ -10,7 +10,7 @@ const GRAPH_LINKS_REQUEST_QUERY: &str = "
     SELECT src_addr as src_id, dst_addr as dst_id, SUM(packet_length) as value
     FROM network_graph_aggregate
     WHERE 
-        group_id = $1
+        tenant_id = $1
         AND bucket >= $2
         AND bucket < $3
         {}
@@ -57,7 +57,7 @@ impl GraphLinksRequester {
 
     pub async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
-        group_id: &str,
+        tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         filters: &NetworkGraphFiltersDTO,
@@ -70,7 +70,7 @@ impl GraphLinksRequester {
             .build_query();
 
         SqlxQueryBuilderWrapper::<GraphEdgeResponse>::new(query_string.as_str())
-            .add_param(group_id)
+            .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
             .add_option_param(filters.is_include_protocols_mode().map(|_| filters.get_protocols().to_vec()))

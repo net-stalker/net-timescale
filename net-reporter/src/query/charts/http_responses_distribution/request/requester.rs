@@ -43,7 +43,7 @@ const HTTP_RESPONSES_DIST_REQUEST_QUERY: &str = "
     SELECT bucket, (http->>'http.response.code')::int8 AS response_code, COUNT(http_part) AS amount
     FROM http_responses_distribution_aggregate, jsonb_path_query(http_part, '$.*') AS http
     WHERE
-        group_id = $1
+        tenant_id = $1
         AND bucket >= $2
         AND bucket < $3
         AND http->'http.response.code' IS NOT NULL
@@ -68,13 +68,13 @@ impl HttpResponsesDistributionRequester {
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
         query_string: &str,
-        group_id: &str,
+        tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         filters: &HttpResponsesDistributionFiltersDTO,
     ) -> Result<Vec<HttpResponsesDistributionBucketResponse>, Error> {
         SqlxQueryBuilderWrapper::<HttpResponsesDistributionBucketResponse>::new(query_string)
-            .add_param(group_id)
+            .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
             .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
@@ -91,7 +91,7 @@ impl Requester for HttpResponsesDistributionRequester {
         connection_pool: Arc<Pool<Postgres>>,
         enveloped_request: Envelope,
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
-        let group_id = enveloped_request.get_tenant_id();
+        let tenant_id = enveloped_request.get_tenant_id();
 
         if enveloped_request.get_type() != self.get_requesting_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
@@ -110,7 +110,7 @@ impl Requester for HttpResponsesDistributionRequester {
         let executed_query_response = Self::execute_query(
             connection_pool,
             query.as_str(),
-            group_id,
+            tenant_id,
             request_start_date,
             request_end_date,
             request_filters,
@@ -122,7 +122,7 @@ impl Requester for HttpResponsesDistributionRequester {
         let dto_response: HttpResponsesDistributionDTO = response.into();
 
         Ok(Envelope::new(
-            group_id,
+            tenant_id,
             HttpResponsesDistributionDTO::get_data_type(),
             &dto_response.encode()
         ))

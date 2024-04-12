@@ -18,7 +18,7 @@ impl ContinuousAggregate for HttpResponsesDistributionAggregate {
                 WITH (timescaledb.continuous) AS
                 SELECT
                     time_bucket('2 minutes', frame_time) AS bucket,
-                    group_id,
+                    tenant_id,
                     agent_id,
                     src_addr,
                     dst_addr,
@@ -28,7 +28,7 @@ impl ContinuousAggregate for HttpResponsesDistributionAggregate {
                 where
                     binary_data->'l5'->'http' is not null
                     and (binary_data->'l5'->'http'->>'http.response')::bool
-                GROUP BY bucket, group_id, agent_id, src_addr, dst_addr, packet_length, binary_data;
+                GROUP BY bucket, tenant_id, agent_id, src_addr, dst_addr, packet_length, binary_data;
             ",
             Self::get_name()
         );

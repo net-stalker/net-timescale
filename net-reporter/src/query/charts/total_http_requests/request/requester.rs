@@ -50,7 +50,7 @@ const TOTAL_HTTP_REQUESTS_REQUEST_QUERY: &str = "
     SELECT bucket, COUNT(src_addr) as total_requests
     FROM total_http_requests_aggregate, jsonb_path_query(http_part, '$.*') as http
     WHERE
-        group_id = $1
+        tenant_id = $1
         AND bucket >= $2
         AND bucket < $3
         AND http->'http.request.method' is not null
@@ -75,13 +75,13 @@ impl TotalHttpRequestsRequester {
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
         query_string: &str,
-        group_id: &str,
+        tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         filters: &TotalHttpRequestsFiltersDTO,
     ) -> Result<Vec<TotalHttpRequestsBucketResponse>, Error> {
         SqlxQueryBuilderWrapper::<TotalHttpRequestsBucketResponse>::new(query_string)
-            .add_param(group_id)
+            .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
             .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
@@ -99,7 +99,7 @@ impl Requester for TotalHttpRequestsRequester {
         connection_pool: Arc<Pool<Postgres>>,
         enveloped_request: Envelope,
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
-        let group_id = enveloped_request.get_tenant_id();
+        let tenant_id = enveloped_request.get_tenant_id();
 
         if enveloped_request.get_type() != self.get_requesting_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
@@ -119,7 +119,7 @@ impl Requester for TotalHttpRequestsRequester {
         let executed_query_response = Self::execute_query(
             connection_pool,
             query.as_str(),
-            group_id,
+            tenant_id,
             request_start_date,
             request_end_date,
             filters,
@@ -131,7 +131,7 @@ impl Requester for TotalHttpRequestsRequester {
         let dto_response: TotalHttpRequestsDTO = response.into();
 
         Ok(Envelope::new(
-            group_id,
+            tenant_id,
             TotalHttpRequestsDTO::get_data_type(),
             &dto_response.encode()
         ))

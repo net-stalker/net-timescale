@@ -20,12 +20,12 @@ impl ContinuousAggregate for NetworkBandwidthPerProtocolAggregate {
                     time_bucket('1 hour', frame_time) AS bucket,
                     src_addr,
                     dst_addr,
-                    group_id,
+                    tenant_id,
                     agent_id,
                     (binary_data->'l1'->'frame'->>'frame.len')::integer as packet_length,
                     binary_data->'l1'->'frame'->>'frame.protocols' as protocols
                 FROM captured_traffic
-                GROUP BY bucket, src_addr, dst_addr, group_id, agent_id, packet_length, protocols;
+                GROUP BY bucket, src_addr, dst_addr, tenant_id, agent_id, packet_length, protocols;
             ",
             Self::get_name()
         );

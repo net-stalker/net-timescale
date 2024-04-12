@@ -31,7 +31,7 @@ const NETWORK_OVERVIEW_FILTERS_QUERY: &str = "
                     SUM(packet_length) as total_bytes,
                     STRING_AGG(protocols, ':' ORDER BY protocols) AS concatenated_protocols
                 from network_overview_filters
-                where group_id = $1 AND bucket >= $2 AND bucket < $3
+                where tenant_id = $1 AND bucket >= $2 AND bucket < $3
                 group by src_addr
             ) as lhs full outer join (
                 select
@@ -39,7 +39,7 @@ const NETWORK_OVERVIEW_FILTERS_QUERY: &str = "
                     SUM(packet_length) as total_bytes,
                     STRING_AGG(protocols, ':' ORDER BY protocols) AS concatenated_protocols
                 from network_overview_filters
-                where group_id = $1 AND bucket >= $2 AND bucket < $3
+                where tenant_id = $1 AND bucket >= $2 AND bucket < $3
                 group by dst_addr
             ) as rhs on lhs.id = rhs.id;
 ";
@@ -54,12 +54,12 @@ impl NetworkOverviewFiltersRequester {
 
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
-        group_id: &str,
+        tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
     ) -> Result<Vec<FilterEntryResponse>, Error> {
         sqlx::query_as(NETWORK_OVERVIEW_FILTERS_QUERY)
-            .bind(group_id)
+            .bind(tenant_id)
             .bind(start_date)
             .bind(end_date)
             .fetch_all(connection_pool.as_ref())
