@@ -34,25 +34,25 @@ impl HttpOverviewFiltersRequester {
 
     async fn execute_queries(
         connection_pool: Arc<Pool<Postgres>>,
-        group_id: &str,
+        tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
     ) -> Result<HttpOverviewFiltersResponse, Error> {
         let endpoints = EndpointsRequester::execute_query(
             connection_pool.clone(),
-            group_id,
+            tenant_id,
             start_date,
             end_date,
         ).await?;
         let http_request_methods = HttpRequestMethodsRequester::execute_query(
             connection_pool.clone(),
-            group_id,
+            tenant_id,
             start_date,
             end_date,
         ).await?;
         let http_response_codes = HttpResponseCodesRequester::execute_query(
             connection_pool.clone(),
-            group_id,
+            tenant_id,
             start_date,
             end_date,
         ).await?;

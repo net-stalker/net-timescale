@@ -18,7 +18,7 @@ impl ContinuousAggregate for HttpOverviewFiltersAggregate {
                 WITH (timescaledb.continuous) AS
                 SELECT
                     time_bucket('2 minutes', frame_time) AS bucket,
-                    group_id,
+                    tenant_id,
                     agent_id,
                     src_addr,
                     dst_addr,
@@ -26,7 +26,7 @@ impl ContinuousAggregate for HttpOverviewFiltersAggregate {
                 FROM captured_traffic
                 where
                     binary_data->'l5'->'http' is not null
-                GROUP BY bucket, group_id, agent_id, src_addr, dst_addr, binary_data;
+                GROUP BY bucket, tenant_id, agent_id, src_addr, dst_addr, binary_data;
             ",
             Self::get_name()
         );

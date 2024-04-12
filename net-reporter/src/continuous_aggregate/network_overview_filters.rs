@@ -20,13 +20,13 @@ impl ContinuousAggregate for NetworkOverviewFiltersAggregate {
                 WITH (timescaledb.continuous) AS
                 SELECT
                     time_bucket('2 minutes', frame_time) AS bucket,
-                    group_id,
+                    tenant_id,
                     src_addr,
                     dst_addr,
                     (binary_data->'l1'->'frame'->>'frame.len')::integer AS packet_length,
                     binary_data->'l1'->'frame'->>'frame.protocols' as protocols
                 FROM captured_traffic
-                GROUP BY bucket, group_id, src_addr, dst_addr, packet_length, protocols;
+                GROUP BY bucket, tenant_id, src_addr, dst_addr, packet_length, protocols;
             ",
             Self::get_name()
         );

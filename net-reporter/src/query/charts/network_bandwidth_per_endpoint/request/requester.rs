@@ -59,7 +59,7 @@ const NETWORK_BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY: &str = "
             SUM(packet_length) AS bytes_sent
         FROM bandwidth_per_endpoint_aggregate
         WHERE 
-            group_id = $1
+            tenant_id = $1
             AND bucket >= $2
             AND bucket < $3
             {}
@@ -70,7 +70,7 @@ const NETWORK_BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY: &str = "
             SUM(packet_length) AS bytes_received
         FROM bandwidth_per_endpoint_aggregate
         WHERE 
-            group_id = $1
+            tenant_id = $1
             AND bucket >= $2 
             AND bucket < $3
             {}
@@ -95,13 +95,13 @@ impl NetworkBandwidthPerEndpointRequester {
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
         query_string: &str,
-        group_id: &str,
+        tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         filters: &NetworkBandwidthPerEndpointFiltersDTO,
     ) -> Result<Vec<EndpointResponse>, Error> {
         SqlxQueryBuilderWrapper::<EndpointResponse>::new(query_string)
-            .add_param(group_id)
+            .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
             .add_option_param(filters.is_include_protocols_mode().map(|_| filters.get_protocols().to_vec()))
@@ -119,7 +119,7 @@ impl Requester for NetworkBandwidthPerEndpointRequester {
         connection_pool: Arc<Pool<Postgres>>,
         enveloped_request: Envelope,
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
-        let group_id = enveloped_request.get_tenant_id();
+        let tenant_id = enveloped_request.get_tenant_id();
 
         if enveloped_request.get_type() != self.get_requesting_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
@@ -139,7 +139,7 @@ impl Requester for NetworkBandwidthPerEndpointRequester {
         let executed_query_response = Self::execute_query(
             connection_pool,
             query.as_str(),
-            group_id,
+            tenant_id,
             request_start_date,
             request_end_date,
             filters,
@@ -151,7 +151,7 @@ impl Requester for NetworkBandwidthPerEndpointRequester {
         let dto_response: NetworkBandwidthPerEndpointDTO = response.into();
 
         Ok(Envelope::new(
-            group_id,
+            tenant_id,
             NetworkBandwidthPerEndpointDTO::get_data_type(),
             &dto_response.encode()
         ))
