@@ -18,12 +18,12 @@ use crate::materialized_view::http_request_methods_distribution::HttpRequestMeth
 use crate::materialized_view::http_responses::HttpResponsesAggregate;
 use crate::materialized_view::http_clients::HttpClientsAggregate;
 use crate::materialized_view::http_responses_distribution::HttpResponsesDistributionAggregate;
-use crate::materialized_view::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolAggregate;
+use crate::materialized_view::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolMaterializedView;
 use crate::materialized_view::total_http_requests::TotalHttpRequestsAggregate;
 use crate::materialized_view::network_bandwidth_per_endpoint::NetworkBandwidthPerEndpointMaterializedView;
-use crate::materialized_view::network_bandwidth::NetworkBandwidthAggregate;
-use crate::materialized_view::network_graph::NetworkGraphAggregate;
-use crate::materialized_view::network_overview_filters::NetworkOverviewFiltersAggregate;
+use crate::materialized_view::network_bandwidth::NetworkBandwidthMaterializedView;
+use crate::materialized_view::network_graph::NetworkGraphMaterializedView;
+use crate::materialized_view::network_overview_filters::NetworkOverviewFiltersMaterializedView;
 
 use crate::query::charts::network_bandwidth_per_endpoint::request::requester::NetworkBandwidthPerEndpointRequester;
 use crate::query::charts::http_request_methods_distribution::request::requester::HttpRequestMethodsDistributionRequester;

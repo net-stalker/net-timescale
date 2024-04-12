@@ -1,39 +1,24 @@
-use sqlx::{Error, Pool, Postgres};
-use sqlx::postgres::PgQueryResult;
+use super::MaterializedView;
 
-use super::ContinuousAggregate;
+const MATERIALIZED_VIEW_NAME: &str = "Network_Fraph_Materialized_View";
+const CREATE_MATERIALIZED_VIEW_QUERY: &str = &format!("
+CREATE MATERIALIZED VIEW IF NOT EXISTS {}
+AS
+SELECT
+    Parsed_Data ->'l1'->'frame'->>'frame.time' AS Frametime,
+    Tenant_ID,
+    Network_ID,
+    Parsed_Data->'l3'->'ip'->>'ip.src' as Src_IP,
+    Parsed_Data->'l3'->'ip'->>'ip.dst' as Dst_IP,
+    Parsed_Data->'l1'->'frame'->>'frame.len' as Packet_Length,
+    Parsed_Data->'l1'->'frame'->>'frame.protocols' as Protocols
+FROM Traffic
+GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Protocols;",
+MATERIALIZED_VIEW_NAME);
 
-pub struct NetworkGraphAggregate {}
+pub struct NetworkGraphMaterializedView {}
 
-const CA_NAME: &str = "network_graph_aggregate";
 #[async_trait::async_trait]
-impl ContinuousAggregate for NetworkGraphAggregate {
-    fn get_name() -> &'static str {
-        CA_NAME
-    }
-
-    async fn create(pool: &Pool<Postgres>) -> Result<PgQueryResult, Error> {
-        // TODO: investigate using binds in sqlx to remove formatting string #8692yh6n4
-        let query = format!(
-            "
-                CREATE MATERIALIZED VIEW {}
-                WITH (timescaledb.continuous) AS
-                SELECT
-                    time_bucket('1 hour', frame_time) AS bucket,
-                    tenant_id,
-                    agent_id,
-                    src_addr,
-                    dst_addr,
-                    (binary_data->'l1'->'frame'->>'frame.len')::integer AS packet_length,
-                    binary_data->'l1'->'frame'->>'frame.protocols' as protocols
-                FROM captured_traffic
-                GROUP BY bucket, tenant_id, agent_id, src_addr, dst_addr, packet_length, protocols;
-            ",
-            Self::get_name()
-        );
-        sqlx::query(query.as_str())
-            .bind(Self::get_name())
-            .execute(pool)
-            .await
-    }
+impl MaterializedView for NetworkGraphMaterializedView {
+    const CREATE_MATERIALIZED_VIEW_QUERY: String = CREATE_MATERIALIZED_VIEW_QUERY.to_owned();
 }

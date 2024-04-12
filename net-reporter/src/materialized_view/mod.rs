@@ -15,10 +15,21 @@ pub mod network_overview_filters;
 pub mod total_http_requests;
 
 
+use sqlx::Pool;
 use sqlx::Postgres;
+use sqlx::Error;
 use sqlx::postgres::PgQueryResult;
 
 #[async_trait::async_trait]
 pub trait MaterializedView {
-    async fn create(pool: &sqlx::Pool<Postgres>) -> Result<PgQueryResult, sqlx::Error>;
+    const CREATE_MATERIALIZED_VIEW_QUERY: String;
+
+    async fn create(
+        &self,
+        pool: &Pool<Postgres>
+    ) -> Result<PgQueryResult, Error> {
+        sqlx::query(&self.CREATE_MATERIALIZED_VIEW_QUERY)
+            .execute(pool)
+            .await
+    }
 }
