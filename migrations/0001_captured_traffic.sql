@@ -16,7 +16,7 @@ CREATE TABLE Traffic
     InsertionTime       TIMESTAMPTZ NOT NULL,
     NetworkID           INT,
     TenantId            TEXT NOT NULL,
-    RawPcapFileAddress  TEXT NOT NULL,
+    RawPcapFilePath     TEXT NOT NULL,
     ParsedData          JSONB NOT NULL,
 
     PRIMARY KEY (PcapID),

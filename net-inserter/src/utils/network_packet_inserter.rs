@@ -4,11 +4,12 @@ use sqlx::postgres::PgQueryResult;
 use net_inserter_api::api::network_packet::network_packet::NetworkPacketDTO;
 
 const INSERT_NP_QUERY: &str =
-    "INSERT INTO Traffic (InsertionTime, TenantId, RawPcapFileAddress, ParsedData) VALUES (NOW(), $1, $2, $3)";
+    "INSERT INTO Traffic (InsertionTime, TenantId, RawPcapFilePath, ParsedData) VALUES (NOW(), $1, $2, $3)";
 
 pub async fn insert_network_packet_transaction(
     transaction: &mut sqlx::Transaction<'_, Postgres>,
     tenant_id: &str,
+    pcap_file_path: &str,
     network_packet: &NetworkPacketDTO
 ) -> Result<PgQueryResult, Error>
 {
@@ -21,11 +22,10 @@ pub async fn insert_network_packet_transaction(
             ))))
         }
     };
-    // let binary_data: ByteArray<'_> = network_packet.get_network_packet_data().into();
 
     sqlx::query(INSERT_NP_QUERY)
         .bind(tenant_id)
-        .bind("MOCK FILE ADDRESS")
+        .bind(pcap_file_path)
         .bind(binary_data)
         .execute(&mut **transaction)
         .await

@@ -72,9 +72,10 @@ impl Inserter {
         
         let pcap_file_name = Uuid::now_v7().to_string();
 
-        let data_packet_save_result = Self::save_data_packet_into(
-            &config.pcaps.directory_to_save,
-            &pcap_file_name,
+        let pcap_file_path = format!("{}/{}", &config.pcaps.directory_to_save, &pcap_file_name);
+
+        let data_packet_save_result = Self::save_data_packet_to(
+            &pcap_file_path,
             data_packet_to_insert.clone()
         );
         if let Err(e) = data_packet_save_result {
@@ -91,7 +92,13 @@ impl Inserter {
         let mut transaction = pool.begin().await.unwrap();
         
         // TODO: later on it will be nice to open a stream of network packets and insert them in a batch
-        match network_packet_inserter::insert_network_packet_transaction(&mut transaction, &tenant_id, &network_packet).await {
+        let insert_result = network_packet_inserter::insert_network_packet_transaction(
+            &mut transaction,
+            &tenant_id,
+            &pcap_file_path,
+            &network_packet
+        ).await;
+        match insert_result {
             Ok(_) => log::info!("Successfully inserted network packet"),
             Err(e) => log::error!("Error: {}", e),
         }
@@ -99,12 +106,11 @@ impl Inserter {
         transaction.commit().await.unwrap();
     }
 
-    pub fn save_data_packet_into(
-        directory: &str,
-        file_name: &str,
+    pub fn save_data_packet_to(
+        file_path: &str,
         data_packet: DataPacketDTO,
     ) -> Result<usize, Box<dyn Error + Send + Sync>>{
-        let mut file = File::create(format!("{}/{}", directory, file_name))?;
+        let mut file = File::create(file_path)?;
 
         // Set permissions to wr for owner and read for others
         let metadata = file.metadata()?;
