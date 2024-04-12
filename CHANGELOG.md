@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [0.1.0-838c14e] - 2024-04-10
 
 Ns 272/remove obsolete config code (#72)
 
 * NS-272/remove-obsolete-config-code: Remove obsolete code from net-inserter and net-reporter config
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-2e0ff1d] - 2024-04-09
 
 Ns 258/update net core library version (#71)
