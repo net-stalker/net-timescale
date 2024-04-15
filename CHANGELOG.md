@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-20068fc] - 2024-04-15
+
+Ns 251/update inserter (#73)
+
+* NS-247/change-data-model: Update migrations
+
+* NS-260/update-net-inserter: Update libs and remove unused code.
+
+* NS-259/update-net-reporter: Fix reporter component
+
+* NS-260/update-net-reporter: Remove obsolete config code
+
+* NS-260/update-net-inserter: Fix inserter component
+
+* NS-260/update-net-inserter: Remove obsolete config code
+
+* NS-251/update-inserter: Now save files into the file system
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-838c14e] - 2024-04-10
 
