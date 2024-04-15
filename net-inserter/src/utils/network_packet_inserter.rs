@@ -21,7 +21,6 @@ pub async fn insert_network_packet_transaction(
             "Failed to decode network packet data".to_string()
         ))))
     };
-    // let binary_data: ByteArray<'_> = network_packet.get_network_packet_data().into();
 
     sqlx::query(INSERT_NP_QUERY)
         .bind(Utc.timestamp_nanos(network_packet.get_frame_time()))
