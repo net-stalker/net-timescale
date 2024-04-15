@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-54dba53] - 2024-04-15
+
+NS-281/change-column-names: Fix column names (for better readability) (#74)
+
+* NS-281/change-column-names: Fix column names (for better readability)
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-20068fc] - 2024-04-15
 
