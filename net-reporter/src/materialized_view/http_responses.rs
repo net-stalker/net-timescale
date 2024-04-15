@@ -14,7 +14,7 @@ SELECT
 FROM Traffic
 WHERE
     Parsed_Data->'l5'->'http' IS NOT NULL
-    AND (Parsed_Data->'l5'->'http'->>'http.request')::BOOL
+    AND (Parsed_Data->'l5'->'http'->>'http.response')::BOOL
 GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Http_Part;
 ";
 
