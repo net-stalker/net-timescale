@@ -1,5 +1,4 @@
 CREATE TABLE Networks
-CREATE TABLE Networks
 (
     Network_ID          SERIAL,
     Network_Name        TEXT NOT NULL,
