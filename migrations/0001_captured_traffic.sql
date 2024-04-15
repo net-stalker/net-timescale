@@ -1,19 +1,27 @@
-CREATE TABLE captured_traffic
+CREATE TABLE Networks
 (
-    id SERIAL,
-    frame_time  TIMESTAMPTZ NOT NULL,
-    group_id   text        NOT NULL,
-    agent_id    text        NOT NULL,
-    src_addr    text        NOT null,
-    dst_addr    text        NOT null,
-    binary_data JSONB       NOT null,
-    PRIMARY KEY (frame_time, group_id, agent_id)
+    Network_ID          SERIAL,
+    Network_Name        TEXT NOT NULL,
+    Tenant_ID           TEXT NOT NULL,
+    Network_Color       INT,
+
+    PRIMARY KEY (Network_ID),
+    
+    UNIQUE (Network_Name, Tenant_ID)
 );
 
-CREATE INDEX ON captured_traffic (src_addr, frame_time DESC);
+CREATE TABLE Traffic
+(
+    Pcap_ID             SERIAL,
+    Insertion_Time      TIMESTAMPTZ NOT NULL,
+    Network_ID          INT,
+    Tenant_ID           TEXT NOT NULL,
+    Raw_Pcap_File_Path  TEXT NOT NULL,
+    Parsed_Data         JSONB NOT NULL,
 
-CREATE INDEX ON captured_traffic (dst_addr, frame_time DESC);
+    PRIMARY KEY (Pcap_ID),
 
-CREATE INDEX binary_data_index ON captured_traffic USING gin(binary_data);
+    FOREIGN KEY (Network_ID) REFERENCES Networks(Network_ID)
+);
 
-SELECT create_hypertable('captured_traffic', 'frame_time');
+CREATE INDEX binary_data_index ON Traffic USING gin(Parsed_Data);

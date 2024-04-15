@@ -32,7 +32,7 @@ impl Inserter {
         let connection_pool = Arc::new(
             Inserter::configure_connection_pool(&config).await
         );
-        let dispatcher = Arc::new(Self::configure_dispatcher().await);
+        let dispatcher = Arc::new(Self::configure_dispatcher(&config).await);
 
         Self {
             connection_pool,
@@ -49,10 +49,10 @@ impl Inserter {
             .unwrap()
     }
 
-    async fn configure_dispatcher() -> Dispatcher {
+    async fn configure_dispatcher(config: &Config) -> Dispatcher {
         Dispatcher::default()
             .add_insertable(NetworkInserter::get_insertable_data_type(), Arc::new(NetworkInserterCtor::default()))
-            .add_insertable(PcapFileInserter::get_insertable_data_type(), Arc::new(PcapFileInserterCtor::default()))
+            .add_insertable(PcapFileInserter::get_insertable_data_type(), Arc::new(PcapFileInserterCtor::new(&config.pcaps.directory_to_save)))
     }
 
     pub async fn handle_insert_request(
@@ -70,7 +70,8 @@ impl Inserter {
         let envelope_type = enveloped_request.get_envelope_type().to_string();
         let insert_handler = dispatcher.get_insert_handler(enveloped_request.get_envelope_type());
         if insert_handler.is_none() {
-            log::error!("Error: unknown data type to insert")
+            log::error!("Error: unknown data type to insert");
+            return;
         }
         let insert_handler = insert_handler.unwrap();
         let mut transaction = pool.begin().await.unwrap();
@@ -85,19 +86,22 @@ impl Inserter {
     }
 
     pub async fn run(self) {
-        log::info!("Run component"); 
+        log::info!("Run component");
+
+        let config = Arc::new(self.config);
 
         log::info!("Run db migrations");
         let migrations_result = net_migrator::migrator::run_migrations(&self.connection_pool, "./migrations").await;
         if migrations_result.is_err() {
             log::error!("Error, failed to run migrations: {}", migrations_result.err().unwrap());
+            // TODO: Remove todo
             todo!();
         }
         log::info!("Successfully ran db migrations");
 
         log::info!("Creating server endpoint for net-reporter..."); 
         let reporter_server_endpoint = ServerQuicEndpointBuilder::default()
-            .with_addr(self.config.server.addr.parse().unwrap())
+            .with_addr(config.server.addr.parse().unwrap())
             .build();
 
         if reporter_server_endpoint.is_err() {
@@ -118,7 +122,7 @@ impl Inserter {
                         Inserter::handle_insert_request(
                             handling_connection_pool,
                             dispatcher_clone,
-                            client_connection
+                            client_connection,
                         ).await
                     });
                 },

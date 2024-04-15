@@ -7,7 +7,7 @@ edition = "2021"
 net-core-api = "0.5.0"
 net-transport = { version = "0.1.1", features = ["quinn"] }
 net-file = "0.1.1"
-net-agent-api = "0.1.5"
+net-agent-api = "0.1.6"
 # net-inserter-api = "0.1.5"
 net-inserter-api = { git = "https://github.com/net-stalker/net-api.git", branch = "NS-278/update-net-inserter-api" }
 net-config = "0.1.1"
@@ -32,6 +32,7 @@ async-trait = "0.1.80"
 thiserror = "1.0.58"
 net-migrator = { path = "../net-migrator" }
 host-core = { path = "../host-core" }
+uuid = {version = "1.8.0", features = ["v7", "fast-rng",]} # Version 7 UUIDs using a Unix timestamp.
 
 [dev-dependencies]
 mockall = "0.11.2"
