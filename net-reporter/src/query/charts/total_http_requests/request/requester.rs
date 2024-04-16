@@ -18,7 +18,7 @@ use net_reporter_api::api::total_http_requests::total_http_requests_filters::Tot
 
 use crate::query::charts::total_http_requests::response::total_http_requests_bucket::TotalHttpRequestsBucketResponse;
 use crate::query::charts::total_http_requests::response::total_http_requests::TotalHttpRequestsResponse;
-use crate::query::requester::Requester;
+use crate::query::requester::RequestHandler;
 use crate::query_builder::query_builder::QueryBuilder;
 use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
 
@@ -93,7 +93,7 @@ impl TotalHttpRequestsRequester {
 }
 
 #[async_trait::async_trait]
-impl Requester for TotalHttpRequestsRequester {
+impl RequestHandler for TotalHttpRequestsRequester {
     async fn request_enveloped_chart(
         &self,
         connection_pool: Arc<Pool<Postgres>>,

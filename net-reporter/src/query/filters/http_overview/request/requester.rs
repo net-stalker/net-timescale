@@ -17,7 +17,7 @@ use net_reporter_api::api::http_overview_dashboard_filters::http_overview_dashbo
 
 use crate::query::filters::http_overview::response::http_overview_filters::HttpOverviewFiltersResponse;
 
-use crate::query::requester::Requester;
+use crate::query::requester::RequestHandler;
 
 use super::endpoints_requester::EndpointsRequester;
 use super::http_request_methods_requester::HttpRequestMethodsRequester;
@@ -66,7 +66,7 @@ impl HttpOverviewFiltersRequester {
 }
 
 #[async_trait::async_trait]
-impl Requester for HttpOverviewFiltersRequester {
+impl RequestHandler for HttpOverviewFiltersRequester {
     async fn request_enveloped_chart(
         &self,
         connection_pool: Arc<Pool<Postgres>>,

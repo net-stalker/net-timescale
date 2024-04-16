@@ -18,7 +18,7 @@ use net_reporter_api::api::network_bandwidth_per_protocol::network_bandwidth_per
 
 use crate::query::charts::network_bandwidth_per_protocol::response::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolResponse;
 use crate::query::charts::network_bandwidth_per_protocol::response::protocol::ProtocolResponse;
-use crate::query::requester::Requester;
+use crate::query::requester::RequestHandler;
 use crate::query_builder::query_builder::QueryBuilder;
 use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
 
@@ -84,7 +84,7 @@ impl NetworkBandwidthPerProtocolRequester {
 }
 
 #[async_trait::async_trait]
-impl Requester for NetworkBandwidthPerProtocolRequester {
+impl RequestHandler for NetworkBandwidthPerProtocolRequester {
     async fn request_enveloped_chart(
         &self,
         connection_pool: Arc<Pool<Postgres>>,

@@ -1,28 +1,28 @@
 use std::collections::HashMap;
 
-use crate::query::requester::Requester;
+use crate::query::requester::RequestHandler;
 
 use super::query_manager::QueryManager;
 
 #[derive(Default)]
 pub struct QueryManagerBuilder {
-    requesters: HashMap<&'static str, Box<dyn Requester>>
+    request_handlers: HashMap<&'static str, Box<dyn RequestHandler>>
 }
 
 impl QueryManagerBuilder {
-    pub fn add_chart_generator(
+    pub fn add_request_handler(
         mut self,
-        requester: Box<dyn Requester>
+        requester: Box<dyn RequestHandler>
     ) -> Self
     {
         //TODO: Create Error handling here
-        let _ = self.requesters.insert(requester.get_requesting_type(), requester);
+        let _ = self.request_handlers.insert(requester.get_requesting_type(), requester);
         self
     }
 
     pub fn build(self) -> QueryManager {
         QueryManager::new(
-            self.requesters
+            self.request_handlers
         )
     }
 }

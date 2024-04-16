@@ -16,7 +16,7 @@ use net_core_api::core::typed_api::Typed;
 
 use crate::query::charts::http_responses::response::http_response::HttpResponseResponse;
 use crate::query::charts::http_responses::response::http_responses::HttpResponsesResponse;
-use crate::query::requester::Requester;
+use crate::query::requester::RequestHandler;
 use crate::query_builder::query_builder::QueryBuilder;
 use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
 
@@ -97,7 +97,7 @@ impl HttpResponsesRequester {
 }
 
 #[async_trait::async_trait]
-impl Requester for HttpResponsesRequester {
+impl RequestHandler for HttpResponsesRequester {
     async fn request_enveloped_chart(
         &self,
         connection_pool: Arc<Pool<Postgres>>,

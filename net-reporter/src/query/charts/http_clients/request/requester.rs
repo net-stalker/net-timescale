@@ -18,7 +18,7 @@ use net_reporter_api::api::http_clients::http_clients_filters::HttpClientsFilter
 use crate::query::charts::http_clients::response::http_client::HttpClientResponse;
 use crate::query::charts::http_clients::response::http_clients::HttpClientsResponse;
 
-use crate::query::requester::Requester;
+use crate::query::requester::RequestHandler;
 use crate::query_builder::query_builder::QueryBuilder;
 use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
 
@@ -99,7 +99,7 @@ impl HttpClientsRequester {
 }
 
 #[async_trait::async_trait]
-impl Requester for HttpClientsRequester {
+impl RequestHandler for HttpClientsRequester {
     async fn request_enveloped_chart(
         &self,
         connection_pool: Arc<Pool<Postgres>>,

@@ -1,30 +1,25 @@
-use std::error::Error;
-use std::fs::File;
-use std::io::Write;
-use std::os::unix::fs::PermissionsExt;
 use std::sync::Arc;
 
 use sqlx::Pool;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::Postgres;
 
-use net_agent_api::api::data_packet::DataPacketDTO;
-
 use net_core_api::api::envelope::envelope::Envelope;
-use net_core_api::core::typed_api::Typed;
 use net_core_api::core::decoder_api::Decoder;
 
 use net_transport::quinn::connection::QuicConnection;
 use net_transport::quinn::server::builder::ServerQuicEndpointBuilder;
-use uuid::Uuid;
 
 use crate::config::Config;
-use crate::utils::decoder;
-use crate::utils::network_packet_inserter;
+
+use super::dispatcher::Dispatcher;
+use super::network::InsertNetworkHandler;
+use super::pcap_file_inserter::InsertPcapFileHandler;
 
 pub struct Inserter {
     config: Config,
     connection_pool: Arc<Pool<Postgres>>,
+    dispatcher: Arc<Dispatcher>,
 }
 
 impl Inserter {
@@ -34,10 +29,12 @@ impl Inserter {
         let connection_pool = Arc::new(
             Inserter::configure_connection_pool(&config).await
         );
+        let dispatcher = Arc::new(Self::configure_dispatcher(&config).await);
 
         Self {
             connection_pool,
             config,
+            dispatcher,
         }
     }
 
@@ -49,9 +46,16 @@ impl Inserter {
             .unwrap()
     }
 
+    async fn configure_dispatcher(config: &Config) -> Dispatcher {
+        Dispatcher::builder()
+            .add_insert_handler(Box::<InsertNetworkHandler>::default())
+            .add_insert_handler(Box::new(InsertPcapFileHandler::new(&config.pcaps.directory_to_save)))
+            .build()
+    }
+
     pub async fn handle_insert_request(
-        config: Arc<Config>,
         pool: Arc<Pool<Postgres>>,
+        dispatcher: Arc<Dispatcher>,
         mut client_connection: QuicConnection
     ) {
         let enveloped_request = match client_connection.receive_reliable().await {
@@ -61,65 +65,22 @@ impl Inserter {
                 return;
             },
         };
-        if enveloped_request.get_type() != DataPacketDTO::get_data_type() {
-            log::error!("Error: Request type is not DataPacketDTO");
+        let envelope_type = enveloped_request.get_envelope_type().to_string();
+        let insert_handler = dispatcher.get_insert_handler(enveloped_request.get_envelope_type());
+        if insert_handler.is_none() {
+            log::error!("Error: unknown data type to insert");
             return;
         }
-
-        let data_packet_to_insert = DataPacketDTO::decode(enveloped_request.get_data());
-
-        let tenant_id = enveloped_request.get_tenant_id();
-        
-        let pcap_file_name = Uuid::now_v7().to_string();
-
-        let pcap_file_path = format!("{}/{}", &config.pcaps.directory_to_save, &pcap_file_name);
-
-        let data_packet_save_result = Self::save_data_packet_to(
-            &pcap_file_path,
-            data_packet_to_insert.clone()
-        );
-        if let Err(e) = data_packet_save_result {
-            log::error!("Error: {e}");
-        }
-
-        let network_packet = match decoder::Decoder::decode(data_packet_to_insert).await {
-            Ok(network_packet) => network_packet,
-            Err(e) => {
-                log::error!("{}", e);
-                return;
-            },
-        };
+        let insert_handler = insert_handler.unwrap();
         let mut transaction = pool.begin().await.unwrap();
-        
-        // TODO: later on it will be nice to open a stream of network packets and insert them in a batch
-        let insert_result = network_packet_inserter::insert_network_packet_transaction(
-            &mut transaction,
-            tenant_id,
-            &pcap_file_path,
-            &network_packet
-        ).await;
-        match insert_result {
-            Ok(_) => log::info!("Successfully inserted network packet"),
-            Err(e) => log::error!("Error: {}", e),
+        let res = insert_handler.insert(&mut transaction, enveloped_request).await;
+        match res {
+            Ok(_) => {
+                log::debug!("{} is successfully inserted", envelope_type);
+                let _ = transaction.commit().await;
+            },
+            Err(err) => log::error!("Error: {:?}", err)
         }
-        
-        transaction.commit().await.unwrap();
-    }
-
-    pub fn save_data_packet_to(
-        file_path: &str,
-        data_packet: DataPacketDTO,
-    ) -> Result<usize, Box<dyn Error + Send + Sync>>{
-        let mut file = File::create(file_path)?;
-
-        // Set permissions to wr for owner and read for others
-        let metadata = file.metadata()?;
-        let mut permissions = metadata.permissions();
-        permissions.set_mode(0o644);
-
-        let data = data_packet.get_data();
-
-        Ok(file.write(data)?)
     }
 
     pub async fn run(self) {
@@ -153,12 +114,12 @@ impl Inserter {
             match client_connection_result {
                 Ok(client_connection) => {
                     log::info!("Client is successfully connected");
-                    let config_clone = config.clone();
                     let handling_connection_pool = self.connection_pool.clone();
+                    let dispatcher_clone = self.dispatcher.clone();
                     tokio::spawn(async move {
                         Inserter::handle_insert_request(
-                            config_clone,
                             handling_connection_pool,
+                            dispatcher_clone,
                             client_connection,
                         ).await
                     });

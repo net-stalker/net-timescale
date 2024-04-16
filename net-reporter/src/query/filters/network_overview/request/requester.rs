@@ -17,7 +17,7 @@ use net_reporter_api::api::network_overview_dashboard_filters::network_overview_
 
 use crate::query::filters::network_overview::response::filter_entry::FilterEntryResponse;
 use crate::query::filters::network_overview::response::network_overview_filters::NetworkOverviewFiltersResponse;
-use crate::query::requester::Requester;
+use crate::query::requester::RequestHandler;
 
 const NETWORK_OVERVIEW_FILTERS_QUERY: &str = "
         select
@@ -68,7 +68,7 @@ impl NetworkOverviewFiltersRequester {
 }
 
 #[async_trait::async_trait]
-impl Requester for NetworkOverviewFiltersRequester {
+impl RequestHandler for NetworkOverviewFiltersRequester {
     async fn request_enveloped_chart(
         &self,
         connection_pool: Arc<Pool<Postgres>>,

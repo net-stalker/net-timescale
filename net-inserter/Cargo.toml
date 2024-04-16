@@ -7,8 +7,7 @@ edition = "2021"
 net-core-api = "0.5.0"
 net-transport = { version = "0.1.1", features = ["quinn"] }
 net-file = "0.1.1"
-net-agent-api = "0.1.6"
-net-inserter-api = "0.1.5"
+net-inserter-api = "0.1.6"
 net-config = "0.1.1"
 net-token-verifier = "0.2.0"
 
@@ -27,6 +26,8 @@ serde_yaml = "0.9.21" # uses to parse log4rs config
 sqlx = { version = "0.7.0", features = ["runtime-async-std", "tls-native-tls", "postgres", "chrono"] }
 tokio = { version = "1.28.1", features = ["full"] }
 openssl = { version = "0.10.64", features = ["vendored"] }
+async-trait = "0.1.80"
+thiserror = "1.0.58"
 net-migrator = { path = "../net-migrator" }
 host-core = { path = "../host-core" }
 uuid = {version = "1.8.0", features = ["v7", "fast-rng",]} # Version 7 UUIDs using a Unix timestamp.
