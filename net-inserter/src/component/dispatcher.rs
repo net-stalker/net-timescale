@@ -17,7 +17,10 @@ impl Dispatcher {
         self
     }
 
-    pub fn get_insert_handler(&self, insertable_type: &str) -> Option<&Box<dyn InsertHandler>> {
-        self.insert_handlers_ctors.get(insertable_type)
+    pub fn get_insert_handler(&self, insertable_type: &str) -> Option<&dyn InsertHandler> {
+        match self.insert_handlers_ctors.get(insertable_type) {
+            Some(boxed) => Some(&**boxed),
+            None => None,
+        }
     }
 }

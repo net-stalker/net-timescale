@@ -49,7 +49,7 @@ impl Inserter {
 
     async fn configure_dispatcher(config: &Config) -> Dispatcher {
         Dispatcher::default()
-            .add_insert_handler(NetworkInserter::get_insertable_data_type(), Box::new(NetworkInserter::default()))
+            .add_insert_handler(NetworkInserter::get_insertable_data_type(), Box::<NetworkInserter>::default())
             .add_insert_handler(PcapFileInserter::get_insertable_data_type(), Box::new(PcapFileInserter::new(&config.pcaps.directory_to_save)))
     }
 
