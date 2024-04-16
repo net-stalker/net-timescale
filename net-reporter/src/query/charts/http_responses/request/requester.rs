@@ -23,42 +23,42 @@ use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
 use net_reporter_api::api::http_responses::http_responses_request::HttpResponsesRequestDTO;
 
 const EXCLUDE_HTTP_METHODS_FILTER_QUERY: &str = "
-    AND ((http->>'http.response.code')::int8 NOT IN (SELECT unnest({})) AND (http->>'http.response.code')::int8 NOT IN (SELECT unnest({})))
+    AND ((Http->>'http.response.code')::int8 NOT IN (SELECT unnest({})) AND (Http->>'http.response.code')::int8 NOT IN (SELECT unnest({})))
 ";
 
 const INCLUDE_HTTP_METHODS_FILTER_QUERY: &str = "
-    AND ((http->>'http.response.code')::int8 IN (SELECT unnest({})) OR (http->>'http.response.code')::int8 IN (SELECT unnest({})))
+    AND ((Http->>'http.response.code')::int8 IN (SELECT unnest({})) OR (Http->>'http.response.code')::int8 IN (SELECT unnest({})))
 ";
 
 const INCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (src_addr IN (SELECT unnest({})) OR dst_addr IN (SELECT unnest({})))
+    AND (Src_IP IN (SELECT unnest({})) OR Dst_IP IN (SELECT unnest({})))
 ";
 
 const EXCLUDE_ENDPOINT_FILTER_QUERY: &str = "   
-    AND (src_addr NOT IN (SELECT unnest({})) AND dst_addr NOT IN (SELECT unnest({})))
+    AND (Src_IP NOT IN (SELECT unnest({})) AND Dst_IP NOT IN (SELECT unnest({})))
 ";
 
 const SET_LOWER_BYTES_BOUND: &str = "
-    AND packet_length >= {}
+    AND Packet_Length >= {}
 ";
 
 const SET_UPPER_BYTES_BOUND: &str = "
-    AND packet_length < {}
+    AND Packet_Length < {}
 ";
 
 const HTTP_RESPONSES_REQUEST_QUERY: &str = "
     SELECT
-        (http_part->>'http.date')::timestamptz AS http_date,
-        packet_date::timestamptz as packet_date,
-        src_addr AS client,
-        dst_addr AS server,
-        (http->>'http.response.code')::int8 AS response_code
-    FROM http_responses_aggregate, jsonb_path_query(http_part, '$.*') AS http
+        (Http_Part->>'http.date')::timestamptz AS Http_Date,
+        Frametime,
+        Src_IP AS Client,
+        Dst_IP AS Server,
+        (http->>'http.response.code')::int8 AS Response_Code
+    FROM Http_Responses_Materialized_View, jsonb_path_query(Http_Part, '$.*') AS Http
     WHERE
-        tenant_id = $1
-        AND bucket >= $2
-        AND bucket < $3
-        AND http->'http.response.code' IS NOT NULL
+        Tenant_ID = $1
+        AND Frametime >= $2
+        AND Frametime < $3
+        AND Http->'http.response.code' IS NOT NULL
         {}
         {}
         {}
