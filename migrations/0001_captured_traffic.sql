@@ -3,7 +3,7 @@ CREATE TABLE Networks
     Network_ID          SERIAL,
     Network_Name        TEXT NOT NULL,
     Tenant_ID           TEXT NOT NULL,
-    Network_Color       INT,
+    Network_Color       TEXT,
 
     PRIMARY KEY (Network_ID),
     
