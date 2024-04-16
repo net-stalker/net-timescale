@@ -23,31 +23,31 @@ use crate::query_builder::query_builder::QueryBuilder;
 use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
 
 const INCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (src_addr IN (SELECT unnest({})) OR dst_addr IN (SELECT unnest({})))
+    AND (Src_IP IN (SELECT unnest({})) OR Dst_IP IN (SELECT unnest({})))
 ";
 
 const EXCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (src_addr NOT IN (SELECT unnest({})) AND dst_addr NOT IN (SELECT unnest({})))
+    AND (Src_IP NOT IN (SELECT unnest({})) AND Dst_IP NOT IN (SELECT unnest({})))
 ";
 
 const SET_LOWER_BYTES_BOUND: &str = "
-    AND SUM(packet_length) >= {}
+    AND SUM(Packet_Length) >= {}
 ";
 
 const SET_UPPER_BYTES_BOUND: &str = "
-    AND SUM(packet_length) < {}
+    AND SUM(Packet_Length) < {}
 ";
 
 const HTTP_REQUEST_METHODS_QUERY: &str = "
-    SELECT http->>'http.request.method' as name, COUNT(src_addr) as amount
-    FROM http_request_methods_distribution_aggregate, jsonb_path_query(http_part, '$.*') AS http
+    SELECT Http->>'http.request.method' as Name, COUNT(Src_IP) as Amount
+    FROM Http_Request_Methods_Distribution_Materialized_View, jsonb_path_query(Http_Part, '$.*') AS Http
     WHERE
-        tenant_id = $1
-        AND bucket >= $2
-        AND bucket < $3
-        AND http->'http.request.method' IS NOT NULL
+        Tenant_ID = $1
+        AND Frametime >= $2
+        AND Frametime < $3
+        AND Http->'http.request.method' IS NOT NULL
         {}
-    GROUP BY name
+    GROUP BY Name
     HAVING
         1 = 1
         {}
