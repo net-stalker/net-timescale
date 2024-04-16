@@ -38,9 +38,9 @@ impl InsertPcapFileHandler {
 #[async_trait]
 impl InsertHandler for InsertPcapFileHandler {
     async fn insert(&self, transaction: &mut sqlx::Transaction<'_, Postgres>, data_to_insert: Envelope) -> Result<(), Box<dyn Error + Send + Sync>> {
-        if data_to_insert.get_envelope_type() != Self::get_insertable_data_type() {
+        if data_to_insert.get_envelope_type() != self.get_insertable_data_type() {
             return Err(Box::new(InsertError::WrongInsertableData(
-                Self::get_insertable_data_type()
+                self.get_insertable_data_type()
                 .split('_')
                 .collect::<Vec<_>>()
                 .join(" ")
@@ -70,15 +70,11 @@ impl InsertHandler for InsertPcapFileHandler {
         ).await; 
         match insert_result {
             Ok(_) => Ok(()),
-            Err(e) => Err(Box::new(InsertError::DbError(Self::get_insertable_data_type().to_string(), e))),
+            Err(e) => Err(Box::new(InsertError::DbError(self.get_insertable_data_type().to_string(), e))),
         }
     }
 
-    fn get_insertable_data_type() -> &'static str {
+    fn get_insertable_data_type(&self) -> &'static str {
         InsertPcapFileDTO::get_data_type()
-    }
-
-    fn get_data_type(&self) -> &'static str {
-        Self::get_insertable_data_type()
     }
 }

@@ -11,7 +11,6 @@ use net_transport::quinn::connection::QuicConnection;
 use net_transport::quinn::server::builder::ServerQuicEndpointBuilder;
 
 use crate::config::Config;
-use crate::core::insert_handler::InsertHandler;
 
 use super::dispatcher::Dispatcher;
 use super::network::InsertNetworkHandler;
@@ -49,8 +48,8 @@ impl Inserter {
 
     async fn configure_dispatcher(config: &Config) -> Dispatcher {
         Dispatcher::default()
-            .add_insert_handler(InsertNetworkHandler::get_insertable_data_type(), Box::<InsertNetworkHandler>::default())
-            .add_insert_handler(InsertPcapFileHandler::get_insertable_data_type(), Box::new(InsertPcapFileHandler::new(&config.pcaps.directory_to_save)))
+            .add_insert_handler(Box::<InsertNetworkHandler>::default())
+            .add_insert_handler(Box::new(InsertPcapFileHandler::new(&config.pcaps.directory_to_save)))
     }
 
     pub async fn handle_insert_request(

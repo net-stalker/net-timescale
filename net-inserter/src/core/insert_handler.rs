@@ -6,6 +6,5 @@ use sqlx::Postgres;
 #[async_trait]
 pub trait InsertHandler: core::fmt::Debug + Sync + Send {
     async fn insert(&self, transaction: &mut sqlx::Transaction<'_, Postgres>, data_to_insert: Envelope) -> Result<(), Box<dyn Error + Send + Sync>>;
-    fn get_insertable_data_type() -> &'static str where Self: Sized;
-    fn get_data_type(&self) -> &'static str;
+    fn get_insertable_data_type(&self) -> &'static str;
 }
