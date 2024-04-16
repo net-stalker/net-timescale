@@ -1,10 +1,11 @@
 use std::error::Error;
 
 use async_trait::async_trait;
-use net_core_api::{api::envelope::envelope::Envelope, core::typed_api::Typed};
+use net_core_api::api::envelope::envelope::Envelope;
+use net_core_api::core::typed_api::Typed;
 use net_inserter_api::api::pcap_file::InsertPcapFileDTO;
 use sqlx::Postgres;
-use crate::core::insert_handler::{InsertHandler, InsertHandlerCtor};
+use crate::core::insert_handler::InsertHandler;
 
 #[derive(Default, Debug)]
 pub struct NetworkInserter {}
@@ -26,13 +27,3 @@ impl InsertHandler for NetworkInserter {
         Self::get_insertable_data_type()
     }
 }
-
-#[derive(Debug, Default)]
-pub struct NetworkInserterCtor {}
-
-impl InsertHandlerCtor for NetworkInserterCtor {
-    fn call(&self) -> std::sync::Arc<dyn InsertHandler> {
-        std::sync::Arc::new(NetworkInserter::default())
-    }
-}
-

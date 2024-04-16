@@ -75,17 +75,17 @@ impl Reporter {
 
     fn build_query_manager() -> QueryManager {
         QueryManager::builder()
-            .add_chart_generator(NetworkBandwidthPerEndpointRequester::default().boxed())
-            .add_chart_generator(NetworkBandwidthPerProtocolRequester::default().boxed())
-            .add_chart_generator(NetworkBandwidthRequester::default().boxed())
-            .add_chart_generator(NetworkGraphRequester::default().boxed())
-            .add_chart_generator(NetworkOverviewFiltersRequester::default().boxed())
-            .add_chart_generator(TotalHttpRequestsRequester::default().boxed())
-            .add_chart_generator(HttpRequestMethodsDistributionRequester::default().boxed())
-            .add_chart_generator(HttpResponsesRequester::default().boxed())
-            .add_chart_generator(HttpClientsRequester::default().boxed())
-            .add_chart_generator(HttpResponsesDistributionRequester::default().boxed())
-            .add_chart_generator(HttpOverviewFiltersRequester::default().boxed())
+            .add_request_handler(NetworkBandwidthPerEndpointRequester::default().boxed())
+            .add_request_handler(NetworkBandwidthPerProtocolRequester::default().boxed())
+            .add_request_handler(NetworkBandwidthRequester::default().boxed())
+            .add_request_handler(NetworkGraphRequester::default().boxed())
+            .add_request_handler(NetworkOverviewFiltersRequester::default().boxed())
+            .add_request_handler(TotalHttpRequestsRequester::default().boxed())
+            .add_request_handler(HttpRequestMethodsDistributionRequester::default().boxed())
+            .add_request_handler(HttpResponsesRequester::default().boxed())
+            .add_request_handler(HttpClientsRequester::default().boxed())
+            .add_request_handler(HttpResponsesDistributionRequester::default().boxed())
+            .add_request_handler(HttpOverviewFiltersRequester::default().boxed())
             .build()
     }
 

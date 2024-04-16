@@ -1,11 +1,17 @@
-use std::{error::Error, os::unix::fs::PermissionsExt};
+use std::error::Error;
+use std::os::unix::fs::PermissionsExt;
 use async_trait::async_trait;
-use net_core_api::{api::envelope::envelope::Envelope, core::{decoder_api::Decoder, typed_api::Typed}};
+use net_core_api::api::envelope::envelope::Envelope;
+use net_core_api::core::decoder_api::Decoder;
+use net_core_api::core::typed_api::Typed;
 use net_inserter_api::api::pcap_file::InsertPcapFileDTO;
 use sqlx::Postgres;
-use tokio::{fs::File, io::AsyncWriteExt};
+use tokio::fs::File;
+use tokio::io::AsyncWriteExt;
 use uuid::Uuid;
-use crate::{core::{insert_error::InsertError, insert_handler::{InsertHandler, InsertHandlerCtor}}, utils::network_packet_inserter};
+use crate::core::insert_error::InsertError;
+use crate::core::insert_handler::InsertHandler;
+use crate::utils::network_packet_inserter;
 
 #[derive(Default, Debug)]
 pub struct PcapFileInserter {
@@ -13,7 +19,7 @@ pub struct PcapFileInserter {
 }
 
 impl PcapFileInserter {
-    fn new(output_directory: &str) -> Self {
+    pub fn new(output_directory: &str) -> Self {
         Self { output_directory: output_directory.to_string() }
     }
 
@@ -74,22 +80,5 @@ impl InsertHandler for PcapFileInserter {
 
     fn get_data_type(&self) -> &'static str {
         Self::get_insertable_data_type()
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct PcapFileInserterCtor {
-    pcaps_output_directory: String, 
-}
-
-impl PcapFileInserterCtor {
-    pub fn new(pcaps_output_directory: &str) -> Self {
-        Self { pcaps_output_directory: pcaps_output_directory.to_string() }
-    }
-}
-
-impl InsertHandlerCtor for PcapFileInserterCtor {
-    fn call(&self) -> std::sync::Arc<dyn InsertHandler> {
-        std::sync::Arc::new(PcapFileInserter::new(&self.pcaps_output_directory))
     }
 }

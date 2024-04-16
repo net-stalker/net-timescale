@@ -19,7 +19,7 @@ use net_reporter_api::api::http_responses_distribution::http_responses_disributi
 use crate::query::charts::http_responses_distribution::response::http_responses_distribution::HttpResponsesDistributionResponse;
 use crate::query::charts::http_responses_distribution::response::http_responses_distribution_bucket::HttpResponsesDistributionBucketResponse;
 
-use crate::query::requester::Requester;
+use crate::query::requester::RequestHandler;
 use crate::query_builder::query_builder::QueryBuilder;
 use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
 
@@ -85,7 +85,7 @@ impl HttpResponsesDistributionRequester {
 }
 
 #[async_trait::async_trait]
-impl Requester for HttpResponsesDistributionRequester {
+impl RequestHandler for HttpResponsesDistributionRequester {
     async fn request_enveloped_chart(
         &self,
         connection_pool: Arc<Pool<Postgres>>,

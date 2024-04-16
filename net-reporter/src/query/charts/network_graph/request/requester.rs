@@ -19,7 +19,7 @@ use net_reporter_api::api::network_graph::network_graph_request::NetworkGraphReq
 use crate::query::charts::network_graph::response::graph_edge::GraphEdgeResponse;
 use crate::query::charts::network_graph::response::graph_node::GraphNodeResponse;
 use crate::query::charts::network_graph::response::network_graph::NetworkGraphResponse;
-use crate::query::requester::Requester;
+use crate::query::requester::RequestHandler;
 
 use super::graph_links_requester::GraphLinksRequester;
 
@@ -66,7 +66,7 @@ impl NetworkGraphRequester {
 }
 
 #[async_trait::async_trait]
-impl Requester for NetworkGraphRequester {
+impl RequestHandler for NetworkGraphRequester {
     async fn request_enveloped_chart(
         &self,
         connection_pool: Arc<Pool<Postgres>>,

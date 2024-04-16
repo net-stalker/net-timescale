@@ -7,21 +7,21 @@ use sqlx::Postgres;
 
 use net_core_api::api::envelope::envelope::Envelope;
 
-use crate::query::requester::Requester;
+use crate::query::requester::RequestHandler;
 
 use super::builder::QueryManagerBuilder;
 
 
 pub struct QueryManager {
-    requesters: HashMap<&'static str, Box<dyn Requester>>
+    request_handlers: HashMap<&'static str, Box<dyn RequestHandler>>
 }
 
 impl QueryManager {
     pub fn new(
-        requesters: HashMap<&'static str, Box<dyn Requester>>
+        requesters: HashMap<&'static str, Box<dyn RequestHandler>>
     ) -> Self {
         Self {
-            requesters
+            request_handlers: requesters
         }
     }
 
@@ -34,7 +34,7 @@ impl QueryManager {
         enveloped_request: Envelope,
         connection_pool: Arc<Pool<Postgres>>
     ) -> Result<Envelope, Box<dyn Error + Send + Sync>> {
-        let requester = self.requesters.get(enveloped_request.get_envelope_type());
+        let requester = self.request_handlers.get(enveloped_request.get_envelope_type());
         if requester.is_none() {
             return Err("Error: Tere is no such request available".into());
         }

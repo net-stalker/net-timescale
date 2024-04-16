@@ -1,4 +1,4 @@
-use std::{error::Error, sync::Arc};
+use std::error::Error;
 
 use async_trait::async_trait;
 use net_core_api::api::envelope::envelope::Envelope;
@@ -9,8 +9,3 @@ pub trait InsertHandler: core::fmt::Debug + Sync + Send {
     fn get_insertable_data_type() -> &'static str where Self: Sized;
     fn get_data_type(&self) -> &'static str;
 }
-
-pub trait InsertHandlerCtor: core::fmt::Debug + Sync + Send {
-    fn call(&self) -> Arc<dyn InsertHandler>;
-}
-

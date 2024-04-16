@@ -15,9 +15,7 @@ use crate::core::insert_handler::InsertHandler;
 
 use super::dispatcher::Dispatcher;
 use super::network::NetworkInserter;
-use super::network::NetworkInserterCtor;
 use super::pcap_file_inserter::PcapFileInserter;
-use super::pcap_file_inserter::PcapFileInserterCtor;
 
 pub struct Inserter {
     config: Config,
@@ -51,8 +49,8 @@ impl Inserter {
 
     async fn configure_dispatcher(config: &Config) -> Dispatcher {
         Dispatcher::default()
-            .add_insertable(NetworkInserter::get_insertable_data_type(), Arc::new(NetworkInserterCtor::default()))
-            .add_insertable(PcapFileInserter::get_insertable_data_type(), Arc::new(PcapFileInserterCtor::new(&config.pcaps.directory_to_save)))
+            .add_insert_handler(NetworkInserter::get_insertable_data_type(), Box::new(NetworkInserter::default()))
+            .add_insert_handler(PcapFileInserter::get_insertable_data_type(), Box::new(PcapFileInserter::new(&config.pcaps.directory_to_save)))
     }
 
     pub async fn handle_insert_request(
