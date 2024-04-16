@@ -22,8 +22,8 @@ use crate::query::requester::Requester;
 const NETWORK_OVERVIEW_FILTERS_QUERY: &str = "
 SELECT
     COALESCE(lhs.IP, rhs.IP) AS Endpoint,
-    ARRAY_REMOVE(ARRAY(SELECT DISTINCT unnest(string_to_array(COALESCE(lhs.concatenated_protocols, '') || ':' || COALESCE(rhs.concatenated_protocols, ''), ':'))), '') AS protocols,
-    GREATEST(lhs.total_bytes, rhs.total_bytes, 0) asAS total_bytes
+    ARRAY_REMOVE(ARRAY(SELECT DISTINCT unnest(string_to_array(COALESCE(lhs.Concatenated_Protocols, '') || ':' || COALESCE(rhs.Concatenated_Protocols, ''), ':'))), '') AS Protocols,
+    GREATEST(lhs.Total_Bytes, rhs.Total_Bytes, 0) AS Total_Bytes
 FROM
     (
         SELECT
@@ -36,7 +36,7 @@ FROM
     ) AS lhs FULL OUTER JOIN (
         SELECT
             Dst_IP AS IP,
-            SUM(Packet_Length) AS total_bytes,
+            SUM(Packet_Length) AS Total_Bytes,
             STRING_AGG(Protocols, ':' ORDER BY Protocols) AS Concatenated_Protocols
         FROM Network_Overview_Filters_Materialized_View
         WHERE Tenant_ID = $1 AND Frametime >= $2 AND Frametime < $3
