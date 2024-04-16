@@ -11,12 +11,12 @@ use crate::core::insert_handler::InsertHandler;
 use crate::utils::network_inserter;
 
 #[derive(Default, Debug)]
-pub struct NetworkInserter {}
+pub struct InsertNetworkHandler {}
 
-impl NetworkInserter {}
+impl InsertNetworkHandler {}
 
 #[async_trait]
-impl InsertHandler for NetworkInserter {
+impl InsertHandler for InsertNetworkHandler {
     async fn insert(&self, transaction: &mut sqlx::Transaction<'_, Postgres>, data_to_insert: Envelope) -> Result<(), Box<dyn Error + Send + Sync>> {
         if data_to_insert.get_envelope_type() != Self::get_insertable_data_type() {
             return Err(Box::new(InsertError::WrongInsertableData(

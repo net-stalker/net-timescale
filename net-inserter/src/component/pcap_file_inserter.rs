@@ -14,11 +14,11 @@ use crate::core::insert_handler::InsertHandler;
 use crate::utils::network_packet_inserter;
 
 #[derive(Default, Debug)]
-pub struct PcapFileInserter {
+pub struct InsertPcapFileHandler {
     output_directory: String,
 }
 
-impl PcapFileInserter {
+impl InsertPcapFileHandler {
     pub fn new(output_directory: &str) -> Self {
         Self { output_directory: output_directory.to_string() }
     }
@@ -36,7 +36,7 @@ impl PcapFileInserter {
 }
 
 #[async_trait]
-impl InsertHandler for PcapFileInserter {
+impl InsertHandler for InsertPcapFileHandler {
     async fn insert(&self, transaction: &mut sqlx::Transaction<'_, Postgres>, data_to_insert: Envelope) -> Result<(), Box<dyn Error + Send + Sync>> {
         if data_to_insert.get_envelope_type() != Self::get_insertable_data_type() {
             return Err(Box::new(InsertError::WrongInsertableData(
