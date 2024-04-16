@@ -4,20 +4,20 @@ use sqlx::{types::chrono::{DateTime, Utc}, Error, Pool, Postgres};
 use crate::query::filters::http_overview::response::endpoint_response::EndpointResponse;
 
 const ENDPOINTS_REQUEST_QUERY: &str = "
-    SELECT DISTINCT src_addr AS endpoint
-    FROM http_filters_aggregate
-    WHERE
-        tenant_id = $1
-        AND bucket >= $2
-        AND bucket < $3
-    UNION
-    SELECT DISTINCT dst_addr AS endpoint
-    FROM http_filters_aggregate
-    WHERE
-        tenant_id = $1
-        AND bucket >= $2
-        AND bucket < $3
-    order by endpoint;
+SELECT DISTINCT Src_IP AS Endpoint
+FROM Http_Overview_Filters_Materialized_View
+WHERE
+    Tenant_ID = $1
+    AND Frametime >= $2
+    AND Frametime < $3
+UNION
+SELECT DISTINCT Dst_IP AS Endpoint
+FROM Http_Overview_Filters_Materialized_View
+WHERE
+    Tenant_ID = $1
+    AND Frametime >= $2
+    AND Frametime < $3
+ORDER BY Endpoint;
 ";
 
 #[derive(Default)]
