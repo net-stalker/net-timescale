@@ -31,7 +31,7 @@ const EXCLUDE_ENDPOINT_FILTER_QUERY: &str = "
 ";
 
 const EXCLUDE_HTTP_METHODS_FILTER_QUERY: &str = "
-    AND not (array_agg(Http->>'http.request.method') && {})
+    AND NOT (array_agg(Http->>'http.request.method') && {})
 ";
 
 const INCLUDE_HTTP_METHODS_FILTER_QUERY: &str = "
@@ -47,8 +47,8 @@ const SET_UPPER_BYTES_BOUND: &str = "
 ";
 
 const TOTAL_HTTP_REQUESTS_REQUEST_QUERY: &str = "
-    SELECT Frametime, COUNT(Src_IP) as Total_Requests
-    FROM Total_Http_Requests_Materialized_View, jsonb_path_query(Http_Part, '$.*') as Http
+    SELECT Frametime, COUNT(Src_IP) AS Total_Requests
+    FROM Total_Http_Requests_Materialized_View, jsonb_path_query(Http_Part, '$.*') AS Http
     WHERE
     Tenant_ID = $1
         AND Frametime >= $2
