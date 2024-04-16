@@ -23,33 +23,33 @@ use crate::query_builder::query_builder::QueryBuilder;
 use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
 
 const INCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (src_addr IN (SELECT unnest({})) OR dst_addr IN (SELECT unnest({})))
+    AND (Src_IP IN (SELECT unnest({})) OR Dst_IP IN (SELECT unnest({})))
 ";
 
 const EXCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (src_addr NOT IN (SELECT unnest({})) AND dst_addr NOT IN (SELECT unnest({})))
+    AND (Src_IP NOT IN (SELECT unnest({})) AND Dst_IP NOT IN (SELECT unnest({})))
 ";
 
 const SET_LOWER_BYTES_BOUND: &str = "
-    AND SUM(packet_length) >= {}
+    AND SUM(Packet_Length) >= {}
 ";
 
 const SET_UPPER_BYTES_BOUND: &str = "
-    AND SUM(packet_length) < {}
+    AND SUM(Packet_Length) < {}
 ";
 
 const NETWORK_BANDWIDTH_PER_PROTOCOL_REQUEST_QUERY: &str = "
-    SELECT SUM(packet_length) AS total_bytes, separated_protocols AS protocol_name
+    SELECT SUM(Packet_Length) AS Total_Bytes, Separated_Protocols AS Protocol_Name
     FROM (
-        SELECT *, UNNEST(STRING_TO_ARRAY(protocols, ':')) AS separated_protocols
-        FROM bandwidth_per_protocol_aggregate
-    ) AS unnested_protocols
+        SELECT *, UNNEST(STRING_TO_ARRAY(Protocols, ':')) AS Separated_Protocols
+        FROM Network_Bandwidth_Per_Protocol_Materialized_View
+    ) AS Unnested_Protocols
     WHERE
-        tenant_id = $1
-        AND bucket >= $2
-        AND bucket < $3
+        Tenant_ID = $1
+        AND Frametime >= $2
+        AND Frametime < $3
         {}
-    GROUP BY separated_protocols
+    GROUP BY Separated_Protocols
     HAVING
         1 = 1
         {}
