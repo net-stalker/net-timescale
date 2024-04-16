@@ -47,9 +47,10 @@ impl Inserter {
     }
 
     async fn configure_dispatcher(config: &Config) -> Dispatcher {
-        Dispatcher::default()
+        Dispatcher::builder()
             .add_insert_handler(Box::<InsertNetworkHandler>::default())
             .add_insert_handler(Box::new(InsertPcapFileHandler::new(&config.pcaps.directory_to_save)))
+            .build()
     }
 
     pub async fn handle_insert_request(
