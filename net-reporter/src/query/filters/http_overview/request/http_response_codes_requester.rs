@@ -10,7 +10,7 @@ WHERE
     Tenant_ID = $1
     AND Frametime >= $2
     AND Frametime < $3
-    AND Http_Part->'http.response.code' IS NOT NULL
+    AND Http->'http.response.code' IS NOT NULL
 ORDER BY Http_Response_Code;
 ";
 
