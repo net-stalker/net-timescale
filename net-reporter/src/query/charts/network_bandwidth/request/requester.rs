@@ -39,7 +39,7 @@ const EXCLUDE_ENDPOINT_FILTER_QUERY: &str = "
 ";
 
 const NETWORK_BANDWIDTH_REQUEST_QUERY: &str = "
-    SELECT Frametime, SUM(Packet_Length) as Total_Bytes
+    SELECT Frametime, SUM(Packet_Length) AS Total_Bytes
     FROM Network_Bandwidth_Materialized_View
     WHERE 
         Tenant_ID = $1

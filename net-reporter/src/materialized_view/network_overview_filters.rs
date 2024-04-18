@@ -7,10 +7,10 @@ SELECT
     (Parsed_Data->'l1'->'frame'->>'frame.time')::TIMESTAMPTZ AS Frametime,
     Tenant_ID,
     Network_ID,
-    Parsed_Data->'l3'->'ip'->>'ip.src' as Src_IP,
-    Parsed_Data->'l3'->'ip'->>'ip.dst' as Dst_IP,
-    (Parsed_Data->'l1'->'frame'->>'frame.len')::INTEGER as Packet_Length,
-    Parsed_Data->'l1'->'frame'->>'frame.protocols' as Protocols
+    Parsed_Data->'l3'->'ip'->>'ip.src' AS Src_IP,
+    Parsed_Data->'l3'->'ip'->>'ip.dst' AS Dst_IP,
+    (Parsed_Data->'l1'->'frame'->>'frame.len')::INTEGER AS Packet_Length,
+    Parsed_Data->'l1'->'frame'->>'frame.protocols' AS Protocols
 FROM Traffic
 GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Protocols;
 ";

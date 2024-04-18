@@ -39,7 +39,7 @@ const SET_UPPER_BYTES_BOUND: &str = "
 ";
 
 const HTTP_REQUEST_METHODS_QUERY: &str = "
-    SELECT Http->>'http.request.method' as Name, COUNT(Src_IP) as Amount
+    SELECT Http->>'http.request.method' AS Name, COUNT(Src_IP) AS Amount
     FROM Http_Request_Methods_Distribution_Materialized_View, jsonb_path_query(Http_Part, '$.*') AS Http
     WHERE
         Tenant_ID = $1
