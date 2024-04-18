@@ -9,7 +9,7 @@ SELECT
     Network_ID,
     Parsed_Data->'l3'->'ip'->>'ip.src' AS Src_IP,
     Parsed_Data->'l3'->'ip'->>'ip.dst' AS Dst_IP,
-    (Parsed_Data->'l1'->'frame'->>'frame.len')::INTEGER as Packet_Length,
+    (Parsed_Data->'l1'->'frame'->>'frame.len')::INTEGER AS Packet_Length,
     Parsed_Data->'l5'->'http' AS Http_Part
 FROM Traffic
 WHERE

@@ -4,8 +4,8 @@ use sqlx::{types::chrono::{DateTime, Utc}, Error, Pool, Postgres};
 use crate::query::filters::http_overview::response::http_request_method_response::HttpRequestMethodResponse;
 
 const HTTP_REQUEST_METHODS_REQUEST_QUERY: &str = "
-SELECT DISTINCT Http->>'http.request.method' as Http_Request_Method
-FROM Http_Overview_Filters_Materialized_View, jsonb_path_query(Http_Part, '$.*') as Http
+SELECT DISTINCT Http->>'http.request.method' AS Http_Request_Method
+FROM Http_Overview_Filters_Materialized_View, jsonb_path_query(Http_Part, '$.*') AS Http
 WHERE
     Tenant_ID = $1
     AND Frametime >= $2
