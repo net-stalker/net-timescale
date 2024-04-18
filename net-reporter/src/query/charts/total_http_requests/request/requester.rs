@@ -50,7 +50,7 @@ const TOTAL_HTTP_REQUESTS_REQUEST_QUERY: &str = "
     SELECT Frametime, COUNT(Src_IP) AS Total_Requests
     FROM Total_Http_Requests_Materialized_View, jsonb_path_query(Http_Part, '$.*') AS Http
     WHERE
-    Tenant_ID = $1
+        Tenant_ID = $1
         AND Frametime >= $2
         AND Frametime < $3
         AND Http->'http.request.method' IS NOT NULL
