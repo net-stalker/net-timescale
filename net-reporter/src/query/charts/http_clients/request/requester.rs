@@ -55,8 +55,7 @@ const HTTP_CLIENTS_REQUEST_QUERY: &str = "
         COUNT(Http_Part) AS Requests
     FROM Http_Clients_Materialized_View, jsonb_path_query(Http_Part, '$.*') AS Http
     WHERE
-        1 = 1
-        AND Http->'http.request.method' IS NOT NULL
+        Http->'http.request.method' IS NOT NULL
         -- Http methods filter
         {}
         -- endpoint filter
