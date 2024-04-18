@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use net_core_api::core::encoder_api::Encoder;
 use sqlx::Pool;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::Postgres;
@@ -65,6 +66,7 @@ impl Inserter {
                 return;
             },
         };
+        let tenant_id = enveloped_request.get_tenant_id().to_string();
         let envelope_type = enveloped_request.get_envelope_type().to_string();
         let insert_handler = dispatcher.get_insert_handler(enveloped_request.get_envelope_type());
         if insert_handler.is_none() {
@@ -74,12 +76,32 @@ impl Inserter {
         let insert_handler = insert_handler.unwrap();
         let mut transaction = pool.begin().await.unwrap();
         let res = insert_handler.insert(&mut transaction, enveloped_request).await;
-        match res {
+        let response = match res {
+            Ok(Some(response)) => response,
+            Ok(None) => {
+                log::debug!("{} is successfully inserted", envelope_type);
+                let _ = transaction.commit().await;
+                return;
+            },
+            Err(err) => {
+                log::error!("Error: {:?}", err);
+                return;
+            }
+        };
+        let response_type = response.get_type().to_string();
+        let response_data = response.encode();
+        match client_connection.send_all_reliable(&Envelope::new(
+            &tenant_id,
+            &response_type,
+            &response_data,
+        ).encode()).await {
             Ok(_) => {
                 log::debug!("{} is successfully inserted", envelope_type);
                 let _ = transaction.commit().await;
             },
-            Err(err) => log::error!("Error: {:?}", err)
+            Err(err) => {
+                log::error!("Error: {}", err)
+            }
         }
     }
 
@@ -92,8 +114,6 @@ impl Inserter {
         let migrations_result = net_migrator::migrator::run_migrations(&self.connection_pool, "./migrations").await;
         if migrations_result.is_err() {
             log::error!("Error, failed to run migrations: {}", migrations_result.err().unwrap());
-            // TODO: Remove todo
-            todo!();
         }
         log::info!("Successfully ran db migrations");
 
@@ -121,7 +141,7 @@ impl Inserter {
                             handling_connection_pool,
                             dispatcher_clone,
                             client_connection,
-                        ).await
+                        ).await;
                     });
                 },
                 Err(_) => todo!(),
