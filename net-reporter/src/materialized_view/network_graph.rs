@@ -1,7 +1,7 @@
 use super::MaterializedView;
 
 const CREATE_MATERIALIZED_VIEW_QUERY: &str = "
-CREATE MATERIALIZED VIEW IF NOT EXISTS Network_Fraph_Materialized_View
+CREATE MATERIALIZED VIEW IF NOT EXISTS Network_Graph_Materialized_View
 AS
 SELECT
     (Parsed_Data->'l1'->'frame'->>'frame.time')::TIMESTAMPTZ AS Frametime,

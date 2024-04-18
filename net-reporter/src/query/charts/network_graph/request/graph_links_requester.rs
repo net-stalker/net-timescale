@@ -8,7 +8,7 @@ use crate::{query::charts::network_graph::response::graph_edge::GraphEdgeRespons
 
 const GRAPH_LINKS_REQUEST_QUERY: &str = "
     SELECT Src_IP, Dst_IP, SUM(Packet_Length) as Value
-    FROM Network_Fraph_Materialized_View
+    FROM Network_Graph_Materialized_View
     WHERE 
         Tenant_ID = $1
         AND Frametime >= $2
