@@ -24,7 +24,7 @@ struct NetworkPacket {
     pub dst: String,
     pub protocols: Vec<String>,
     // we skip network id because it is null in fresh inserter network packet
-    pub json_data: Vec<u8>,
+    pub json_data: serde_json::Value,
 }
 
 impl From<NetworkPacket> for NetworkPacketDTO {
@@ -35,7 +35,7 @@ impl From<NetworkPacket> for NetworkPacketDTO {
             &value.src,
             &value.dst,
             &value.protocols,
-            &value.json_data,
+            &serde_json::to_vec(&value.json_data).unwrap_or_default(),
         )
     }
 }

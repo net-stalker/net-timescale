@@ -1,5 +1,5 @@
 [pcaps]
-directory_to_save = ""
+directory_to_save = "output"
 
 [connection_url]
 url = "postgres://postgres:PsWDgxZb@localhost:5433"

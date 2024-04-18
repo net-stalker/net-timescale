@@ -8,6 +8,8 @@ Cargo.lock
 
 .vscode/
 
+output/
+
 # Ignore all config.toml files
 */config.toml
 
