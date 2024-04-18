@@ -4,7 +4,7 @@ const CREATE_MATERIALIZED_VIEW_QUERY: &str = "
 CREATE MATERIALIZED VIEW IF NOT EXISTS Network_Bandwidth_Materialized_View
 AS
 SELECT
-    (Parsed_Data->'l1'->'frame'->>'frame.time')::TIMESTAMPTZ AS Frametime,
+    date_trunc('minute', (Parsed_Data->'l1'->'frame'->>'frame.time')::TIMESTAMPTZ) AS Frametime,
     Tenant_ID,
     Network_ID,
     Parsed_Data->'l3'->'ip'->>'ip.src' AS Src_IP,
