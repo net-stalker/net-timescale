@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use net_core_api::api::result::result::ResultDTO;
 use net_core_api::core::encoder_api::Encoder;
 use sqlx::Pool;
 use sqlx::postgres::PgPoolOptions;
@@ -66,7 +67,6 @@ impl Inserter {
                 return;
             },
         };
-        let tenant_id = enveloped_request.get_tenant_id().to_string();
         let envelope_type = enveloped_request.get_envelope_type().to_string();
         let insert_handler = dispatcher.get_insert_handler(enveloped_request.get_envelope_type());
         if insert_handler.is_none() {
@@ -77,30 +77,28 @@ impl Inserter {
         let mut transaction = pool.begin().await.unwrap();
         let res = insert_handler.insert(&mut transaction, enveloped_request).await;
         let response = match res {
-            Ok(Some(response)) => response,
+            Ok(Some(response)) => {
+                log::debug!("{} is successfully inserted", envelope_type);
+                ResultDTO::new(true, None, Some(response))
+            },
             Ok(None) => {
                 log::debug!("{} is successfully inserted", envelope_type);
-                let _ = transaction.commit().await;
-                return;
+                ResultDTO::new(true, None, None)
             },
             Err(err) => {
                 log::error!("Error: {:?}", err);
-                return;
+                ResultDTO::new(false, Some(&format!("Couldn't insert data: {}", err)), None)
             }
         };
-        let response_type = response.get_type().to_string();
-        let response_data = response.encode();
-        match client_connection.send_all_reliable(&Envelope::new(
-            &tenant_id,
-            &response_type,
-            &response_data,
-        ).encode()).await {
+        match client_connection.send_all_reliable(&response.encode()).await {
             Ok(_) => {
-                log::debug!("{} is successfully inserted", envelope_type);
-                let _ = transaction.commit().await;
+                if response.is_ok() {
+                    let _ = transaction.commit().await;
+                }
+                log::debug!("Result is sent back");
             },
             Err(err) => {
-                log::error!("Error: {}", err)
+                log::error!("Couldn't send the response back: {}", err)
             }
         }
     }

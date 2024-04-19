@@ -1,10 +1,9 @@
 use std::error::Error;
 use std::os::unix::fs::PermissionsExt;
-use std::sync::Arc;
 use async_trait::async_trait;
 use net_core_api::api::envelope::envelope::Envelope;
-use net_core_api::core::api::API;
 use net_core_api::core::decoder_api::Decoder;
+use net_core_api::core::encoder_api::Encoder;
 use net_core_api::core::typed_api::Typed;
 use net_inserter_api::api::pcap_file::InsertPcapFileDTO;
 use sqlx::Postgres;
@@ -39,7 +38,7 @@ impl InsertPcapFileHandler {
 
 #[async_trait]
 impl InsertHandler for InsertPcapFileHandler {
-    async fn insert(&self, transaction: &mut sqlx::Transaction<'_, Postgres>, data_to_insert: Envelope) -> Result<Option<Arc<dyn API + Send + Sync>>, Box<dyn Error + Send + Sync>> {
+    async fn insert(&self, transaction: &mut sqlx::Transaction<'_, Postgres>, data_to_insert: Envelope) -> Result<Option<Envelope>, Box<dyn Error + Send + Sync>> {
         if data_to_insert.get_envelope_type() != self.get_insertable_data_type() {
             return Err(Box::new(InsertError::WrongInsertableData(
                 self.get_insertable_data_type()
@@ -71,7 +70,11 @@ impl InsertHandler for InsertPcapFileHandler {
             &network_packet_data
         ).await; 
         match insert_result {
-            Ok(res) => Ok(Some(Arc::new(res))),
+            Ok(res) => Ok(Some(Envelope::new(
+                tenant_id,
+                res.get_type(),
+                &res.encode(),
+            ))),
             Err(e) => Err(Box::new(InsertError::DbError(self.get_insertable_data_type().to_string(), e))),
         }
     }
