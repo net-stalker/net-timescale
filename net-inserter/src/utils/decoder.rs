@@ -9,8 +9,8 @@ pub struct Decoder {}
 
 impl Decoder {
     // TODO: change string to a normal error type
-    pub async fn decode(data_packet: net_agent_api::api::data_packet::DataPacketDTO) -> Result<NetworkPacketDTO, String> {
-        let json_bytes = PcapTranslator::translate(data_packet.get_data().to_owned());
+    pub async fn decode(pcap_data: &[u8]) -> Result<NetworkPacketDTO, String> {
+        let json_bytes = PcapTranslator::translate(pcap_data.to_owned());
 
         let filtered_value_json = JsonPcapParser::filter_source_layer(&json_bytes);
         let first_json_value = JsonParser::first(&filtered_value_json).unwrap();

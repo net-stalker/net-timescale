@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
 <!-- [END AUTO UPDATE] -->
+## [0.1.0-97574ac] - 2024-04-16
+
+NS-284/dynamic-dispatch-net-inserter: implemented  dispatch for net-inserter (#76)
+
+* implemented  insert request dispatcher for net-inserter
+
+* updated db migrations
+
+* removed net-agent-api from Cargo.toml in net-inserter
 ## [0.1.0-54dba53] - 2024-04-15
 
 NS-281/change-column-names: Fix column names (for better readability) (#74)

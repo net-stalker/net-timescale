@@ -7,7 +7,7 @@ use sqlx::Postgres;
 use net_core_api::api::envelope::envelope::Envelope;
 
 #[async_trait::async_trait]
-pub trait Requester: Sync + Send {
+pub trait RequestHandler: Sync + Send {
     async fn request_enveloped_chart(
         &self,
         connection_pool: Arc<Pool<Postgres>>,
