@@ -25,43 +25,45 @@ use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
 use net_reporter_api::api::http_clients::http_clients_request::HttpClientsRequestDTO;
 
 const EXCLUDE_HTTP_METHODS_FILTER_QUERY: &str = "
-    AND (http->>'http.request.method' NOT IN (SELECT unnest({})) AND http->>'http.request.method' NOT IN (SELECT unnest({})))
+    AND (Http->>'http.request.method' NOT IN (SELECT unnest({})) AND Http->>'http.request.method' NOT IN (SELECT unnest({})))
 ";
 
 const INCLUDE_HTTP_METHODS_FILTER_QUERY: &str = "
-    AND (http->>'http.request.method' IN (SELECT unnest({})) OR http->>'http.request.method' IN (SELECT unnest({})))
+    AND (Http->>'http.request.method' IN (SELECT unnest({})) OR Http->>'http.request.method' IN (SELECT unnest({})))
 ";
 
 const INCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (src_addr IN (SELECT unnest({})) OR dst_addr IN (SELECT unnest({})))
+    AND (Src_IP IN (SELECT unnest({})) OR Dst_IP IN (SELECT unnest({})))
 ";
 
 const EXCLUDE_ENDPOINT_FILTER_QUERY: &str = "   
-    AND (src_addr NOT IN (SELECT unnest({})) AND dst_addr NOT IN (SELECT unnest({})))
+    AND (Src_IP NOT IN (SELECT unnest({})) AND Dst_IP NOT IN (SELECT unnest({})))
 ";
 
 const SET_LOWER_BYTES_BOUND: &str = "
-    AND SUM(packet_length) >= {}
+    AND SUM(Packet_Length) >= {}
 ";
 
 const SET_UPPER_BYTES_BOUND: &str = "
-    AND SUM(packet_length) < {}
+    AND SUM(Packet_Length) < {}
 ";
 
 const HTTP_CLIENTS_REQUEST_QUERY: &str = "
     SELECT
-        src_addr AS endpoint,
-        http_part->>'http.user_agent' AS user_agent,
-        COUNT(http_part) AS requests
-    FROM http_clients_aggregate, jsonb_path_query(http_part, '$.*') AS http
+        Src_IP AS Endpoint,
+        Http_Part->>'http.user_agent' AS User_Agent,
+        COUNT(Http_Part) AS Requests
+    FROM Http_Clients_Materialized_View, jsonb_path_query(Http_Part, '$.*') AS Http
     WHERE
-        1 = 1
-        AND http->'http.request.method' is not null
-        -- http methods filter
+        Tenant_ID = $1
+        AND Frametime >= $2
+        AND Frametime < $3
+        AND Http->'http.request.method' IS NOT NULL
+        -- Http methods filter
         {}
         -- endpoint filter
         {}
-    GROUP BY src_addr, user_agent
+    GROUP BY Src_IP, User_Agent
     HAVING
         1 = 1
         -- set lower bytes bound filter

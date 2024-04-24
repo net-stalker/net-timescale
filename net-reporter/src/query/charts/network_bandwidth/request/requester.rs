@@ -23,32 +23,32 @@ use crate::query_builder::query_builder::QueryBuilder;
 use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
 
 const EXCLUDE_PROTOCOLS_FILTER_QUERY: &str = "
-    AND not (string_to_array(protocols, ':') && {})
+    AND NOT (string_to_array(Protocols, ':') && {})
 ";
 
 const INCLUDE_PROTOCOLS_FILTER_QUERY: &str = "
-    AND (string_to_array(protocols, ':') @> {})
+    AND (string_to_array(Protocols, ':') @> {})
 ";
 
 const INCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (src_addr IN (SELECT unnest({})) OR dst_addr IN (SELECT unnest({})))
+    AND (Src_IP IN (SELECT unnest({})) OR Dst_IP IN (SELECT unnest({})))
 ";
 
 const EXCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (src_addr NOT IN (SELECT unnest({})) AND dst_addr NOT IN (SELECT unnest({})))
+    AND (Src_IP NOT IN (SELECT unnest({})) AND Dst_IP NOT IN (SELECT unnest({})))
 ";
 
 const NETWORK_BANDWIDTH_REQUEST_QUERY: &str = "
-    SELECT bucket, SUM(packet_length) as total_bytes
-    FROM network_bandwidth_aggregate
+    SELECT Frametime, SUM(Packet_Length) AS Total_Bytes
+    FROM Network_Bandwidth_Materialized_View
     WHERE 
-        tenant_id = $1
-        AND bucket >= $2
-        AND bucket < $3
+        Tenant_ID = $1
+        AND Frametime >= $2
+        AND Frametime < $3
         {}
         {}
-    GROUP BY bucket
-    ORDER BY bucket;
+    GROUP BY Frametime
+    ORDER BY Frametime;
 ";
 
 #[derive(Default)]

@@ -5,7 +5,9 @@ use sqlx::types::chrono::Utc;
 
 #[derive(sqlx::FromRow, Clone, Debug)]
 pub struct TotalHttpRequestsBucketResponse {
+    #[sqlx(rename = "Frametime")]
     bucket: DateTime<Utc>,
+    #[sqlx(rename = "Total_Requests")]
     total_requests: i64,
 }
 

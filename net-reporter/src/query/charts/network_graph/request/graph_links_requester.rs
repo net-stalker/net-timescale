@@ -7,44 +7,44 @@ use crate::{query::charts::network_graph::response::graph_edge::GraphEdgeRespons
 
 
 const GRAPH_LINKS_REQUEST_QUERY: &str = "
-    SELECT src_addr as src_id, dst_addr as dst_id, SUM(packet_length) as value
-    FROM network_graph_aggregate
+    SELECT Src_IP, Dst_IP, SUM(Packet_Length) AS Value
+    FROM Network_Graph_Materialized_View
     WHERE 
-        tenant_id = $1
-        AND bucket >= $2
-        AND bucket < $3
+        Tenant_ID = $1
+        AND Frametime >= $2
+        AND Frametime < $3
         {}
         {}
-    GROUP BY src_addr, dst_addr
+    GROUP BY Src_IP, Dst_IP
     HAVING
         1 = 1
         {}
         {}
-    ORDER BY src_addr, dst_addr;
+    ORDER BY Src_IP, Dst_IP;
 ";
 
 const EXCLUDE_PROTOCOLS_FILTER_QUERY: &str = "
-    AND not (string_to_array(protocols, ':') && {})
+    AND NOT (string_to_array(Protocols, ':') && {})
 ";
 
 const INCLUDE_PROTOCOLS_FILTER_QUERY: &str = "
-    AND (string_to_array(protocols, ':') @> {})
+    AND (string_to_array(Protocols, ':') @> {})
 ";
 
 const INCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (src_addr IN (SELECT unnest({})) OR dst_addr IN (SELECT unnest({})))
+    AND (Src_IP IN (SELECT unnest({})) OR Dst_IP IN (SELECT unnest({})))
 ";
 
 const EXCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (src_addr NOT IN (SELECT unnest({})) AND dst_addr NOT IN (SELECT unnest({})))
+    AND (Src_IP NOT IN (SELECT unnest({})) AND Dst_IP NOT IN (SELECT unnest({})))
 ";
 
 const SET_LOWER_BYTES_BOUND: &str = "
-    AND SUM(packet_length) >= {}
+    AND SUM(Packet_Length) >= {}
 ";
 
 const SET_UPPER_BYTES_BOUND: &str = "
-    AND SUM(packet_length) < {}
+    AND SUM(Packet_Length) < {}
 ";
 
 #[derive(Default)]
