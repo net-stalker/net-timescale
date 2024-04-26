@@ -6,10 +6,10 @@ async fn main() {
     init_log();
     log::info!("Run module");
     let config = if cfg!(debug_assertions) {
-        println!("Running in debug mode");
+        log::info!("Running in debug mode");
         Config::builder().build().expect("read config error")
     } else {
-        println!("Running in release mode");
+        log::info!("Running in release mode");
         let config_path = std::env::var("CONFIG_PATH").unwrap();
         let mut config = Config::new(&config_path).build().expect("read config error");
         config.server.addr = format!("{}:{}", host_core::get_addr_for_host(&config.server.host_name).await, &config.server.port);
