@@ -23,32 +23,32 @@ use crate::query_builder::query_builder::QueryBuilder;
 use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
 
 const EXCLUDE_PROTOCOLS_FILTER_QUERY: &str = "
-    AND not (string_to_array(protocols, ':') && {})
+    AND NOT (string_to_array(Protocols, ':') && {})
 ";
 
 const INCLUDE_PROTOCOLS_FILTER_QUERY: &str = "
-    AND (string_to_array(protocols, ':') @> {})
+    AND (string_to_array(Protocols, ':') @> {})
 ";
 
 const INCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (src_addr IN (SELECT unnest({})) OR dst_addr IN (SELECT unnest({})))
+    AND (Src_IP IN (SELECT unnest({})) OR Dst_IP IN (SELECT unnest({})))
 ";
 
 const EXCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (src_addr NOT IN (SELECT unnest({})) AND dst_addr NOT IN (SELECT unnest({})))
+    AND (Src_IP NOT IN (SELECT unnest({})) AND Dst_IP NOT IN (SELECT unnest({})))
 ";
 
 const NETWORK_BANDWIDTH_REQUEST_QUERY: &str = "
-    SELECT bucket, SUM(packet_length) as total_bytes
-    FROM network_bandwidth_aggregate
+    SELECT Frametime, SUM(Packet_Length) AS Total_Bytes
+    FROM Network_Bandwidth_Materialized_View
     WHERE 
-        group_id = $1
-        AND bucket >= $2
-        AND bucket < $3
+        Tenant_ID = $1
+        AND Frametime >= $2
+        AND Frametime < $3
         {}
         {}
-    GROUP BY bucket
-    ORDER BY bucket;
+    GROUP BY Frametime
+    ORDER BY Frametime;
 ";
 
 #[derive(Default)]
@@ -62,13 +62,13 @@ impl NetworkBandwidthRequester {
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
         query_string: &str,
-        group_id: &str,
+        tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         filters: &NetworkBandwidthFiltersDTO,
     ) -> Result<Vec<BandwidthBucketResponse>, Error> {
         SqlxQueryBuilderWrapper::<BandwidthBucketResponse>::new(query_string)
-            .add_param(group_id)
+            .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
             .add_option_param(filters.is_include_protocols_mode().map(|_| filters.get_protocols().to_vec()))
@@ -84,7 +84,7 @@ impl RequestHandler for NetworkBandwidthRequester {
         connection_pool: Arc<Pool<Postgres>>,
         enveloped_request: Envelope,
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
-        let group_id = enveloped_request.get_tenant_id();
+        let tenant_id = enveloped_request.get_tenant_id();
 
         if enveloped_request.get_type() != self.get_requesting_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
@@ -102,7 +102,7 @@ impl RequestHandler for NetworkBandwidthRequester {
         let executed_query_response = Self::execute_query(
             connection_pool,
             query.as_str(),
-            group_id,
+            tenant_id,
             request_start_date,
             request_end_date,
             filters,
@@ -114,7 +114,7 @@ impl RequestHandler for NetworkBandwidthRequester {
         let dto_response: NetworkBandwidthDTO = response.into();
 
         Ok(Envelope::new(
-            group_id,
+            tenant_id,
             NetworkBandwidthDTO::get_data_type(),
             &dto_response.encode()
         ))
