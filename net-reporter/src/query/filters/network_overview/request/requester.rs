@@ -20,28 +20,28 @@ use crate::query::filters::network_overview::response::network_overview_filters:
 use crate::query::requester::RequestHandler;
 
 const NETWORK_OVERVIEW_FILTERS_QUERY: &str = "
-        select
-            COALESCE(lhs.id, rhs.id) as endpoint,
-            ARRAY_REMOVE(ARRAY(SELECT DISTINCT unnest(string_to_array(COALESCE(lhs.concatenated_protocols, '') || ':' || COALESCE(rhs.concatenated_protocols, ''), ':'))), '') AS protocols,
-            GREATEST(lhs.total_bytes, rhs.total_bytes, 0) as total_bytes
-        from
-            (
-                select
-                    src_addr as id,
-                    SUM(packet_length) as total_bytes,
-                    STRING_AGG(protocols, ':' ORDER BY protocols) AS concatenated_protocols
-                from network_overview_filters
-                where group_id = $1 AND bucket >= $2 AND bucket < $3
-                group by src_addr
-            ) as lhs full outer join (
-                select
-                    dst_addr as id,
-                    SUM(packet_length) as total_bytes,
-                    STRING_AGG(protocols, ':' ORDER BY protocols) AS concatenated_protocols
-                from network_overview_filters
-                where group_id = $1 AND bucket >= $2 AND bucket < $3
-                group by dst_addr
-            ) as rhs on lhs.id = rhs.id;
+SELECT
+    COALESCE(lhs.IP, rhs.IP) AS Endpoint,
+    ARRAY_REMOVE(ARRAY(SELECT DISTINCT unnest(string_to_array(COALESCE(lhs.Concatenated_Protocols, '') || ':' || COALESCE(rhs.Concatenated_Protocols, ''), ':'))), '') AS Protocols,
+    GREATEST(lhs.Total_Bytes, rhs.Total_Bytes, 0) AS Total_Bytes
+FROM
+    (
+        SELECT
+            Src_IP AS IP,
+            SUM(Packet_Length) AS Total_Bytes,
+            STRING_AGG(Protocols, ':' ORDER BY Protocols) AS Concatenated_Protocols
+        FROM Network_Overview_Filters_Materialized_View
+        WHERE Tenant_ID = $1 AND Frametime >= $2 AND Frametime < $3
+        GROUP BY Src_IP
+    ) AS lhs FULL OUTER JOIN (
+        SELECT
+            Dst_IP AS IP,
+            SUM(Packet_Length) AS Total_Bytes,
+            STRING_AGG(Protocols, ':' ORDER BY Protocols) AS Concatenated_Protocols
+        FROM Network_Overview_Filters_Materialized_View
+        WHERE Tenant_ID = $1 AND Frametime >= $2 AND Frametime < $3
+        GROUP BY Dst_IP
+    ) AS rhs ON lhs.IP = rhs.IP;
 ";
 
 #[derive(Default)]
@@ -54,12 +54,12 @@ impl NetworkOverviewFiltersRequester {
 
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
-        group_id: &str,
+        tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
     ) -> Result<Vec<FilterEntryResponse>, Error> {
         sqlx::query_as(NETWORK_OVERVIEW_FILTERS_QUERY)
-            .bind(group_id)
+            .bind(tenant_id)
             .bind(start_date)
             .bind(end_date)
             .fetch_all(connection_pool.as_ref())

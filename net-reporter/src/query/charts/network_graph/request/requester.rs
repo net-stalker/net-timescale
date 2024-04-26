@@ -47,14 +47,14 @@ impl NetworkGraphRequester {
 
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
-        group_id: &str,
+        tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         filters: &NetworkGraphFiltersDTO,
     ) -> Result<(Vec<GraphNodeResponse>, Vec<GraphEdgeResponse>), Error> {
         let graph_links = GraphLinksRequester::execute_query(
             connection_pool.clone(),
-            group_id,
+            tenant_id,
             start_date,
             end_date,
             filters
@@ -72,7 +72,7 @@ impl RequestHandler for NetworkGraphRequester {
         connection_pool: Arc<Pool<Postgres>>,
         enveloped_request: Envelope,
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
-        let group_id = enveloped_request.get_tenant_id();
+        let tenant_id = enveloped_request.get_tenant_id();
 
         if enveloped_request.get_type() != self.get_requesting_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
@@ -84,7 +84,7 @@ impl RequestHandler for NetworkGraphRequester {
 
         let executed_query_response = Self::execute_query(
             connection_pool,
-            group_id,
+            tenant_id,
             request_start_date,
             request_end_date,
             filters,
@@ -96,7 +96,7 @@ impl RequestHandler for NetworkGraphRequester {
         let dto_response: NetworkGraphDTO = response.into();
 
         Ok(Envelope::new(
-            group_id,
+            tenant_id,
             NetworkGraphDTO::get_data_type(),
             &dto_response.encode()
         ))

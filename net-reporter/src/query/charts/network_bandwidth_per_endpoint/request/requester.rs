@@ -24,64 +24,64 @@ use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
 
 
 const EXCLUDE_PROTOCOLS_FILTER_QUERY: &str = "
-    AND not (ARRAY(SELECT DISTINCT unnest(string_to_array(protocols, ':'))) && {})
+    AND NOT (ARRAY(SELECT DISTINCT unnest(string_to_array(Protocols, ':'))) && {})
 ";
 
 const INCLUDE_PROTOCOLS_FILTER_QUERY: &str = "
-    AND ARRAY(SELECT DISTINCT unnest(string_to_array(protocols, ':'))) @> {}
+    AND ARRAY(SELECT DISTINCT unnest(string_to_array(Protocols, ':'))) @> {}
 ";
 
 const INCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (COALESCE(lhs.id, rhs.id) IN (SELECT unnest({})))
+    AND (COALESCE(lhs.IP, rhs.IP) IN (SELECT unnest({})))
 ";
 
 const EXCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (COALESCE(lhs.id, rhs.id) NOT IN (SELECT unnest({})))
+    AND (COALESCE(lhs.IP, rhs.IP) NOT IN (SELECT unnest({})))
 ";
 
 const SET_LOWER_BYTES_BOUND: &str = "
-    AND LEAST(COALESCE(lhs.bytes_sent, 0), COALESCE(rhs.bytes_received, 0)) >= {}
+    AND LEAST(COALESCE(lhs.Bytes_Sent, 0), COALESCE(rhs.Bytes_Received, 0)) >= {}
 ";
 
 const SET_UPPER_BYTES_BOUND: &str = "
-    AND GREATEST(COALESCE(lhs.bytes_sent, 0), COALESCE(rhs.bytes_received, 0)) < {}
+    AND GREATEST(COALESCE(lhs.Bytes_Sent, 0), COALESCE(rhs.Bytes_Received, 0)) < {}
 ";
 
 const NETWORK_BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY: &str = "
     SELECT
-        COALESCE(lhs.id, rhs.id) AS id,
-        COALESCE(lhs.bytes_sent, 0) AS bytes_sent,
-        COALESCE(rhs.bytes_received, 0) AS bytes_received
+        COALESCE(lhs.IP, rhs.IP) AS IP,
+        COALESCE(lhs.Bytes_Sent, 0) AS Bytes_Sent,
+        COALESCE(rhs.Bytes_Received, 0) AS Bytes_Received
     FROM
     (
         SELECT
-            src_addr AS id,
-            SUM(packet_length) AS bytes_sent
-        FROM bandwidth_per_endpoint_aggregate
+            Src_IP AS IP,
+            SUM(Packet_Length) AS Bytes_Sent
+        FROM Network_Bandwidth_Per_Endpoint_Materialized_View
         WHERE 
-            group_id = $1
-            AND bucket >= $2
-            AND bucket < $3
+            Tenant_ID = $1
+            AND Frametime >= $2
+            AND Frametime < $3
             {}
-        GROUP BY src_addr
-    ) AS lhs full outer join (
+        GROUP BY Src_IP
+    ) AS lhs FULL OUTER JOIN (
         SELECT
-            dst_addr AS id,
-            SUM(packet_length) AS bytes_received
-        FROM bandwidth_per_endpoint_aggregate
+            Dst_IP AS IP,
+            SUM(Packet_Length) AS Bytes_Received
+        FROM Network_Bandwidth_Per_Endpoint_Materialized_View
         WHERE 
-            group_id = $1
-            AND bucket >= $2 
-            AND bucket < $3
+            Tenant_ID = $1
+            AND Frametime >= $2 
+            AND Frametime < $3
             {}
-        GROUP BY dst_addr
-    ) AS rhs ON lhs.id = rhs.id
+        GROUP BY Dst_IP
+    ) AS rhs ON lhs.IP = rhs.IP
     WHERE
         1 = 1
         {}
         {}
         {}
-    ORDER BY id;
+    ORDER BY IP;
 ";
 
 #[derive(Default)]
@@ -95,13 +95,13 @@ impl NetworkBandwidthPerEndpointRequester {
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
         query_string: &str,
-        group_id: &str,
+        tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         filters: &NetworkBandwidthPerEndpointFiltersDTO,
     ) -> Result<Vec<EndpointResponse>, Error> {
         SqlxQueryBuilderWrapper::<EndpointResponse>::new(query_string)
-            .add_param(group_id)
+            .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
             .add_option_param(filters.is_include_protocols_mode().map(|_| filters.get_protocols().to_vec()))
@@ -119,7 +119,7 @@ impl RequestHandler for NetworkBandwidthPerEndpointRequester {
         connection_pool: Arc<Pool<Postgres>>,
         enveloped_request: Envelope,
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
-        let group_id = enveloped_request.get_tenant_id();
+        let tenant_id = enveloped_request.get_tenant_id();
 
         if enveloped_request.get_type() != self.get_requesting_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
@@ -139,7 +139,7 @@ impl RequestHandler for NetworkBandwidthPerEndpointRequester {
         let executed_query_response = Self::execute_query(
             connection_pool,
             query.as_str(),
-            group_id,
+            tenant_id,
             request_start_date,
             request_end_date,
             filters,
@@ -151,7 +151,7 @@ impl RequestHandler for NetworkBandwidthPerEndpointRequester {
         let dto_response: NetworkBandwidthPerEndpointDTO = response.into();
 
         Ok(Envelope::new(
-            group_id,
+            tenant_id,
             NetworkBandwidthPerEndpointDTO::get_data_type(),
             &dto_response.encode()
         ))

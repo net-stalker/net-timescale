@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
 <!-- [END AUTO UPDATE] -->
+## [0.1.0-99eefe9] - 2024-04-26
+
+Ns 248/update views (#75)
+
+* NS-247/change-data-model: Update migrations
+
+* NS-265/group-tenant-id-fix: Rename agent_id -> tenant_id
+
+* NS-248/update-views: Update core materialized view logic
+
+* NS-248/update-views: Update all the views
+
+* NS-282/update-requests-text: Fix all the request and corresponding views
 ## [0.1.0-97574ac] - 2024-04-16
 
 NS-284/dynamic-dispatch-net-inserter: implemented  dispatch for net-inserter (#76)
