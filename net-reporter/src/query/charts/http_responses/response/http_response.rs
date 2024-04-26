@@ -5,10 +5,15 @@ use net_reporter_api::api::http_responses::http_response::HttpResponseDTO;
 
 #[derive(sqlx::FromRow, Clone, Debug)]
 pub struct HttpResponseResponse {
+    #[sqlx(rename = "Frametime")]
     packet_date: DateTime<Utc>,
+    #[sqlx(rename = "Http_Date")]
     http_date: Option<DateTime<Utc>>,
+    #[sqlx(rename = "Client")]
     client: String,
+    #[sqlx(rename = "Server")]
     server: String,
+    #[sqlx(rename = "Response_Code")]
     response_code: i64,
 }
 

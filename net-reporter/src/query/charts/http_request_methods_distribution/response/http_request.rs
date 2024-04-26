@@ -3,7 +3,9 @@ use net_reporter_api::api::http_request_methods_distribution::http_request_metho
 
 #[derive(sqlx::FromRow, Clone, Debug)]
 pub struct HttpRequestMethodResponse {
+    #[sqlx(rename = "Name")]
     name: String,
+    #[sqlx(rename = "Amount")]
     amount: i64
 }
 

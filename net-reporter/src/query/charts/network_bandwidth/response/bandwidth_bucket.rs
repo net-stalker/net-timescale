@@ -5,7 +5,9 @@ use net_reporter_api::api::network_bandwidth::bandwidth_bucket::BandwidthBucketD
 
 #[derive(sqlx::FromRow, Clone, Debug)]
 pub struct BandwidthBucketResponse {
+    #[sqlx(rename = "Frametime")]
     bucket: DateTime<Utc>,
+    #[sqlx(rename = "Total_Bytes")]
     total_bytes: i64,
 }
 
