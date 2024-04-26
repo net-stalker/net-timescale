@@ -4,7 +4,8 @@ members = [
     "host-core",
     "net-inserter",
     "net-migrator",
-    "net-reporter"
+    "net-reporter",
+    "net-updater"
 ]
 
 [workspace.dependencies]
