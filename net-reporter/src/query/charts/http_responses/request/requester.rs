@@ -23,42 +23,42 @@ use crate::query_builder::sqlx_query_builder_wrapper::SqlxQueryBuilderWrapper;
 use net_reporter_api::api::http_responses::http_responses_request::HttpResponsesRequestDTO;
 
 const EXCLUDE_HTTP_METHODS_FILTER_QUERY: &str = "
-    AND ((http->>'http.response.code')::int8 NOT IN (SELECT unnest({})) AND (http->>'http.response.code')::int8 NOT IN (SELECT unnest({})))
+    AND ((Http->>'http.response.code')::int8 NOT IN (SELECT unnest({})) AND (Http->>'http.response.code')::int8 NOT IN (SELECT unnest({})))
 ";
 
 const INCLUDE_HTTP_METHODS_FILTER_QUERY: &str = "
-    AND ((http->>'http.response.code')::int8 IN (SELECT unnest({})) OR (http->>'http.response.code')::int8 IN (SELECT unnest({})))
+    AND ((Http->>'http.response.code')::int8 IN (SELECT unnest({})) OR (Http->>'http.response.code')::int8 IN (SELECT unnest({})))
 ";
 
 const INCLUDE_ENDPOINT_FILTER_QUERY: &str = "
-    AND (src_addr IN (SELECT unnest({})) OR dst_addr IN (SELECT unnest({})))
+    AND (Src_IP IN (SELECT unnest({})) OR Dst_IP IN (SELECT unnest({})))
 ";
 
 const EXCLUDE_ENDPOINT_FILTER_QUERY: &str = "   
-    AND (src_addr NOT IN (SELECT unnest({})) AND dst_addr NOT IN (SELECT unnest({})))
+    AND (Src_IP NOT IN (SELECT unnest({})) AND Dst_IP NOT IN (SELECT unnest({})))
 ";
 
 const SET_LOWER_BYTES_BOUND: &str = "
-    AND packet_length >= {}
+    AND Packet_Length >= {}
 ";
 
 const SET_UPPER_BYTES_BOUND: &str = "
-    AND packet_length < {}
+    AND Packet_Length < {}
 ";
 
 const HTTP_RESPONSES_REQUEST_QUERY: &str = "
     SELECT
-        (http_part->>'http.date')::timestamptz AS http_date,
-        packet_date::timestamptz as packet_date,
-        src_addr AS client,
-        dst_addr AS server,
-        (http->>'http.response.code')::int8 AS response_code
-    FROM http_responses_aggregate, jsonb_path_query(http_part, '$.*') AS http
+        (Http_Part->>'http.date')::timestamptz AS Http_Date,
+        Frametime,
+        Src_IP AS Client,
+        Dst_IP AS Server,
+        (http->>'http.response.code')::int8 AS Response_Code
+    FROM Http_Responses_Materialized_View, jsonb_path_query(Http_Part, '$.*') AS Http
     WHERE
-        group_id = $1
-        AND bucket >= $2
-        AND bucket < $3
-        AND http->'http.response.code' IS NOT NULL
+        Tenant_ID = $1
+        AND Frametime >= $2
+        AND Frametime < $3
+        AND Http->'http.response.code' IS NOT NULL
         {}
         {}
         {}
@@ -76,16 +76,16 @@ impl HttpResponsesRequester {
     async fn execute_query(
         connection_pool: Arc<Pool<Postgres>>,
         query_string: &str,
-        group_id: &str,
+        tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         filters: &HttpResponsesFiltersDTO,
     ) -> Result<Vec<HttpResponseResponse>, Error> {
-        log::info!("Query Parameters: {:?}", group_id);
+        log::info!("Query Parameters: {:?}", tenant_id);
         log::info!("Query Parameters: {}", start_date);
         log::info!("Query Parameters: {}", end_date);
         SqlxQueryBuilderWrapper::<HttpResponseResponse>::new(query_string)
-            .add_param(group_id)
+            .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
             .add_option_param(filters.is_include_http_methods_mode().map(|_| filters.get_http_responses().to_vec()))
@@ -103,7 +103,7 @@ impl RequestHandler for HttpResponsesRequester {
         connection_pool: Arc<Pool<Postgres>>,
         enveloped_request: Envelope,
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
-        let group_id = enveloped_request.get_tenant_id();
+        let tenant_id = enveloped_request.get_tenant_id();
 
         if enveloped_request.get_type() != self.get_requesting_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
@@ -123,7 +123,7 @@ impl RequestHandler for HttpResponsesRequester {
         let executed_query_response = Self::execute_query(
             connection_pool,
             query.as_str(),
-            group_id,
+            tenant_id,
             request_start_date,
             request_end_date,
             filters,
@@ -135,7 +135,7 @@ impl RequestHandler for HttpResponsesRequester {
         let dto_response: HttpResponsesDTO = response.into();
 
         Ok(Envelope::new(
-            group_id,
+            tenant_id,
             HttpResponsesDTO::get_data_type(),
             &dto_response.encode()
         ))

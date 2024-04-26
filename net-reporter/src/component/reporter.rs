@@ -13,18 +13,19 @@ use sqlx::Postgres;
 
 use crate::config::Config;
 
-use crate::continuous_aggregate::http_overview_filters::HttpOverviewFiltersAggregate;
-use crate::continuous_aggregate::http_request_methods_distribution::HttpRequestMethodsDistributionAggregate;
-use crate::continuous_aggregate::http_responses::HttpResponsesAggregate;
-use crate::continuous_aggregate::http_clients::HttpClientsAggregate;
-use crate::continuous_aggregate::http_responses_distribution::HttpResponsesDistributionAggregate;
-use crate::continuous_aggregate::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolAggregate;
-use crate::continuous_aggregate::total_http_requests::TotalHttpRequestsAggregate;
-use crate::continuous_aggregate::ContinuousAggregate;
-use crate::continuous_aggregate::bandwidth_per_endpoint::BandwidthPerEndpointAggregate;
-use crate::continuous_aggregate::network_bandwidth::NetworkBandwidthAggregate;
-use crate::continuous_aggregate::network_graph::NetworkGraphAggregate;
-use crate::continuous_aggregate::network_overview_filters::NetworkOverviewFiltersAggregate;
+use crate::materialized_view::MaterializedView;
+
+use crate::materialized_view::http_overview_filters::HttpOverviewFiltersMaterializedView;
+use crate::materialized_view::http_request_methods_distribution::HttpRequestMethodsDistributionMaterializedView;
+use crate::materialized_view::http_responses::HttpResponsesMaterializedView;
+use crate::materialized_view::http_clients::HttpClientsMaterialiazedView;
+use crate::materialized_view::http_responses_distribution::HttpResponsesDistributionMaterializedView;
+use crate::materialized_view::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolMaterializedView;
+use crate::materialized_view::total_http_requests::TotalHttpRequestsMaterializedView;
+use crate::materialized_view::network_bandwidth_per_endpoint::NetworkBandwidthPerEndpointMaterializedView;
+use crate::materialized_view::network_bandwidth::NetworkBandwidthMaterializedView;
+use crate::materialized_view::network_graph::NetworkGraphMaterializedView;
+use crate::materialized_view::network_overview_filters::NetworkOverviewFiltersMaterializedView;
 
 use crate::query::charts::network_bandwidth_per_endpoint::request::requester::NetworkBandwidthPerEndpointRequester;
 use crate::query::charts::http_request_methods_distribution::request::requester::HttpRequestMethodsDistributionRequester;
@@ -73,6 +74,99 @@ impl Reporter {
             .unwrap()
     }
 
+    async fn create_materialized_view(connection_pool: &Pool<Postgres>) {
+        // TODO: refactor this part of code using, for example, continues aggregate manager
+        // to reduce the amount of code here
+        match HttpOverviewFiltersMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match HttpRequestMethodsDistributionMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match HttpResponsesMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match HttpClientsMaterialiazedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match HttpResponsesDistributionMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match NetworkBandwidthPerProtocolMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match TotalHttpRequestsMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match NetworkBandwidthPerEndpointMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match NetworkBandwidthMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match NetworkGraphMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+        match NetworkOverviewFiltersMaterializedView::create(connection_pool).await {
+            Ok(_) => {
+                // TODO: add logs
+            },
+            Err(err) => {
+                log::debug!("{err}");
+            }
+        };
+    }
+
     fn build_query_manager() -> QueryManager {
         QueryManager::builder()
             .add_request_handler(NetworkBandwidthPerEndpointRequester::default().boxed())
@@ -89,187 +183,6 @@ impl Reporter {
             .build()
     }
 
-    async fn create_continuous_aggregates(con: &Pool<Postgres>) {
-        // TODO: refactor this part of code using, for example, continues aggregate manager
-        // to reduce the amount of code here
-        match NetworkGraphAggregate::create(con).await {
-            Ok(_) => {
-                log::info!("successfully created address pair continuous aggregate");
-            },
-            Err(err) => {
-                log::debug!("couldn't create {}: {}", NetworkGraphAggregate::get_name(), err);
-            }
-        }
-        match NetworkGraphAggregate::add_refresh_policy(con, None, None, "1 minute").await {
-            Ok(_) => {
-                log::info!("successfully created {} refresh policy", NetworkGraphAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {} refresh policy: {}", NetworkGraphAggregate::get_name(), err);
-            }
-        }
-        match NetworkBandwidthAggregate::create(con).await {
-            Ok(_) => {
-                log::info!("successfully created {}", NetworkBandwidthAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {}: {}", NetworkBandwidthAggregate::get_name(), err);
-            }
-        }
-        match NetworkBandwidthAggregate::add_refresh_policy(con, None, None, "1 minute").await {
-            Ok(_) => {
-                log::info!("successfully created {} refresh policy", NetworkBandwidthAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {} refresh policy: {}", NetworkBandwidthAggregate::get_name(), err);
-            }
-        }
-        match BandwidthPerEndpointAggregate::create(con).await {
-            Ok(_) => {
-                log::info!("successfully created {}", BandwidthPerEndpointAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {}: {}", BandwidthPerEndpointAggregate::get_name(), err);
-            }
-        }
-        match BandwidthPerEndpointAggregate::add_refresh_policy(con, None, None, "1 minute").await {
-            Ok(_) => {
-                log::info!("successfully created {} refresh policy", BandwidthPerEndpointAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {} refresh policy: {}", BandwidthPerEndpointAggregate::get_name(), err);
-            }
-        }
-        match NetworkOverviewFiltersAggregate::create(con).await {
-            Ok(_) => {
-                log::info!("successfully created {}", NetworkOverviewFiltersAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {}: {}", NetworkOverviewFiltersAggregate::get_name(), err);
-            }
-        }
-        match NetworkOverviewFiltersAggregate::add_refresh_policy(con, None, None, "1 minute").await {
-            Ok(_) => {
-                log::info!("successfully created {} refresh policy", NetworkOverviewFiltersAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {} refresh policy: {}", NetworkOverviewFiltersAggregate::get_name(), err);
-            }
-        }
-        match NetworkBandwidthPerProtocolAggregate::create(con).await {
-            Ok(_) => {
-                log::info!("successfully created {}", NetworkBandwidthPerProtocolAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {}: {}", NetworkBandwidthPerProtocolAggregate::get_name(), err);
-            }
-        }
-        match NetworkBandwidthPerProtocolAggregate::add_refresh_policy(con, None, None, "1 minute").await {
-            Ok(_) => {
-                log::info!("successfully created {} refresh policy", NetworkBandwidthPerProtocolAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {} refresh policy: {}", NetworkBandwidthPerProtocolAggregate::get_name(), err);
-            }
-        }
-        match TotalHttpRequestsAggregate::create(con).await {
-            Ok(_) => {
-                log::info!("successfully created {}", TotalHttpRequestsAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {}: {}", TotalHttpRequestsAggregate::get_name(), err);
-            }
-        }
-        match TotalHttpRequestsAggregate::add_refresh_policy(con, None, None, "1 minute").await {
-            Ok(_) => {
-                log::info!("successfully created {}", TotalHttpRequestsAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {}: {}", TotalHttpRequestsAggregate::get_name(), err);
-            }
-        }
-        match HttpRequestMethodsDistributionAggregate::create(con).await {
-            Ok(_) => {
-                log::info!("successfully created {}", HttpRequestMethodsDistributionAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {}: {}", HttpRequestMethodsDistributionAggregate::get_name(), err);
-            }
-        }
-        match HttpRequestMethodsDistributionAggregate::add_refresh_policy(con, None, None, "1 minute").await {
-            Ok(_) => {
-                log::info!("successfully created {} refresh policy", HttpRequestMethodsDistributionAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {} refresh policy: {}", HttpRequestMethodsDistributionAggregate::get_name(), err);
-            }
-        }
-        match HttpResponsesAggregate::create(con).await {
-            Ok(_) => {
-                log::info!("successfully created {}", HttpResponsesAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {}: {}", HttpResponsesAggregate::get_name(), err);
-            }
-        }
-        match HttpResponsesAggregate::add_refresh_policy(con, None, None, "1 minute").await {
-            Ok(_) => {
-                log::info!("successfully created {} refresh policy", HttpResponsesAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {} refresh policy: {}", HttpResponsesAggregate::get_name(), err);
-            }
-        }
-        match HttpClientsAggregate::create(con).await {
-            Ok(_) => {
-                log::info!("successfully created {}", HttpClientsAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {}: {}", HttpClientsAggregate::get_name(), err);
-            }
-        }
-        match HttpClientsAggregate::add_refresh_policy(con, None, None, "1 minute").await {
-            Ok(_) => {
-                log::info!("successfully created {} refresh policy", HttpClientsAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {} refresh policy: {}", HttpClientsAggregate::get_name(), err);
-            }
-        }
-        match HttpResponsesDistributionAggregate::create(con).await {
-            Ok(_) => {
-                log::info!("successfully created {}", HttpResponsesDistributionAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {}: {}", HttpResponsesDistributionAggregate::get_name(), err);
-            }
-        }
-        match HttpResponsesDistributionAggregate::add_refresh_policy(con, None, None, "1 minute").await {
-            Ok(_) => {
-                log::info!("successfully created {} refresh policy", HttpResponsesDistributionAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {} refresh policy: {}", HttpResponsesDistributionAggregate::get_name(), err);
-            }
-        }
-        match HttpOverviewFiltersAggregate::create(con).await {
-            Ok(_) => {
-                log::info!("successfully created {}", HttpOverviewFiltersAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {}: {}", HttpOverviewFiltersAggregate::get_name(), err);
-            }
-        }
-        match HttpOverviewFiltersAggregate::add_refresh_policy(con, None, None, "1 minute").await {
-            Ok(_) => {
-                log::info!("successfully created {} refresh policy", HttpOverviewFiltersAggregate::get_name());
-            },
-            Err(err) => {
-                log::debug!("couldn't create {} refresh policy: {}", HttpOverviewFiltersAggregate::get_name(), err);
-            }
-        }
-    }
-
     pub async fn run(self) {
         log::info!("Run component"); 
 
@@ -281,7 +194,7 @@ impl Reporter {
         }
         log::info!("Successfully ran db migrations");
 
-        Reporter::create_continuous_aggregates(&self.connection_pool).await;
+        Reporter::create_materialized_view(&self.connection_pool).await;
 
         log::info!("Creating server endpoint for net-reporter..."); 
         

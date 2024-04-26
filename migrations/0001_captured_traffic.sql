@@ -1,4 +1,4 @@
-CREATE TABLE Networks
+CREATE TABLE IF NOT EXISTS Networks
 (
     Network_ID          SERIAL,
     Network_Name        TEXT NOT NULL,
@@ -10,7 +10,11 @@ CREATE TABLE Networks
     UNIQUE (Network_Name, Tenant_ID)
 );
 
-CREATE TABLE Traffic
+CREATE INDEX IF NOT EXISTS Network_ID_Index ON Networks USING HASH (Network_ID);
+CREATE INDEX IF NOT EXISTS Network_Name_Index ON Networks USING HASH (Network_Name);
+CREATE INDEX IF NOT EXISTS Network_Tenant_ID_Index ON Networks USING HASH (Tenant_ID);
+
+CREATE TABLE IF NOT EXISTS Traffic
 (
     Pcap_ID             SERIAL,
     Insertion_Time      TIMESTAMPTZ NOT NULL,
@@ -24,4 +28,8 @@ CREATE TABLE Traffic
     FOREIGN KEY (Network_ID) REFERENCES Networks(Network_ID)
 );
 
-CREATE INDEX binary_data_index ON Traffic USING gin(Parsed_Data);
+CREATE INDEX IF NOT EXISTS Pcap_ID_Index ON Traffic USING HASH (Pcap_ID);
+CREATE INDEX IF NOT EXISTS Pcap_Insertion_Time_Index ON Traffic USING BRIN (Insertion_Time);
+CREATE INDEX IF NOT EXISTS Pcap_Network_ID_Index ON Traffic USING HASH (Network_ID);
+CREATE INDEX IF NOT EXISTS Pcap_Tenant_ID_Index ON Traffic USING HASH (Tenant_ID);
+CREATE INDEX IF NOT EXISTS Pcap_Parsed_Data_Index ON Traffic USING GIN (Parsed_Data);
