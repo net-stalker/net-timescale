@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-07bdc11] - 2024-04-26
+
+NS-250/add-indexes-to-db (#80)
+
+* NS-250/add-indexes-to-db: Add indexes for db and 'IF NOT EXISTS' in tables creating for preventing Errors
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-99eefe9] - 2024-04-26
 
