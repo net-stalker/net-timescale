@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [0.1.0-3450b02] - 2024-04-26
+
+NS-293/remove-printlns: Change all the println! (s) to the log::info! (#81)
+
+* NS-293/remove-printlns: Change all the println! (s) to the log::info!
 <!-- [END AUTO UPDATE] -->
 ## [0.1.0-de13e1f] - 2024-04-26
 
