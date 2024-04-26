@@ -38,14 +38,14 @@ impl InsertPcapFileHandler {
 
 #[async_trait]
 impl InsertHandler for InsertPcapFileHandler {
-    async fn insert(&self, transaction: &mut sqlx::Transaction<'_, Postgres>, data_to_insert: Envelope) -> Result<Option<Envelope>, Box<dyn Error + Send + Sync>> {
+    async fn insert(&self, transaction: &mut sqlx::Transaction<'_, Postgres>, data_to_insert: Envelope) -> Result<Option<Envelope>, InsertError> {
         if data_to_insert.get_envelope_type() != self.get_insertable_data_type() {
-            return Err(Box::new(InsertError::WrongInsertableData(
+            return Err(InsertError::WrongInsertableData(
                 self.get_insertable_data_type()
                 .split('_')
                 .collect::<Vec<_>>()
                 .join(" ")
-            )))
+            ));
         }
         let tenant_id = data_to_insert.get_tenant_id();
         let pcap_data = InsertPcapFileDTO::decode(data_to_insert.get_data());
@@ -56,12 +56,12 @@ impl InsertHandler for InsertPcapFileHandler {
 
         if let Err(e) = data_packet_save_result {
             log::error!("Error: {e}");
-            return Err(e);
+            return Err(InsertError::WriteFile(e.to_string()));
         }
 
         let network_packet_data = match crate::utils::decoder::Decoder::get_network_packet_data(pcap_data.get_data()).await {
             Ok(data) => data,
-            Err(err_desc) => return Err(Box::new(InsertError::DecodePcapFile(err_desc)))
+            Err(err_desc) => return Err(InsertError::DecodePcapFile(err_desc))
         };
         let insert_result = network_packet_inserter::insert_network_packet_transaction(
             transaction,
@@ -75,7 +75,7 @@ impl InsertHandler for InsertPcapFileHandler {
                 res.get_type(),
                 &res.encode(),
             ))),
-            Err(e) => Err(Box::new(InsertError::DbError(self.get_insertable_data_type().to_string(), e))),
+            Err(e) => Err(InsertError::DbError(self.get_insertable_data_type().to_string(), e)),
         }
     }
 

@@ -15,8 +15,8 @@ use net_transport::quinn::server::builder::ServerQuicEndpointBuilder;
 use crate::config::Config;
 
 use super::dispatcher::Dispatcher;
-use super::network::InsertNetworkHandler;
-use super::pcap_file_inserter::InsertPcapFileHandler;
+use super::network_insert_handler::InsertNetworkHandler;
+use super::pcap_file_insert_handler::InsertPcapFileHandler;
 
 pub struct Inserter {
     config: Config,

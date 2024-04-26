@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use async_trait::async_trait;
 use net_core_api::api::envelope::envelope::Envelope;
 use net_core_api::core::decoder_api::Decoder;
@@ -17,14 +15,14 @@ impl InsertNetworkHandler {}
 
 #[async_trait]
 impl InsertHandler for InsertNetworkHandler {
-    async fn insert(&self, transaction: &mut sqlx::Transaction<'_, Postgres>, data_to_insert: Envelope) -> Result<Option<Envelope>, Box<dyn Error + Send + Sync>> {
+    async fn insert(&self, transaction: &mut sqlx::Transaction<'_, Postgres>, data_to_insert: Envelope) -> Result<Option<Envelope>, InsertError> {
         if data_to_insert.get_envelope_type() != self.get_insertable_data_type() {
-            return Err(Box::new(InsertError::WrongInsertableData(
+            return Err(InsertError::WrongInsertableData(
                 self.get_insertable_data_type()
                 .split('-')
                 .collect::<Vec<_>>()
                 .join(" ")
-            )))
+            ));
         }
         let tenant_id = data_to_insert.get_tenant_id();
         let network_data = InsertNetworkRequestDTO::decode(data_to_insert.get_data());
@@ -35,7 +33,7 @@ impl InsertHandler for InsertNetworkHandler {
         ).await;
         match insert_result {
             Ok(_) => Ok(None),
-            Err(e) => Err(Box::new(InsertError::DbError(self.get_insertable_data_type().to_string(), e))),
+            Err(e) => Err(InsertError::DbError(self.get_insertable_data_type().to_string(), e)),
         }
     }
 

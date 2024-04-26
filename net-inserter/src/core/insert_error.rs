@@ -8,5 +8,7 @@ pub enum InsertError {
     #[error("Error while inserting `{0}`: `{1:?}`")]
     DbError(String, sqlx::Error),
     #[error("couldn't decode pcap file into a pcaket: {0}")]
-    DecodePcapFile(String)
+    DecodePcapFile(String),
+    #[error("cound't write file to a directory: {0}")]
+    WriteFile(String)
 }
