@@ -116,20 +116,20 @@ impl QueryManager {
 //             box_hashmap
 //         ));
 
-//         println!("Arc:\n{}", std::mem::size_of::<Arc<ArcQueryManager>>());
+//         log::info!("Arc:\n{}", std::mem::size_of::<Arc<ArcQueryManager>>());
 //         let now = Instant::now();
 //         for _ in 0..AMOUNT_OF_REPS {
 //             let gen = arc_generators.clone();
 //             let chartgen = gen.as_ref().chart_generators.get("1").unwrap();
 //         }
-//         println!("Elapsed: {:.2?}", now.elapsed());
+//         log::info!("Elapsed: {:.2?}", now.elapsed());
 
-//         println!("Box:\n{}", std::mem::size_of::<Arc<BoxQueryManager>>());
+//         log::info!("Box:\n{}", std::mem::size_of::<Arc<BoxQueryManager>>());
 //         let now = Instant::now();
 //         for _ in 0..AMOUNT_OF_REPS {
 //             let gen = box_generators.clone();
 //             let chartgen = gen.as_ref().chart_generators.get("1").unwrap();
 //         }
-//         println!("Elapsed: {:.2?}", now.elapsed());
+//         log::info!("Elapsed: {:.2?}", now.elapsed());
 //     }
 // }
