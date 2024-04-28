@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
 <!-- [END AUTO UPDATE] -->
+## [0.1.0-3450b02] - 2024-04-26
+
+NS-293/remove-printlns: Change all the println! (s) to the log::info! (#81)
+
+* NS-293/remove-printlns: Change all the println! (s) to the log::info!
+## [0.1.0-de13e1f] - 2024-04-26
+
+NS-292/add-net-updater: Add simple net-updater component structure (#79)
+
+* NS-292/add-net-updater: Add simple net-updater component structure
 ## [0.1.0-07bdc11] - 2024-04-26
 
 NS-250/add-indexes-to-db (#80)

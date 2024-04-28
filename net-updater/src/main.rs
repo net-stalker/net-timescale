@@ -1,10 +1,12 @@
-use net_inserter::config::Config;
-use net_inserter::component::inserter::Inserter;
+use net_updater::config::Config;
+use net_updater::component::updater::Updater;
 
 #[tokio::main]
 async fn main() {
     init_log();
+    
     log::info!("Run module");
+
     let config = if cfg!(debug_assertions) {
         log::info!("Running in debug mode");
         Config::builder().build().expect("read config error")
@@ -16,11 +18,11 @@ async fn main() {
         config
     };
 
-    let inserter_component = Inserter::new(config).await;
+    let updater_component = Updater::new(config).await;
 
     log::info!("Created component");
     
-    inserter_component.run().await;
+    updater_component.run().await;
 }
 
 fn init_log() {     
