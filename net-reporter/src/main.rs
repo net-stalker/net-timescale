@@ -6,10 +6,10 @@ async fn main() {
     init_log();
     log::info!("Run module");
     let config = if cfg!(debug_assertions) {
-        println!("Running in debug mode");
+        log::info!("Running in debug mode");
         Config::builder().build().expect("read config error")
     } else {
-        println!("Running in release mode");
+        log::info!("Running in release mode");
         let config_path = std::env::var("CONFIG_PATH").unwrap();
         let mut config = Config::new(&config_path).build().expect("read config error");
         // update ip address, now we can just bind everything as before
