@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use net_core_api::api::result::result::ResultDTO;
+use net_core_api::core::encoder_api::Encoder;
 use sqlx::Pool;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::Postgres;
@@ -13,8 +15,8 @@ use net_transport::quinn::server::builder::ServerQuicEndpointBuilder;
 use crate::config::Config;
 
 use super::dispatcher::Dispatcher;
-use super::network::InsertNetworkHandler;
-use super::pcap_file_inserter::InsertPcapFileHandler;
+use super::network_insert_handler::InsertNetworkHandler;
+use super::pcap_file_insert_handler::InsertPcapFileHandler;
 
 pub struct Inserter {
     config: Config,
@@ -74,12 +76,30 @@ impl Inserter {
         let insert_handler = insert_handler.unwrap();
         let mut transaction = pool.begin().await.unwrap();
         let res = insert_handler.insert(&mut transaction, enveloped_request).await;
-        match res {
-            Ok(_) => {
+        let response = match res {
+            Ok(Some(response)) => {
                 log::debug!("{} is successfully inserted", envelope_type);
-                let _ = transaction.commit().await;
+                ResultDTO::new(true, None, Some(response))
             },
-            Err(err) => log::error!("Error: {:?}", err)
+            Ok(None) => {
+                log::debug!("{} is successfully inserted", envelope_type);
+                ResultDTO::new(true, None, None)
+            },
+            Err(err) => {
+                log::error!("Error: {:?}", err);
+                ResultDTO::new(false, Some(&format!("Couldn't insert data: {}", err)), None)
+            }
+        };
+        match client_connection.send_all_reliable(&response.encode()).await {
+            Ok(_) => {
+                if response.is_ok() {
+                    let _ = transaction.commit().await;
+                }
+                log::debug!("Result is sent back");
+            },
+            Err(err) => {
+                log::error!("Couldn't send the response back: {}", err)
+            }
         }
     }
 
@@ -92,8 +112,6 @@ impl Inserter {
         let migrations_result = net_migrator::migrator::run_migrations(&self.connection_pool, "./migrations").await;
         if migrations_result.is_err() {
             log::error!("Error, failed to run migrations: {}", migrations_result.err().unwrap());
-            // TODO: Remove todo
-            todo!();
         }
         log::info!("Successfully ran db migrations");
 
@@ -121,7 +139,7 @@ impl Inserter {
                             handling_connection_pool,
                             dispatcher_clone,
                             client_connection,
-                        ).await
+                        ).await;
                     });
                 },
                 Err(_) => todo!(),
