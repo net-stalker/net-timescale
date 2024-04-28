@@ -13,6 +13,7 @@ const GRAPH_LINKS_REQUEST_QUERY: &str = "
         Tenant_ID = $1
         AND Frametime >= $2
         AND Frametime < $3
+        AND Network_ID = $4
         {}
         {}
     GROUP BY Src_IP, Dst_IP
@@ -60,6 +61,7 @@ impl GraphLinksRequester {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
+        network_id: i64,
         filters: &NetworkGraphFiltersDTO,
     ) -> Result<Vec<GraphEdgeResponse>, Error> {
         let query_string = QueryBuilder::new(GRAPH_LINKS_REQUEST_QUERY, 4)
@@ -73,6 +75,7 @@ impl GraphLinksRequester {
             .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
+            .add_param(network_id)
             .add_option_param(filters.is_include_protocols_mode().map(|_| filters.get_protocols().to_vec()))
             .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
             .add_option_param(filters.get_bytes_lower_bound())

@@ -59,6 +59,7 @@ const HTTP_CLIENTS_REQUEST_QUERY: &str = "
         AND Frametime >= $2
         AND Frametime < $3
         AND Http->'http.request.method' IS NOT NULL
+        AND Network_ID = $4
         -- Http methods filter
         {}
         -- endpoint filter
@@ -86,12 +87,14 @@ impl HttpClientsRequester {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
+        network_id: i64,
         filters: &HttpClientsFiltersDTO,
     ) -> Result<Vec<HttpClientResponse>, Error> {
         SqlxQueryBuilderWrapper::<HttpClientResponse>::new(query_string)
             .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
+            .add_param(network_id)
             .add_option_param(filters.is_include_http_methods_mode().map(|_| filters.get_http_methods().to_vec()))
             .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
             .add_option_param(filters.get_bytes_lower_bound())
@@ -115,6 +118,7 @@ impl RequestHandler for HttpClientsRequester {
         let request = HttpClientsRequestDTO::decode(enveloped_request.get_data());
         let request_start_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_start_date_time()).unwrap();
         let request_end_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_end_date_time()).unwrap();
+        let network_id = request.get_network_id();
         let filters = request.get_filters();
 
         let query = QueryBuilder::new(HTTP_CLIENTS_REQUEST_QUERY, 4)
@@ -130,6 +134,7 @@ impl RequestHandler for HttpClientsRequester {
             tenant_id,
             request_start_date,
             request_end_date,
+            network_id,
             filters,
         ).await?;
 

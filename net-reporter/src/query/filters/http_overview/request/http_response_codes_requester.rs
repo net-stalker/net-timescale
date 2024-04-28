@@ -10,6 +10,7 @@ WHERE
     Tenant_ID = $1
     AND Frametime >= $2
     AND Frametime < $3
+    AND Network_ID = $4
     AND Http->'http.response.code' IS NOT NULL
 ORDER BY Http_Response_Code;
 ";
@@ -27,11 +28,13 @@ impl HttpResponseCodesRequester {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
+        network_id: i64,
     ) -> Result<Vec<HttpResponseCodeResponse>, Error> {
         sqlx::query_as::<Postgres, HttpResponseCodeResponse>(HTTP_RESPONSE_CODES_REQUEST_QUERY)
             .bind(tenant_id)
             .bind(start_date)
             .bind(end_date)
+            .bind(network_id)
             .fetch_all(connection_pool.as_ref())
             .await 
     }

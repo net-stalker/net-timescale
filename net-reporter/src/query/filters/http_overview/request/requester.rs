@@ -37,24 +37,28 @@ impl HttpOverviewFiltersRequester {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
+        network_id: i64,
     ) -> Result<HttpOverviewFiltersResponse, Error> {
         let endpoints = EndpointsRequester::execute_query(
             connection_pool.clone(),
             tenant_id,
             start_date,
             end_date,
+            network_id,
         ).await?;
         let http_request_methods = HttpRequestMethodsRequester::execute_query(
             connection_pool.clone(),
             tenant_id,
             start_date,
             end_date,
+            network_id,
         ).await?;
         let http_response_codes = HttpResponseCodesRequester::execute_query(
             connection_pool.clone(),
             tenant_id,
             start_date,
             end_date,
+            network_id,
         ).await?;
 
         Ok(HttpOverviewFiltersResponse::new(
@@ -80,12 +84,14 @@ impl RequestHandler for HttpOverviewFiltersRequester {
         let request = HttpOverviewDashboardFiltersRequestDTO::decode(enveloped_request.get_data());
         let request_start_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_start_date_time()).unwrap();
         let request_end_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_end_date_time()).unwrap();
+        let network_id = request.get_network_id();
 
         let executed_query_response = Self::execute_queries(
             connection_pool,
             tenant_id,
             request_start_date,
             request_end_date,
+            network_id,
         ).await?;
 
         let response: HttpOverviewFiltersResponse = executed_query_response;

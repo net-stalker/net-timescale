@@ -53,6 +53,7 @@ const TOTAL_HTTP_REQUESTS_REQUEST_QUERY: &str = "
         Tenant_ID = $1
         AND Frametime >= $2
         AND Frametime < $3
+        AND Network_ID = $4
         AND Http->'http.request.method' IS NOT NULL
         {}
     GROUP BY Frametime
