@@ -1,7 +1,7 @@
+use std::error::Error;
 use chrono::DateTime;
 use chrono::Utc;
 use net_inserter_api::api::network_packet::network_packet::NetworkPacketDTO;
-use sqlx::Error;
 use sqlx::Postgres;
 
 const INSERT_NP_QUERY: &str = "
@@ -45,14 +45,13 @@ pub async fn insert_network_packet_transaction(
     tenant_id: &str,
     pcap_file_path: &str,
     network_packet_data: &[u8],
-) -> Result<NetworkPacketDTO, Error> {
+) -> Result<NetworkPacketDTO, Box<dyn Error + Send + Sync>> {
     let binary_data: serde_json::Value = match serde_json::from_slice(network_packet_data) {
         Ok(data) => data,
         Err(_) => {
-            log::error!("Failed to decode network packet data");
-            return Err(Error::Decode(Box::new(sqlx::error::Error::Protocol(
-                "Failed to decode network packet data".to_string()
-            ))))
+            let error_message = "Failed to decode network packet data into json value";
+            log::error!("{error_message}");
+            return Err(error_message.into())
         }
     };
     let network_packet = sqlx::query_as::<_, NetworkPacket>(INSERT_NP_QUERY)
