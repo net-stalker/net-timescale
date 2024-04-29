@@ -104,7 +104,7 @@ impl RequestHandler for NetworkBandwidthPerProtocolRequester {
         let network_id = request.get_network_id();
         let request_filters = request.get_filters();
 
-        let query = QueryBuilder::new(NETWORK_BANDWIDTH_PER_PROTOCOL_REQUEST_QUERY, 4)
+        let query = QueryBuilder::new(NETWORK_BANDWIDTH_PER_PROTOCOL_REQUEST_QUERY, 5)
             .add_dynamic_filter(request_filters.is_include_endpoints_mode(), 1, INCLUDE_ENDPOINT_FILTER_QUERY, EXCLUDE_ENDPOINT_FILTER_QUERY)
             .add_static_filter(request_filters.get_bytes_lower_bound(), SET_LOWER_BYTES_BOUND, 1)
             .add_static_filter(request_filters.get_bytes_upper_bound(), SET_UPPER_BYTES_BOUND, 1)

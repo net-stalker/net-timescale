@@ -117,7 +117,7 @@ impl RequestHandler for HttpResponsesRequester {
         let network_id = request.get_network_id();
         let filters = request.get_filters();
 
-        let query = QueryBuilder::new(HTTP_RESPONSES_REQUEST_QUERY, 4)
+        let query = QueryBuilder::new(HTTP_RESPONSES_REQUEST_QUERY, 5)
             .add_dynamic_filter(filters.is_include_http_methods_mode(), 1, INCLUDE_HTTP_METHODS_FILTER_QUERY, EXCLUDE_HTTP_METHODS_FILTER_QUERY)
             .add_dynamic_filter(filters.is_include_endpoints_mode(), 1, INCLUDE_ENDPOINT_FILTER_QUERY, EXCLUDE_ENDPOINT_FILTER_QUERY)
             .add_static_filter(filters.get_bytes_lower_bound(), SET_LOWER_BYTES_BOUND, 1)

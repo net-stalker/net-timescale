@@ -64,7 +64,7 @@ impl GraphLinksRequester {
         network_id: i64,
         filters: &NetworkGraphFiltersDTO,
     ) -> Result<Vec<GraphEdgeResponse>, Error> {
-        let query_string = QueryBuilder::new(GRAPH_LINKS_REQUEST_QUERY, 4)
+        let query_string = QueryBuilder::new(GRAPH_LINKS_REQUEST_QUERY, 5)
             .add_dynamic_filter(filters.is_include_protocols_mode(), 1, INCLUDE_PROTOCOLS_FILTER_QUERY, EXCLUDE_PROTOCOLS_FILTER_QUERY)
             .add_dynamic_filter(filters.is_include_endpoints_mode(), 1, INCLUDE_ENDPOINT_FILTER_QUERY, EXCLUDE_ENDPOINT_FILTER_QUERY)
             .add_static_filter(filters.get_bytes_lower_bound(), SET_LOWER_BYTES_BOUND, 1)
