@@ -7,9 +7,8 @@ edition = "2021"
 net-core-api = "0.5.0"
 net-transport = { version = "0.1.1", features = ["quinn"] }
 net-file = "0.1.1"
-net-inserter-api = "0.1.6"
+net-inserter-api = "0.2.0"
 net-config = "0.1.1"
-net-token-verifier = "0.2.0"
 
 log.workspace = true
 log4rs.workspace = true
@@ -21,7 +20,7 @@ serde.workspace = true
 toml.workspace = true
 
 chrono = { version = "0.4.23", feature = ["clock"] }
-serde_json = "1.0.91"
+serde_json = { version = "1.0.91", features = ["std"] }
 serde_yaml = "0.9.21" # uses to parse log4rs config
 sqlx = { version = "0.7.0", features = ["runtime-async-std", "tls-native-tls", "postgres", "chrono"] }
 tokio = { version = "1.28.1", features = ["full"] }
