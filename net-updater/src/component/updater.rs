@@ -1,5 +1,11 @@
 use std::sync::Arc;
 
+use net_core_api::api::envelope::envelope::Envelope;
+use net_core_api::api::result::result::ResultDTO;
+use net_core_api::core::decoder_api::Decoder;
+use net_core_api::core::encoder_api::Encoder;
+use net_core_api::core::typed_api::Typed;
+use net_transport::quinn::connection::QuicConnection;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::Pool;
 use sqlx::Postgres;
@@ -7,10 +13,13 @@ use sqlx::Postgres;
 use net_transport::quinn::server::builder::ServerQuicEndpointBuilder;
 
 use crate::config::Config;
+use crate::core::request_result::RequestResult;
+use crate::core::update_manager::manager::UpdateManager;
 
 pub struct Updater {
     config: Config,
     connection_pool: Arc<Pool<Postgres>>,
+    update_manager: Arc<UpdateManager>,
 }
 
 impl Updater {
@@ -20,10 +29,14 @@ impl Updater {
         let connection_pool = Arc::new(
             Updater::configure_connection_pool(&config).await
         );
+        let update_manager = Arc::new(
+            Updater::build_update_manager()
+        );
 
         Self {
             connection_pool,
             config,
+            update_manager
         }
     }
 
@@ -33,6 +46,11 @@ impl Updater {
             .connect(config.connection_url.url.as_str())
             .await
             .unwrap()
+    }
+
+    fn build_update_manager() -> UpdateManager {
+        UpdateManager::builder()
+            .build()
     }
 
     pub async fn run(self) {
@@ -66,14 +84,14 @@ impl Updater {
             match client_connection_result {
                 Ok(client_connection) => {
                     log::info!("Client is successfully connected");
-                    let config_clone = config.clone();
+                    let handling_update_manager = self.update_manager.clone();
                     let handling_connection_pool = self.connection_pool.clone();
                     
                     tokio::spawn(async move {
                         Updater::handle_update_request(
-                            config_clone,
-                            handling_connection_pool,
                             client_connection,
+                            handling_update_manager,
+                            handling_connection_pool,
                         ).await
                     });
                 },
@@ -84,10 +102,36 @@ impl Updater {
     
     #[allow(unused_variables)]
     async fn handle_update_request(
-        config_clone: Arc<Config>,
+        mut client_connection: QuicConnection,
+        handling_update_manager: Arc<UpdateManager>,
         handling_connection_pool: Arc<Pool<Postgres>>,
-        client_connection: net_transport::quinn::connection::QuicConnection
     ) {
-        todo!()
+        let receive_result = client_connection.receive_reliable().await;
+        if receive_result.is_err() {
+            todo!()
+        }
+        let recieve_result = receive_result.unwrap();
+
+        let enveloped_request = Envelope::decode(&recieve_result);
+
+        let tenant_id = enveloped_request.get_tenant_id().to_owned();
+
+        log::info!("Recieved request from client: {:?}", enveloped_request);
+
+        let request_result = handling_update_manager.as_ref().handle_update(enveloped_request, handling_connection_pool).await;
+        log::info!("Got response on request: {:?}", request_result);
+
+        let request_result: RequestResult = request_result.into();
+        let request_result_dto: ResultDTO = request_result.into();
+        let envelope_to_send = Envelope::new(
+            &tenant_id,
+            ResultDTO::get_data_type(),
+            &request_result_dto.encode()
+        );
+
+        let send_result = client_connection.send_all_reliable(&envelope_to_send.encode()).await;
+        if send_result.is_err() {
+            todo!()
+        }
     }
 }
