@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
+use crate::core::update_handler::UpdateHandler;
+
 use super::manager::UpdateManager;
-use super::update_handler::UpdateHandler;
 
 #[derive(Default)]
 pub struct UpdateManagerBuilder {
