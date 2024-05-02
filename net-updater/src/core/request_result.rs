@@ -1,0 +1,89 @@
+use std::error::Error;
+
+use net_core_api::api::envelope::envelope::Envelope;
+use net_core_api::core::encoder_api::Encoder;
+use net_core_api::core::typed_api::Typed;
+
+use net_core_api::api::result::result::ResultDTO;
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct RequestResult {
+    is_ok: bool,
+    description: Option<String>,
+    response: Option<Envelope>,
+}
+
+impl RequestResult {
+    pub fn new(
+        is_ok: bool,
+        description: Option<String>,
+        response: Option<Envelope>
+    ) -> Self {
+        Self {
+            is_ok,
+            description,
+            response
+        }
+    }
+
+    pub fn error(description: Option<String>) -> Self {
+        RequestResult::new(
+            false,
+            description,
+            None
+        )
+    }
+
+    pub fn ok(description: Option<String>, response: Option<Envelope>) -> Self {
+        RequestResult::new(
+            true,
+            description,
+            response
+        )
+    }
+
+    pub fn enveloped_dto_error(
+        description: Option<String>,
+        tenant_id: &str
+    ) -> Envelope {
+        RequestResult::error(description).into_enveloped_dto_result(tenant_id)
+    }
+
+    pub fn enveloped_dto_ok(
+        description: Option<String>,
+        response: Option<Envelope>,
+        tenant_id: &str
+    ) -> Envelope {
+        RequestResult::ok(description, response).into_enveloped_dto_result(tenant_id)
+    }
+
+    fn into_enveloped_dto_result(
+        self,
+        tenant_id: &str
+    ) -> Envelope {
+        Envelope::new(
+            tenant_id,
+            ResultDTO::get_data_type(),
+            &<RequestResult as Into<ResultDTO>>::into(self).encode()
+        )
+    }
+}
+
+impl From<RequestResult> for ResultDTO {
+    fn from(value: RequestResult) -> Self {
+        ResultDTO::new(
+            value.is_ok,
+            value.description.as_deref(),
+            value.response
+        )
+    }
+}
+
+impl From<Result<Envelope, Box<dyn Error + Sync + Send>>> for RequestResult {
+    fn from(value: Result<Envelope, Box<dyn Error + Sync + Send>>) -> Self {
+        match value {
+            Ok(envelope) => Self::ok(None, Some(envelope)),
+            Err(error) => Self::error(Some(error.to_string())),
+        }
+    }
+}
