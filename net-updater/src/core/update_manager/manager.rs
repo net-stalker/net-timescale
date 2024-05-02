@@ -7,8 +7,9 @@ use sqlx::Postgres;
 
 use net_core_api::api::envelope::envelope::Envelope;
 
+use crate::core::update_handler::UpdateHandler;
+
 use super::builder::UpdateManagerBuilder;
-use super::update_handler::UpdateHandler;
 
 
 pub struct UpdateManager {
