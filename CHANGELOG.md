@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [-554d5ff] - 2024-05-02
+
+Ns 294/add update manager (#83)
+
+* NS-294/add-update-manager: Add update manager and update handler trait
+<!-- [END AUTO UPDATE] -->
 ## [-859b759] - 2024-04-28
 
 Make handle to return response (#78)
@@ -17,7 +23,6 @@ Make handle to return response (#78)
 * make-handle-to-return-response: made insert handlers to return InsertError error type
 
 * made util modules to return Box<dyn Error + Send + Sync>
-<!-- [END AUTO UPDATE] -->
 ## [0.1.0-3450b02] - 2024-04-26
 
 NS-293/remove-printlns: Change all the println! (s) to the log::info! (#81)
