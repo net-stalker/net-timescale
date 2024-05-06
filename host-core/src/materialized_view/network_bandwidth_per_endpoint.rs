@@ -1,4 +1,5 @@
-use super::{MaterializedView, MaterializedViewQueries};
+use super::MaterializedView;
+use super::MaterializedViewQueries;
 
 const NAME: &str = "Network_Bandwidth_Per_Endpoint_Materialized_View";
 

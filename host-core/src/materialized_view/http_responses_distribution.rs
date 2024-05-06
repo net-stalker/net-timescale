@@ -1,10 +1,11 @@
-use super::{MaterializedView, MaterializedViewQueries};
+use super::MaterializedView;
+use super::MaterializedViewQueries;
 
-const NAME: &str = "Total_Http_Requests_Materialized_View";
+const NAME: &str = "Http_Responses_Distribution_Materialized_View";
 
-pub struct TotalHttpRequestsMaterializedView {}
+pub struct HttpResponsesDistributionMaterializedView {}
 
-impl MaterializedViewQueries for TotalHttpRequestsMaterializedView {
+impl MaterializedViewQueries for HttpResponsesDistributionMaterializedView {
     const NAME: &'static str = NAME;
 
     fn get_creation_query() -> String {
@@ -22,11 +23,11 @@ impl MaterializedViewQueries for TotalHttpRequestsMaterializedView {
             FROM Traffic
             WHERE
                 Parsed_Data->'l5'->'http' IS NOT NULL
-                AND (Parsed_Data->'l5'->'http'->>'http.request')::BOOL
+                AND (Parsed_Data->'l5'->'http'->>'http.response')::BOOL
             GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Http_Part;
         ", NAME)
     }
 }
 
 #[async_trait::async_trait]
-impl MaterializedView for TotalHttpRequestsMaterializedView {}
+impl MaterializedView for HttpResponsesDistributionMaterializedView {}

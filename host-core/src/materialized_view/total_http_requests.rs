@@ -1,10 +1,11 @@
-use super::{MaterializedView, MaterializedViewQueries};
+use super::MaterializedView;
+use super::MaterializedViewQueries;
 
-const NAME: &str = "Http_Request_Methods_Distribution_Materialized_View";
+const NAME: &str = "Total_Http_Requests_Materialized_View";
 
-pub struct HttpRequestMethodsDistributionMaterializedView {}
+pub struct TotalHttpRequestsMaterializedView {}
 
-impl MaterializedViewQueries for HttpRequestMethodsDistributionMaterializedView {
+impl MaterializedViewQueries for TotalHttpRequestsMaterializedView {
     const NAME: &'static str = NAME;
 
     fn get_creation_query() -> String {
@@ -12,7 +13,7 @@ impl MaterializedViewQueries for HttpRequestMethodsDistributionMaterializedView 
             CREATE MATERIALIZED VIEW IF NOT EXISTS {}
             AS
             SELECT
-                (Parsed_Data->'l1'->'frame'->>'frame.time')::TIMESTAMPTZ AS Frametime,
+                date_trunc('minute', (Parsed_Data->'l1'->'frame'->>'frame.time')::TIMESTAMPTZ) AS Frametime,
                 Tenant_ID,
                 Network_ID,
                 Parsed_Data->'l3'->'ip'->>'ip.src' AS Src_IP,
@@ -29,4 +30,4 @@ impl MaterializedViewQueries for HttpRequestMethodsDistributionMaterializedView 
 }
 
 #[async_trait::async_trait]
-impl MaterializedView for HttpRequestMethodsDistributionMaterializedView {}
+impl MaterializedView for TotalHttpRequestsMaterializedView {}

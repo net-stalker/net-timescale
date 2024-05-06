@@ -1,10 +1,11 @@
-use super::{MaterializedView, MaterializedViewQueries};
+use super::MaterializedView;
+use super::MaterializedViewQueries;
 
-const NAME: &str = "Network_Graph_Materialized_View";
+const NAME: &str = "Http_Responses_Materialized_View";
 
-pub struct NetworkGraphMaterializedView {}
+pub struct HttpResponsesMaterializedView {}
 
-impl MaterializedViewQueries for NetworkGraphMaterializedView {
+impl MaterializedViewQueries for HttpResponsesMaterializedView {
     const NAME: &'static str = NAME;
 
     fn get_creation_query() -> String {
@@ -18,12 +19,15 @@ impl MaterializedViewQueries for NetworkGraphMaterializedView {
                 Parsed_Data->'l3'->'ip'->>'ip.src' AS Src_IP,
                 Parsed_Data->'l3'->'ip'->>'ip.dst' AS Dst_IP,
                 (Parsed_Data->'l1'->'frame'->>'frame.len')::INTEGER AS Packet_Length,
-                Parsed_Data->'l1'->'frame'->>'frame.protocols' AS Protocols
+                Parsed_Data->'l5'->'http' AS Http_Part
             FROM Traffic
-            GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Protocols;
+            WHERE
+                Parsed_Data->'l5'->'http' IS NOT NULL
+                AND (Parsed_Data->'l5'->'http'->>'http.response')::BOOL
+            GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Http_Part;
         ", NAME)
     }
 }
 
 #[async_trait::async_trait]
-impl MaterializedView for NetworkGraphMaterializedView {}
+impl MaterializedView for HttpResponsesMaterializedView {}

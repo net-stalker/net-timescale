@@ -1,4 +1,5 @@
-use super::{MaterializedView, MaterializedViewQueries};
+use super::MaterializedView;
+use super::MaterializedViewQueries;
 
 const NAME: &str = "Http_Overview_Filters_Materialized_View";
 

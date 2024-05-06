@@ -1,10 +1,11 @@
-use super::{MaterializedView, MaterializedViewQueries};
+use super::MaterializedView;
+use super::MaterializedViewQueries;
 
-const NAME: &str = "Network_Overview_Filters_Materialized_View";
+const NAME: &str = "Network_Bandwidth_Materialized_View";
 
-pub struct NetworkOverviewFiltersMaterializedView {}
+pub struct NetworkBandwidthMaterializedView {}
 
-impl MaterializedViewQueries for NetworkOverviewFiltersMaterializedView {
+impl MaterializedViewQueries for NetworkBandwidthMaterializedView {
     const NAME: &'static str = NAME;
 
     fn get_creation_query() -> String {
@@ -12,7 +13,7 @@ impl MaterializedViewQueries for NetworkOverviewFiltersMaterializedView {
             CREATE MATERIALIZED VIEW IF NOT EXISTS {}
             AS
             SELECT
-                (Parsed_Data->'l1'->'frame'->>'frame.time')::TIMESTAMPTZ AS Frametime,
+                date_trunc('minute', (Parsed_Data->'l1'->'frame'->>'frame.time')::TIMESTAMPTZ) AS Frametime,
                 Tenant_ID,
                 Network_ID,
                 Parsed_Data->'l3'->'ip'->>'ip.src' AS Src_IP,
@@ -26,4 +27,4 @@ impl MaterializedViewQueries for NetworkOverviewFiltersMaterializedView {
 }
 
 #[async_trait::async_trait]
-impl MaterializedView for NetworkOverviewFiltersMaterializedView {}
+impl MaterializedView for NetworkBandwidthMaterializedView {}
