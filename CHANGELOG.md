@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [-554d5ff] - 2024-05-02
 
 Ns 294/add update manager (#83)
 
 * NS-294/add-update-manager: Add update manager and update handler trait
-<!-- [END AUTO UPDATE] -->
 ## [-859b759] - 2024-04-28
 
 Make handle to return response (#78)
