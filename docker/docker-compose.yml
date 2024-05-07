@@ -9,6 +9,17 @@ services:
       - POSTGRES_PASSWORD=PsWDgxZb
     networks:
       - net-net
+
+  timescaledb-buffer:
+    build:
+      context: timescaledb
+    hostname: timescaledb-buffer
+    ports:
+      - 5434:5432
+    environment:
+      - POSTGRES_PASSWORD=PsWDgxZb
+    networks:
+      - net-net
   
   net-reporter:
     build:
