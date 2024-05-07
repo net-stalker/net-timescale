@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
+use host_core::connection_pool::configure_connection_pool;
 use net_core_api::api::result::result::ResultDTO;
 use net_core_api::core::encoder_api::Encoder;
 use sqlx::Pool;
-use sqlx::postgres::PgPoolOptions;
 use sqlx::Postgres;
 
 use net_core_api::api::envelope::envelope::Envelope;
@@ -20,7 +20,9 @@ use super::pcap_file_insert_handler::InsertPcapFileHandler;
 
 pub struct Inserter {
     config: Config,
-    connection_pool: Arc<Pool<Postgres>>,
+    timesacledb_connection_pool: Arc<Pool<Postgres>>,
+    #[allow(dead_code)]
+    timescaledb_buffer_connection_pool: Arc<Pool<Postgres>>,
     dispatcher: Arc<Dispatcher>,
 }
 
@@ -28,26 +30,28 @@ impl Inserter {
     pub async fn new(
         config: Config,
     ) -> Self {
-        let connection_pool = Arc::new(
-            Inserter::configure_connection_pool(&config).await
+        let timesacledb_connection_pool = Arc::new(
+            configure_connection_pool(
+                config.max_connection_size.size.parse().expect("not a number"),
+                &config.timescaledb_connection_url.url,
+            ).await
+        );
+        let timescaledb_buffer_connection_pool = Arc::new(
+            configure_connection_pool(
+                config.max_connection_size.size.parse().expect("not a number"),
+                &config.timescaledb_buffer_connection_url.url,
+            ).await
         );
         let dispatcher = Arc::new(Self::configure_dispatcher(&config).await);
 
         Self {
-            connection_pool,
+            timesacledb_connection_pool,
+            timescaledb_buffer_connection_pool,
             config,
             dispatcher,
         }
     }
 
-    async fn configure_connection_pool(config: &Config) -> Pool<Postgres> {
-        PgPoolOptions::new()
-            .max_connections(config.max_connection_size.size.parse().expect("not a number"))
-            .connect(config.timescaledb_connection_url.url.as_str())
-            .await
-            .unwrap()
-    }
-    
     async fn configure_dispatcher(config: &Config) -> Dispatcher {
         Dispatcher::builder()
             .add_insert_handler(Box::<InsertNetworkHandler>::default())
@@ -109,7 +113,7 @@ impl Inserter {
         let config = Arc::new(self.config);
 
         log::info!("Run db migrations");
-        let migrations_result = net_migrator::migrator::run_migrations(&self.connection_pool, "./migrations").await;
+        let migrations_result = net_migrator::migrator::run_migrations(&self.timesacledb_connection_pool, "./migrations").await;
         if migrations_result.is_err() {
             log::error!("Error, failed to run migrations: {}", migrations_result.err().unwrap());
         }
@@ -132,7 +136,7 @@ impl Inserter {
             match client_connection_result {
                 Ok(client_connection) => {
                     log::info!("Client is successfully connected");
-                    let handling_connection_pool = self.connection_pool.clone();
+                    let handling_connection_pool = self.timesacledb_connection_pool.clone();
                     let dispatcher_clone = self.dispatcher.clone();
                     tokio::spawn(async move {
                         Inserter::handle_insert_request(

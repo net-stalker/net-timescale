@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use host_core::connection_pool::configure_connection_pool;
 use net_core_api::api::result::result::ResultDTO;
 use net_core_api::core::decoder_api::Decoder;
 use net_core_api::core::encoder_api::Encoder;
@@ -8,7 +9,6 @@ use net_core_api::core::typed_api::Typed;
 use net_transport::quinn::connection::QuicConnection;
 use net_transport::quinn::server::builder::ServerQuicEndpointBuilder;
 use sqlx::Pool;
-use sqlx::postgres::PgPoolOptions;
 use sqlx::Postgres;
 
 use crate::config::Config;
@@ -53,7 +53,10 @@ impl Reporter {
         config: Config
     ) -> Self {
         let connection_pool = Arc::new(
-            Reporter::configure_connection_pool(&config).await
+            configure_connection_pool(
+                config.max_connection_size.size.parse().expect("not a number"),
+                &config.connection_url.url,
+            ).await
         );
         let query_manager = Arc::new(
             Reporter::build_query_manager()
@@ -64,14 +67,6 @@ impl Reporter {
             config,
             query_manager,
         }
-    }
-
-    async fn configure_connection_pool(config: &Config) -> Pool<Postgres> {
-        PgPoolOptions::new()
-            .max_connections(config.max_connection_size.size.parse().expect("not a number"))
-            .connect(config.connection_url.url.as_str())
-            .await
-            .unwrap()
     }
 
     async fn create_materialized_view(connection_pool: &Pool<Postgres>) {
