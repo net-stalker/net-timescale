@@ -43,11 +43,11 @@ impl Inserter {
     async fn configure_connection_pool(config: &Config) -> Pool<Postgres> {
         PgPoolOptions::new()
             .max_connections(config.max_connection_size.size.parse().expect("not a number"))
-            .connect(config.connection_url.url.as_str())
+            .connect(config.timescaledb_connection_url.url.as_str())
             .await
             .unwrap()
     }
-
+    
     async fn configure_dispatcher(config: &Config) -> Dispatcher {
         Dispatcher::builder()
             .add_insert_handler(Box::<InsertNetworkHandler>::default())

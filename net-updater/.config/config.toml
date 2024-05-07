@@ -1,5 +1,8 @@
-[connection_url]
+[timescaledb_connection_url]
 url = "postgres://postgres:PsWDgxZb@localhost:5433"
+
+[timescaledb_buffer_connection_url]
+url = "postgres://postgres:PsWDgxZb@localhost:5434"
 
 [max_connection_size]
 size = "10"

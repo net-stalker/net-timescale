@@ -18,7 +18,12 @@ pub struct Server {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct ConnectionUrl {
+pub struct TimescaleDBConnectionUrl {
+    pub url: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct TimescaleDbBufferConnectionUrl {
     pub url: String,
 }
 
@@ -30,6 +35,7 @@ pub struct MaxConnectionSize {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, NetConfig)]
 pub struct Config {
     pub server: Server,
-    pub connection_url: ConnectionUrl,
+    pub timescaledb_connection_url: TimescaleDBConnectionUrl,
+    pub timescaledb_buffer_connection_url: TimescaleDbBufferConnectionUrl,
     pub max_connection_size: MaxConnectionSize,
 }
