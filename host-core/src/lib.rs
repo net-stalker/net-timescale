@@ -18,3 +18,5 @@ pub async fn get_addr_for_host(host_name: &str) -> String {
     }
     panic!("Failed to find ip address for host name: {}", host_name);
 }
+
+pub mod materialized_view;
