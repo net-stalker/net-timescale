@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [-de64482] - 2024-05-09
+
+NS-309 (#85)
+
+* NS-298/add-views-refresher: Add refresh methods for all the materialized views
+
+* NS-309/move-materialized-views-to-core: Move Materialized view creation to host-core
 <!-- [END AUTO UPDATE] -->
 ## [-554d5ff] - 2024-05-02
 
