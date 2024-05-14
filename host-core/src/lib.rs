@@ -20,3 +20,4 @@ pub async fn get_addr_for_host(host_name: &str) -> String {
 }
 
 pub mod materialized_view;
+pub mod connection_pool;

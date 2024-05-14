@@ -1,5 +1,6 @@
+use net_component::component::component_core::Component;
 use net_reporter::config::Config;
-use net_reporter::component::reporter::Reporter;
+use net_reporter::component::reporter_component::ReporterComponent;
 
 #[tokio::main]
 async fn main() {
@@ -17,11 +18,14 @@ async fn main() {
         config
     };
     log::debug!("server ip adddress: {:?}", config.server.addr);
-    let reporter_component = Reporter::new(config).await;
+    let reporter_component = ReporterComponent::new(&config).await;
     
     log::info!("Created component");
     
-    reporter_component.run().await;
+    match reporter_component.run().await {
+        Ok(_) => (),
+        Err(err) => log::error!("Something went wrong during starting the component: {}", err),
+    }
 }
 
 fn init_log() {
