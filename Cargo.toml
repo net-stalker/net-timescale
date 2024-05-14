@@ -2,6 +2,7 @@
 
 members = [ 
     "component-core",
+    "net-deleter",
     "net-inserter",
     "net-reporter",
     "net-updater"
