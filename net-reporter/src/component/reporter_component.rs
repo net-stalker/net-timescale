@@ -1,18 +1,18 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use host_core::materialized_view::http_clients::HttpClientsMaterialiazedView;
-use host_core::materialized_view::http_overview_filters::HttpOverviewFiltersMaterializedView;
-use host_core::materialized_view::http_request_methods_distribution::HttpRequestMethodsDistributionMaterializedView;
-use host_core::materialized_view::http_responses::HttpResponsesMaterializedView;
-use host_core::materialized_view::http_responses_distribution::HttpResponsesDistributionMaterializedView;
-use host_core::materialized_view::network_bandwidth::NetworkBandwidthMaterializedView;
-use host_core::materialized_view::network_bandwidth_per_endpoint::NetworkBandwidthPerEndpointMaterializedView;
-use host_core::materialized_view::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolMaterializedView;
-use host_core::materialized_view::network_graph::NetworkGraphMaterializedView;
-use host_core::materialized_view::network_overview_filters::NetworkOverviewFiltersMaterializedView;
-use host_core::materialized_view::total_http_requests::TotalHttpRequestsMaterializedView;
-use host_core::materialized_view::MaterializedView;
+use component_core::materialized_view::http_clients::HttpClientsMaterialiazedView;
+use component_core::materialized_view::http_overview_filters::HttpOverviewFiltersMaterializedView;
+use component_core::materialized_view::http_request_methods_distribution::HttpRequestMethodsDistributionMaterializedView;
+use component_core::materialized_view::http_responses::HttpResponsesMaterializedView;
+use component_core::materialized_view::http_responses_distribution::HttpResponsesDistributionMaterializedView;
+use component_core::materialized_view::network_bandwidth::NetworkBandwidthMaterializedView;
+use component_core::materialized_view::network_bandwidth_per_endpoint::NetworkBandwidthPerEndpointMaterializedView;
+use component_core::materialized_view::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolMaterializedView;
+use component_core::materialized_view::network_graph::NetworkGraphMaterializedView;
+use component_core::materialized_view::network_overview_filters::NetworkOverviewFiltersMaterializedView;
+use component_core::materialized_view::total_http_requests::TotalHttpRequestsMaterializedView;
+use component_core::materialized_view::MaterializedView;
 use net_component::component::network_service_component::NetworkServiceComponent;
 use net_component::handler::network_service_handler_manager::NetworkServiceHandlerManager;
 use net_component::handler::network_service_handler_manager_builder::NetworkServiceHandlerManagerBuilder;
@@ -31,7 +31,7 @@ use crate::handlers::chart_handlers::network_graph::handle::handler::NetworkGrap
 use crate::handlers::chart_handlers::total_http_requests::handler::TotalHttpRequestsHandler;
 use crate::handlers::filters_handlers::http_overview::handle::handler::HttpOverviewFiltersHandler;
 use crate::handlers::filters_handlers::network_overview::handler::NetworkOverviewFiltersHandler;
-use host_core::connection_pool;
+use component_core::connection_pool;
 
 pub struct ReporterComponent {
     connection_pool: Arc<Pool<Postgres>>,

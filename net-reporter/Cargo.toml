@@ -18,8 +18,7 @@ sqlx = { version = "0.7.0", features = ["runtime-async-std", "tls-native-tls", "
 async-trait = "0.1.74"
 serde_yaml = "0.9.21" # uses to parse log4rs config
 tokio = { version = "1.28.1", features = ["full"] }
-net-migrator = { path = "../net-migrator" }
-host-core = { path = "../host-core" }
+component-core = { path = "../component-core" }
 
 log.workspace = true
 log4rs.workspace = true

@@ -14,7 +14,7 @@ async fn main() {
         let config_path = std::env::var("CONFIG_PATH").unwrap();
         let mut config = Config::new(&config_path).build().expect("read config error");
         // update ip address, now we can just bind everything as before
-        config.server.addr = format!("{}:{}", host_core::get_addr_for_host(&config.server.host_name).await, config.server.port);
+        config.server.addr = format!("{}:{}", component_core::get_addr_for_host(&config.server.host_name).await, config.server.port);
         config
     };
     log::debug!("server ip adddress: {:?}", config.server.addr);

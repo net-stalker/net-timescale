@@ -8,7 +8,7 @@ use sqlx::Pool;
 use sqlx::Postgres;
 
 use crate::config::Config;
-use host_core::connection_pool;
+use component_core::connection_pool;
 
 pub struct UpdaterComponent {
     connection_pool: Arc<Pool<Postgres>>,

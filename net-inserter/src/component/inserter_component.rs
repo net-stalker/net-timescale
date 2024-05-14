@@ -10,7 +10,7 @@ use sqlx::Postgres;
 use crate::config::Config;
 use crate::handlers::network_insert_handler::InsertNetworkHandler;
 use crate::handlers::pcap_file_insert_handler::InsertPcapFileHandler;
-use host_core::connection_pool;
+use component_core::connection_pool;
 
 pub struct InserterComponent {
     connection_pool: Arc<Pool<Postgres>>,
@@ -28,6 +28,7 @@ impl InserterComponent {
         );
         let server_addr: SocketAddr = config.server.addr.parse().expect("Valid server address is expected");
         let handling_manager = Self::build_handling_manager(config).await;
+
         Self {
             connection_pool,
             server_addr,

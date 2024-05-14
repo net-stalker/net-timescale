@@ -28,8 +28,7 @@ tokio = { version = "1.28.1", features = ["full"] }
 openssl = { version = "0.10.64", features = ["vendored"] }
 async-trait = "0.1.80"
 thiserror = "1.0.58"
-net-migrator = { path = "../net-migrator" }
-host-core = { path = "../host-core" }
+component-core = { path = "../component-core" }
 uuid = {version = "1.8.0", features = ["v7", "fast-rng",]} # Version 7 UUIDs using a Unix timestamp.
 
 [dev-dependencies]

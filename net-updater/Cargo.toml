@@ -21,9 +21,8 @@ net-config = "0.1.1"
 net-file = "0.1.1"
 net-transport = { version = "0.1.1", features = ["quinn"] }
 net-component = "0.1.0"
-net-migrator = { path = "../net-migrator" }
 
-host-core = { path = "../host-core" }
+component-core = { path = "../component-core" }
 
 async-trait = "0.1.80"
 serde_json = "1.0.91"
