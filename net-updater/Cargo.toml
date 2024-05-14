@@ -20,6 +20,7 @@ net-core-api = "0.5.0"
 net-config = "0.1.1"
 net-file = "0.1.1"
 net-transport = { version = "0.1.1", features = ["quinn"] }
+net-component = "0.1.0"
 net-migrator = { path = "../net-migrator" }
 
 host-core = { path = "../host-core" }

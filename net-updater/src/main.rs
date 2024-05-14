@@ -1,5 +1,6 @@
+use net_component::component::component_core::Component;
 use net_updater::config::Config;
-use net_updater::component::updater::Updater;
+use net_updater::component::updater_component::UpdaterComponent;
 
 #[tokio::main]
 async fn main() {
@@ -18,11 +19,14 @@ async fn main() {
         config
     };
 
-    let updater_component = Updater::new(config).await;
+    let updater_component = UpdaterComponent::new(&config).await;
 
     log::info!("Created component");
     
-    updater_component.run().await;
+    match updater_component.run().await {
+        Ok(_) => (),
+        Err(err) => log::error!("Something went wrong during starting the component: {}", err),
+    }
 }
 
 fn init_log() {     

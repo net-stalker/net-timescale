@@ -1,4 +1,4 @@
-pub mod config;
 pub mod component;
 pub mod core;
-pub mod query;
+pub mod handlers;
+pub mod config;

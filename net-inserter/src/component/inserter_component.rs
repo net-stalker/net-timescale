@@ -8,15 +8,17 @@ use sqlx::Pool;
 use sqlx::Postgres;
 
 use crate::config::Config;
+use crate::handlers::network_insert_handler::InsertNetworkHandler;
+use crate::handlers::pcap_file_insert_handler::InsertPcapFileHandler;
 use host_core::connection_pool;
 
-pub struct UpdaterComponent {
+pub struct InserterComponent {
     connection_pool: Arc<Pool<Postgres>>,
     server_addr: SocketAddr,
     handling_manager: Arc<NetworkServiceHandlerManager>,
 }
 
-impl UpdaterComponent {
+impl InserterComponent {
     pub async fn new(config: &Config) -> Self {
         let connection_pool = Arc::new(
             connection_pool::configure_connection_pool(
@@ -25,7 +27,7 @@ impl UpdaterComponent {
             ).await
         );
         let server_addr: SocketAddr = config.server.addr.parse().expect("Valid server address is expected");
-        let handling_manager = Self::build_handling_manager().await;
+        let handling_manager = Self::build_handling_manager(config).await;
         Self {
             connection_pool,
             server_addr,
@@ -33,16 +35,18 @@ impl UpdaterComponent {
         }
     }
 
-    async fn build_handling_manager() -> Arc<NetworkServiceHandlerManager> {
+    async fn build_handling_manager(config: &Config) -> Arc<NetworkServiceHandlerManager> {
         Arc::new(
             NetworkServiceHandlerManagerBuilder::default()
+                .add_handler(InsertNetworkHandler::default().boxed())
+                .add_handler(InsertPcapFileHandler::new(&config.pcaps.directory_to_save).boxed())
                 .build()
         )
     }
 }
 
 #[async_trait::async_trait]
-impl NetworkServiceComponent for UpdaterComponent {
+impl NetworkServiceComponent for InserterComponent {
     fn get_connection_pool(&self) -> Arc<Pool<Postgres> >  {
         self.connection_pool.clone()
     }
