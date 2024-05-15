@@ -3,6 +3,7 @@ use crate::materialized_view::core::common::MaterializedViewQueries;
 
 const NAME: &str = "Http_Clients_Materialized_View";
 
+#[derive(Default)]
 pub struct HttpClientsMaterialiazedView {}
 
 impl MaterializedViewQueries for HttpClientsMaterialiazedView {

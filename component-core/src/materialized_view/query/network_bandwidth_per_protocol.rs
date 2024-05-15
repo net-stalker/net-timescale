@@ -3,6 +3,7 @@ use crate::materialized_view::core::common::MaterializedViewQueries;
 
 const NAME: &str = "Network_Bandwidth_Per_Protocol_Materialized_View";
 
+#[derive(Default)]
 pub struct NetworkBandwidthPerProtocolMaterializedView {}
 
 impl MaterializedViewQueries for NetworkBandwidthPerProtocolMaterializedView {

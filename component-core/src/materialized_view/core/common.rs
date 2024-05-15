@@ -3,6 +3,18 @@ use sqlx::Postgres;
 use sqlx::Error;
 use sqlx::postgres::PgQueryResult;
 
+use crate::materialized_view::manager::manager::MaterializedViewManager;
+use crate::materialized_view::query::http_clients::HttpClientsMaterialiazedView;
+use crate::materialized_view::query::http_overview_filters::HttpOverviewFiltersMaterializedView;
+use crate::materialized_view::query::http_request_methods_distribution::HttpRequestMethodsDistributionMaterializedView;
+use crate::materialized_view::query::http_responses::HttpResponsesMaterializedView;
+use crate::materialized_view::query::network_bandwidth::NetworkBandwidthMaterializedView;
+use crate::materialized_view::query::network_bandwidth_per_endpoint::NetworkBandwidthPerEndpointMaterializedView;
+use crate::materialized_view::query::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolMaterializedView;
+use crate::materialized_view::query::network_graph::NetworkGraphMaterializedView;
+use crate::materialized_view::query::network_overview_filters::NetworkOverviewFiltersMaterializedView;
+use crate::materialized_view::query::total_http_requests::TotalHttpRequestsMaterializedView;
+
 pub trait MaterializedViewQueries: Send + Sync {
     fn get_name(&self) -> String;
 
@@ -49,4 +61,19 @@ pub trait MaterializedView: MaterializedViewQueries {
             .execute(pool)
             .await
     }
+}
+
+pub fn get_common_materialized_view_manager() -> MaterializedViewManager {
+    MaterializedViewManager::builder()
+        .add_materialized_view(Box::new(HttpClientsMaterialiazedView::default()))
+        .add_materialized_view(Box::new(HttpOverviewFiltersMaterializedView::default()))
+        .add_materialized_view(Box::new(HttpRequestMethodsDistributionMaterializedView::default()))
+        .add_materialized_view(Box::new(HttpResponsesMaterializedView::default()))
+        .add_materialized_view(Box::new(NetworkBandwidthPerEndpointMaterializedView::default()))
+        .add_materialized_view(Box::new(NetworkBandwidthPerProtocolMaterializedView::default()))
+        .add_materialized_view(Box::new(NetworkBandwidthMaterializedView::default()))
+        .add_materialized_view(Box::new(NetworkGraphMaterializedView::default()))
+        .add_materialized_view(Box::new(NetworkOverviewFiltersMaterializedView::default()))
+        .add_materialized_view(Box::new(TotalHttpRequestsMaterializedView::default()))
+    .build()
 }

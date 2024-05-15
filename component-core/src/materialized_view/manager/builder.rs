@@ -13,9 +13,10 @@ impl MaterializedViewManagerBuilder {
     }
 
     pub fn add_materialized_view(
-        &mut self,
+        mut self,
         materialized_view: Box<dyn MaterializedView>
-    ) {
+    ) -> Self {
         self.materialized_views.push(materialized_view);
+        self
     }
 }

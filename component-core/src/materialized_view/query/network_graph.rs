@@ -3,6 +3,7 @@ use crate::materialized_view::core::common::MaterializedViewQueries;
 
 const NAME: &str = "Network_Graph_Materialized_View";
 
+#[derive(Default)]
 pub struct NetworkGraphMaterializedView {}
 
 impl MaterializedViewQueries for NetworkGraphMaterializedView {
