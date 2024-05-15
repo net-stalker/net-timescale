@@ -8,6 +8,7 @@ use net_core_api::core::decoder_api::Decoder;
 use net_core_api::core::typed_api::Typed;
 use net_inserter_api::api::network::InsertNetworkRequestDTO;
 use sqlx::{Pool, Postgres};
+use uuid::Uuid;
 use crate::core::insert_error::InsertError;
 use crate::utils::network_inserter;
 
@@ -37,9 +38,11 @@ impl NetworkServiceHandler for InsertNetworkHandler {
             Ok(transaction) => transaction,
             Err(err) => return Err(InsertError::TranscationError(err.to_string()).into()),
         };
+        let network_id = Uuid::now_v7().to_string();
         let insert_result = network_inserter::insert_network_transaction(
             &mut transaction,
             tenant_id,
+            &network_id,
             &network_data,
         ).await;
         match insert_result {
