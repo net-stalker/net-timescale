@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [-368e981] - 2024-05-15
+
+Ns 317/rewrite component with net component (#87)
+
+* updated components to use net-component
+
+* updated migrations, now we don't need to use net-migrator
 <!-- [END AUTO UPDATE] -->
 ## [-de64482] - 2024-05-09
 
