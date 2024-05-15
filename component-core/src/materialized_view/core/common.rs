@@ -4,16 +4,16 @@ use sqlx::Error;
 use sqlx::postgres::PgQueryResult;
 
 pub trait MaterializedViewQueries {
-    const NAME: &'static str;
+    fn get_name(&self) -> String;
 
-    fn get_creation_query() -> String;
+    fn get_creation_query(&self) -> String;
 
-    fn get_refresh_query_blocking() -> String {
-        format!("REFRESH MATERIALIZED VIEW {};", Self::NAME)
+    fn get_refresh_query_blocking(&self) -> String {
+        format!("REFRESH MATERIALIZED VIEW {};", self.get_name())
     }
 
-    fn get_refresh_query_concurrent() -> String {
-        format!("REFRESH MATERIALIZED VIEW CONCURRENTLY {};", Self::NAME)
+    fn get_refresh_query_concurrent(&self) -> String {
+        format!("REFRESH MATERIALIZED VIEW CONCURRENTLY {};", self.get_name())
     }
 }
 
@@ -21,27 +21,30 @@ pub trait MaterializedViewQueries {
 pub trait MaterializedView: MaterializedViewQueries {
 
     async fn create(
+        &self,
         pool: &Pool<Postgres>
     ) -> Result<PgQueryResult, Error> {
-        let create_query = Self::get_creation_query();
+        let create_query = self.get_creation_query();
         sqlx::query(&create_query)
             .execute(pool)
             .await
     }
 
     async fn refresh_blocking(
+        &self,
         pool: &Pool<Postgres>
     ) -> Result<PgQueryResult, Error> {
-        let refresh_query = Self::get_refresh_query_blocking();
+        let refresh_query = self.get_refresh_query_blocking();
         sqlx::query(&refresh_query)
             .execute(pool)
             .await
     }
 
     async fn refresh_concurrently(
+        &self,
         pool: &Pool<Postgres>
     ) -> Result<PgQueryResult, Error> {
-        let refresh_query = Self::get_refresh_query_concurrent();
+        let refresh_query = self.get_refresh_query_concurrent();
         sqlx::query(&refresh_query)
             .execute(pool)
             .await

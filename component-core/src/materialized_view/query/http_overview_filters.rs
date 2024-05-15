@@ -6,9 +6,11 @@ const NAME: &str = "Http_Overview_Filters_Materialized_View";
 pub struct HttpOverviewFiltersMaterializedView {}
 
 impl MaterializedViewQueries for HttpOverviewFiltersMaterializedView {
-    const NAME: &'static str = NAME;
+    fn get_name(&self) -> String {
+        NAME.to_owned()
+    }
 
-    fn get_creation_query() -> String {
+    fn get_creation_query(&self) -> String {
         format!("
             CREATE MATERIALIZED VIEW IF NOT EXISTS {}
             AS
@@ -24,7 +26,7 @@ impl MaterializedViewQueries for HttpOverviewFiltersMaterializedView {
             WHERE
                 Parsed_Data->'l5'->'http' IS NOT NULL
             GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Http_Part;
-        ", NAME)
+        ", self.get_name())
     }
 }
 

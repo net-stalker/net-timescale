@@ -6,9 +6,11 @@ const NAME: &str = "Http_Responses_Distribution_Materialized_View";
 pub struct HttpResponsesDistributionMaterializedView {}
 
 impl MaterializedViewQueries for HttpResponsesDistributionMaterializedView {
-    const NAME: &'static str = NAME;
+    fn get_name(&self) -> String {
+        NAME.to_owned()
+    }
 
-    fn get_creation_query() -> String {
+    fn get_creation_query(&self) -> String {
         format!("
             CREATE MATERIALIZED VIEW IF NOT EXISTS {}
             AS
@@ -25,7 +27,7 @@ impl MaterializedViewQueries for HttpResponsesDistributionMaterializedView {
                 Parsed_Data->'l5'->'http' IS NOT NULL
                 AND (Parsed_Data->'l5'->'http'->>'http.response')::BOOL
             GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Http_Part;
-        ", NAME)
+        ", self.get_name())
     }
 }
 

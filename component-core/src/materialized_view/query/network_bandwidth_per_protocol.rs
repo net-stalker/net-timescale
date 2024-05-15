@@ -6,9 +6,11 @@ const NAME: &str = "Network_Bandwidth_Per_Protocol_Materialized_View";
 pub struct NetworkBandwidthPerProtocolMaterializedView {}
 
 impl MaterializedViewQueries for NetworkBandwidthPerProtocolMaterializedView {
-    const NAME: &'static str = NAME;
+    fn get_name(&self) -> String {
+        NAME.to_owned()
+    }
 
-    fn get_creation_query() -> String {
+    fn get_creation_query(&self) -> String {
         format!("
             CREATE MATERIALIZED VIEW IF NOT EXISTS {}
             AS
@@ -22,7 +24,7 @@ impl MaterializedViewQueries for NetworkBandwidthPerProtocolMaterializedView {
                 Parsed_Data->'l1'->'frame'->>'frame.protocols' AS Protocols
             FROM Traffic
             GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Protocols;
-        ", NAME)
+        ", self.get_name())
     }
 }
 
