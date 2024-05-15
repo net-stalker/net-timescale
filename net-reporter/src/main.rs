@@ -1,5 +1,6 @@
+use net_component::component::component_core::Component;
 use net_reporter::config::Config;
-use net_reporter::component::reporter::Reporter;
+use net_reporter::component::reporter_component::ReporterComponent;
 
 #[tokio::main]
 async fn main() {
@@ -13,15 +14,18 @@ async fn main() {
         let config_path = std::env::var("CONFIG_PATH").unwrap();
         let mut config = Config::new(&config_path).build().expect("read config error");
         // update ip address, now we can just bind everything as before
-        config.server.addr = format!("{}:{}", host_core::get_addr_for_host(&config.server.host_name).await, config.server.port);
+        config.server.addr = format!("{}:{}", component_core::get_addr_for_host(&config.server.host_name).await, config.server.port);
         config
     };
     log::debug!("server ip adddress: {:?}", config.server.addr);
-    let reporter_component = Reporter::new(config).await;
+    let reporter_component = ReporterComponent::new(&config).await;
     
     log::info!("Created component");
     
-    reporter_component.run().await;
+    match reporter_component.run().await {
+        Ok(_) => (),
+        Err(err) => log::error!("Something went wrong during starting the component: {}", err),
+    }
 }
 
 fn init_log() {

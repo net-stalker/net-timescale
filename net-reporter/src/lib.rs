@@ -1,4 +1,4 @@
 pub mod component;
-pub mod config;
-pub mod query;
+pub mod handlers;
 pub mod query_builder;
+pub mod config;

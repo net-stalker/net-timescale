@@ -1,5 +1,6 @@
+use net_component::component::component_core::Component;
 use net_updater::config::Config;
-use net_updater::component::updater::Updater;
+use net_updater::component::updater_component::UpdaterComponent;
 
 #[tokio::main]
 async fn main() {
@@ -14,15 +15,18 @@ async fn main() {
         log::info!("Running in release mode");
         let config_path = std::env::var("CONFIG_PATH").unwrap();
         let mut config = Config::new(&config_path).build().expect("read config error");
-        config.server.addr = format!("{}:{}", host_core::get_addr_for_host(&config.server.host_name).await, &config.server.port);
+        config.server.addr = format!("{}:{}", component_core::get_addr_for_host(&config.server.host_name).await, &config.server.port);
         config
     };
 
-    let updater_component = Updater::new(config).await;
+    let updater_component = UpdaterComponent::new(&config).await;
 
     log::info!("Created component");
     
-    updater_component.run().await;
+    match updater_component.run().await {
+        Ok(_) => (),
+        Err(err) => log::error!("Something went wrong during starting the component: {}", err),
+    }
 }
 
 fn init_log() {     
