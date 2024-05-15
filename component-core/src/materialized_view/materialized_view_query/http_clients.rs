@@ -1,11 +1,11 @@
-use super::MaterializedView;
-use super::MaterializedViewQueries;
+use crate::materialized_view::core::common::MaterializedView;
+use crate::materialized_view::core::common::MaterializedViewQueries;
 
-const NAME: &str = "Http_Request_Methods_Distribution_Materialized_View";
+const NAME: &str = "Http_Clients_Materialized_View";
 
-pub struct HttpRequestMethodsDistributionMaterializedView {}
+pub struct HttpClientsMaterialiazedView {}
 
-impl MaterializedViewQueries for HttpRequestMethodsDistributionMaterializedView {
+impl MaterializedViewQueries for HttpClientsMaterialiazedView {
     const NAME: &'static str = NAME;
 
     fn get_creation_query() -> String {
@@ -30,4 +30,4 @@ impl MaterializedViewQueries for HttpRequestMethodsDistributionMaterializedView 
 }
 
 #[async_trait::async_trait]
-impl MaterializedView for HttpRequestMethodsDistributionMaterializedView {}
+impl MaterializedView for HttpClientsMaterialiazedView {}

@@ -1,11 +1,11 @@
-use super::MaterializedView;
-use super::MaterializedViewQueries;
+use crate::materialized_view::core::common::MaterializedView;
+use crate::materialized_view::core::common::MaterializedViewQueries;
 
-const NAME: &str = "Http_Clients_Materialized_View";
+const NAME: &str = "Http_Responses_Distribution_Materialized_View";
 
-pub struct HttpClientsMaterialiazedView {}
+pub struct HttpResponsesDistributionMaterializedView {}
 
-impl MaterializedViewQueries for HttpClientsMaterialiazedView {
+impl MaterializedViewQueries for HttpResponsesDistributionMaterializedView {
     const NAME: &'static str = NAME;
 
     fn get_creation_query() -> String {
@@ -13,7 +13,7 @@ impl MaterializedViewQueries for HttpClientsMaterialiazedView {
             CREATE MATERIALIZED VIEW IF NOT EXISTS {}
             AS
             SELECT
-                (Parsed_Data->'l1'->'frame'->>'frame.time')::TIMESTAMPTZ AS Frametime,
+                date_trunc('minute', (Parsed_Data->'l1'->'frame'->>'frame.time')::TIMESTAMPTZ) AS Frametime,
                 Tenant_ID,
                 Network_ID,
                 Parsed_Data->'l3'->'ip'->>'ip.src' AS Src_IP,
@@ -23,11 +23,11 @@ impl MaterializedViewQueries for HttpClientsMaterialiazedView {
             FROM Traffic
             WHERE
                 Parsed_Data->'l5'->'http' IS NOT NULL
-                AND (Parsed_Data->'l5'->'http'->>'http.request')::BOOL
+                AND (Parsed_Data->'l5'->'http'->>'http.response')::BOOL
             GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Http_Part;
         ", NAME)
     }
 }
 
 #[async_trait::async_trait]
-impl MaterializedView for HttpClientsMaterialiazedView {}
+impl MaterializedView for HttpResponsesDistributionMaterializedView {}

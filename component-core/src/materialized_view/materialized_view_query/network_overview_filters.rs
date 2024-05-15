@@ -1,11 +1,11 @@
-use super::MaterializedView;
-use super::MaterializedViewQueries;
+use crate::materialized_view::core::common::MaterializedView;
+use crate::materialized_view::core::common::MaterializedViewQueries;
 
-const NAME: &str = "Network_Graph_Materialized_View";
+const NAME: &str = "Network_Overview_Filters_Materialized_View";
 
-pub struct NetworkGraphMaterializedView {}
+pub struct NetworkOverviewFiltersMaterializedView {}
 
-impl MaterializedViewQueries for NetworkGraphMaterializedView {
+impl MaterializedViewQueries for NetworkOverviewFiltersMaterializedView {
     const NAME: &'static str = NAME;
 
     fn get_creation_query() -> String {
@@ -27,4 +27,4 @@ impl MaterializedViewQueries for NetworkGraphMaterializedView {
 }
 
 #[async_trait::async_trait]
-impl MaterializedView for NetworkGraphMaterializedView {}
+impl MaterializedView for NetworkOverviewFiltersMaterializedView {}

@@ -1,11 +1,11 @@
-use super::MaterializedView;
-use super::MaterializedViewQueries;
+use crate::materialized_view::core::common::MaterializedView;
+use crate::materialized_view::core::common::MaterializedViewQueries;
 
-const NAME: &str = "Http_Responses_Distribution_Materialized_View";
+const NAME: &str = "Total_Http_Requests_Materialized_View";
 
-pub struct HttpResponsesDistributionMaterializedView {}
+pub struct TotalHttpRequestsMaterializedView {}
 
-impl MaterializedViewQueries for HttpResponsesDistributionMaterializedView {
+impl MaterializedViewQueries for TotalHttpRequestsMaterializedView {
     const NAME: &'static str = NAME;
 
     fn get_creation_query() -> String {
@@ -23,11 +23,11 @@ impl MaterializedViewQueries for HttpResponsesDistributionMaterializedView {
             FROM Traffic
             WHERE
                 Parsed_Data->'l5'->'http' IS NOT NULL
-                AND (Parsed_Data->'l5'->'http'->>'http.response')::BOOL
+                AND (Parsed_Data->'l5'->'http'->>'http.request')::BOOL
             GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Http_Part;
         ", NAME)
     }
 }
 
 #[async_trait::async_trait]
-impl MaterializedView for HttpResponsesDistributionMaterializedView {}
+impl MaterializedView for TotalHttpRequestsMaterializedView {}

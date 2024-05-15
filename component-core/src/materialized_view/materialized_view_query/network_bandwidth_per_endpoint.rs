@@ -1,5 +1,5 @@
-use super::MaterializedView;
-use super::MaterializedViewQueries;
+use crate::materialized_view::core::common::MaterializedView;
+use crate::materialized_view::core::common::MaterializedViewQueries;
 
 const NAME: &str = "Network_Bandwidth_Per_Endpoint_Materialized_View";
 

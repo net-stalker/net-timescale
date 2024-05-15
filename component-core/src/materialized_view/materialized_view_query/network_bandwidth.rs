@@ -1,11 +1,11 @@
-use super::MaterializedView;
-use super::MaterializedViewQueries;
+use crate::materialized_view::core::common::MaterializedView;
+use crate::materialized_view::core::common::MaterializedViewQueries;
 
-const NAME: &str = "Network_Bandwidth_Per_Protocol_Materialized_View";
+const NAME: &str = "Network_Bandwidth_Materialized_View";
 
-pub struct NetworkBandwidthPerProtocolMaterializedView {}
+pub struct NetworkBandwidthMaterializedView {}
 
-impl MaterializedViewQueries for NetworkBandwidthPerProtocolMaterializedView {
+impl MaterializedViewQueries for NetworkBandwidthMaterializedView {
     const NAME: &'static str = NAME;
 
     fn get_creation_query() -> String {
@@ -13,7 +13,7 @@ impl MaterializedViewQueries for NetworkBandwidthPerProtocolMaterializedView {
             CREATE MATERIALIZED VIEW IF NOT EXISTS {}
             AS
             SELECT
-                (Parsed_Data->'l1'->'frame'->>'frame.time')::TIMESTAMPTZ AS Frametime,
+                date_trunc('minute', (Parsed_Data->'l1'->'frame'->>'frame.time')::TIMESTAMPTZ) AS Frametime,
                 Tenant_ID,
                 Network_ID,
                 Parsed_Data->'l3'->'ip'->>'ip.src' AS Src_IP,
@@ -27,4 +27,4 @@ impl MaterializedViewQueries for NetworkBandwidthPerProtocolMaterializedView {
 }
 
 #[async_trait::async_trait]
-impl MaterializedView for NetworkBandwidthPerProtocolMaterializedView {}
+impl MaterializedView for NetworkBandwidthMaterializedView {}
