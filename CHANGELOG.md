@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [-763ab55] - 2024-05-15
+
+Ns 310/add insert buffer (#89)
+
+* NS-310/add-insert-buffer: Add Traffic_Buffer to migrations
 <!-- [END AUTO UPDATE] -->
 ## [-8bc2450] - 2024-05-15
 
