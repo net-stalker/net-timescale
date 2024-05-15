@@ -26,10 +26,7 @@ impl MaterializedViewManager {
         pool: &Pool<Postgres>
     ) -> Result<(), Error> {
         for view in &self.materialized_views {
-            let creation_result = view.create(pool).await;
-            if let Err(e) = creation_result {
-                return Err(e);
-            }
+            view.create(pool).await?;
         }
 
         Ok(())
@@ -40,10 +37,7 @@ impl MaterializedViewManager {
         pool: &Pool<Postgres>
     ) -> Result<(), Error> {
         for view in &self.materialized_views {
-            let creation_result = view.refresh_blocking(pool).await;
-            if let Err(e) = creation_result {
-                return Err(e);
-            }
+            view.refresh_blocking(pool).await?;
         }
 
         Ok(())
@@ -54,10 +48,7 @@ impl MaterializedViewManager {
         pool: &Pool<Postgres>
     ) -> Result<(), Error> {
         for view in &self.materialized_views {
-            let creation_result = view.refresh_concurrently(pool).await;
-            if let Err(e) = creation_result {
-                return Err(e);
-            }
+            view.refresh_concurrently(pool).await?;
         }
 
         Ok(())
