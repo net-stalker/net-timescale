@@ -3,7 +3,7 @@ use sqlx::Postgres;
 use sqlx::Error;
 use sqlx::postgres::PgQueryResult;
 
-pub trait MaterializedViewQueries {
+pub trait MaterializedViewQueries: Send + Sync {
     fn get_name(&self) -> String;
 
     fn get_creation_query(&self) -> String;
