@@ -5,7 +5,6 @@ use async_trait::async_trait;
 use net_component::handler::network_service_handler::NetworkServiceHandler;
 use net_core_api::api::envelope::envelope::Envelope;
 use net_core_api::core::decoder_api::Decoder;
-use net_core_api::core::encoder_api::Encoder;
 use net_core_api::core::typed_api::Typed;
 use net_inserter_api::api::pcap_file::InsertPcapFileDTO;
 use sqlx::{Pool, Postgres};
@@ -54,8 +53,8 @@ impl NetworkServiceHandler for InsertPcapFileHandler {
         }
         let tenant_id = enveloped_request.get_tenant_id();
         let pcap_data = InsertPcapFileDTO::decode(enveloped_request.get_data());
-        let pcap_file_name = Uuid::now_v7().to_string();
-        let pcap_file_path = format!("{}/{}", &self.output_directory, &pcap_file_name);
+        let packet_id = Uuid::now_v7().to_string();
+        let pcap_file_path = format!("{}/{}", &self.output_directory, &packet_id);
         
         let data_packet_save_result = self.save_pcap_file_to(&pcap_file_path, pcap_data.get_data()).await;
 
@@ -74,18 +73,15 @@ impl NetworkServiceHandler for InsertPcapFileHandler {
         };
         let insert_result = network_packet_inserter::insert_network_packet_transaction(
             &mut transaction,
+            &packet_id,
             tenant_id,
             &pcap_file_path,
             &network_packet_data
         ).await; 
         match insert_result {
-            Ok(res) => {
+            Ok(_) => {
                 let _ = transaction.commit().await;
-                Ok(Envelope::new(
-                    tenant_id,
-                    res.get_type(),
-                    &res.encode(),
-                ))
+                Ok(Envelope::new(tenant_id, "network-packet-id", packet_id.as_bytes()))
             },
             Err(e) => Err(InsertError::DbError(self.get_handler_type().to_string(), e).into()),
         }
