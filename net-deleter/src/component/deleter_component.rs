@@ -34,7 +34,7 @@ impl DeleterComponent {
         }
     }
 
-    async fn build_handling_manager(config: &Config) -> Arc<NetworkServiceHandlerManager> {
+    async fn build_handling_manager(_config: &Config) -> Arc<NetworkServiceHandlerManager> {
         Arc::new(
             NetworkServiceHandlerManagerBuilder::default()
                 .build()
