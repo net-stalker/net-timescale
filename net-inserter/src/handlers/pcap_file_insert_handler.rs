@@ -81,7 +81,7 @@ impl NetworkServiceHandler for InsertPcapFileHandler {
         match insert_result {
             Ok(_) => {
                 let _ = transaction.commit().await;
-                Ok(Envelope::new(tenant_id, "none", b""))
+                Ok(Envelope::new(tenant_id, "network-packet-id", packet_id.as_bytes()))
             },
             Err(e) => Err(InsertError::DbError(self.get_handler_type().to_string(), e).into()),
         }
