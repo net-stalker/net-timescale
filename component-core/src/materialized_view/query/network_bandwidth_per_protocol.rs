@@ -1,14 +1,17 @@
-use super::MaterializedView;
-use super::MaterializedViewQueries;
+use crate::materialized_view::core::common::MaterializedView;
+use crate::materialized_view::core::common::MaterializedViewQueries;
 
-const NAME: &str = "Network_Overview_Filters_Materialized_View";
+const NAME: &str = "Network_Bandwidth_Per_Protocol_Materialized_View";
 
-pub struct NetworkOverviewFiltersMaterializedView {}
+#[derive(Default)]
+pub struct NetworkBandwidthPerProtocolMaterializedView {}
 
-impl MaterializedViewQueries for NetworkOverviewFiltersMaterializedView {
-    const NAME: &'static str = NAME;
+impl MaterializedViewQueries for NetworkBandwidthPerProtocolMaterializedView {
+    fn get_name(&self) -> String {
+        NAME.to_owned()
+    }
 
-    fn get_creation_query() -> String {
+    fn get_creation_query(&self) -> String {
         format!("
             CREATE MATERIALIZED VIEW IF NOT EXISTS {}
             AS
@@ -22,9 +25,9 @@ impl MaterializedViewQueries for NetworkOverviewFiltersMaterializedView {
                 Parsed_Data->'l1'->'frame'->>'frame.protocols' AS Protocols
             FROM Traffic
             GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Protocols;
-        ", NAME)
+        ", self.get_name())
     }
 }
 
 #[async_trait::async_trait]
-impl MaterializedView for NetworkOverviewFiltersMaterializedView {}
+impl MaterializedView for NetworkBandwidthPerProtocolMaterializedView {}

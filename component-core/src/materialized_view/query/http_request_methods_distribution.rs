@@ -1,14 +1,17 @@
-use super::MaterializedView;
-use super::MaterializedViewQueries;
+use crate::materialized_view::core::common::MaterializedView;
+use crate::materialized_view::core::common::MaterializedViewQueries;
 
-const NAME: &str = "Http_Clients_Materialized_View";
+const NAME: &str = "Http_Request_Methods_Distribution_Materialized_View";
 
-pub struct HttpClientsMaterialiazedView {}
+#[derive(Default)]
+pub struct HttpRequestMethodsDistributionMaterializedView {}
 
-impl MaterializedViewQueries for HttpClientsMaterialiazedView {
-    const NAME: &'static str = NAME;
+impl MaterializedViewQueries for HttpRequestMethodsDistributionMaterializedView {
+    fn get_name(&self) -> String {
+        NAME.to_owned()
+    }
 
-    fn get_creation_query() -> String {
+    fn get_creation_query(&self) -> String {
         format!("
             CREATE MATERIALIZED VIEW IF NOT EXISTS {}
             AS
@@ -25,9 +28,9 @@ impl MaterializedViewQueries for HttpClientsMaterialiazedView {
                 Parsed_Data->'l5'->'http' IS NOT NULL
                 AND (Parsed_Data->'l5'->'http'->>'http.request')::BOOL
             GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Http_Part;
-        ", NAME)
+        ", self.get_name())
     }
 }
 
 #[async_trait::async_trait]
-impl MaterializedView for HttpClientsMaterialiazedView {}
+impl MaterializedView for HttpRequestMethodsDistributionMaterializedView {}

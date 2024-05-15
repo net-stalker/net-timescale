@@ -1,19 +1,22 @@
-use super::MaterializedView;
-use super::MaterializedViewQueries;
+use crate::materialized_view::core::common::MaterializedView;
+use crate::materialized_view::core::common::MaterializedViewQueries;
 
-const NAME: &str = "Network_Bandwidth_Materialized_View";
+const NAME: &str = "Network_Graph_Materialized_View";
 
-pub struct NetworkBandwidthMaterializedView {}
+#[derive(Default)]
+pub struct NetworkGraphMaterializedView {}
 
-impl MaterializedViewQueries for NetworkBandwidthMaterializedView {
-    const NAME: &'static str = NAME;
+impl MaterializedViewQueries for NetworkGraphMaterializedView {
+    fn get_name(&self) -> String {
+        NAME.to_owned()
+    }
 
-    fn get_creation_query() -> String {
+    fn get_creation_query(&self) -> String {
         format!("
             CREATE MATERIALIZED VIEW IF NOT EXISTS {}
             AS
             SELECT
-                date_trunc('minute', (Parsed_Data->'l1'->'frame'->>'frame.time')::TIMESTAMPTZ) AS Frametime,
+                (Parsed_Data->'l1'->'frame'->>'frame.time')::TIMESTAMPTZ AS Frametime,
                 Tenant_ID,
                 Network_ID,
                 Parsed_Data->'l3'->'ip'->>'ip.src' AS Src_IP,
@@ -22,9 +25,9 @@ impl MaterializedViewQueries for NetworkBandwidthMaterializedView {
                 Parsed_Data->'l1'->'frame'->>'frame.protocols' AS Protocols
             FROM Traffic
             GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Protocols;
-        ", NAME)
+        ", self.get_name())
     }
 }
 
 #[async_trait::async_trait]
-impl MaterializedView for NetworkBandwidthMaterializedView {}
+impl MaterializedView for NetworkGraphMaterializedView {}
