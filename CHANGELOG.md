@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [-8bc2450] - 2024-05-15
 
 changed serial to text in migrations, updated code due to the changes in migrations (#88)
@@ -15,7 +16,6 @@ changed serial to text in migrations, updated code due to the changes in migrati
 * changed serial to text in migrations, updated code due to the changes in migrations
 
 * added returning of the packet id after inserting the pcap file
-<!-- [END AUTO UPDATE] -->
 ## [-368e981] - 2024-05-15
 
 Ns 317/rewrite component with net component (#87)
