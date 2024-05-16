@@ -17,8 +17,7 @@ serde.workspace = true
 toml.workspace = true
 
 net-core-api = "0.5.0"
-# net-updater-api = "0.4.0"
-net-updater-api = { git = "https://github.com/net-stalker/net-api", branch = "NS-315/implement-api-for-network-requests" }
+net-updater-api = "0.4.1"
 net-config = "0.1.1"
 net-file = "0.1.1"
 net-transport = { version = "0.1.1", features = ["quinn"] }
