@@ -69,7 +69,7 @@ impl HttpRequestMethodsDistributionHandler {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        network_id: i64,
+        network_id: &str,
         filters: &HttpRequestMethodsDisributionFiltersDTO,
     ) -> Result<Vec<HttpRequestMethodResponse>, Error> {
         SqlxQueryBuilderWrapper::<HttpRequestMethodResponse>::new(query_string)

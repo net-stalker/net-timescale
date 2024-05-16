@@ -61,7 +61,7 @@ impl GraphLinksHandler {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        network_id: i64,
+        network_id: &str,
         filters: &NetworkGraphFiltersDTO,
     ) -> Result<Vec<GraphEdgeResponse>, Error> {
         let query_string = QueryBuilder::new(GRAPH_LINKS_REQUEST_QUERY, 5)

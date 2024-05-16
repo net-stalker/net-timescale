@@ -36,7 +36,7 @@ impl HttpOverviewFiltersHandler {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        network_id: i64,
+        network_id: &str,
     ) -> Result<HttpOverviewFiltersResponse, Error> {
         let endpoints = EndpointsHandler::execute_query(
             connection_pool.clone(),

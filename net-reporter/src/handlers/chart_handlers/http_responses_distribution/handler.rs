@@ -72,7 +72,7 @@ impl HttpResponsesDistributionHandler {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        network_id: i64,
+        network_id: &str,
         filters: &HttpResponsesDistributionFiltersDTO,
     ) -> Result<Vec<HttpResponsesDistributionBucketResponse>, Error> {
         SqlxQueryBuilderWrapper::<HttpResponsesDistributionBucketResponse>::new(query_string)

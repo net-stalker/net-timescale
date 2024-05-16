@@ -28,7 +28,7 @@ impl HttpResponseCodesHandler {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        network_id: i64,
+        network_id: &str,
     ) -> Result<Vec<HttpResponseCodeResponse>, Error> {
         sqlx::query_as::<Postgres, HttpResponseCodeResponse>(HTTP_RESPONSE_CODES_REQUEST_QUERY)
             .bind(tenant_id)

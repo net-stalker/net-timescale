@@ -80,7 +80,7 @@ impl HttpResponsesHandler {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        network_id: i64,
+        network_id: &str,
         filters: &HttpResponsesFiltersDTO,
     ) -> Result<Vec<HttpResponseResponse>, Error> {
         log::info!("Query Parameters: {:?}", tenant_id);
