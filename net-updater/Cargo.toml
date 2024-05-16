@@ -17,6 +17,8 @@ serde.workspace = true
 toml.workspace = true
 
 net-core-api = "0.5.0"
+# net-updater-api = "0.4.0"
+net-updater-api = { git = "https://github.com/net-stalker/net-api", branch = "NS-315/implement-api-for-network-requests" }
 net-config = "0.1.1"
 net-file = "0.1.1"
 net-transport = { version = "0.1.1", features = ["quinn"] }
@@ -29,3 +31,4 @@ serde_json = "1.0.91"
 serde_yaml = "0.9.21" # uses to parse log4rs config
 sqlx = { version = "0.7.0", features = ["runtime-async-std", "tls-native-tls", "postgres", "chrono"] }
 tokio = { version = "1.28.1", features = ["full"] }
+thiserror = "1.0.60"

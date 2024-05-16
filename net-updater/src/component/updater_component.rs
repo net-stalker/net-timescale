@@ -8,6 +8,7 @@ use sqlx::Pool;
 use sqlx::Postgres;
 
 use crate::config::Config;
+use crate::handlers::updaters::packets_network_id_handler::UpdatePacketsNetworkIdHandler;
 use component_core::connection_pool;
 
 pub struct UpdaterComponent {
@@ -36,6 +37,7 @@ impl UpdaterComponent {
     async fn build_handling_manager() -> Arc<NetworkServiceHandlerManager> {
         Arc::new(
             NetworkServiceHandlerManagerBuilder::default()
+                .add_handler(UpdatePacketsNetworkIdHandler::default().boxed())
                 .build()
         )
     }
