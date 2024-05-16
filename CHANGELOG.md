@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [-b980e14] - 2024-05-16
+
+added network id into requests (#82)
+
+* added network id into requests
 <!-- [END AUTO UPDATE] -->
 ## [-2541c26] - 2024-05-16
 
