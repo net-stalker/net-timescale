@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [-2541c26] - 2024-05-16
 
 updated insert network packet, now we can insert only into traffic_buffer (#92)
 
 * updated insert network packet, now we can insert only into traffic_buffer
-<!-- [END AUTO UPDATE] -->
 ## [-6629bea] - 2024-05-15
 
 Ns 320/materialized-view-manager (#90)
