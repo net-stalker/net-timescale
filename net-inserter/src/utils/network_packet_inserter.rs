@@ -3,7 +3,7 @@ use sqlx::postgres::PgQueryResult;
 use sqlx::Postgres;
 
 const INSERT_NP_QUERY: &str = "
-    INSERT INTO Traffic (Pcap_ID, Insertion_Time, Tenant_Id, Raw_Pcap_File_Path, Parsed_Data) VALUES (NOW(), $1, $2, $3, $4)
+    INSERT INTO Traffic (Pcap_ID, Insertion_Time, Tenant_Id, Raw_Pcap_File_Path, Parsed_Data) VALUES ($1, NOW(), $2, $3, $4)
 ";
 
 pub async fn insert_network_packet_transaction(
