@@ -1,0 +1,10 @@
+[connection_url]
+url = "postgres://postgres:PsWDgxZb@localhost:5433"
+
+[max_connection_size]
+size = "10"
+
+[server]
+host_name = "net-deleter"
+port = "5456"
+addr = "127.0.0.1:5456"

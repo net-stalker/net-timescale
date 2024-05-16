@@ -1,5 +1,6 @@
+use net_component::component::component_core::Component;
 use net_inserter::config::Config;
-use net_inserter::component::inserter::Inserter;
+use net_inserter::component::inserter_component::InserterComponent;
 
 #[tokio::main]
 async fn main() {
@@ -12,15 +13,18 @@ async fn main() {
         log::info!("Running in release mode");
         let config_path = std::env::var("CONFIG_PATH").unwrap();
         let mut config = Config::new(&config_path).build().expect("read config error");
-        config.server.addr = format!("{}:{}", host_core::get_addr_for_host(&config.server.host_name).await, &config.server.port);
+        config.server.addr = format!("{}:{}", component_core::get_addr_for_host(&config.server.host_name).await, &config.server.port);
         config
     };
 
-    let inserter_component = Inserter::new(config).await;
+    let inserter_component = InserterComponent::new(&config).await;
 
     log::info!("Created component");
     
-    inserter_component.run().await;
+    match inserter_component.run().await {
+        Ok(_) => (),
+        Err(err) => log::error!("Something went wrong during starting the component: {}", err),
+    }
 }
 
 fn init_log() {     

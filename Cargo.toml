@@ -1,9 +1,9 @@
 [workspace]
 
 members = [ 
-    "host-core",
+    "component-core",
+    "net-deleter",
     "net-inserter",
-    "net-migrator",
     "net-reporter",
     "net-updater"
 ]

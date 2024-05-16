@@ -9,6 +9,51 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
 <!-- [END AUTO UPDATE] -->
+## [-2541c26] - 2024-05-16
+
+updated insert network packet, now we can insert only into traffic_buffer (#92)
+
+* updated insert network packet, now we can insert only into traffic_buffer
+## [-6629bea] - 2024-05-15
+
+Ns 320/materialized-view-manager (#90)
+
+* NS-320/materialized-view-manager: manage folders
+
+* NS-320/materialized-view-manager: Add MaterializedViewManager
+
+* NS-320/materialized-view-manager: Add common materialized_view_manager
+## [-763ab55] - 2024-05-15
+
+Ns 310/add insert buffer (#89)
+
+* NS-310/add-insert-buffer: Add Traffic_Buffer to migrations
+## [-8bc2450] - 2024-05-15
+
+changed serial to text in migrations, updated code due to the changes in migrations (#88)
+
+* changed serial to text in migrations, updated code due to the changes in migrations
+
+* added returning of the packet id after inserting the pcap file
+## [-368e981] - 2024-05-15
+
+Ns 317/rewrite component with net component (#87)
+
+* updated components to use net-component
+
+* updated migrations, now we don't need to use net-migrator
+## [-de64482] - 2024-05-09
+
+NS-309 (#85)
+
+* NS-298/add-views-refresher: Add refresh methods for all the materialized views
+
+* NS-309/move-materialized-views-to-core: Move Materialized view creation to host-core
+## [-554d5ff] - 2024-05-02
+
+Ns 294/add update manager (#83)
+
+* NS-294/add-update-manager: Add update manager and update handler trait
 ## [-859b759] - 2024-04-28
 
 Make handle to return response (#78)
