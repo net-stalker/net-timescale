@@ -51,9 +51,20 @@ impl NetworkServiceHandler for DeleteNetworkPacketHandler {
             Ok(transaction) => transaction,
             Err(err) => return Err(DeleteError::TranscationError(err.to_string()).into()),
         };
+        // Delete from main table
+        let mapped_packets_to_delete = packets_to_delete.get_ids().iter().map(|id| id.as_str()).collect::<Vec<&str>>();
         let delete_packets_res = network_packets_deleter::delete_network_packets_transaction(
             &mut transaction,
-            packets_to_delete.get_ids().iter().map(|id| id.as_str()).collect::<Vec<&str>>().as_slice(),
+            &mapped_packets_to_delete,
+            tenant_id,
+        ).await;
+        if let Err(err) = delete_packets_res {
+            return Err(DeleteError::DbError(deletable_data_type, err).into());
+        }
+        // Delete from buffer table
+        let delete_packets_res = network_packets_deleter::delete_network_packets_buffer_transaction(
+            &mut transaction,
+            &mapped_packets_to_delete,
             tenant_id,
         ).await;
         if let Err(err) = delete_packets_res {
