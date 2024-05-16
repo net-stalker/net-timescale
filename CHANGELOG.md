@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [-6629bea] - 2024-05-15
 
 Ns 320/materialized-view-manager (#90)
@@ -17,7 +18,6 @@ Ns 320/materialized-view-manager (#90)
 * NS-320/materialized-view-manager: Add MaterializedViewManager
 
 * NS-320/materialized-view-manager: Add common materialized_view_manager
-<!-- [END AUTO UPDATE] -->
 ## [-763ab55] - 2024-05-15
 
 Ns 310/add insert buffer (#89)
