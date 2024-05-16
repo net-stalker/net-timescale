@@ -62,6 +62,7 @@ const NETWORK_BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY: &str = "
             Tenant_ID = $1
             AND Frametime >= $2
             AND Frametime < $3
+            AND Network_ID = $4
             {}
         GROUP BY Src_IP
     ) AS lhs FULL OUTER JOIN (
@@ -73,6 +74,7 @@ const NETWORK_BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY: &str = "
             Tenant_ID = $1
             AND Frametime >= $2 
             AND Frametime < $3
+            AND Network_ID = $4
             {}
         GROUP BY Dst_IP
     ) AS rhs ON lhs.IP = rhs.IP
@@ -98,12 +100,14 @@ impl NetworkBandwidthPerEndpointHandler {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
+        network_id: &str,
         filters: &NetworkBandwidthPerEndpointFiltersDTO,
     ) -> Result<Vec<EndpointResponse>, Error> {
         SqlxQueryBuilderWrapper::<EndpointResponse>::new(query_string)
             .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
+            .add_param(network_id)
             .add_option_param(filters.is_include_protocols_mode().map(|_| filters.get_protocols().to_vec()))
             .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
             .add_option_param(filters.get_bytes_lower_bound())
@@ -127,9 +131,10 @@ impl NetworkServiceHandler for NetworkBandwidthPerEndpointHandler {
         let request = NetworkBandwidthPerEndpointRequestDTO::decode(enveloped_request.get_data());
         let request_start_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_start_date_time()).unwrap();
         let request_end_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_end_date_time()).unwrap();
+        let network_id = request.get_network_id();
         let filters = request.get_filters();
 
-        let query = QueryBuilder::new(NETWORK_BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY, 4)
+        let query = QueryBuilder::new(NETWORK_BANDWIDTH_PER_ENDPOINT_REQUEST_QUERY, 5)
             .add_dynamic_filter(filters.is_include_protocols_mode(), 2, INCLUDE_PROTOCOLS_FILTER_QUERY, EXCLUDE_PROTOCOLS_FILTER_QUERY)
             .add_dynamic_filter(filters.is_include_endpoints_mode(), 1, INCLUDE_ENDPOINT_FILTER_QUERY, EXCLUDE_ENDPOINT_FILTER_QUERY)
             .add_static_filter(filters.get_bytes_lower_bound(), SET_LOWER_BYTES_BOUND, 1)
@@ -142,6 +147,7 @@ impl NetworkServiceHandler for NetworkBandwidthPerEndpointHandler {
             tenant_id,
             request_start_date,
             request_end_date,
+            network_id,
             filters,
         ).await?;
 

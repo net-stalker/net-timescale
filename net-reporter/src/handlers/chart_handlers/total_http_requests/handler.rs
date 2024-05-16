@@ -53,6 +53,7 @@ const TOTAL_HTTP_REQUESTS_REQUEST_QUERY: &str = "
         Tenant_ID = $1
         AND Frametime >= $2
         AND Frametime < $3
+        AND Network_ID = $4
         AND Http->'http.request.method' IS NOT NULL
         {}
     GROUP BY Frametime
@@ -109,7 +110,7 @@ impl NetworkServiceHandler for TotalHttpRequestsHandler {
         let request_end_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_end_date_time()).unwrap();
         let filters = request.get_filters();
 
-        let query = QueryBuilder::new(TOTAL_HTTP_REQUESTS_REQUEST_QUERY, 4)
+        let query = QueryBuilder::new(TOTAL_HTTP_REQUESTS_REQUEST_QUERY, 5)
             .add_dynamic_filter(filters.is_include_endpoints_mode(), 1, INCLUDE_ENDPOINT_FILTER_QUERY, EXCLUDE_ENDPOINT_FILTER_QUERY)
             .add_dynamic_filter(filters.is_include_http_methods_mode(), 1, INCLUDE_HTTP_METHODS_FILTER_QUERY, EXCLUDE_HTTP_METHODS_FILTER_QUERY)
             .add_static_filter(filters.get_bytes_lower_bound(), SET_LOWER_BYTES_BOUND, 1)
