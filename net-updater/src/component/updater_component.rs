@@ -22,7 +22,7 @@ impl UpdaterComponent {
         let connection_pool = Arc::new(
             connection_pool::configure_connection_pool(
                 &config.connection_url.url,
-                config.max_connection_size.size.parse().expect("Valid number of max connection size is expected")
+                config.max_connection_size.size.parse().expect("Valid number of max connection size is expected"),
             ).await
         );
         let server_addr: SocketAddr = config.server.addr.parse().expect("Valid server address is expected");
