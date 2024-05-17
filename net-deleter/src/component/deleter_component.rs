@@ -8,6 +8,9 @@ use sqlx::Pool;
 use sqlx::Postgres;
 
 use crate::config::Config;
+use crate::handlers::clear_buffer_handler::ClearBufferHandler;
+use crate::handlers::delete_network_handler::DeleteNetworkHandler;
+use crate::handlers::delete_packet_handler::DeleteNetworkPacketHandler;
 use component_core::connection_pool;
 
 pub struct DeleterComponent {
@@ -37,6 +40,9 @@ impl DeleterComponent {
     async fn build_handling_manager(_config: &Config) -> Arc<NetworkServiceHandlerManager> {
         Arc::new(
             NetworkServiceHandlerManagerBuilder::default()
+                .add_handler(ClearBufferHandler::default().boxed())
+                .add_handler(DeleteNetworkHandler::default().boxed())
+                .add_handler(DeleteNetworkPacketHandler::default().boxed())
                 .build()
         )
     }
