@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [-66be6e4] - 2024-05-17
+
+added flush buffer handler (#93)
+
+* added flush buffer handler
 <!-- [END AUTO UPDATE] -->
 ## [-50b2f32] - 2024-05-17
 
