@@ -8,6 +8,7 @@ use sqlx::Pool;
 use sqlx::Postgres;
 
 use crate::config::Config;
+use crate::handlers::updaters::packets_network_id_handler::UpdatePacketsNetworkIdHandler;
 use component_core::connection_pool;
 
 pub struct UpdaterComponent {
@@ -21,7 +22,7 @@ impl UpdaterComponent {
         let connection_pool = Arc::new(
             connection_pool::configure_connection_pool(
                 &config.connection_url.url,
-                config.max_connection_size.size.parse().expect("Valid number of max connection size is expected")
+                config.max_connection_size.size.parse().expect("Valid number of max connection size is expected"),
             ).await
         );
         let server_addr: SocketAddr = config.server.addr.parse().expect("Valid server address is expected");
@@ -36,6 +37,7 @@ impl UpdaterComponent {
     async fn build_handling_manager() -> Arc<NetworkServiceHandlerManager> {
         Arc::new(
             NetworkServiceHandlerManagerBuilder::default()
+                .add_handler(UpdatePacketsNetworkIdHandler::default().boxed())
                 .build()
         )
     }
