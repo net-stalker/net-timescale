@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [-50b2f32] - 2024-05-17
 
 Ns 312/net deleter (#91)
 
 * implemented net-deleter
-<!-- [END AUTO UPDATE] -->
 ## [-b980e14] - 2024-05-16
 
 added network id into requests (#82)
