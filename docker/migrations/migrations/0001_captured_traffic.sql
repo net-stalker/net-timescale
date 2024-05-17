@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS Traffic
 
     PRIMARY KEY (Pcap_ID),
 
-    FOREIGN KEY (Network_ID) REFERENCES Networks(Network_ID)
+    FOREIGN KEY (Network_ID) REFERENCES Networks(Network_ID) ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS Pcap_ID_Index ON Traffic USING HASH (Pcap_ID);
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS Traffic_Buffer
 
     PRIMARY KEY (Pcap_ID),
 
-    FOREIGN KEY (Network_ID) REFERENCES Networks(Network_ID)
+    FOREIGN KEY (Network_ID) REFERENCES Networks(Network_ID) ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS Pcap_ID_Index ON Traffic_Buffer USING HASH (Pcap_ID);

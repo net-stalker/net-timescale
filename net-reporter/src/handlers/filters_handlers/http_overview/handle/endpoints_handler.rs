@@ -10,6 +10,7 @@ WHERE
     Tenant_ID = $1
     AND Frametime >= $2
     AND Frametime < $3
+    AND Network_ID = $4
 UNION
 SELECT DISTINCT Dst_IP AS Endpoint
 FROM Http_Overview_Filters_Materialized_View
@@ -17,6 +18,7 @@ WHERE
     Tenant_ID = $1
     AND Frametime >= $2
     AND Frametime < $3
+    AND Network_ID = $4
 ORDER BY Endpoint;
 ";
 
@@ -33,11 +35,13 @@ impl EndpointsHandler {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
+        network_id: &str,
     ) -> Result<Vec<EndpointResponse>, Error> {
         sqlx::query_as::<Postgres, EndpointResponse>(ENDPOINTS_REQUEST_QUERY)
             .bind(tenant_id)
             .bind(start_date)
             .bind(end_date)
+            .bind(network_id)
             .fetch_all(connection_pool.as_ref())
             .await 
     }
