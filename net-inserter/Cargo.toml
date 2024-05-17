@@ -10,6 +10,7 @@ net-file = "0.1.1"
 net-inserter-api = "0.4.1"
 net-config = "0.1.1"
 net-component = "0.1.0"
+net-primitives = { git = "https://github.com/net-stalker/net-api", branch = "NS-325/net-primitives" }
 
 log.workspace = true
 log4rs.workspace = true

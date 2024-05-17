@@ -4,7 +4,9 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use net_component::handler::network_service_handler::NetworkServiceHandler;
 use net_core_api::api::envelope::envelope::Envelope;
+use net_core_api::api::result::result::ResultDTO;
 use net_core_api::core::decoder_api::Decoder;
+use net_core_api::core::encoder_api::Encoder;
 use net_core_api::core::typed_api::Typed;
 use net_inserter_api::api::pcap_file::InsertPcapFileDTO;
 use sqlx::{Pool, Postgres};
@@ -81,7 +83,7 @@ impl NetworkServiceHandler for InsertPcapFileHandler {
         match insert_result {
             Ok(_) => {
                 let _ = transaction.commit().await;
-                Ok(Envelope::new(tenant_id, "network-packet-id", packet_id.as_bytes()))
+                Ok(Envelope::new(tenant_id, ResultDTO::get_data_type(), &ResultDTO::new(true, None, None).encode()))
             },
             Err(e) => Err(InsertError::DbError(self.get_handler_type().to_string(), e).into()),
         }

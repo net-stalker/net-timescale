@@ -1,5 +1,7 @@
 use std::error::Error;
 use std::sync::Arc;
+use net_core_api::api::result::result::ResultDTO;
+use net_core_api::core::encoder_api::Encoder;
 use net_deleter_api::api::buffer::ClearBufferRequestDTO;
 use net_component::handler::network_service_handler::NetworkServiceHandler;
 use net_core_api::api::envelope::envelope::Envelope;
@@ -21,6 +23,7 @@ impl ClearBufferHandler {
 
 #[async_trait::async_trait]
 impl NetworkServiceHandler for ClearBufferHandler {
+    // doesn't need to trigger refreshes
     async fn handle(&self, connection_pool: Arc<Pool<Postgres>>, enveloped_request: Envelope) -> Result<Envelope, Box<dyn Error + Send + Sync>> {
         let deletable_data_type = self.get_handler_type().split('-').collect::<Vec<_>>().join(" ");
         if enveloped_request.get_envelope_type() != self.get_handler_type() {
@@ -41,7 +44,7 @@ impl NetworkServiceHandler for ClearBufferHandler {
             return Err(DeleteError::DbError(deletable_data_type, err).into());
         }
         let _ = transaction.commit().await;
-        Ok(Envelope::new(tenant_id, "none", b""))
+        Ok(Envelope::new(tenant_id, ResultDTO::get_data_type(), &ResultDTO::new(true, None, None).encode()))
     }
 
     fn get_handler_type(&self) -> String {

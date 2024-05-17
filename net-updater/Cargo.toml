@@ -22,6 +22,7 @@ net-config = "0.1.1"
 net-file = "0.1.1"
 net-transport = { version = "0.1.1", features = ["quinn"] }
 net-component = "0.1.0"
+net-primitives = { git = "https://github.com/net-stalker/net-api", branch = "NS-325/net-primitives" }
 
 component-core = { path = "../component-core" }
 
