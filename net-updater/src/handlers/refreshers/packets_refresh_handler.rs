@@ -20,16 +20,16 @@ use crate::utils::packets_by_network_id_selector;
 use crate::utils::packets_parsed_data_updater;
 
 #[derive(Default, Debug)]
-pub struct PacketsRefreshHandler {}
+pub struct RefreshPcapParsedDataHandler {}
 
-impl PacketsRefreshHandler {
+impl RefreshPcapParsedDataHandler {
     pub fn boxed(self) -> Box<Self> {
         Box::new(self)
     }
 }
 
 #[async_trait]
-impl NetworkServiceHandler for PacketsRefreshHandler {
+impl NetworkServiceHandler for RefreshPcapParsedDataHandler {
     async fn handle(&self, connection_pool: Arc<Pool<Postgres>>, enveloped_request: Envelope) -> Result<Envelope, Box<dyn Error + Send + Sync>> {
         let processed_data_type = self.get_handler_type()
             .split('-')
