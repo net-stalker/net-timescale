@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [-97fc70f] - 2024-05-17
 
 Ns 322/transfer packets operation (#94)
 
 * added update packets network id handler
-<!-- [END AUTO UPDATE] -->
 ## [-66be6e4] - 2024-05-17
 
 added flush buffer handler (#93)
