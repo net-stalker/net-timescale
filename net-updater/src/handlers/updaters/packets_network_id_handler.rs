@@ -25,7 +25,6 @@ impl UpdatePacketsNetworkIdHandler {
 
 #[async_trait]
 impl NetworkServiceHandler for UpdatePacketsNetworkIdHandler {
-    // refresh both
     async fn handle(&self, connection_pool: Arc<Pool<Postgres>>, enveloped_request: Envelope) -> Result<Envelope, Box<dyn Error + Send + Sync>> {
         if enveloped_request.get_envelope_type() != self.get_handler_type() {
             return Err(UpdateError::WrongUpdatableData(

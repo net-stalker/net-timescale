@@ -23,7 +23,6 @@ impl ClearBufferHandler {
 
 #[async_trait::async_trait]
 impl NetworkServiceHandler for ClearBufferHandler {
-    // doesn't need to trigger refreshes
     async fn handle(&self, connection_pool: Arc<Pool<Postgres>>, enveloped_request: Envelope) -> Result<Envelope, Box<dyn Error + Send + Sync>> {
         let deletable_data_type = self.get_handler_type().split('-').collect::<Vec<_>>().join(" ");
         if enveloped_request.get_envelope_type() != self.get_handler_type() {
