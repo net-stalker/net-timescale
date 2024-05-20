@@ -31,3 +31,4 @@ serde_yaml = "0.9.21" # uses to parse log4rs config
 sqlx = { version = "0.7.0", features = ["runtime-async-std", "tls-native-tls", "postgres", "chrono"] }
 tokio = { version = "1.28.1", features = ["full"] }
 thiserror = "1.0.60"
+subprocess = "0.2.9"
