@@ -4,7 +4,9 @@ use std::sync::Arc;
 use tokio::fs;
 use net_component::handler::network_service_handler::NetworkServiceHandler;
 use net_core_api::api::envelope::envelope::Envelope;
+use net_core_api::api::primitives::integer::Integer;
 use net_core_api::core::decoder_api::Decoder;
+use net_core_api::core::encoder_api::Encoder;
 use net_core_api::core::typed_api::Typed;
 use net_deleter_api::api::packets::DeletePacketsRequestDTO;
 use sqlx::Pool;
@@ -67,15 +69,17 @@ impl NetworkServiceHandler for DeleteNetworkPacketHandler {
             &mapped_packets_to_delete,
             tenant_id,
         ).await;
-        if let Err(err) = delete_packets_res {
-            return Err(DeleteError::DbError(deletable_data_type, err).into());
+        match delete_packets_res {
+            Ok(updated_rows) => {
+                let _ = transaction.commit().await;
+                for id in packets_to_delete.get_ids() {
+                    // looks like we don't really bother about the result of delete operation
+                    let _ = self.delete_pcap_file(id.as_str()).await;
+                }
+                Ok(Envelope::new(tenant_id, Integer::get_data_type(), &Integer::new(updated_rows.rows_affected() as i64).encode()))
+            },
+            Err(err) => Err(DeleteError::DbError(deletable_data_type, err).into()),
         }
-        let _ = transaction.commit().await;
-        for id in packets_to_delete.get_ids() {
-            // looks like we don't really bother about the result of delete operation
-            let _ = self.delete_pcap_file(id.as_str()).await;
-        }
-        Ok(Envelope::new(tenant_id, "none", b""))
     }
 
     fn get_handler_type(&self) -> String {

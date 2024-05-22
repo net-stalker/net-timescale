@@ -4,8 +4,10 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use net_component::handler::network_service_handler::NetworkServiceHandler;
 use net_core_api::api::envelope::envelope::Envelope;
+use net_core_api::api::primitives::integer::Integer;
 use net_core_api::core::decoder_api::Decoder;
 use net_core_api::core::typed_api::Typed;
+use net_core_api::core::encoder_api::Encoder;
 use net_inserter_api::api::network::InsertNetworkRequestDTO;
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
@@ -46,10 +48,9 @@ impl NetworkServiceHandler for InsertNetworkHandler {
             &network_data,
         ).await;
         match insert_result {
-            Ok(_) => {
+            Ok(updated_rows) => {
                 let _ = transaction.commit().await;
-                // TODO: probably we need to return something more than nothing
-                Ok(Envelope::new(tenant_id, "none", b""))
+                Ok(Envelope::new(tenant_id, Integer::get_data_type(), &Integer::new(updated_rows.rows_affected() as i64).encode()))
             },
             Err(e) => Err(InsertError::DbError(self.get_handler_type(), e).into()),
         }
