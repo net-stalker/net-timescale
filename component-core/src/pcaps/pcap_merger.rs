@@ -2,7 +2,7 @@ use subprocess::Exec;
 
 pub struct PcapMerger;
 
-const MERGECAP_COMMAND: &str = "margecap -w -";
+const MERGECAP_COMMAND: &str = "margecap -a -w -";
 
 impl PcapMerger {
     pub fn merge(path_to_files: &[&str]) -> Vec<u8> {

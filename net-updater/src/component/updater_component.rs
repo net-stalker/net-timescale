@@ -8,7 +8,7 @@ use sqlx::Pool;
 use sqlx::Postgres;
 
 use crate::config::Config;
-use crate::handlers::refreshers::packets_refresh_handler::RefreshPcapParsedDataHandler;
+use crate::handlers::refreshers::refresh_packets_handler::RefreshPcapParsedDataHandler;
 use crate::handlers::updaters::packets_network_id_handler::UpdatePacketsNetworkIdHandler;
 use component_core::connection_pool;
 
