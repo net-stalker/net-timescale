@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [-ae59f9b] - 2024-05-22
+
+NS-327 implemented materialized views refresh handler (#96)
+
+* implemented materialized views refresh handler
 <!-- [END AUTO UPDATE] -->
 ## [-97fc70f] - 2024-05-17
 
