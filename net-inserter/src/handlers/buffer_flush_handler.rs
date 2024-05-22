@@ -7,7 +7,7 @@ use net_core_api::api::envelope::envelope::Envelope;
 use net_core_api::core::typed_api::Typed;
 use net_core_api::core::encoder_api::Encoder;
 use net_inserter_api::api::buffer::FlushBufferRequestDTO;
-use net_primitives::api::integer::Integer;
+use net_core_api::api::primitives::integer::Integer;
 use sqlx::{Pool, Postgres};
 use crate::core::insert_error::InsertError;
 use crate::utils::buffer_flusher;

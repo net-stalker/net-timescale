@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::sync::Arc;
-use net_core_api::api::result::result::ResultDTO;
+use net_core_api::api::primitives::none::None;
 use net_core_api::core::encoder_api::Encoder;
 use net_deleter_api::api::buffer::ClearBufferRequestDTO;
 use net_component::handler::network_service_handler::NetworkServiceHandler;
@@ -43,7 +43,7 @@ impl NetworkServiceHandler for ClearBufferHandler {
             return Err(DeleteError::DbError(deletable_data_type, err).into());
         }
         let _ = transaction.commit().await;
-        Ok(Envelope::new(tenant_id, ResultDTO::get_data_type(), &ResultDTO::new(true, None, None).encode()))
+        Ok(Envelope::new(tenant_id, None::get_data_type(), &None::default().encode()))
     }
 
     fn get_handler_type(&self) -> String {

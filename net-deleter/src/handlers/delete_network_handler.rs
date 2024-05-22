@@ -4,10 +4,10 @@ use std::sync::Arc;
 use net_deleter_api::api::network::DeleteNetworkRequestDTO;
 use net_component::handler::network_service_handler::NetworkServiceHandler;
 use net_core_api::api::envelope::envelope::Envelope;
+use net_core_api::api::primitives::integer::Integer;
 use net_core_api::core::decoder_api::Decoder;
 use net_core_api::core::encoder_api::Encoder;
 use net_core_api::core::typed_api::Typed;
-use net_primitives::api::integer::Integer;
 use sqlx::Pool;
 use sqlx::Postgres;
 
