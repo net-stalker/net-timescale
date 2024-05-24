@@ -23,6 +23,7 @@ use crate::handlers::chart_handlers::network_graph::handle::handler::NetworkGrap
 use crate::handlers::chart_handlers::total_http_requests::handler::TotalHttpRequestsHandler;
 use crate::handlers::filters_handlers::http_overview::handle::handler::HttpOverviewFiltersHandler;
 use crate::handlers::filters_handlers::network_overview::handler::NetworkOverviewFiltersHandler;
+use crate::handlers::network_handlers::network_id::handler::NetworkIdHandler;
 
 use component_core::connection_pool;
 
@@ -69,6 +70,7 @@ impl ReporterComponent {
                 .add_handler(TotalHttpRequestsHandler::default().boxed())
                 .add_handler(HttpOverviewFiltersHandler::default().boxed())
                 .add_handler(NetworkOverviewFiltersHandler::default().boxed())
+                .add_handler(NetworkIdHandler::default().boxed())
                 .build()
         )
     }
