@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use component_core::materialized_view::manager::manager::MaterializedViewManager;
 use net_component::handler::network_service_handler::NetworkServiceHandler;
 use net_core_api::api::envelope::envelope::Envelope;
-use net_core_api::api::result::result::ResultDTO;
+use net_core_api::api::primitives::none::None;
 use net_core_api::core::encoder_api::Encoder;
 use net_core_api::core::typed_api::Typed;
 use net_updater_api::api::refreshers::refresh_views::refresh_views_request::RefreshViewsRequestDTO;
@@ -42,7 +42,7 @@ impl NetworkServiceHandler for MaterializedViewsRefreshHandler {
         }
         let tenant_id = enveloped_request.get_tenant_id();
         match self.views_manager.refresh_views_blocking(&connection_pool).await {
-            Ok(()) => Ok(Envelope::new(tenant_id, ResultDTO::get_data_type(), &ResultDTO::new(true, None, None).encode())),
+            Ok(()) => Ok(Envelope::new(tenant_id, None::get_data_type(), &None::default().encode())),
             Err(err) => Err(UpdateError::DbError(self.get_handler_type(), err.into()).into()),
         }
     }
