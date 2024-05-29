@@ -16,7 +16,7 @@ pub async fn select_networks_ids_transaction(
         .fetch_all(&mut **transaction)
         .await?
         .into_iter()
-        .map(|row| row.get("Network_ID"))
+        .map(|row| row.get(0))
         .collect();
     Ok(res)
 }

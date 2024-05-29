@@ -2,7 +2,7 @@ use std::error::Error;
 use sqlx::Postgres;
 
 const SELECT_PACKETS_BY_NETWORK_ID_QUERY: &str = "
-    SELECT Pcap_ID, Raw_Pcap_File_Path FROM Traffic
+    SELECT Pcap_ID AS id, Raw_Pcap_File_Path AS pcap_file_path FROM Traffic
     WHERE Network_ID = $1 AND Tenant_Id = $2
     ORDER BY (Parsed_Data->'l1'->'frame'->>'frame.time_epoch')::DECIMAL;
 ";
@@ -22,8 +22,6 @@ pub async fn select_packets_by_network_id_transaction(
 
 #[derive(sqlx::FromRow, Clone, Debug)]
 pub struct PcapPathInfo {
-    #[sqlx(rename = "Pcap_ID")]
     pub id: String,
-    #[sqlx(rename = "Raw_Pcap_File_Path")]
     pub pcap_file_path: String,
 }
