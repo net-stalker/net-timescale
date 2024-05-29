@@ -7,4 +7,4 @@ size = "10"
 [server]
 host_name = "net-updater"
 port = "5457"
-addr = "127.0.0.1"
+addr = "127.0.0.1:5457"
