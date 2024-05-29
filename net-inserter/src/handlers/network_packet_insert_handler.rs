@@ -9,7 +9,8 @@ use net_core_api::core::decoder_api::Decoder;
 use net_core_api::core::encoder_api::Encoder;
 use net_core_api::core::typed_api::Typed;
 use net_inserter_api::api::pcap_file::InsertPcapFileDTO;
-use sqlx::{Pool, Postgres};
+use sqlx::Pool;
+use sqlx::Postgres;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 use uuid::Uuid;
@@ -17,11 +18,11 @@ use crate::core::insert_error::InsertError;
 use crate::utils::network_packet_inserter;
 
 #[derive(Default, Debug)]
-pub struct InsertPcapFileHandler {
+pub struct InsertNetworkPacketHandler {
     output_directory: String,
 }
 
-impl InsertPcapFileHandler {
+impl InsertNetworkPacketHandler {
     pub fn new(output_directory: &str) -> Self {
         Self { output_directory: output_directory.to_string() }
     }
@@ -43,7 +44,7 @@ impl InsertPcapFileHandler {
 }
 
 #[async_trait]
-impl NetworkServiceHandler for InsertPcapFileHandler {
+impl NetworkServiceHandler for InsertNetworkPacketHandler {
     async fn handle(&self, connection_pool: Arc<Pool<Postgres>>, enveloped_request: Envelope) -> Result<Envelope, Box<dyn Error + Send + Sync>> {
         if enveloped_request.get_envelope_type() != self.get_handler_type() {
             return Err(InsertError::WrongInsertableData(

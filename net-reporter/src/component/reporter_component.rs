@@ -12,6 +12,7 @@ use sqlx::Postgres;
 
 use crate::config::Config;
 
+use crate::handlers::buffer_handlers::buffer::handler::BufferHandler;
 use crate::handlers::chart_handlers::http_clients::handler::HttpClientsHandler;
 use crate::handlers::chart_handlers::http_request_methods_distribution::handler::HttpRequestMethodsDistributionHandler;
 use crate::handlers::chart_handlers::http_responses::handler::HttpResponsesHandler;
@@ -23,6 +24,8 @@ use crate::handlers::chart_handlers::network_graph::handle::handler::NetworkGrap
 use crate::handlers::chart_handlers::total_http_requests::handler::TotalHttpRequestsHandler;
 use crate::handlers::filters_handlers::http_overview::handle::handler::HttpOverviewFiltersHandler;
 use crate::handlers::filters_handlers::network_overview::handler::NetworkOverviewFiltersHandler;
+use crate::handlers::network_handlers::network_id::handler::NetworkIdHandler;
+use crate::handlers::network_packet_handlers::network_packets::handler::NetworkPacketsHandler;
 
 use component_core::connection_pool;
 
@@ -69,6 +72,9 @@ impl ReporterComponent {
                 .add_handler(TotalHttpRequestsHandler::default().boxed())
                 .add_handler(HttpOverviewFiltersHandler::default().boxed())
                 .add_handler(NetworkOverviewFiltersHandler::default().boxed())
+                .add_handler(NetworkIdHandler::default().boxed())
+                .add_handler(NetworkPacketsHandler::default().boxed())
+                .add_handler(BufferHandler::default().boxed())
                 .build()
         )
     }

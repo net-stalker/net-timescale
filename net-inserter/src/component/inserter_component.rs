@@ -10,7 +10,7 @@ use sqlx::Postgres;
 use crate::config::Config;
 use crate::handlers::buffer_flush_handler::FlushBufferHandler;
 use crate::handlers::network_insert_handler::InsertNetworkHandler;
-use crate::handlers::pcap_file_insert_handler::InsertPcapFileHandler;
+use crate::handlers::network_packet_insert_handler::InsertNetworkPacketHandler;
 use component_core::connection_pool;
 
 pub struct InserterComponent {
@@ -41,7 +41,7 @@ impl InserterComponent {
         Arc::new(
             NetworkServiceHandlerManagerBuilder::default()
                 .add_handler(InsertNetworkHandler::default().boxed())
-                .add_handler(InsertPcapFileHandler::new(&config.pcaps.directory_to_save).boxed())
+                .add_handler(InsertNetworkPacketHandler::new(&config.pcaps.directory_to_save).boxed())
                 .add_handler(FlushBufferHandler::default().boxed())
                 .build()
         )
