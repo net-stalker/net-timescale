@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
 <!-- [END AUTO UPDATE] -->
+## [-73fa8d1] - 2024-05-22
+
+NS-324 updated handlers to return updated rows (#95)
+
+* updated handlers to return the amount of updated rows
+## [-ae59f9b] - 2024-05-22
+
+NS-327 implemented materialized views refresh handler (#96)
+
+* implemented materialized views refresh handler
 ## [-97fc70f] - 2024-05-17
 
 Ns 322/transfer packets operation (#94)
