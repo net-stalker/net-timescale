@@ -37,12 +37,12 @@ impl DeleterComponent {
         }
     }
 
-    async fn build_handling_manager(_config: &Config) -> Arc<NetworkServiceHandlerManager> {
+    async fn build_handling_manager(config: &Config) -> Arc<NetworkServiceHandlerManager> {
         Arc::new(
             NetworkServiceHandlerManagerBuilder::default()
                 .add_handler(ClearBufferHandler::default().boxed())
                 .add_handler(DeleteNetworkHandler::default().boxed())
-                .add_handler(DeleteNetworkPacketHandler::default().boxed())
+                .add_handler(DeleteNetworkPacketHandler::new(&config.pcaps.directory_to_save).boxed())
                 .build()
         )
     }

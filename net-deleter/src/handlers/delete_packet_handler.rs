@@ -15,7 +15,7 @@ use sqlx::Postgres;
 use crate::core::delete_error::DeleteError;
 use crate::utils::network_packets_deleter;
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct DeleteNetworkPacketHandler {
     pcap_files_directory: String,
 }
@@ -51,11 +51,11 @@ impl NetworkServiceHandler for DeleteNetworkPacketHandler {
         let packets_to_delete = DeletePacketsRequestDTO::decode(enveloped_request.get_data());
         let mut transaction = match connection_pool.begin().await {
             Ok(transaction) => transaction,
-            Err(err) => return Err(DeleteError::TranscationError(err.to_string()).into()),
+            Err(err) => return Err(DeleteError::TranscationErrorStart(err.to_string()).into()),
         };
         // Delete from main table
         let mapped_packets_to_delete = packets_to_delete.get_ids().iter().map(|id| id.as_str()).collect::<Vec<&str>>();
-        let delete_packets_res = network_packets_deleter::delete_network_packets_transaction(
+        let delete_packets_res = network_packets_deleter::delete_network_packets_buffer_transaction(
             &mut transaction,
             &mapped_packets_to_delete,
             tenant_id,
@@ -67,22 +67,22 @@ impl NetworkServiceHandler for DeleteNetworkPacketHandler {
         // TODO: it actually makes sense to split delete operations from buffer and from main storage
         // It seems that we might need to delete a single packet from buffer and as a result it may trigger the refreshes
         // Overall, It also makes sense to split them in terms of good design
-        let delete_packets_res = network_packets_deleter::delete_network_packets_buffer_transaction(
+        let delete_packets_res = network_packets_deleter::delete_network_packets_transaction(
             &mut transaction,
             &mapped_packets_to_delete,
             tenant_id,
         ).await;
-        match delete_packets_res {
-            Ok(updated_rows) => {
-                let _ = transaction.commit().await;
-                for id in packets_to_delete.get_ids() {
-                    // looks like we don't really bother about the result of delete operation
-                    let _ = self.delete_pcap_file(id.as_str()).await;
-                }
-                Ok(Envelope::new(tenant_id, Integer::get_data_type(), &Integer::new(updated_rows.rows_affected() as i64).encode()))
-            },
-            Err(err) => Err(DeleteError::DbError(deletable_data_type, err).into()),
+        if let Err(err) = delete_packets_res {
+            return Err(DeleteError::DbError(deletable_data_type, err).into());
         }
+        if let Err(err) = transaction.commit().await {
+            return Err(DeleteError::TranscationErrorEnd(err.to_string()).into());
+        }
+        let delete_packets_res = delete_packets_res.unwrap();
+        for id in packets_to_delete.get_ids() {
+            self.delete_pcap_file(id.as_str()).await.unwrap_or_else(|_| log::debug!("Couldn't delete the file"));
+        }
+        Ok(Envelope::new(tenant_id, Integer::get_data_type(), &Integer::new(delete_packets_res.rows_affected() as i64).encode()))
     }
 
     fn get_handler_type(&self) -> String {

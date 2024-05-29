@@ -36,20 +36,21 @@ impl NetworkServiceHandler for DeleteNetworkHandler {
         let network_to_delete = DeleteNetworkRequestDTO::decode(enveloped_request.get_data());
         let mut transaction = match connection_pool.begin().await {
             Ok(transaction) => transaction,
-            Err(err) => return Err(DeleteError::TranscationError(err.to_string()).into()),
+            Err(err) => return Err(DeleteError::TranscationErrorStart(err.to_string()).into()),
         };
-        let delete_packets_res = network_deleter::delete_network_transaction(
+        let delete_network_res = network_deleter::delete_network_transaction(
             &mut transaction,
             network_to_delete.get_id(),
             tenant_id,
         ).await;
-        match delete_packets_res {
-            Ok(updated_rows) => {
-                let _ = transaction.commit().await;
-                Ok(Envelope::new(tenant_id, Integer::get_data_type(), &Integer::new(updated_rows.rows_affected() as i64).encode()))
-            },
-            Err(err) => Err(DeleteError::DbError(deletable_data_type, err).into()),
+        if let Err(err) = delete_network_res {
+            return Err(DeleteError::DbError(deletable_data_type, err).into());
         }
+        if let Err(err) = transaction.commit().await {
+            return Err(DeleteError::TranscationErrorEnd(err.to_string()).into());
+        }
+        let delete_network_res = delete_network_res.unwrap();
+        Ok(Envelope::new(tenant_id, Integer::get_data_type(), &Integer::new(delete_network_res.rows_affected() as i64).encode()))
     }
 
     fn get_handler_type(&self) -> String {

@@ -10,6 +10,11 @@ use std::env;
 use net_config::NetConfig;
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct Pcaps {
+    pub directory_to_save: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Server {
     pub host_name: String,
     pub port: String,
@@ -31,4 +36,5 @@ pub struct Config {
     pub server: Server,
     pub connection_url: ConnectionUrl,
     pub max_connection_size: MaxConnectionSize,
+    pub pcaps: Pcaps,
 }
