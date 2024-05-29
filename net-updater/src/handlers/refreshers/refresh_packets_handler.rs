@@ -50,14 +50,14 @@ impl NetworkServiceHandler for RefreshPcapParsedDataHandler {
         for network_id in networks_ids.iter() {
             let packets = packets_by_network_id_selector::select_packets_by_network_id_transaction(
                 &mut transaction,
-                &network_id,
+                network_id,
                 tenant_id
             ).await?;
             let merged_pcap = pcaps::pcap_merger::PcapMerger::merge(&packets.iter().map(|pcap_info| pcap_info.pcap_file_path.as_str()).collect::<Vec<&str>>());
             let jsonb_merged_pcap = PcapTranslator::translate(merged_pcap);
             let split_pcaps_jsons: Vec<serde_json::Value> = PcapSplitter::split(&jsonb_merged_pcap)?
                 .into_iter()
-                .map(|jsonb_pcap| pcaps::decoder::Decoder::to_layered(jsonb_pcap))
+                .map(pcaps::decoder::Decoder::to_layered)
                 .take_while(|json_pcap| json_pcap.is_ok())
                 .map(|json_pcap| json_pcap.unwrap())
                 .collect();
