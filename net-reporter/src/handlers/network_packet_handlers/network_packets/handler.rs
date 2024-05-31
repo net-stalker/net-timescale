@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use component_core::materialized_view::query;
 use net_component::handler::network_service_handler::NetworkServiceHandler;
 use net_reporter_api::api::network_packet::network_packets::NetworkPacketsDTO;
 use net_reporter_api::api::network_packet::network_packets_request::NetworkPacketsRequestDTO;

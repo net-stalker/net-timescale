@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-net-reporter-api = "0.7.3"
+net-reporter-api = "0.7.4"
 net-core-api = "0.5.2"
 net-component = "0.1.0"
 net-transport = { version = "0.1.1", features = ["quinn"] }
