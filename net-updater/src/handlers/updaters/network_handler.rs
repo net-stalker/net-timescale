@@ -9,7 +9,6 @@ use net_core_api::core::decoder_api::Decoder;
 use net_core_api::core::encoder_api::Encoder;
 use net_core_api::core::typed_api::Typed;
 use net_updater_api::api::updaters::update_network::update_network_request::UpdateNetworkRequestDTO;
-use net_updater_api::api::updaters::update_packets_network_id::update_packets_network_id_request::UpdatePacketsNetworkIdRequestDTO;
 use sqlx::Pool;
 use sqlx::Postgres;
 use crate::core::update_error::UpdateError;

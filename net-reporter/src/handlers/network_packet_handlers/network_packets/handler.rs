@@ -82,7 +82,7 @@ impl NetworkServiceHandler for NetworkPacketsHandler {
         let mut transcaction = connection_pool.begin().await?;
 
         let query = QueryBuilder::new(GET_NETWORK_PACKETS, 1)
-            .add_static_filter(network_ids.iter().find(|id| **id == None), SET_NULL_NETWORK, 1)
+            .add_static_filter(network_ids.iter().find(|id| id.is_none()), SET_NULL_NETWORK, 1)
             .build_query();
 
         let executed_query_response = Self::execute_query(
