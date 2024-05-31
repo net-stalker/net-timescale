@@ -25,6 +25,7 @@ use crate::handlers::chart_handlers::total_http_requests::handler::TotalHttpRequ
 use crate::handlers::filters_handlers::http_overview::handle::handler::HttpOverviewFiltersHandler;
 use crate::handlers::filters_handlers::network_overview::handler::NetworkOverviewFiltersHandler;
 use crate::handlers::network_handlers::network_id::handler::NetworkIdHandler;
+use crate::handlers::network_handlers::networks::handler::NetworksHandler;
 use crate::handlers::network_packet_handlers::network_packets::handler::NetworkPacketsHandler;
 
 use component_core::connection_pool;
@@ -73,6 +74,7 @@ impl ReporterComponent {
                 .add_handler(HttpOverviewFiltersHandler::default().boxed())
                 .add_handler(NetworkOverviewFiltersHandler::default().boxed())
                 .add_handler(NetworkIdHandler::default().boxed())
+                .add_handler(NetworksHandler::default().boxed())
                 .add_handler(NetworkPacketsHandler::default().boxed())
                 .add_handler(BufferHandler::default().boxed())
                 .build()

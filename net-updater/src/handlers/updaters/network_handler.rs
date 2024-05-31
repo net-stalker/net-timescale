@@ -61,6 +61,6 @@ impl NetworkServiceHandler for UpdateNetworkHandler {
     }
 
     fn get_handler_type(&self) -> String {
-        UpdatePacketsNetworkIdRequestDTO::get_data_type().to_string()
+        UpdateNetworkRequestDTO::get_data_type().to_string()
     }
 }
