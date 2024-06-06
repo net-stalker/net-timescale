@@ -16,7 +16,7 @@ use crate::handlers::network_packet_handlers::network_packets::response::network
 use crate::handlers::network_packet_handlers::network_packets::response::network_packets::NetworkPackets;
 
 
-const GET_BUFFER: &str = "
+const GET_BUFFER_QUERY: &str = "
     SELECT
         Traffic_Buffer.Pcap_ID AS id,
         Traffic_Buffer.Network_Id AS network_id,
@@ -42,7 +42,7 @@ impl BufferHandler {
         transcation: &mut Transaction<'_, Postgres>,
         tenant_id: &str,
     ) -> Result<Vec<NetworkPacket>, Error> {
-        sqlx::query_as(GET_BUFFER)
+        sqlx::query_as(GET_BUFFER_QUERY)
             .bind(tenant_id)
             .fetch_all(&mut **transcation)
             .await

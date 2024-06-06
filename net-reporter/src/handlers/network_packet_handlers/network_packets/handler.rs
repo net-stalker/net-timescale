@@ -18,7 +18,7 @@ use crate::query_builder::query_builder::QueryBuilder;
 
 use super::response::network_packet::NetworkPacket;
 
-const GET_NETWORK_PACKETS: &str = "
+const GET_NETWORK_PACKETS_QUERY: &str = "
     SELECT
         Traffic.Pcap_ID AS id,
         Traffic.Network_Id AS network_id,
@@ -78,10 +78,10 @@ impl NetworkServiceHandler for NetworkPacketsHandler {
         }
         let request = NetworkPacketsRequestDTO::decode(enveloped_request.get_data());
         // kekw moment
-        let network_ids = request.get_id();
+        let network_ids = request.get_network_ids();
         let mut transcaction = connection_pool.begin().await?;
 
-        let query = QueryBuilder::new(GET_NETWORK_PACKETS, 1)
+        let query = QueryBuilder::new(GET_NETWORK_PACKETS_QUERY, 1)
             .add_static_filter(network_ids.iter().find(|id| id.is_none()), SET_NULL_NETWORK, 1)
             .build_query();
 
