@@ -64,6 +64,9 @@ impl NetworkServiceHandler for DeleteNetworkPacketHandler {
             return Err(DeleteError::DbError(deletable_data_type, err).into());
         }
         // Delete from buffer table
+        // TODO: it actually makes sense to split delete operations from buffer and from main storage
+        // It seems that we might need to delete a single packet from buffer and as a result it may trigger the refreshes
+        // Overall, It also makes sense to split them in terms of good design
         let delete_packets_res = network_packets_deleter::delete_network_packets_buffer_transaction(
             &mut transaction,
             &mapped_packets_to_delete,
