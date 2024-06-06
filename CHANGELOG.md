@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [-b5bc640] - 2024-06-06
 
 Ns 338/implement handlers after ns 335 (#98)
@@ -21,7 +22,6 @@ Ns 338/implement handlers after ns 335 (#98)
 * added buffer handler
 
 * added udpate network handler, renamed pcap insert handler to netowrk packet insert handler
-<!-- [END AUTO UPDATE] -->
 ## [-73fa8d1] - 2024-05-22
 
 NS-324 updated handlers to return updated rows (#95)

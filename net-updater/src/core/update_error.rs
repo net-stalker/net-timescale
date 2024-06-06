@@ -7,6 +7,8 @@ pub enum UpdateError {
     WrongUpdatableData(String),
     #[error("Error while updating `{0}`: `{1:?}`")]
     DbError(String, Box<dyn std::error::Error + Send + Sync>),
-    #[error("Couldn't start the transcation `0`")]
+    #[error("Transcation error: `0`")]
     TranscationError(String),
+    #[error("Something went wrong during pcaps update `0`")]
+    CouldntUpdatePcaps(String),
 }

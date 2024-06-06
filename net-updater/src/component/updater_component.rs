@@ -9,6 +9,7 @@ use sqlx::Pool;
 use sqlx::Postgres;
 
 use crate::config::Config;
+use crate::handlers::refreshers::refresh_packets_handler::RefreshPcapParsedDataHandler;
 use crate::handlers::refreshers::materialized_views_refresh_handler::MaterializedViewsRefreshHandler;
 use crate::handlers::updaters::network_handler::UpdateNetworkHandler;
 use crate::handlers::updaters::packets_network_id_handler::UpdatePacketsNetworkIdHandler;
@@ -40,9 +41,10 @@ impl UpdaterComponent {
     async fn build_handling_manager() -> Arc<NetworkServiceHandlerManager> {
         Arc::new(
             NetworkServiceHandlerManagerBuilder::default()
-                .add_handler(UpdatePacketsNetworkIdHandler::default().boxed())
-                .add_handler(UpdateNetworkHandler::default().boxed())
                 .add_handler(MaterializedViewsRefreshHandler::new(Box::new(get_common_materialized_view_manager())).boxed())
+                .add_handler(RefreshPcapParsedDataHandler::default().boxed())
+                .add_handler(UpdateNetworkHandler::default().boxed())
+                .add_handler(UpdatePacketsNetworkIdHandler::default().boxed())
                 .build()
         )
     }
