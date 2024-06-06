@@ -56,6 +56,12 @@ impl NetworkServiceHandler for InsertNetworkPacketHandler {
         }
         let tenant_id = enveloped_request.get_tenant_id();
         let pcap_data = InsertPcapFileDTO::decode(enveloped_request.get_data());
+        
+        let network_packet_data = match crate::utils::decoder::Decoder::get_network_packet_data(pcap_data.get_data()).await {
+            Ok(data) => data,
+            Err(err_desc) => return Err(InsertError::DecodePcapFile(err_desc).into())
+        };
+        
         let packet_id = Uuid::now_v7().to_string();
         let pcap_file_path = format!("{}/{}", &self.output_directory, &packet_id);
         
@@ -66,10 +72,6 @@ impl NetworkServiceHandler for InsertNetworkPacketHandler {
             return Err(InsertError::WriteFile(e.to_string()).into());
         }
 
-        let network_packet_data = match crate::utils::decoder::Decoder::get_network_packet_data(pcap_data.get_data()).await {
-            Ok(data) => data,
-            Err(err_desc) => return Err(InsertError::DecodePcapFile(err_desc).into())
-        };
         let mut transaction = match connection_pool.begin().await {
             Ok(transaction) => transaction,
             Err(err) => return Err(InsertError::TranscationError(err.to_string()).into()),
