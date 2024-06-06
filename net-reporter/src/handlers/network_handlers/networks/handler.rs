@@ -55,8 +55,8 @@ impl NetworkServiceHandler for NetworksHandler {
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
         let tenant_id = enveloped_request.get_tenant_id();
 
-        if enveloped_request.get_type() != self.get_handler_type() {
-            return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
+        if enveloped_request.get_envelope_type() != self.get_handler_type() {
+            return Err(format!("wrong request is being received: {}", enveloped_request.get_envelope_type()).into());
         }
         let request = NetworksRequestDTO::decode(enveloped_request.get_data());
         let network_ids = request.get_networks_ids_to_get();

@@ -16,14 +16,14 @@ use crate::handlers::network_packet_handlers::network_packets::response::network
 use crate::handlers::network_packet_handlers::network_packets::response::network_packets::NetworkPackets;
 
 
-const GET_BUFFER: &str = "
+const GET_BUFFER_QUERY: &str = "
     SELECT
         Traffic_Buffer.Pcap_ID AS id,
         Traffic_Buffer.Network_Id AS network_id,
         Traffic_Buffer.Insertion_Time AS insertion_time,
         Traffic_Buffer.Parsed_Data->'l3'->'ip'->>'ip.src' AS src,
         Traffic_Buffer.Parsed_Data->'l3'->'ip'->>'ip.dst' AS dst,
-        array_agg(string_to_array(Traffic.Parsed_Data->'l1'->'frame'->>'frame.protocols', ':')) AS protocols,
+        string_to_array(Traffic_Buffer.Parsed_Data->'l1'->'frame'->>'frame.protocols', ':') AS protocols,
         Traffic_Buffer.Parsed_Data As json_data
     FROM Traffic_Buffer
     WHERE Traffic_Buffer.Tenant_Id = $1
@@ -42,7 +42,7 @@ impl BufferHandler {
         transcation: &mut Transaction<'_, Postgres>,
         tenant_id: &str,
     ) -> Result<Vec<NetworkPacket>, Error> {
-        sqlx::query_as(GET_BUFFER)
+        sqlx::query_as(GET_BUFFER_QUERY)
             .bind(tenant_id)
             .fetch_all(&mut **transcation)
             .await
@@ -58,7 +58,7 @@ impl NetworkServiceHandler for BufferHandler {
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
         let tenant_id = enveloped_request.get_tenant_id();
 
-        if enveloped_request.get_type() != self.get_handler_type() {
+        if enveloped_request.get_envelope_type() != self.get_handler_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
         }
         let mut transcaction = connection_pool.begin().await?;

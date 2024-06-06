@@ -14,23 +14,32 @@ use net_core_api::core::typed_api::Typed;
 use sqlx::Transaction;
 
 use crate::handlers::network_packet_handlers::network_packets::response::network_packets::NetworkPackets;
+use crate::query_builder::query_builder::QueryBuilder;
 
 use super::response::network_packet::NetworkPacket;
 
-const GET_NETWORK_PACKETS: &str = "
+const GET_NETWORK_PACKETS_QUERY: &str = "
     SELECT
         Traffic.Pcap_ID AS id,
         Traffic.Network_Id AS network_id,
         Traffic.Insertion_Time AS insertion_time,
         Traffic.Parsed_Data->'l3'->'ip'->>'ip.src' AS src,
         Traffic.Parsed_Data->'l3'->'ip'->>'ip.dst' AS dst,
-        array_agg(string_to_array(Traffic.Parsed_Data->'l1'->'frame'->>'frame.protocols', ':')) AS protocols,
+        string_to_array(Traffic.Parsed_Data->'l1'->'frame'->>'frame.protocols', ':') AS protocols,
         Traffic.Parsed_Data AS json_data
     FROM Traffic
     WHERE
-        (COALESCE(ARRAY_LENGTH($1, 1), 0) = 0 OR Traffic.Network_ID IN (SELECT UNNEST($1)))
+        (
+            COALESCE(ARRAY_LENGTH($1, 1), 0) = 0
+            OR Traffic.Network_ID = ANY(ARRAY(SELECT UNNEST($1)))
+            {}
+        )
         AND Traffic.Tenant_Id = $2
     GROUP BY Traffic.Pcap_ID;
+";
+
+const SET_NULL_NETWORK: &str = "
+    OR Traffic.Network_ID is NULL
 ";
 
 #[derive(Default)]
@@ -42,11 +51,12 @@ impl NetworkPacketsHandler {
     }
 
     async fn execute_query(
+        query_string: &str,
         transcation: &mut Transaction<'_, Postgres>,
         network_ids: &[Option<String>],
         tenant_id: &str,
     ) -> Result<Vec<NetworkPacket>, Error> {
-        sqlx::query_as(GET_NETWORK_PACKETS)
+        sqlx::query_as(query_string)
             .bind(network_ids)
             .bind(tenant_id)
             .fetch_all(&mut **transcation)
@@ -63,15 +73,20 @@ impl NetworkServiceHandler for NetworkPacketsHandler {
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
         let tenant_id = enveloped_request.get_tenant_id();
 
-        if enveloped_request.get_type() != self.get_handler_type() {
+        if enveloped_request.get_envelope_type() != self.get_handler_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
         }
         let request = NetworkPacketsRequestDTO::decode(enveloped_request.get_data());
         // kekw moment
-        let network_ids = request.get_id();
+        let network_ids = request.get_network_ids();
         let mut transcaction = connection_pool.begin().await?;
 
+        let query = QueryBuilder::new(GET_NETWORK_PACKETS_QUERY, 1)
+            .add_static_filter(network_ids.iter().find(|id| id.is_none()), SET_NULL_NETWORK, 1)
+            .build_query();
+
         let executed_query_response = Self::execute_query(
+            &query,
             &mut transcaction,
             network_ids,
             tenant_id,

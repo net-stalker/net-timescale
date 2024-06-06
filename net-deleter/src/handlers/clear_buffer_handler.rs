@@ -12,7 +12,7 @@ use sqlx::Postgres;
 use crate::core::delete_error::DeleteError;
 use crate::utils::buffer_cleaner;
 
-#[derive(Default, Debug)]
+#[derive(Debug, Default)]
 pub struct ClearBufferHandler {}
 
 impl ClearBufferHandler {
@@ -33,7 +33,7 @@ impl NetworkServiceHandler for ClearBufferHandler {
         let tenant_id = enveloped_request.get_tenant_id();
         let mut transaction = match connection_pool.begin().await {
             Ok(transaction) => transaction,
-            Err(err) => return Err(DeleteError::TranscationError(err.to_string()).into()),
+            Err(err) => return Err(DeleteError::TranscationErrorStart(err.to_string()).into()),
         };
         let delete_packets_res = buffer_cleaner::clear_buffer_transaction(
             &mut transaction,
@@ -42,7 +42,9 @@ impl NetworkServiceHandler for ClearBufferHandler {
         if let Err(err) = delete_packets_res {
             return Err(DeleteError::DbError(deletable_data_type, err).into());
         }
-        let _ = transaction.commit().await;
+        if let Err(err) = transaction.commit().await {
+            return Err(DeleteError::TranscationErrorEnd(err.to_string()).into());
+        }
         Ok(Envelope::new(tenant_id, None::get_data_type(), &None::default().encode()))
     }
 

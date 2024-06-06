@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [-a5da330] - 2024-06-06
 
 Ns 326/pcaps refresh (#97)
@@ -33,7 +34,6 @@ Ns 326/pcaps refresh (#97)
 * fixed bad port bind in net-updater
 
 * fixed bad address in net-updater config
-<!-- [END AUTO UPDATE] -->
 ## [-b5bc640] - 2024-06-06
 
 Ns 338/implement handlers after ns 335 (#98)

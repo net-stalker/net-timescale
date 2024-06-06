@@ -4,12 +4,11 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use net_component::handler::network_service_handler::NetworkServiceHandler;
 use net_core_api::api::envelope::envelope::Envelope;
-use net_core_api::api::primitives::integer::Integer;
+use net_core_api::api::primitives::none::None;
 use net_core_api::core::decoder_api::Decoder;
 use net_core_api::core::encoder_api::Encoder;
 use net_core_api::core::typed_api::Typed;
 use net_updater_api::api::updaters::update_network::update_network_request::UpdateNetworkRequestDTO;
-use net_updater_api::api::updaters::update_packets_network_id::update_packets_network_id_request::UpdatePacketsNetworkIdRequestDTO;
 use sqlx::Pool;
 use sqlx::Postgres;
 use crate::core::update_error::UpdateError;
@@ -52,15 +51,15 @@ impl NetworkServiceHandler for UpdateNetworkHandler {
             tenant_id,
         ).await;
         match update_result {
-            Ok(updated_rows) => {
+            Ok(_) => {
                 let _ = transaction.commit().await;
-                Ok(Envelope::new(tenant_id, Integer::get_data_type(), &Integer::new(updated_rows.rows_affected() as i64).encode()))
+                Ok(Envelope::new(tenant_id, None::get_data_type(), &None::default().encode()))
             },
             Err(e) => Err(UpdateError::DbError(self.get_handler_type(), e).into()),
         }
     }
 
     fn get_handler_type(&self) -> String {
-        UpdatePacketsNetworkIdRequestDTO::get_data_type().to_string()
+        UpdateNetworkRequestDTO::get_data_type().to_string()
     }
 }
