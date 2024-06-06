@@ -8,6 +8,31 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [-a5da330] - 2024-06-06
+
+Ns 326/pcaps refresh (#97)
+
+* implemented pcap parsed data refresh handler
+
+* updated net-updater handler manager
+
+* NS-326/pcaps-refresh: prepared CHANGELOG.md
+
+* updated mergecap command and renamed a file
+
+* added network id handler
+
+* added networks handler
+
+* implemented handler for network packets
+
+* added buffer handler
+
+* added udpate network handler, renamed pcap insert handler to netowrk packet insert handler
+
+* fixed bad port bind in net-updater
+
+* fixed bad address in net-updater config
 <!-- [END AUTO UPDATE] -->
 ## [-b5bc640] - 2024-06-06
 
