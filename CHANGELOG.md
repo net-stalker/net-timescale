@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [-cfab2fe] - 2024-06-06
+
+Fix errors (#99)
+
+* fixed-get-buffer-request
+
+* fixed errors in flush buffer
+
+* go on with fixing error
+
+* fixed wrong handler type in network handler
 <!-- [END AUTO UPDATE] -->
 ## [-a5da330] - 2024-06-06
 
