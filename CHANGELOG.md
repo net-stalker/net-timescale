@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [-cfab2fe] - 2024-06-06
 
 Fix errors (#99)
@@ -19,7 +20,6 @@ Fix errors (#99)
 * go on with fixing error
 
 * fixed wrong handler type in network handler
-<!-- [END AUTO UPDATE] -->
 ## [-a5da330] - 2024-06-06
 
 Ns 326/pcaps refresh (#97)
