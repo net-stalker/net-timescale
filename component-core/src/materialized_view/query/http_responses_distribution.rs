@@ -25,7 +25,25 @@ impl MaterializedViewQueries for HttpResponsesDistributionMaterializedView {
                 Parsed_Data->'l5'->'http' AS Http_Part
             FROM Traffic
             WHERE
-                Parsed_Data->'l5'->'http' IS NOT NULL
+                Parsed_Data->'l3'->'ip'->>'ip.src' is not null
+                AND Parsed_Data->'l3'->'ip'->>'ip.dst' is not null
+                AND Parsed_Data->'l5'->'http' IS NOT NULL
+                AND (Parsed_Data->'l5'->'http'->>'http.response')::BOOL
+            GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Http_Part
+            UNION
+            SELECT
+                date_trunc('minute', (Parsed_Data->'l1'->'frame'->>'frame.time')::TIMESTAMPTZ) AS Frametime,
+                Tenant_ID,
+                Network_ID,
+                Parsed_Data->'l3'->'ipv6'->>'ipv6.src' AS Src_IP,
+                Parsed_Data->'l3'->'ipv6'->>'ipv6.dst' AS Dst_IP,
+                (Parsed_Data->'l1'->'frame'->>'frame.len')::INTEGER AS Packet_Length,
+                Parsed_Data->'l5'->'http' AS Http_Part
+            FROM Traffic
+            WHERE
+                Parsed_Data->'l3'->'ipv6'->>'ipv6.src' is not null
+                AND Parsed_Data->'l3'->'ipv6'->>'ipv6.dst' is not null
+                AND Parsed_Data->'l5'->'http' IS NOT NULL
                 AND (Parsed_Data->'l5'->'http'->>'http.response')::BOOL
             GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Http_Part;
         ", self.get_name())
