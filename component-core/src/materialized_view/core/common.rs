@@ -13,6 +13,7 @@ use crate::materialized_view::query::network_bandwidth_per_endpoint::NetworkBand
 use crate::materialized_view::query::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolMaterializedView;
 use crate::materialized_view::query::network_graph::NetworkGraphMaterializedView;
 use crate::materialized_view::query::network_overview_filters::NetworkOverviewFiltersMaterializedView;
+use crate::materialized_view::query::network_packets::NetworkPacketsMaterializedView;
 use crate::materialized_view::query::total_http_requests::TotalHttpRequestsMaterializedView;
 
 pub trait MaterializedViewQueries: Send + Sync {
@@ -74,6 +75,7 @@ pub fn get_common_materialized_view_manager() -> MaterializedViewManager {
         .add_materialized_view(Box::<NetworkBandwidthMaterializedView>::default())
         .add_materialized_view(Box::<NetworkGraphMaterializedView>::default())
         .add_materialized_view(Box::<NetworkOverviewFiltersMaterializedView>::default())
+        .add_materialized_view(Box::<NetworkPacketsMaterializedView>::default())
         .add_materialized_view(Box::<TotalHttpRequestsMaterializedView>::default())
     .build()
 }
