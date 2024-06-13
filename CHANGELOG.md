@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [-b68b617] - 2024-06-13
+
+added buffered packets network id updater (#100)
+
+* added buffered packets network id updater
 <!-- [END AUTO UPDATE] -->
 ## [-cfab2fe] - 2024-06-06
 
