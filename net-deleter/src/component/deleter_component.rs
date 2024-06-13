@@ -9,6 +9,7 @@ use sqlx::Postgres;
 
 use crate::config::Config;
 use crate::handlers::clear_buffer_handler::ClearBufferHandler;
+use crate::handlers::delete_buffered_network_packet::DeleteBufferedNetworkPacketHandler;
 use crate::handlers::delete_network_handler::DeleteNetworkHandler;
 use crate::handlers::delete_packet_handler::DeleteNetworkPacketHandler;
 use component_core::connection_pool;
@@ -43,6 +44,7 @@ impl DeleterComponent {
                 .add_handler(ClearBufferHandler::default().boxed())
                 .add_handler(DeleteNetworkHandler::default().boxed())
                 .add_handler(DeleteNetworkPacketHandler::new(&config.pcaps.directory_to_save).boxed())
+                .add_handler(DeleteBufferedNetworkPacketHandler::new(&config.pcaps.directory_to_save).boxed())
                 .build()
         )
     }
