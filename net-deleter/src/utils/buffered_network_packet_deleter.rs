@@ -8,7 +8,7 @@ const DELETE_NP_QUERY_BUFFER: &str = "
     WHERE Pcap_ID = $1 AND Tenant_Id = $2;
 ";
 
-pub async fn delete_network_packets_buffer_transaction(
+pub async fn delete_network_packet_buffer_transaction(
     transaction: &mut sqlx::Transaction<'_, Postgres>,
     packet_id: &str,
     tenant_id: &str,

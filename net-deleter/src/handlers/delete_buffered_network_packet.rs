@@ -53,7 +53,7 @@ impl NetworkServiceHandler for DeleteBufferedNetworkPacketHandler {
             Ok(transaction) => transaction,
             Err(err) => return Err(DeleteError::TranscationErrorStart(err.to_string()).into()),
         };
-        let delete_packets_res = buffered_network_packet_deleter::delete_network_packets_buffer_transaction(
+        let delete_packets_res = buffered_network_packet_deleter::delete_network_packet_buffer_transaction(
             &mut transaction,
             packet_to_delete.get_id(),
             tenant_id,
