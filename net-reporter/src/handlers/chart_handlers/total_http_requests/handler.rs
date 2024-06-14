@@ -79,12 +79,14 @@ impl TotalHttpRequestsHandler {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
+        network_id: &str,
         filters: &TotalHttpRequestsFiltersDTO,
     ) -> Result<Vec<TotalHttpRequestsBucketResponse>, Error> {
         SqlxQueryBuilderWrapper::<TotalHttpRequestsBucketResponse>::new(query_string)
             .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
+            .add_param(network_id)
             .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
             .add_option_param(filters.is_include_http_methods_mode().map(|_| filters.get_http_methods().to_vec()))
             .add_option_param(filters.get_bytes_lower_bound())
@@ -102,12 +104,13 @@ impl NetworkServiceHandler for TotalHttpRequestsHandler {
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
         let tenant_id = enveloped_request.get_tenant_id();
 
-        if enveloped_request.get_type() != self.get_handler_type() {
+        if enveloped_request.get_envelope_type() != self.get_handler_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
         }
         let request = RequestTotalHttpRequestsDTO::decode(enveloped_request.get_data());
         let request_start_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_start_date_time()).unwrap();
         let request_end_date: DateTime<Utc> = Utc.timestamp_millis_opt(request.get_end_date_time()).unwrap();
+        let network_id = request.get_network_id();
         let filters = request.get_filters();
 
         let query = QueryBuilder::new(TOTAL_HTTP_REQUESTS_REQUEST_QUERY, 5)
@@ -123,6 +126,7 @@ impl NetworkServiceHandler for TotalHttpRequestsHandler {
             tenant_id,
             request_start_date,
             request_end_date,
+            network_id,
             filters,
         ).await?;
 

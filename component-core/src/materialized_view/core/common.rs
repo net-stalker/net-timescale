@@ -8,6 +8,7 @@ use crate::materialized_view::query::http_clients::HttpClientsMaterialiazedView;
 use crate::materialized_view::query::http_overview_filters::HttpOverviewFiltersMaterializedView;
 use crate::materialized_view::query::http_request_methods_distribution::HttpRequestMethodsDistributionMaterializedView;
 use crate::materialized_view::query::http_responses::HttpResponsesMaterializedView;
+use crate::materialized_view::query::http_responses_distribution::HttpResponsesDistributionMaterializedView;
 use crate::materialized_view::query::network_bandwidth::NetworkBandwidthMaterializedView;
 use crate::materialized_view::query::network_bandwidth_per_endpoint::NetworkBandwidthPerEndpointMaterializedView;
 use crate::materialized_view::query::network_bandwidth_per_protocol::NetworkBandwidthPerProtocolMaterializedView;
@@ -68,6 +69,7 @@ pub fn get_common_materialized_view_manager() -> MaterializedViewManager {
         .add_materialized_view(Box::<HttpClientsMaterialiazedView>::default())
         .add_materialized_view(Box::<HttpOverviewFiltersMaterializedView>::default())
         .add_materialized_view(Box::<HttpRequestMethodsDistributionMaterializedView>::default())
+        .add_materialized_view(Box::<HttpResponsesDistributionMaterializedView>::default())
         .add_materialized_view(Box::<HttpResponsesMaterializedView>::default())
         .add_materialized_view(Box::<NetworkBandwidthPerEndpointMaterializedView>::default())
         .add_materialized_view(Box::<NetworkBandwidthPerProtocolMaterializedView>::default())
