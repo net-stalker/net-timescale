@@ -1,5 +1,8 @@
-use std::sync::Arc;
-use sqlx::{types::chrono::{DateTime, Utc}, Error, Pool, Postgres};
+use sqlx::types::chrono::DateTime;
+use sqlx::types::chrono::Utc;
+use sqlx::Error;
+use sqlx::Postgres;
+use sqlx::Transaction;
 
 use crate::handlers::filters_handlers::http_overview::response::http_request_method_response::HttpRequestMethodResponse;
 
@@ -10,7 +13,6 @@ WHERE
     Tenant_ID = $1
     AND Frametime >= $2
     AND Frametime < $3 
-    AND Network_ID = $4
     AND Http->'http.request.method' IS NOT NULL
 ORDER BY Http_Request_Method
 ";
@@ -24,18 +26,16 @@ impl HttpRequestMethodsHandler {
     }
 
     pub async fn execute_query(
-        connection_pool: Arc<Pool<Postgres>>,
+        transcation: &mut Transaction<'_, Postgres>,
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        network_id: &str,
     ) -> Result<Vec<HttpRequestMethodResponse>, Error> {
         sqlx::query_as::<Postgres, HttpRequestMethodResponse>(HTTP_REQUEST_METHODS_REQUEST_QUERY)
             .bind(tenant_id)
             .bind(start_date)
             .bind(end_date)
-            .bind(network_id)
-            .fetch_all(connection_pool.as_ref())
+            .fetch_all(&mut **transcation)
             .await 
     }
 }
