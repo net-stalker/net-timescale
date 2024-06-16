@@ -1,31 +1,39 @@
-use net_reporter_api::api::network_overview_dashboard_filters::filter_entry::FilterEntryDTO;
+use net_reporter_api::api::network::networks::NetworksDTO;
 use net_reporter_api::api::network_overview_dashboard_filters::network_overview_dashbord_filters::NetworkOverviewDashboardFiltersDTO;
 
-use super::filter_entry::FilterEntryResponse;
+use crate::handlers::network_handlers::networks::response::network::Network;
+use crate::handlers::network_handlers::networks::response::networks::Networks;
 
+use super::endpoint_response::EndpointResponse;
+use super::protocol_response::ProtocolResponse;
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Debug)]
 pub struct NetworkOverviewFiltersResponse {
-    entries: Vec<FilterEntryResponse>
+    endpoints: Vec<EndpointResponse>,
+    protocols: Vec<ProtocolResponse>,
+    networks: Vec<Network>,
+}
+
+impl NetworkOverviewFiltersResponse {
+    pub fn new(
+        endpoints: Vec<EndpointResponse>,
+        protocols: Vec<ProtocolResponse>,
+        networks: Vec<Network>,
+    ) -> Self {
+        NetworkOverviewFiltersResponse {
+            endpoints,
+            protocols,
+            networks,
+        }
+    }
 }
 
 impl From<NetworkOverviewFiltersResponse> for NetworkOverviewDashboardFiltersDTO {
     fn from(value: NetworkOverviewFiltersResponse) -> Self {
-
         NetworkOverviewDashboardFiltersDTO::new(
-            value.entries
-                .into_iter()
-                .map(|fitler_entry | fitler_entry.into())
-                .collect::<Vec<FilterEntryDTO>>()
-                .as_slice()
+            value.endpoints.into_iter().map(|endpoint| endpoint.endpoint).collect::<Vec<String>>().as_slice(),
+            value.protocols.into_iter().map(|protocol| protocol.protocol).collect::<Vec<String>>().as_slice(),
+            &NetworksDTO::from(Networks::from(value.networks)),
         )
-    }
-}
-
-impl From<Vec<FilterEntryResponse>> for NetworkOverviewFiltersResponse {
-    fn from(value: Vec<FilterEntryResponse>) -> Self {
-        NetworkOverviewFiltersResponse {
-            entries: value
-        }
     }
 }

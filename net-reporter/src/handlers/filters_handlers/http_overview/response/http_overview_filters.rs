@@ -9,7 +9,7 @@ use super::http_request_method_response::HttpRequestMethodResponse;
 use super::http_response_code_response::HttpResponseCodeResponse;
 
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Debug)]
 pub struct HttpOverviewFiltersResponse {
     endpoints: Vec<EndpointResponse>,
     http_request_methods: Vec<HttpRequestMethodResponse>,
