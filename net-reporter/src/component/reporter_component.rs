@@ -23,7 +23,7 @@ use crate::handlers::chart_handlers::network_bandwidth_per_protocol::handler::Ne
 use crate::handlers::chart_handlers::network_graph::handle::handler::NetworkGraphHandler;
 use crate::handlers::chart_handlers::total_http_requests::handler::TotalHttpRequestsHandler;
 use crate::handlers::filters_handlers::http_overview::handle::handler::HttpOverviewFiltersHandler;
-use crate::handlers::filters_handlers::network_overview::handler::NetworkOverviewFiltersHandler;
+use crate::handlers::filters_handlers::network_overview::handle::handler::NetworkOverviewFiltersHandler;
 use crate::handlers::network_handlers::network_id::handler::NetworkIdHandler;
 use crate::handlers::network_handlers::networks::handler::NetworksHandler;
 use crate::handlers::network_packet_handlers::network_packets::handler::NetworkPacketsHandler;

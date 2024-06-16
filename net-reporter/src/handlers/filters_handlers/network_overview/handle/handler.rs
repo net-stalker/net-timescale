@@ -23,9 +23,9 @@ use super::protocols_handler::ProtocolsHandler;
 
 
 #[derive(Default)]
-pub struct NetworksOverviewFiltersHandler {}
+pub struct NetworkOverviewFiltersHandler {}
 
-impl NetworksOverviewFiltersHandler {
+impl NetworkOverviewFiltersHandler {
     pub fn boxed(self) -> Box<Self> {
         Box::new(self)
     }
@@ -66,7 +66,7 @@ impl NetworksOverviewFiltersHandler {
 }
 
 #[async_trait::async_trait]
-impl NetworkServiceHandler for NetworksOverviewFiltersHandler {
+impl NetworkServiceHandler for NetworkOverviewFiltersHandler {
     async fn handle(
         &self,
         connection_pool: Arc<Pool<Postgres>>,

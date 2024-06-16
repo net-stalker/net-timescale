@@ -72,14 +72,14 @@ impl HttpResponsesDistributionHandler {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        network_id: &str,
+        network_id: Option<&str>,
         filters: &HttpResponsesDistributionFiltersDTO,
     ) -> Result<Vec<HttpResponsesDistributionBucketResponse>, Error> {
         SqlxQueryBuilderWrapper::<HttpResponsesDistributionBucketResponse>::new(query_string)
             .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
-            .add_param(network_id)
+            .add_param(network_id.map(str::to_string))
             .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
             .add_option_param(filters.get_bytes_lower_bound())
             .add_option_param(filters.get_bytes_upper_bound())

@@ -51,7 +51,7 @@ impl NetworkGraphHandler {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        network_id: &str,
+        network_id: Option<&str>,
         filters: &NetworkGraphFiltersDTO,
     ) -> Result<(Vec<GraphNodeResponse>, Vec<GraphEdgeResponse>), Error> {
         let graph_links = GraphLinksHandler::execute_query(

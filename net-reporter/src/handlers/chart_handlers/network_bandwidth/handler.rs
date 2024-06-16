@@ -66,14 +66,14 @@ impl NetworkBandwidthHandler {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        network_id: &str,
+        network_id: Option<&str>,
         filters: &NetworkBandwidthFiltersDTO,
     ) -> Result<Vec<BandwidthBucketResponse>, Error> {
         SqlxQueryBuilderWrapper::<BandwidthBucketResponse>::new(query_string)
             .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
-            .add_param(network_id)
+            .add_param(network_id.map(str::to_string))
             .add_option_param(filters.is_include_protocols_mode().map(|_| filters.get_protocols().to_vec()))
             .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
             .execute_query(connection_pool).await
