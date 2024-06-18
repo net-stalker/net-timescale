@@ -40,7 +40,8 @@ CREATE INDEX IF NOT EXISTS idx_http_overview_filters_tenant_network ON Http_Over
 CREATE INDEX IF NOT EXISTS idx_http_overview_filters_frametime_brin ON Http_Overview_Filters_Materialized_View USING BRIN (Frametime);
 
 -- Create separate indexes on Src_IP and Dst_IP
-CREATE INDEX IF NOT EXISTS idx_http_overview_filters_src_dst_ip ON Http_Overview_Filters_Materialized_View USING HASH (Src_IP, Dst_IP);
+CREATE INDEX IF NOT EXISTS idx_http_overview_filters_src_ip ON Http_Overview_Filters_Materialized_View USING HASH (Src_IP)
+CREATE INDEX IF NOT EXISTS idx_http_overview_filters_dst_ip ON Http_Overview_Filters_Materialized_View USING HASH (Dst_IP);
 
 -- Create index on Packet_Length
 CREATE INDEX IF NOT EXISTS idx_http_overview_filters_packet_length ON Http_Overview_Filters_Materialized_View (Packet_Length);
