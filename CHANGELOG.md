@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [-6f70273] - 2024-06-13
 
 split network packets deleters (#101)
 
 * split network packets deleters
-<!-- [END AUTO UPDATE] -->
 ## [-b68b617] - 2024-06-13
 
 added buffered packets network id updater (#100)
