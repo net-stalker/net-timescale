@@ -32,7 +32,7 @@ WHERE
 GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Protocols;
 
 -- Create composite index on Tenant_ID and Network_ID
-CREATE INDEX IF NOT EXISTS idx_network_overview_tenant_network ON Network_Overview_Materialized_View USING HASH (Tenant_ID, Network_ID);
+CREATE INDEX IF NOT EXISTS idx_network_overview_tenant_network ON Network_Overview_Materialized_View (Tenant_ID, Network_ID);
 
 -- Create BRIN index on Frametime for space efficiency
 CREATE INDEX IF NOT EXISTS idx_network_overview_frametime_brin ON Network_Overview_Materialized_View USING BRIN (Frametime);

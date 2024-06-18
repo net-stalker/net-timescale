@@ -36,13 +36,13 @@ WHERE
 GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Http_Part;
 
 -- Create composite index on Tenant_ID and Network_ID
-CREATE INDEX IF NOT EXISTS idx_http_responses_distribution_tenant_network ON Http_Responses_Distribution_Materialized_View USING HASH (Tenant_ID, Network_ID);
+CREATE INDEX IF NOT EXISTS idx_http_responses_distribution_tenant_network ON Http_Responses_Distribution_Materialized_View (Tenant_ID, Network_ID);
 
 -- Create BRIN index on Frametime for space efficiency
 CREATE INDEX IF NOT EXISTS idx_http_responses_distribution_frametime_brin ON Http_Responses_Distribution_Materialized_View USING BRIN (Frametime);
 
 -- Create composite index on Src_IP and Dst_IP
-CREATE INDEX IF NOT EXISTS idx_http_responses_distribution_src_dst_ip ON Http_Responses_Distribution_Materialized_View USING HASH (Src_IP, Dst_IP);
+CREATE INDEX IF NOT EXISTS idx_http_responses_distribution_src_dst_ip ON Http_Responses_Distribution_Materialized_View (Src_IP, Dst_IP);
 
 -- Create GIN index on Http_Part
 CREATE INDEX IF NOT EXISTS idx_http_responses_distribution_http_part ON Http_Responses_Distribution_Materialized_View USING GIN (Http_Part);

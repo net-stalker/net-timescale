@@ -32,13 +32,13 @@ WHERE
     AND Parsed_Data->'l3'->'ipv6'->>'ipv6.dst' IS NOT NULL;
 
 -- Create composite index on Tenant_ID and Network_ID
-CREATE INDEX IF NOT EXISTS idx_network_packets_tenant_network ON Network_Packets USING HASH (tenant_id, network_id);
+CREATE INDEX IF NOT EXISTS idx_network_packets_tenant_network ON Network_Packets (tenant_id, network_id);
 
 -- Create index on Insertion_Time for efficient time-based queries
 CREATE INDEX IF NOT EXISTS idx_network_packets_insertion_time ON Network_Packets USING BRIN (insertion_time);
 
 -- Create separate indexes on src and dst
-CREATE INDEX IF NOT EXISTS idx_network_packets_src_dst ON Network_Packets USING HASH (src, dst);
+CREATE INDEX IF NOT EXISTS idx_network_packets_src_dst ON Network_Packets (src, dst);
 
 -- Create GIN index on protocols for array operations
 CREATE INDEX IF NOT EXISTS idx_network_packets_protocols_gin ON Network_Packets USING GIN (protocols);

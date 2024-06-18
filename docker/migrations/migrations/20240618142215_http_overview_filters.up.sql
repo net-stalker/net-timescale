@@ -34,13 +34,13 @@ WHERE
 GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Http_Part;
 
 -- Create composite index on Tenant_ID and Network_ID
-CREATE INDEX IF NOT EXISTS idx_http_overview_filters_tenant_network ON Http_Overview_Filters_Materialized_View USING HASH (Tenant_ID, Network_ID);
+CREATE INDEX IF NOT EXISTS idx_http_overview_filters_tenant_network ON Http_Overview_Filters_Materialized_View (Tenant_ID, Network_ID);
 
 -- Create BRIN index on Frametime for space efficiency
 CREATE INDEX IF NOT EXISTS idx_http_overview_filters_frametime_brin ON Http_Overview_Filters_Materialized_View USING BRIN (Frametime);
 
 -- Create separate indexes on Src_IP and Dst_IP
-CREATE INDEX IF NOT EXISTS idx_http_overview_filters_src_ip ON Http_Overview_Filters_Materialized_View USING HASH (Src_IP)
+CREATE INDEX IF NOT EXISTS idx_http_overview_filters_src_ip ON Http_Overview_Filters_Materialized_View USING HASH (Src_IP);
 CREATE INDEX IF NOT EXISTS idx_http_overview_filters_dst_ip ON Http_Overview_Filters_Materialized_View USING HASH (Dst_IP);
 
 -- Create index on Packet_Length

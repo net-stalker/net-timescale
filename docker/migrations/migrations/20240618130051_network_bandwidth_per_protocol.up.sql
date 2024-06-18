@@ -31,13 +31,13 @@ WHERE
 GROUP BY Frametime, Tenant_ID, Network_ID, Src_IP, Dst_IP, Packet_Length, Protocols;
 
 -- Create composite index on Tenant_ID and Network_ID
-CREATE INDEX IF NOT EXISTS idx_network_bandwidth_per_protocol_tenant_network ON Network_Bandwidth_Per_Protocol_Materialized_View USING HASH (Tenant_ID, Network_ID);
+CREATE INDEX IF NOT EXISTS idx_network_bandwidth_per_protocol_tenant_network ON Network_Bandwidth_Per_Protocol_Materialized_View (Tenant_ID, Network_ID);
 
 -- Create BRIN index on Frametime for space efficiency
 CREATE INDEX IF NOT EXISTS idx_network_bandwidth_per_protocol_frametime_brin ON Network_Bandwidth_Per_Protocol_Materialized_View USING BRIN (Frametime);
 
 -- Create separate indexes on Src_IP and Dst_IP
-CREATE INDEX IF NOT EXISTS idx_network_bandwidth_per_protocol_src_dst_ip ON Network_Bandwidth_Per_Protocol_Materialized_View USING HASH (Src_IP, Dst_IP);
+CREATE INDEX IF NOT EXISTS idx_network_bandwidth_per_protocol_src_dst_ip ON Network_Bandwidth_Per_Protocol_Materialized_View (Src_IP, Dst_IP);
 
 -- Create index on Packet_Length
 CREATE INDEX IF NOT EXISTS idx_network_bandwidth_per_protocol_packet_length ON Network_Bandwidth_Per_Protocol_Materialized_View (Packet_Length);
