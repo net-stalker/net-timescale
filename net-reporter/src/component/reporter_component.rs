@@ -1,8 +1,6 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use component_core::materialized_view::core::common::get_common_materialized_view_manager;
-
 use net_component::component::network_service_component::NetworkServiceComponent;
 use net_component::handler::network_service_handler_manager::NetworkServiceHandlerManager;
 use net_component::handler::network_service_handler_manager_builder::NetworkServiceHandlerManagerBuilder;
@@ -46,11 +44,6 @@ impl ReporterComponent {
         );
         let server_addr: SocketAddr = config.server.addr.parse().expect("Valid server address is expected");
         let handling_manager = Self::build_handling_manager().await;
-        
-        // TODO: remove creation of materialized views out there
-        let materialized_view_manager = get_common_materialized_view_manager();
-        //TOOD: add some error handlind
-        let _ = materialized_view_manager.create_views(&connection_pool).await;
 
         Self {
             connection_pool,
