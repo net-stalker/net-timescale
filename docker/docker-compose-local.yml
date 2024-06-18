@@ -11,7 +11,7 @@ services:
     networks:
       - net-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -26,7 +26,16 @@ services:
     depends_on:
       timescaledb:
         condition: service_healthy
-    command: sh -c "sleep 10 && sqlx database create --database-url $$DATABASE_URL && sqlx migrate run --database-url $$DATABASE_URL"
+    entrypoint: >
+      sh -c "
+        until pg_isready -h timescaledb -p 5432 -U postgres; do
+          echo 'Waiting for database...'
+          sleep 1
+        done &&
+        echo 'Database is ready. Running migrations...' &&
+        sqlx database create --database-url $$DATABASE_URL &&
+        sqlx migrate run --database-url $$DATABASE_URL
+      "
 
 networks:
   net-net:

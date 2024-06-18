@@ -21,6 +21,8 @@ pub trait MaterializedViewQueries: Send + Sync {
 
     fn get_creation_query(&self) -> String;
 
+    fn get_index_queries(&self) -> Vec<String>;
+
     fn get_refresh_query_blocking(&self) -> String {
         format!("REFRESH MATERIALIZED VIEW {};", self.get_name())
     }
@@ -41,6 +43,20 @@ pub trait MaterializedView: MaterializedViewQueries {
         sqlx::query(&create_query)
             .execute(pool)
             .await
+    }
+
+    async fn create_indexes(
+        &self,
+        pool: &Pool<Postgres>
+    ) -> Result<(), Error> {
+        let index_queries = self.get_index_queries();
+        let mut transaction = pool.begin().await?;
+        for index_query in index_queries.into_iter() {
+            sqlx::query(&index_query)
+                .execute(&mut *transaction)
+                .await?;
+        }
+        transaction.commit().await
     }
 
     async fn refresh_blocking(
