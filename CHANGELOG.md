@@ -8,6 +8,45 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [-2ba928f] - 2024-06-26
+
+Ns 323/add indexes for materialized views: completely redesigned creating materialized views and its refreshing (#104)
+
+* udpated materizlized views to handle ipv6
+
+* fixed, now we can work with both ipv4 and ipv6
+
+* performed a little update for migrations. Now we not only wait 10 seconds but actually checks if database is ready
+
+* added migration file for http_clients chart
+
+* added migration files for http request methods distribution chart
+
+* added migration files for http responses chart
+
+* added migration files for http responses distribution chart
+
+* added migration files for network bandwidth chart
+
+* added migration files for network bandwidth per protocol chart
+
+* added migration files for network bandwidth per endpoint chart
+
+* added migration files for network graph chart
+
+* added migration files for total http requests chart
+
+* added migration files for total http overview filters
+
+* added migration files for netowrk  overview filters
+
+* added migration files for network packets
+
+* updated materiazlied views refresher
+
+* fixed the problem with multiple hash index
+
+* removed git deps and updated total_http request handler
 <!-- [END AUTO UPDATE] -->
 ## [-b0f2d0c] - 2024-06-26
 
