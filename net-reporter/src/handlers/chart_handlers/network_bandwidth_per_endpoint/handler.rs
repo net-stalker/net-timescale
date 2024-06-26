@@ -125,7 +125,7 @@ impl NetworkServiceHandler for NetworkBandwidthPerEndpointHandler {
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
         let tenant_id = enveloped_request.get_tenant_id();
 
-        if enveloped_request.get_type() != self.get_handler_type() {
+        if enveloped_request.get_envelope_type() != self.get_handler_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
         }
         let request = NetworkBandwidthPerEndpointRequestDTO::decode(enveloped_request.get_data());
