@@ -80,7 +80,7 @@ impl HttpResponsesHandler {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        network_id: &str,
+        network_id: Option<&str>,
         filters: &HttpResponsesFiltersDTO,
     ) -> Result<Vec<HttpResponseResponse>, Error> {
         log::info!("Query Parameters: {:?}", tenant_id);
@@ -90,7 +90,7 @@ impl HttpResponsesHandler {
             .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
-            .add_param(network_id)
+            .add_param(network_id.map(str::to_string))
             .add_option_param(filters.is_include_http_methods_mode().map(|_| filters.get_http_responses().to_vec()))
             .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
             .add_option_param(filters.get_bytes_lower_bound())

@@ -4,23 +4,23 @@ use sqlx::Error;
 use sqlx::Postgres;
 use sqlx::Transaction;
 
-use crate::handlers::filters_handlers::http_overview::response::endpoint_response::EndpointResponse;
+use crate::handlers::filters_handlers::network_overview::response::endpoint_response::EndpointResponse;
 
 const ENDPOINTS_REQUEST_QUERY: &str = "
-SELECT DISTINCT Src_IP AS Endpoint
-FROM Http_Overview_Filters_Materialized_View
-WHERE
-    Tenant_ID = $1
-    AND Frametime >= $2
-    AND Frametime < $3
-UNION
-SELECT DISTINCT Dst_IP AS Endpoint
-FROM Http_Overview_Filters_Materialized_View
-WHERE
-    Tenant_ID = $1
-    AND Frametime >= $2
-    AND Frametime < $3
-ORDER BY Endpoint;
+    SELECT DISTINCT Src_IP AS Endpoint
+    FROM Network_Overview_Filters_Materialized_View
+    WHERE
+        Tenant_ID = $1
+        AND Frametime >= $2
+        AND Frametime < $3
+    UNION
+    SELECT DISTINCT Dst_IP AS Endpoint
+    FROM Network_Overview_Filters_Materialized_View
+    WHERE
+        Tenant_ID = $1
+        AND Frametime >= $2
+        AND Frametime < $3
+    ORDER BY Endpoint;
 ";
 
 #[derive(Default)]
