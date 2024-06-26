@@ -6,8 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# net-reporter-api = "0.8.4"
-net-reporter-api = { git = "https://github.com/net-stalker/net-api", branch = "NS-361/dahsboard-filters-update" }
+net-reporter-api = "0.9.4"
 net-core-api = "0.5.2"
 net-component = "0.1.0"
 net-transport = { version = "0.1.1", features = ["quinn"] }

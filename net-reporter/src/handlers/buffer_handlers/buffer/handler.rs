@@ -26,7 +26,25 @@ const GET_BUFFER_QUERY: &str = "
         string_to_array(Traffic_Buffer.Parsed_Data->'l1'->'frame'->>'frame.protocols', ':') AS protocols,
         Traffic_Buffer.Parsed_Data As json_data
     FROM Traffic_Buffer
-    WHERE Traffic_Buffer.Tenant_Id = $1
+    WHERE
+        Parsed_Data->'l3'->'ip'->>'ip.src' is not null
+        AND Parsed_Data->'l3'->'ip'->>'ip.dst' is not null
+        AND Traffic_Buffer.Tenant_Id = $1
+    GROUP BY Traffic_Buffer.Pcap_ID
+    UNION
+    SELECT
+        Traffic_Buffer.Pcap_ID AS id,
+        Traffic_Buffer.Network_Id AS network_id,
+        Traffic_Buffer.Insertion_Time AS insertion_time,
+        Traffic_Buffer.Parsed_Data->'l3'->'ipv6'->>'ipv6.src' AS src,
+        Traffic_Buffer.Parsed_Data->'l3'->'ipv6'->>'ipv6.dst' AS dst,
+        string_to_array(Traffic_Buffer.Parsed_Data->'l1'->'frame'->>'frame.protocols', ':') AS protocols,
+        Traffic_Buffer.Parsed_Data As json_data
+    FROM Traffic_Buffer
+    WHERE
+        Parsed_Data->'l3'->'ipv6'->>'ipv6.src' is not null
+        AND Parsed_Data->'l3'->'ipv6'->>'ipv6.dst' is not null
+        AND Traffic_Buffer.Tenant_Id = $1
     GROUP BY Traffic_Buffer.Pcap_ID;
 ";
 

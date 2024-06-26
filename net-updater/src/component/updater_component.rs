@@ -1,7 +1,6 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use component_core::materialized_view::core::common::get_common_materialized_view_manager;
 use net_component::component::network_service_component::NetworkServiceComponent;
 use net_component::handler::network_service_handler_manager::NetworkServiceHandlerManager;
 use net_component::handler::network_service_handler_manager_builder::NetworkServiceHandlerManagerBuilder;
@@ -43,7 +42,7 @@ impl UpdaterComponent {
         Arc::new(
             NetworkServiceHandlerManagerBuilder::default()
                 .add_handler(UpdateBufferedPacketsNetworkIdHandler::default().boxed())
-                .add_handler(MaterializedViewsRefreshHandler::new(Box::new(get_common_materialized_view_manager())).boxed())
+                .add_handler(MaterializedViewsRefreshHandler::default().boxed())
                 .add_handler(RefreshPcapParsedDataHandler::default().boxed())
                 .add_handler(UpdateNetworkHandler::default().boxed())
                 .add_handler(UpdatePacketsNetworkIdHandler::default().boxed())

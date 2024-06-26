@@ -20,26 +20,26 @@ use super::response::network_packet::NetworkPacket;
 
 const GET_NETWORK_PACKETS_QUERY: &str = "
     SELECT
-        Traffic.Pcap_ID AS id,
-        Traffic.Network_Id AS network_id,
-        Traffic.Insertion_Time AS insertion_time,
-        Traffic.Parsed_Data->'l3'->'ip'->>'ip.src' AS src,
-        Traffic.Parsed_Data->'l3'->'ip'->>'ip.dst' AS dst,
-        string_to_array(Traffic.Parsed_Data->'l1'->'frame'->>'frame.protocols', ':') AS protocols,
-        Traffic.Parsed_Data AS json_data
-    FROM Traffic
+        id,
+        network_id,
+        insertion_time,
+        src,
+        dst,
+        protocols,
+        json_data
+    FROM Network_Packets
     WHERE
         (
             COALESCE(ARRAY_LENGTH($1, 1), 0) = 0
-            OR Traffic.Network_ID = ANY(ARRAY(SELECT UNNEST($1)))
+            OR network_id = ANY(ARRAY(SELECT UNNEST($1)))
             {}
         )
-        AND Traffic.Tenant_Id = $2
-    GROUP BY Traffic.Pcap_ID;
+        AND tenant_id = $2
+    GROUP BY id, network_id, insertion_time, src, dst, protocols, json_data;
 ";
 
 const SET_NULL_NETWORK: &str = "
-    OR Traffic.Network_ID is NULL
+    OR network_id is NULL
 ";
 
 #[derive(Default)]
