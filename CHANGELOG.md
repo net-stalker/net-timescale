@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
 <!-- [END AUTO UPDATE] -->
+## [-b0f2d0c] - 2024-06-26
+
+Ns 360/update requesting charts and filters (#103)
+
+* updated network overview filters handler
+
+* refactored network overview filters
+
+* fixed the issue with setting null networks in requests
+
+* added transaction commits
+## [-82b0f01] - 2024-06-26
+
+Fixed requesting charts. Fixed issue with envelope type and materialized views (#102)
+
+* fixed issue with envelope type and materialized views
 ## [-6f70273] - 2024-06-13
 
 split network packets deleters (#101)

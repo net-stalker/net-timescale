@@ -72,14 +72,14 @@ impl HttpResponsesDistributionHandler {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        network_id: &str,
+        network_id: Option<&str>,
         filters: &HttpResponsesDistributionFiltersDTO,
     ) -> Result<Vec<HttpResponsesDistributionBucketResponse>, Error> {
         SqlxQueryBuilderWrapper::<HttpResponsesDistributionBucketResponse>::new(query_string)
             .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
-            .add_param(network_id)
+            .add_param(network_id.map(str::to_string))
             .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
             .add_option_param(filters.get_bytes_lower_bound())
             .add_option_param(filters.get_bytes_upper_bound())
@@ -96,7 +96,7 @@ impl NetworkServiceHandler for HttpResponsesDistributionHandler {
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
         let tenant_id = enveloped_request.get_tenant_id();
 
-        if enveloped_request.get_type() != self.get_handler_type() {
+        if enveloped_request.get_envelope_type() != self.get_handler_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
         }
         let request = HttpResponsesDistributionRequestDTO::decode(enveloped_request.get_data());
@@ -110,6 +110,8 @@ impl NetworkServiceHandler for HttpResponsesDistributionHandler {
             .add_static_filter(request_filters.get_bytes_lower_bound(), SET_LOWER_BYTES_BOUND, 1)
             .add_static_filter(request_filters.get_bytes_upper_bound(), SET_UPPER_BYTES_BOUND, 1)
             .build_query();
+
+        log::debug!("query:\n{query}");
 
         let executed_query_response = Self::execute_query(
             connection_pool,

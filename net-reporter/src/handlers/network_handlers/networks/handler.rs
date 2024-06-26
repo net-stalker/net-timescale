@@ -33,7 +33,7 @@ impl NetworksHandler {
         Box::new(self)
     }
 
-    async fn execute_query(
+    pub async fn execute_query(
         transcation: &mut Transaction<'_, Postgres>,
         network_ids: &[String],
         tenant_id: &str,

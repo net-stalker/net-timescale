@@ -71,14 +71,14 @@ impl NetworkBandwidthPerProtocolHandler {
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        network_id: &str,
+        network_id: Option<&str>,
         filters: &NetworkBandwidthPerProtocolFiltersDTO,
     ) -> Result<Vec<ProtocolResponse>, Error> {
         SqlxQueryBuilderWrapper::<ProtocolResponse>::new(query_string)
             .add_param(tenant_id)
             .add_param(start_date)
             .add_param(end_date)
-            .add_param(network_id)
+            .add_param(network_id.map(str::to_string))
             .add_option_param(filters.is_include_endpoints_mode().map(|_| filters.get_endpoints().to_vec()))
             .add_option_param(filters.get_bytes_lower_bound())
             .add_option_param(filters.get_bytes_upper_bound())
@@ -95,7 +95,7 @@ impl NetworkServiceHandler for NetworkBandwidthPerProtocolHandler {
     ) -> Result<Envelope, Box<dyn std::error::Error + Send + Sync>> {
         let tenant_id = enveloped_request.get_tenant_id();
 
-        if enveloped_request.get_type() != self.get_handler_type() {
+        if enveloped_request.get_envelope_type() != self.get_handler_type() {
             return Err(format!("wrong request is being received: {}", enveloped_request.get_type()).into());
         }
         let request = NetworkBandwidthPerProtocolRequestDTO::decode(enveloped_request.get_data());
