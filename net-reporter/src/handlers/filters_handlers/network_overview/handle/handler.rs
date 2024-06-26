@@ -57,6 +57,8 @@ impl NetworkOverviewFiltersHandler {
             tenant_id
         ).await?;
 
+        let _ = transaction.commit().await;
+
         Ok(NetworkOverviewFiltersResponse::new(
             endpoints,
             protocols,

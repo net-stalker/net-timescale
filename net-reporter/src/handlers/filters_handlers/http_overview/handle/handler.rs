@@ -64,6 +64,8 @@ impl HttpOverviewFiltersHandler {
             tenant_id
         ).await?;
 
+        let _ = transaction.commit().await;
+
         Ok(HttpOverviewFiltersResponse::new(
             endpoints,
             http_request_methods,
