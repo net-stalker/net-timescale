@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [-82b0f01] - 2024-06-26
+
+Fixed requesting charts. Fixed issue with envelope type and materialized views (#102)
+
+* fixed issue with envelope type and materialized views
 <!-- [END AUTO UPDATE] -->
 ## [-6f70273] - 2024-06-13
 
