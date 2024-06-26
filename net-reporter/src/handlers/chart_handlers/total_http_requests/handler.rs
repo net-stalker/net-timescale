@@ -73,13 +73,13 @@ impl TotalHttpRequestsHandler {
         Box::new(self)
     }
 
-    async fn execute_query(
+    async fn execute_query<'a>(
         connection_pool: Arc<Pool<Postgres>>,
         query_string: &str,
         tenant_id: &str,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
-        network_id: &str,
+        network_id: Option<String>,
         filters: &TotalHttpRequestsFiltersDTO,
     ) -> Result<Vec<TotalHttpRequestsBucketResponse>, Error> {
         SqlxQueryBuilderWrapper::<TotalHttpRequestsBucketResponse>::new(query_string)
@@ -126,7 +126,7 @@ impl NetworkServiceHandler for TotalHttpRequestsHandler {
             tenant_id,
             request_start_date,
             request_end_date,
-            network_id,
+            network_id.map(str::to_string),
             filters,
         ).await?;
 
