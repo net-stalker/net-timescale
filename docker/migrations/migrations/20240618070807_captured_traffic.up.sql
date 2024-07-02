@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS Traffic
     Tenant_ID           TEXT NOT NULL,
     Raw_Pcap_File_Path  TEXT NOT NULL,
     Parsed_Data         JSONB NOT NULL,
+    Delete_At           TIMESTAMPTZ NOT NULL,
 
     PRIMARY KEY (Pcap_ID),
 
@@ -43,6 +44,7 @@ CREATE TABLE IF NOT EXISTS Traffic_Buffer
     Tenant_ID           TEXT NOT NULL,
     Raw_Pcap_File_Path  TEXT NOT NULL,
     Parsed_Data         JSONB NOT NULL,
+    Delete_At           TIMESTAMPTZ NOT NULL,
 
     PRIMARY KEY (Pcap_ID),
 
@@ -54,3 +56,24 @@ CREATE INDEX IF NOT EXISTS Pcap_Insertion_Time_Index ON Traffic_Buffer USING BRI
 CREATE INDEX IF NOT EXISTS Pcap_Network_ID_Index ON Traffic_Buffer USING HASH (Network_ID);
 CREATE INDEX IF NOT EXISTS Pcap_Tenant_ID_Index ON Traffic_Buffer USING HASH (Tenant_ID);
 CREATE INDEX IF NOT EXISTS Pcap_Parsed_Data_Index ON Traffic_Buffer USING GIN (Parsed_Data);
+
+-- Enable the pg_cron extension
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- Schedule the cron job
+SELECT cron.schedule('delete_expired_records', '0 0 * * *', $$DELETE FROM Traffic WHERE Delete_At < NOW();$$);
+
+
+CREATE OR REPLACE FUNCTION set_delete_time()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.Delete_At := NOW() + INTERVAL '1 day';
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER set_delete_time_trigger
+BEFORE INSERT OR UPDATE ON Traffic_Buffer
+FOR EACH ROW
+EXECUTE FUNCTION set_delete_time();
+
