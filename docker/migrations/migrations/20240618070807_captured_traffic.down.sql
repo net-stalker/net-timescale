@@ -13,6 +13,7 @@ DROP TRIGGER IF EXISTS set_delete_time_trigger ON Traffic_Buffer;
 
 -- Drop the trigger function
 DROP FUNCTION IF EXISTS set_delete_time();
+DROP FUNCTION IF EXISTS delete_expired_records_and_refresh_views();
 
 -- Drop indexes for Traffic_Buffer
 DROP INDEX IF EXISTS Pcap_Parsed_Data_Index;

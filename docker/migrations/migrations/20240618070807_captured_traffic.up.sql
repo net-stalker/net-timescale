@@ -60,8 +60,23 @@ CREATE INDEX IF NOT EXISTS Pcap_Parsed_Data_Index ON Traffic_Buffer USING GIN (P
 -- Enable the pg_cron extension
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
+CREATE OR REPLACE FUNCTION delete_expired_records_and_refresh_views() RETURNS void AS $$
+DECLARE
+  matview RECORD;
+  deleted_count INT;
+BEGIN
+   -- Perform the actual delete operation
+  DELETE FROM Traffic WHERE Delete_At < NOW();
+  
+  -- Loop through each materialized view and refresh it
+  FOR matview IN SELECT matviewname FROM pg_matviews LOOP
+    EXECUTE 'REFRESH MATERIALIZED VIEW ' || quote_ident(matview.matviewname);
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Schedule the cron job
-SELECT cron.schedule('delete_expired_records', '0 0 * * *', $$DELETE FROM Traffic WHERE Delete_At < NOW();$$);
+SELECT cron.schedule('delete_expired_records', '0 0 * * *', $$SELECT delete_expired_records_and_refresh_views();$$);
 
 
 CREATE OR REPLACE FUNCTION set_delete_time()
