@@ -67,6 +67,7 @@ DECLARE
 BEGIN
    -- Perform the actual delete operation
   DELETE FROM Traffic WHERE Delete_At < NOW();
+  DELETE FROM Traffic_Buffer WHERE Delete_At < NOW();
   
   -- Loop through each materialized view and refresh it
   FOR matview IN SELECT matviewname FROM pg_matviews LOOP
