@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+<!-- [END AUTO UPDATE] -->
 ## [-2ba928f] - 2024-06-26
 
 Ns 323/add indexes for materialized views: completely redesigned creating materialized views and its refreshing (#104)
@@ -47,7 +48,6 @@ Ns 323/add indexes for materialized views: completely redesigned creating materi
 * fixed the problem with multiple hash index
 
 * removed git deps and updated total_http request handler
-<!-- [END AUTO UPDATE] -->
 ## [-b0f2d0c] - 2024-06-26
 
 Ns 360/update requesting charts and filters (#103)
