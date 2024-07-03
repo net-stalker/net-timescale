@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
 <!-- [END AUTO UPDATE] -->
+## [-e67bcb7] - 2024-07-03
+
+Ns 366/auto data delete (#105)
+
+* added pg_cron for deleting data from timescaledb
+
+* scheduled deleting and refreshing of materialized views
 ## [-2ba928f] - 2024-06-26
 
 Ns 323/add indexes for materialized views: completely redesigned creating materialized views and its refreshing (#104)
