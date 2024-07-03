@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- [START AUTO UPDATE] -->
 <!-- Please keep comment here to allow auto-update -->
+## [-0a6aae3] - 2024-07-03
+
+Fix issued with requesting dashboards (#106)
+
+* fixed migrations for network overview filters
+
+* fixed wrong name mappings of the quried data
 <!-- [END AUTO UPDATE] -->
 ## [-e67bcb7] - 2024-07-03
 
