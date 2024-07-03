@@ -5,11 +5,11 @@ use net_reporter_api::api::http_responses_distribution::http_responses_distribut
 
 #[derive(sqlx::FromRow, Clone, Debug)]
 pub struct HttpResponsesDistributionBucketResponse {
-    #[sqlx(rename = "Frametime")]
+    #[sqlx(rename = "frametime")]
     bucket: DateTime<Utc>,
-    #[sqlx(rename = "Response_Code")]
+    #[sqlx(rename = "response_code")]
     response_code: i64,
-    #[sqlx(rename = "Amount")]
+    #[sqlx(rename = "amount")]
     amount: i64,
 }
 

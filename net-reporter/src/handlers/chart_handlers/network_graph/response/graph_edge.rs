@@ -2,11 +2,11 @@ use net_reporter_api::api::network_graph::graph_edge::GraphEdgeDTO;
 
 #[derive(sqlx::FromRow, Clone, Debug)]
 pub struct GraphEdgeResponse {
-    #[sqlx(rename = "Src_IP")]
+    #[sqlx(rename = "src_ip")]
     pub src_id: String,
-    #[sqlx(rename = "Dst_IP")]
+    #[sqlx(rename = "dst_ip")]
     pub dst_id: String,
-    #[sqlx(rename = "Value")]
+    #[sqlx(rename = "value")]
     pub value: i64,
 }
 

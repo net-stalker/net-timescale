@@ -1,5 +1,5 @@
 #[derive(sqlx::FromRow, Clone, Debug)]
 pub struct HttpResponseCodeResponse {
-    #[sqlx(rename = "Http_Response_Code")]
+    #[sqlx(rename = "http_response_code")]
     pub http_response_code: String,
 }
