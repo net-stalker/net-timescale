@@ -44,8 +44,6 @@ services:
       context: ../
       dockerfile: net-reporter/Dockerfile
     hostname: net-reporter
-    ports:
-      - "5454:5454"
     networks:
       - net-net
     depends_on:
@@ -57,8 +55,6 @@ services:
       context: ../
       dockerfile: net-updater/Dockerfile
     hostname: net-updater
-    ports:
-      - "5457:5457"
     networks:
       - net-net
     depends_on:
@@ -72,8 +68,6 @@ services:
       context: ../
       dockerfile: net-inserter/Dockerfile
     hostname: net-inserter
-    ports:
-      - "5455:5455"
     networks:
       - net-net
     depends_on:
@@ -87,8 +81,6 @@ services:
       context: ../
       dockerfile: net-deleter/Dockerfile
     hostname: net-deleter
-    ports:
-      - "5456:5456"
     networks:
       - net-net
     depends_on:
