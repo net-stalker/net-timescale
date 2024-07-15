@@ -24,16 +24,16 @@ WORKDIR /net-timescale
 COPY . .
 
 # Build the application
-RUN cargo build --package net-inserter --release
+RUN cargo build --package net-deleter --release
 
 # Final stage
 FROM debian:bullseye-slim
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y tshark
 
-COPY --from=builder /net-timescale/target/release/net-inserter /
-COPY --from=builder /net-timescale/net-inserter/config.toml /
+COPY --from=builder /net-timescale/target/release/net-deleter /
+COPY --from=builder /net-timescale/net-deleter/config.toml /
 
 ENV CONFIG_PATH=/
 
-ENTRYPOINT ["/net-inserter"]
+ENTRYPOINT ["/net-deleter"]

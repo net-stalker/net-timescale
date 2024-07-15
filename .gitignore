@@ -15,3 +15,5 @@ output/
 
 # Except the one in the .cargo directory
 !.cargo/config.toml
+
+docker/.env
