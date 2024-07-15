@@ -31,7 +31,6 @@ RUN cargo build --package net-reporter --release
 FROM debian:bullseye-slim
 COPY --from=builder /net-timescale/target/release/net-reporter /
 COPY --from=builder /net-timescale/net-reporter/config.toml /
-COPY --from=builder /net-timescale/migrations /migrations
 
 ENV CONFIG_PATH=/
 

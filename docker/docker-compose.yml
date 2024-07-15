@@ -6,9 +6,38 @@ services:
       context: timescaledb
     hostname: timescaledb
     environment:
-      - POSTGRES_PASSWORD=PsWDgxZb
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     networks:
       - net-net
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  migrations:
+    build:
+      context: migrations
+    networks:
+      - net-net
+    env_file:
+      - .env
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+        until pg_isready -h timescaledb -p 5432 -U postgres; do
+          echo 'Waiting for database...'
+          sleep 1
+        done &&
+        echo 'Database is ready. Running migrations...' &&
+        sqlx database create --database-url $$DATABASE_URL &&
+        sqlx migrate run --database-url $$DATABASE_URL
+      "
   
   net-reporter:
     build:
@@ -18,7 +47,21 @@ services:
     networks:
       - net-net
     depends_on:
-      - timescaledb
+      - migrations
+    restart: unless-stopped
+  
+  net-updater:
+    build:
+      context: ../
+      dockerfile: net-updater/Dockerfile
+    hostname: net-updater
+    networks:
+      - net-net
+    depends_on:
+      - migrations
+    volumes:
+      - ${OUTPUT_DIR}:/mnt/netstalker
+    restart: unless-stopped
 
   net-inserter:
     build:
@@ -28,9 +71,24 @@ services:
     networks:
       - net-net
     depends_on:
-      - timescaledb
+      - migrations
+    volumes:
+      - ${OUTPUT_DIR}:/mnt/netstalker
+    restart: unless-stopped
 
-  # uncomment to run net-gateway. Correct the path to the context if you need
+  net-deleter:
+    build:
+      context: ../
+      dockerfile: net-deleter/Dockerfile
+    hostname: net-deleter
+    networks:
+      - net-net
+    depends_on:
+      - migrations
+    volumes:
+      - ${OUTPUT_DIR}:/mnt/netstalker
+    restart: unless-stopped
+
   net-gateway:
     build:
       context: ../../net-gateway
@@ -38,13 +96,19 @@ services:
     hostname: net-gateway
     ports:
       - "8080:8080"
-    networks:
-      - net-net
     depends_on:
-      - net-reporter
       - net-inserter
+      - net-deleter
+      - net-reporter
+      - net-updater
+    networks: 
+      - net-net
+      - fusionauth_net
+    restart: unless-stopped
 
-networks:
+networks: 
   net-net:
     driver: bridge
     name: net-net
+  fusionauth_net:
+    external: true
