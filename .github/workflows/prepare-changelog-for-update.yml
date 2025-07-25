@@ -22,7 +22,7 @@ jobs:
 
       - name: Get branch name
         id: branch-name
-        uses: tj-actions/branch-names@v7
+        uses: tj-actions/branch-names@v9.0.0
 
       - name: Set up Python
         uses: actions/setup-python@v4
